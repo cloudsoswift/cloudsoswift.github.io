@@ -5,6 +5,31 @@
         <link>https://cloudsoswift.github.io/tags/</link>
         <description>Recent content in Tags on Blog of cloudsoswift</description>
         <generator>Hugo -- gohugo.io</generator>
-        <language>ko</language><atom:link href="https://cloudsoswift.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+        <language>ko</language>
+        <lastBuildDate>Tue, 24 Jan 2023 08:35:50 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/tags/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>blog</title>
+        <link>https://cloudsoswift.github.io/tags/blog/</link>
+        <pubDate>Tue, 24 Jan 2023 08:35:50 +0900</pubDate>
+        
+        <guid>https://cloudsoswift.github.io/tags/blog/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>etc</title>
+        <link>https://cloudsoswift.github.io/tags/etc/</link>
+        <pubDate>Tue, 24 Jan 2023 08:35:50 +0900</pubDate>
+        
+        <guid>https://cloudsoswift.github.io/tags/etc/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>개발</title>
+        <link>https://cloudsoswift.github.io/tags/%EA%B0%9C%EB%B0%9C/</link>
+        <pubDate>Mon, 23 Jan 2023 01:32:17 +0900</pubDate>
+        
+        <guid>https://cloudsoswift.github.io/tags/%EA%B0%9C%EB%B0%9C/</guid>
+        <description></description>
+        </item>
+        
     </channel>
 </rss>
