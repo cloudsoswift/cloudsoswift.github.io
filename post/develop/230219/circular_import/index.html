@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="ko" dir="ltr">
     <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='UX에 죽고 UX에 살자...!'>
-<title>Tags</title>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='임시'>
+<title>[Javascript] 순환 참조 (Circular Import)</title>
 
-<link rel='canonical' href='https://cloudsoswift.github.io/tags/'>
+<link rel='canonical' href='https://cloudsoswift.github.io/post/develop/230219/circular_import/'>
 
-<link rel="stylesheet" href="/scss/style.min.5be32ca3f6e1a997c75795c4359147cc6d4fbd34948c0acd51e31d237033978a.css"><meta property='og:title' content='Tags'>
-<meta property='og:description' content='UX에 죽고 UX에 살자...!'>
-<meta property='og:url' content='https://cloudsoswift.github.io/tags/'>
+<link rel="stylesheet" href="/scss/style.min.5be32ca3f6e1a997c75795c4359147cc6d4fbd34948c0acd51e31d237033978a.css"><meta property='og:title' content='[Javascript] 순환 참조 (Circular Import)'>
+<meta property='og:description' content='임시'>
+<meta property='og:url' content='https://cloudsoswift.github.io/post/develop/230219/circular_import/'>
 <meta property='og:site_name' content='Blog of cloudsoswift'>
-<meta property='og:type' content='website'><meta property='og:updated_time' content=' 2023-02-19T11:22:33&#43;09:00 '/>
-<meta name="twitter:title" content="Tags">
-<meta name="twitter:description" content="UX에 죽고 UX에 살자...!"><link rel="alternate" type="application/rss&#43;xml" href="https://cloudsoswift.github.io/tags/index.xml">
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='개발' /><meta property='article:tag' content='Javascript' /><meta property='article:published_time' content='2023-02-19T11:22:33&#43;09:00'/><meta property='article:modified_time' content='2023-02-19T11:22:33&#43;09:00'/><meta property='og:image' content='https://cloudsoswift.github.io/post/etc/2022-01-28-first-init-hugo.png' />
+<meta name="twitter:title" content="[Javascript] 순환 참조 (Circular Import)">
+<meta name="twitter:description" content="임시"><meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content='https://cloudsoswift.github.io/post/etc/2022-01-28-first-init-hugo.png' />
     </head>
-    <body class="">
+    <body class="
+    article-page
+    ">
     <script>
         (function() {
             const colorSchemeKey = 'StackColorScheme';
@@ -153,182 +156,125 @@
     </ol>
 </aside>
 
-    <aside class="sidebar right-sidebar sticky">
-        
-            
+    
+
+            <main class="main full-width">
+    <article class="has-image main-article">
+    <header class="article-header">
+        <div class="article-image">
+            <a href="/post/develop/230219/circular_import/">
                 
-            
-        
-            
+                    <img src="/post/etc/2022-01-28-first-init-hugo.png" loading="lazy" alt="Featured image of post [Javascript] 순환 참조 (Circular Import)" />
                 
-            
-        
-            
-                <section class="widget tagCloud">
-    <div class="widget-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <line x1="5" y1="9" x2="19" y2="9" />
-  <line x1="5" y1="15" x2="19" y2="15" />
-  <line x1="11" y1="4" x2="7" y2="20" />
-  <line x1="17" y1="4" x2="13" y2="20" />
-</svg>
-
-
-
-    </div>
-    <h2 class="widget-title section-title">Categories</h2>
-
-    <div class="tagCloud-tags">
-        
-            <a href="/categories/etc/" class="font_size_2">
-                etc
             </a>
+        </div>
+    
+
+    <div class="article-details">
+    
+    <header class="article-category">
         
-            <a href="/categories/develop/" class="font_size_1">
+            <a href="/categories/develop/" >
                 develop
             </a>
         
-    </div>
-</section>
-
-            
-        
-            
-                <section class="widget tagCloud">
-    <div class="widget-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-tag" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-  <path stroke="none" d="M0 0h24v24H0z"/>
-  <path d="M11 3L20 12a1.5 1.5 0 0 1 0 2L14 20a1.5 1.5 0 0 1 -2 0L3 11v-4a4 4 0 0 1 4 -4h4" />
-  <circle cx="9" cy="9" r="2" />
-</svg>
-
-
-
-    </div>
-    <h2 class="widget-title section-title">Tags</h2>
-
-    <div class="tagCloud-tags">
-        
-            <a href="/tags/etc/" class="font_size_2">
-                etc
-            </a>
-        
-            <a href="/tags/%EA%B0%9C%EB%B0%9C/" class="font_size_2">
-                개발
-            </a>
-        
-            <a href="/tags/blog/" class="font_size_1">
-                blog
-            </a>
-        
-            <a href="/tags/golang/" class="font_size_1">
-                golang
-            </a>
-        
-            <a href="/tags/hugo/" class="font_size_1">
-                hugo
-            </a>
-        
-            <a href="/tags/javascript/" class="font_size_1">
-                Javascript
-            </a>
-        
-    </div>
-</section>
-            
-        
-    </aside>
-
-
-            <main class="main full-width">
-    <header>
-        <h3 class="section-title">
-            
-                Section
-            
-        </h3>
-
-        <div class="section-card">
-            <div class="section-details">
-                <h3 class="section-count">6 pages</h3>
-                <h1 class="section-term">Tags</h1>
-                
-            </div>
-        </div>
     </header>
-        
     
-    <section class="article-list--compact">
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/post/develop/230219/circular_import/">[Javascript] 순환 참조 (Circular Import)</a>
+        </h2>
+    
         
-            <article>
-    <a href="/tags/javascript/">
-        <div class="article-details">
-            <h2 class="article-title">Javascript</h2>
-            <footer class="article-time">
-                <time datetime='2023-02-19T11:22:33&#43;09:00'>02-19, 2023 / 11:22 KST</time>
-            </footer>
-        </div>
-    </a>
-</article>
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
         
-            <article>
-    <a href="/tags/%EA%B0%9C%EB%B0%9C/">
-        <div class="article-details">
-            <h2 class="article-title">개발</h2>
-            <footer class="article-time">
-                <time datetime='2023-02-19T11:22:33&#43;09:00'>02-19, 2023 / 11:22 KST</time>
-            </footer>
-        </div>
-    </a>
-</article>
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">02-19, 2023 / 11:22 KST</time>
+            </div>
         
-            <article>
-    <a href="/tags/blog/">
-        <div class="article-details">
-            <h2 class="article-title">blog</h2>
-            <footer class="article-time">
-                <time datetime='2023-01-24T08:35:50&#43;09:00'>01-24, 2023 / 08:35 KST</time>
-            </footer>
-        </div>
-    </a>
-</article>
+
         
-            <article>
-    <a href="/tags/etc/">
-        <div class="article-details">
-            <h2 class="article-title">etc</h2>
-            <footer class="article-time">
-                <time datetime='2023-01-24T08:35:50&#43;09:00'>01-24, 2023 / 08:35 KST</time>
-            </footer>
-        </div>
-    </a>
-</article>
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <p>임시</p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
         
-            <article>
-    <a href="/tags/golang/">
-        <div class="article-details">
-            <h2 class="article-title">golang</h2>
-            <footer class="article-time">
-                <time datetime='2023-01-24T08:35:50&#43;09:00'>01-24, 2023 / 08:35 KST</time>
-            </footer>
-        </div>
-    </a>
-</article>
+            <a href="/tags/%EA%B0%9C%EB%B0%9C/">개발</a>
         
-            <article>
-    <a href="/tags/hugo/">
-        <div class="article-details">
-            <h2 class="article-title">hugo</h2>
-            <footer class="article-time">
-                <time datetime='2023-01-24T08:35:50&#43;09:00'>01-24, 2023 / 08:35 KST</time>
-            </footer>
-        </div>
-    </a>
-</article>
+            <a href="/tags/javascript/">Javascript</a>
         
     </section>
-<footer class="site-footer">
+
+
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">Related content</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/post/etc/first-init/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">첫 글</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    
+
+    <footer class="site-footer">
     <section class="copyright">
         &copy; 
         
@@ -341,6 +287,84 @@
     </section>
 </footer>
 
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
 
             </main>
         </div>

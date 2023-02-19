@@ -6,18 +6,23 @@
         <description>Recent content on Blog of cloudsoswift</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>ko</language>
-        <lastBuildDate>Tue, 24 Jan 2023 08:35:50 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/index.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Sun, 19 Feb 2023 11:22:33 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>[Javascript] 순환 참조 (Circular Import)</title>
+        <link>https://cloudsoswift.github.io/post/develop/230219/circular_import/</link>
+        <pubDate>Sun, 19 Feb 2023 11:22:33 +0900</pubDate>
+        
+        <guid>https://cloudsoswift.github.io/post/develop/230219/circular_import/</guid>
+        <description>&lt;img src="https://cloudsoswift.github.io/post/etc/2022-01-28-first-init-hugo.png" alt="Featured image of post [Javascript] 순환 참조 (Circular Import)" /&gt;&lt;p&gt;임시&lt;/p&gt;
+</description>
+        </item>
+        <item>
         <title>블로그 시작</title>
         <link>https://cloudsoswift.github.io/post/etc/start/</link>
         <pubDate>Tue, 24 Jan 2023 08:35:50 +0900</pubDate>
         
         <guid>https://cloudsoswift.github.io/post/etc/start/</guid>
-        <description>&lt;p&gt;블로그를 시작하면서 마주치는 선택지와 내가 선택한 것들을 정리해보고자 한다.&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;
+        <description>&lt;img src="https://cloudsoswift.github.io/post/etc/2022-01-28-first-init-hugo.png" alt="Featured image of post 블로그 시작" /&gt;&lt;p&gt;블로그를 시작하면서 마주치는 선택지와 내가 선택한 것들을 정리해보고자 한다.&lt;/p&gt;
 &lt;h2 id=&#34;플랫폼&#34;&gt;플랫폼&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;
 &lt;h3 id=&#34;기존의-blog-서비스--tistory-naver-velog-등-&#34;&gt;기존의 blog 서비스 ( Tistory, Naver, velog 등&amp;hellip; )&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;안정적으로 서비스 됨. ( 배포, 댓글 이런거 신경 안 써도 됨. )&lt;/li&gt;
@@ -27,8 +32,6 @@
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
 &lt;h3 id=&#34;github-pages를-이용&#34;&gt;Github Pages를 이용&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;배포, 댓글 같은 점들을 내가 직접 설정&lt;/strong&gt;&lt;/li&gt;
@@ -39,38 +42,24 @@
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
 &lt;h2 id=&#34;블로그github-pages-프레임워크static-site-generator&#34;&gt;블로그(Github Pages) 프레임워크(Static Site Generator)&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;
 &lt;h3 id=&#34;jekyll&#34;&gt;Jekyll&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;Ruby 기반&lt;/strong&gt;&lt;/li&gt;
 &lt;li&gt;Github Pages에서 사용하고 있어 호환성이 높다&lt;/li&gt;
 &lt;li&gt;윈도우를 공식적으로ㅠㅠ 지원ㅠㅠ 하지않음ㅠㅠ.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
 &lt;h3 id=&#34;hexo&#34;&gt;Hexo&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;js 기반&lt;/strong&gt;&lt;/li&gt;
 &lt;li&gt;만든 사람이 대만인.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
 &lt;h3 id=&#34;hugo&#34;&gt;Hugo&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;Go 기반&lt;/strong&gt;&lt;/li&gt;
 &lt;li&gt;반응속도가 다른 프레임워크들 보다 월등히 빠르다.&lt;/li&gt;
 &lt;li&gt;&lt;em&gt;&lt;strong&gt;윈도우를 공 식 적 으 로 지 원 함.&lt;/strong&gt;&lt;/em&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
 &lt;h2 id=&#34;hugo를-선택한-이유&#34;&gt;Hugo를 선택한 이유&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Star 갯수 (2023. 01. 22 기준)
@@ -85,8 +74,6 @@
     &gt;Hugo Themes&lt;/a&gt;에서 Theme를 찾아보는데, 맘에 드는 &lt;a class=&#34;link&#34; href=&#34;https://themes.gohugo.io/themes/hugo-theme-stack/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
     &gt;Theme&lt;/a&gt;를 발견했다. &lt;!-- raw HTML omitted --&gt;(반응형도 잘 되길래 더 꽂혀버림&amp;hellip;)&lt;/li&gt;
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
 &lt;h2 id=&#34;hugo-설치-및-설정&#34;&gt;Hugo 설치 및 설정&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Windows 환경에 Hugo를 설치할 때, &lt;a class=&#34;link&#34; href=&#34;https://gohugo.io/installation/windows/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
@@ -94,36 +81,31 @@
 &lt;ul&gt;
 &lt;li&gt;Hugo의 Github Repository의 &lt;a class=&#34;link&#34; href=&#34;https://github.com/gohugoio/hugo/releases&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
     &gt;최신 release&lt;/a&gt;를 다운받고, 시스템 전역변수에 Path로 추가해준다.&lt;/li&gt;
-&lt;li&gt;
-&lt;h3 id=&#34;사이트-생성&#34;&gt;사이트 생성&lt;/h3&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;hugo new site myHugo&lt;/code&gt; 명령어를 통해 새로운 site를 생성한다.&lt;/li&gt;
-&lt;li&gt;
-&lt;h3 id=&#34;테마-추가&#34;&gt;테마 추가&lt;/h3&gt;
-&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://themes.gohugo.io/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Hugo Themes&lt;/a&gt;에 들어가서 원하는 테마를 찾아본다.
-&lt;ul&gt;
-&lt;li&gt;본인의 경우, &lt;a class=&#34;link&#34; href=&#34;https://github.com/CaiJimmy/hugo-theme-stack&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Hugo Theme Stack&lt;/a&gt; 이라는 테마를 선택함.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
-&lt;li&gt;웬만하면 Downloads 링크가 Github Repository로 연결되어 있을 것인데, 해당 Repo를 Site 폴더의 submodule로 추가해준다.
+&lt;/ul&gt;
+&lt;h3 id=&#34;사이트-생성&#34;&gt;사이트 생성&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;hugo new site myHugo&lt;/code&gt; 명령어를 통해 새로운 site를 생성한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;테마-추가&#34;&gt;테마 추가&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://themes.gohugo.io/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Hugo Themes&lt;/a&gt;에 들어가서 원하는 테마를 찾아본다.
+- 본인의 경우, &lt;a class=&#34;link&#34; href=&#34;https://github.com/CaiJimmy/hugo-theme-stack&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Hugo Theme Stack&lt;/a&gt; 이라는 테마를 선택함.&lt;/li&gt;
+&lt;li&gt;웬만하면 Downloads 링크가 Github Repository로 연결되어 있을 것인데, 해당 Repo를 Site 폴더의 submodule로 추가해준다.&lt;!-- raw HTML omitted --&gt;
 &lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;git init
 git submodule add [theme repo 주소] themes/[테마 이름] 
 &lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
 &lt;li&gt;이후 추가적인 설정을 위해 theme 폴더 안의 config 파일이나, site 폴더 안의 config 파일을 수정한다.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
 &lt;h3 id=&#34;글-쓰기&#34;&gt;글 쓰기&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;hugo new post/파일명.md&lt;/code&gt; 를 통해 새 문서를 만든다.&lt;/li&gt;
 &lt;li&gt;이러면 Hugo가 해당 위치에 &lt;a class=&#34;link&#34; href=&#34;https://gohugo.io/content-management/front-matter/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
     &gt;Front Matter&lt;/a&gt;라고 부르는 해당 글에대한 metadata가 미리 작성되어 있는 Markdown 파일을 만들어 준다.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
 &lt;h3 id=&#34;로컬단에서-확인해보기&#34;&gt;로컬단에서 확인해보기&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;hugo server&lt;/code&gt; 명령어를 통해 로컬단에서 미리 블로그가 어떻게 보일지를 확인할 수 있다.&lt;/li&gt;
@@ -131,33 +113,19 @@ git submodule add [theme repo 주소] themes/[테마 이름]
     &gt;http://localhost:1313/&lt;/a&gt;로 접근할 수 있다.&lt;/li&gt;
 &lt;li&gt;VS Code에서 Live Server 쓰는것 마냥 변경사항이 바로바로 반영되어서 확인하기 편했다!&lt;/li&gt;
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
 &lt;h3 id=&#34;build-및-git에-올리기&#34;&gt;Build 및 Git에 올리기&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;
 &lt;h4 id=&#34;build&#34;&gt;Build&lt;/h4&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;hugo -t [테마 이름]&lt;/code&gt; 명령어를 사용하면, &lt;code&gt;/public&lt;/code&gt; 폴더 안에 빌드된 Site 데이터들이 저장된다.&lt;/li&gt;
 &lt;li&gt;참고로 밑에서 git에서 submodule을 추가할 때, public 폴더가 이미 존재하면 추가가 안되니 먼저 submodule add를 해주고 build 작업을 진행해야 한다.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
 &lt;h4 id=&#34;git에-올리기&#34;&gt;Git에 올리기&lt;/h4&gt;
 &lt;ul&gt;
 &lt;li&gt;아까 Theme 설치할 때, Git init 작업을 진행했으므로, init은 생략한다.
-&lt;code&gt; git remote add origin [Hugo Site 폴더 저장할 Repo 주소] git submodule add -b master [실제 Github Pages에 올릴 Repo 주소] public &lt;/code&gt;
-&lt;ul&gt;
-&lt;li&gt;이후 두 Git Repo에 대해 각각 add -&amp;gt; commit -&amp;gt; push 과정을 수행하면 된다.&lt;/li&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;git remote add origin [Hugo Site 폴더 저장할 Repo 주소]
+git submodule add -b master [실제 Github Pages에 올릴 Repo 주소] public
+&lt;/code&gt;&lt;/pre&gt;이후 두 Git Repo에 대해 각각 add -&amp;gt; commit -&amp;gt; push 과정을 수행하면 된다.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
 &lt;h2 id=&#34;참고한-글&#34;&gt;참고한 글&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://ialy1595.github.io/post/blog-construct-1/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
@@ -170,8 +138,6 @@ git submodule add [theme repo 주소] themes/[테마 이름]
     &gt;self invest님 블로그&lt;/a&gt;
 &lt;ul&gt;
 &lt;li&gt;마찬가지로 자세히 문서화 해주시고, 추가로 github action으로 자동화하는 방법까지 작성해주셨다. 아직 자동화까진 적용 안해봤지만 참고할 예정&amp;hellip; 감사합니다 (_ _)&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;

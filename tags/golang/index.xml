@@ -1,21 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
-        <title>Posts on Blog of cloudsoswift</title>
-        <link>https://cloudsoswift.github.io/post/</link>
-        <description>Recent content in Posts on Blog of cloudsoswift</description>
+        <title>golang on Blog of cloudsoswift</title>
+        <link>https://cloudsoswift.github.io/tags/golang/</link>
+        <description>Recent content in golang on Blog of cloudsoswift</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>ko</language>
-        <lastBuildDate>Sun, 19 Feb 2023 11:22:33 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/post/index.xml" rel="self" type="application/rss+xml" /><item>
-        <title>[Javascript] 순환 참조 (Circular Import)</title>
-        <link>https://cloudsoswift.github.io/post/develop/230219/circular_import/</link>
-        <pubDate>Sun, 19 Feb 2023 11:22:33 +0900</pubDate>
-        
-        <guid>https://cloudsoswift.github.io/post/develop/230219/circular_import/</guid>
-        <description>&lt;img src="https://cloudsoswift.github.io/post/etc/2022-01-28-first-init-hugo.png" alt="Featured image of post [Javascript] 순환 참조 (Circular Import)" /&gt;&lt;p&gt;임시&lt;/p&gt;
-</description>
-        </item>
-        <item>
+        <lastBuildDate>Tue, 24 Jan 2023 08:35:50 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/tags/golang/index.xml" rel="self" type="application/rss+xml" /><item>
         <title>블로그 시작</title>
         <link>https://cloudsoswift.github.io/post/etc/start/</link>
         <pubDate>Tue, 24 Jan 2023 08:35:50 +0900</pubDate>
@@ -141,22 +132,6 @@ git submodule add -b master [실제 Github Pages에 올릴 Repo 주소] public
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-</description>
-        </item>
-        <item>
-        <title>첫 글</title>
-        <link>https://cloudsoswift.github.io/post/etc/first-init/</link>
-        <pubDate>Mon, 23 Jan 2023 01:32:17 +0900</pubDate>
-        
-        <guid>https://cloudsoswift.github.io/post/etc/first-init/</guid>
-        <description>&lt;h1 id=&#34;블로그에-쓰는-첫-글이다&#34;&gt;블로그에 쓰는 첫 글이다.&lt;/h1&gt;
-&lt;ol start=&#34;2023&#34;&gt;
-&lt;li&gt;
-&lt;ol&gt;
-&lt;li&gt;23&lt;/li&gt;
-&lt;/ol&gt;
-&lt;/li&gt;
-&lt;/ol&gt;
 </description>
         </item>
         

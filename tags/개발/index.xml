@@ -6,7 +6,16 @@
         <description>Recent content in 개발 on Blog of cloudsoswift</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>ko</language>
-        <lastBuildDate>Mon, 23 Jan 2023 01:32:17 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/tags/%EA%B0%9C%EB%B0%9C/index.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Sun, 19 Feb 2023 11:22:33 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/tags/%EA%B0%9C%EB%B0%9C/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>[Javascript] 순환 참조 (Circular Import)</title>
+        <link>https://cloudsoswift.github.io/post/develop/230219/circular_import/</link>
+        <pubDate>Sun, 19 Feb 2023 11:22:33 +0900</pubDate>
+        
+        <guid>https://cloudsoswift.github.io/post/develop/230219/circular_import/</guid>
+        <description>&lt;img src="https://cloudsoswift.github.io/post/etc/2022-01-28-first-init-hugo.png" alt="Featured image of post [Javascript] 순환 참조 (Circular Import)" /&gt;&lt;p&gt;임시&lt;/p&gt;
+</description>
+        </item>
+        <item>
         <title>첫 글</title>
         <link>https://cloudsoswift.github.io/post/etc/first-init/</link>
         <pubDate>Mon, 23 Jan 2023 01:32:17 +0900</pubDate>
