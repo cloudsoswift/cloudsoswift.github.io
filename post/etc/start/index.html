@@ -464,6 +464,56 @@ git submodule add -b master [실제 Github Pages에 올릴 Repo 주소] public
      
     
         
+    <script
+    src="https://giscus.app/client.js"
+    data-repo="cloudsoswift/cloudsoswift.github.io"
+    data-repo-id="R_kgDOIx-DaQ"
+    data-category="Announcements"
+    data-category-id="DIC_kwDOIx-Dac4CUdFI"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="top"
+    data-theme="light_protanopia"
+    data-lang="ko"
+    crossorigin="anonymous"
+    async
+></script>
+<script>
+    function setGiscusTheme(theme) {
+        let giscus = document.querySelector("iframe.giscus-frame");
+        if (giscus) {
+            giscus.contentWindow.postMessage(
+                {
+                    giscus: {
+                        setConfig: {
+                            theme: theme,
+                        },
+                    },
+                },
+                "https://giscus.app"
+            );
+        }
+    }
+
+    (function () {
+        addEventListener("message", (e) => {
+            if (event.origin !== "https://giscus.app") return;
+            handler();
+        });
+        window.addEventListener("onColorSchemeChange", handler);
+
+        function handler() {
+            if (document.documentElement.dataset.scheme === "light") {
+                setGiscusTheme('light_protanopia');
+            } else {
+                setGiscusTheme('dark_protanopia');
+            }
+        }
+    })();
+</script>
+
     
 
     <footer class="site-footer">
