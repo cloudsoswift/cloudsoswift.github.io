@@ -1,12 +1,409 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
-        <title>Blog of cloudsoswift</title>
+        <title>내자가추 백절불굴</title>
         <link>https://cloudsoswift.github.io/</link>
-        <description>Recent content on Blog of cloudsoswift</description>
+        <description>Recent content on 내자가추 백절불굴</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>ko</language>
-        <lastBuildDate>Sun, 19 Feb 2023 11:22:33 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/index.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Sun, 09 Jul 2023 03:07:19 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>뉴스 스크랩을 위한 서비스 찾기</title>
+        <link>https://cloudsoswift.github.io/post/self-development/230709/news-scrap/</link>
+        <pubDate>Sun, 09 Jul 2023 03:07:19 +0900</pubDate>
+        
+        <guid>https://cloudsoswift.github.io/post/self-development/230709/news-scrap/</guid>
+        <description>&lt;h1 id=&#34;발단&#34;&gt;발단&lt;/h1&gt;
+&lt;p&gt;슬슬 SSAFY도 끝났겠다, 취업준비에 박차를 가해야 하는 상황을 맞닥들이게 되었다.&lt;br&gt;
+가장 중요한건 끊임없는 CS 공부, Problem Solving 이겠지만 추후 토이프로젝트, 면접 대비를 위해서 지속적으로 IT 분야 뿐만 아니라&lt;br&gt;
+전반적인 사회 흐름을 알 필요가 있다고 생각하게 되었다.
+이러한 부분에 있어, 이따금씩 네이버 뉴스나 Chrome 앱의 Discover를 통해 정보를 알 순 있었긴 했다.&lt;/p&gt;
+&lt;h2 id=&#34;정보-정리의-필요성을-느끼다&#34;&gt;정보 정리의 필요성을 느끼다&lt;/h2&gt;
+&lt;p&gt;하지만 이렇게 단편적으로 기사를 보기만 하는건 Chrome 앱의 탭만 늘리거나, Obsidian의 &amp;lsquo;나중에 정리할 글&amp;rsquo; 문서의 양만 늘리고 있었다.&lt;br&gt;
+그래서 이를 정리해야 겠다는 필요성을 느끼게 되었고, 옛날에 사용했던 &lt;a class=&#34;link&#34; href=&#34;https://keep.google.com/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Google Keep&lt;/a&gt;과 같은 서비스를 사용해봐야 겠다고 생각했다.&lt;br&gt;
+그리고 이와 유사한 서비스들을 찾아보고 이를 정리해 블로그에 올리게 되었다.&lt;br&gt;
++ 몰랐는데 이러한 서비스들을 &lt;strong&gt;Read It Later(RIL)&lt;/strong&gt; 서비스 라고 하는 것 같다.&lt;/p&gt;
+&lt;h1 id=&#34;뉴스-스크랩-서비스들&#34;&gt;뉴스 스크랩 서비스들&lt;/h1&gt;
+&lt;p&gt;주로 사용되는 뉴스 스크랩 서비스들은 다음과 같았다.&lt;/p&gt;
+&lt;h2 id=&#34;notion-httpswwwnotionso&#34;&gt;Notion &lt;a class=&#34;link&#34; href=&#34;https://www.notion.so/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;h3 id=&#34;장점&#34;&gt;장점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;익숙하다.&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;SSAFY 생활할 때 배운 내용들 정리할 때 사용해서 익숙한 플랫폼이다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;멀티 플랫폼이 된다.&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;PC, 모바일 모두 가능.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;이미지 첨부가 간단하다.&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;직접 이미지를 업로드 하는건 물론, 클립보드의 이미지도 업로드 가능하다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;원하는 부분에 &lt;strong&gt;하이라이트 및 댓글을 달 수있다&lt;/strong&gt;.
+&lt;ul&gt;
+&lt;li&gt;강조나 요약, 해석같은걸 기록하고 싶은 부분에 댓글을 달 수 있다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;단점&#34;&gt;단점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;UI가 불편하다.&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;데이터베이스 - 표&lt;/code&gt; 형식을 사용하게 될 텐데, 평소에 정보 정리할 때도 많이 불편했어서 좀 그렇다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이따금씩 &lt;strong&gt;버벅인다.&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;멀티 플랫폼이라 동기화를 해서 그런지, 문서 작성 및 수정시  버벅이는 현상이 가끔 발생한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;pocket-httpsgetpocketcomko&#34;&gt;Pocket &lt;a class=&#34;link&#34; href=&#34;https://getpocket.com/ko&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;참고한 리뷰&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://kfact.tistory.com/309&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;블로그 포스팅에 유용한 어플 추천(Keep, Pocket, Over)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;장점-1&#34;&gt;장점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;어플이 &lt;strong&gt;깔끔하다&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;멀티 플랫폼&lt;/strong&gt;을 지원한다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;광고 없이&lt;/strong&gt; 기사를 &lt;strong&gt;텍스트로 저장&lt;/strong&gt; 가능하다.&lt;/li&gt;
+&lt;li&gt;기사 저장시, 원문이 변경되어도 &lt;strong&gt;저장 시점의 기사가 저장&lt;/strong&gt;되어 있다.
+&lt;ul&gt;
+&lt;li&gt;Pocket에 송부하는 시점의 텍스트가 저장되므로, 원본 기사가 변경되어도 저장된 기사가 남아있다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;단점-1&#34;&gt;단점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;추가 &lt;strong&gt;코멘트를 달 수 없다&lt;/strong&gt;.
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;태그&lt;/strong&gt;를 달 순 있지만, 개인적인 견해나 요약을 달기에는 부적절 해보인다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;저장한 &lt;strong&gt;내용이 사라질 수도 있다&lt;/strong&gt;.
+&lt;ul&gt;
+&lt;li&gt;다른 서비스로 이주한 분의 글(&lt;a class=&#34;link&#34; href=&#34;https://www.canda.blog/reader-by-readwise/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;새로운 읽는 경험: Reader by Readwise&lt;/a&gt;)을 봤는데,&lt;br&gt;
+유료로 멤버십을 구독했음에도 영구저장이 기능이 제대로 동작하지 않는다고 한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;강력한 검색&lt;/em&gt;을 &lt;strong&gt;지원하지 못한다&lt;/strong&gt;.
+&lt;ul&gt;
+&lt;li&gt;이것도 위 단점과 마찬가지로 글에서 알게된 단점인데, 검색시 검색한 키워드와 관련없는 콘텐츠들이 검색된다고 한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;instapaper-httpswwwinstapapercom&#34;&gt;Instapaper &lt;a class=&#34;link&#34; href=&#34;https://www.instapaper.com/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;참고한 리뷰&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://m.blog.naver.com/PostView.naver?isHttpsRedirect=true&amp;amp;blogId=2icct&amp;amp;logNo=220992519547&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;[앱 리뷰 / iOS&amp;amp;Android] 깔끔하게 뉴스 기사 모아보기, &amp;lsquo;Instapaper&amp;rsquo;&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;장점-2&#34;&gt;장점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;멀티 플랫폼&lt;/strong&gt;을 지원한다.
+&lt;ul&gt;
+&lt;li&gt;Web, iOS, Android를 지원한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;메모&lt;/strong&gt;가 가능하다.&lt;/li&gt;
+&lt;li&gt;메모, 하이라이트를 &lt;strong&gt;한 곳에서 모아볼 수 있다&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;기사를 Instapaper에서 제공하는 여러 폰트로 볼 수 있다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;단점-2&#34;&gt;단점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;태그를 지원하지 않는다&lt;/strong&gt;.
+&lt;ul&gt;
+&lt;li&gt;폴더만을 이용해서 구분해야 한다. 즉, 두 가지 이상의 기준으로 문서를 분리할 수 없다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;evernote-httpsevernotecomintlko&#34;&gt;Evernote &lt;a class=&#34;link&#34; href=&#34;https://evernote.com/intl/ko&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;참고한 리뷰&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://jayouda.tistory.com/entry/%EB%85%B8%EC%85%98NOTION-vs-%EC%97%90%EB%B2%84%EB%85%B8%ED%8A%B8Evernote-%EB%B9%84%EA%B5%90-%EB%85%B8%ED%8A%B8-%EC%95%B1%EC%97%85%EB%AC%B4-%EC%83%9D%EC%82%B0%EC%84%B1-%ED%96%A5%EC%83%81&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;노션(NOTION) vs 에버노트(Evernote) 비교 노트 앱(업무 생산성 향상)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;장점-3&#34;&gt;장점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;초보자&lt;/strong&gt;가 사용하기 &lt;strong&gt;편리&lt;/strong&gt;하다.
+&lt;ul&gt;
+&lt;li&gt;노트 -&amp;gt; 노트북 -&amp;gt; 스택의 구조로 관리한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;단점-3&#34;&gt;단점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;메모 이동이 불편&lt;/strong&gt;하다.
+&lt;ul&gt;
+&lt;li&gt;여러 메모를 한 번에 이동하는게 되지 않아, 하나 하나 이동해야 한다. &lt;a class=&#34;link&#34; href=&#34;https://jayouda.tistory.com/entry/%EB%85%B8%EC%85%98NOTION-vs-%EC%97%90%EB%B2%84%EB%85%B8%ED%8A%B8Evernote-%EB%B9%84%EA%B5%90-%EB%85%B8%ED%8A%B8-%EC%95%B1%EC%97%85%EB%AC%B4-%EC%83%9D%EC%82%B0%EC%84%B1-%ED%96%A5%EC%83%81&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;#&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;여러 환경&lt;/strong&gt;에서 사용하려면 &lt;strong&gt;추가 요금&lt;/strong&gt;을 내야 한다.
+&lt;ul&gt;
+&lt;li&gt;무료로는 두 개의 기기에서만 사용 가능하다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;feedly-httpsfeedlycomi&#34;&gt;Feedly &lt;a class=&#34;link&#34; href=&#34;https://feedly.com/i&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;참고한 리뷰&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://kingpinstudio.net/feedly-%ED%94%BC%EB%93%A4%EB%A6%AC/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Feedly 후기. 얼마 남지 않은 RSS 리더 앱. 역시 괜히 살아남은 게 아닌&amp;hellip;&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;장점-4&#34;&gt;장점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;기본적인 &lt;strong&gt;기능 및 가독성&lt;/strong&gt;이 좋다&lt;/li&gt;
+&lt;li&gt;RSS를 사용하시려면 &lt;strong&gt;거의 없는 선택지&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;RSS 자체가 많이 사장되다 보니 경쟁자가 많지 않다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;단점-4&#34;&gt;단점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;내가 원하는 문서를 추가할 순 없다.
+&lt;ul&gt;
+&lt;li&gt;특정 토픽이나 주제를 Follow 하는 형태이다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;RSS 자체를 &lt;strong&gt;요즘 잘 쓰지 않는다&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;RSS 자체의 &lt;strong&gt;한계점이 많다&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;유료 서비스가 &lt;strong&gt;비싸다&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;월 8달러 꼴이다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;별도 &lt;strong&gt;메모가 안되는 것 같다?&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;한 번 기사를 봤는데 별도로 메모나 하이라이팅 하는 부분이 없었던 것으로 기억한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;liner-httpsgetlinercomko&#34;&gt;Liner &lt;a class=&#34;link&#34; href=&#34;https://getliner.com/ko&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;h3 id=&#34;장점-5&#34;&gt;장점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;멀티 플랫폼&lt;/strong&gt;을 지원한다.&lt;/li&gt;
+&lt;li&gt;GPT-4를 이용해 &lt;strong&gt;AI가 전문을 요약&lt;/strong&gt;해준다.&lt;/li&gt;
+&lt;li&gt;뉴스 뿐만 아니라 유튜브 등 다양한 곳에서 사용 가능하다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;단점-5&#34;&gt;단점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;추가 &lt;strong&gt;코멘트를 달 수 없다&lt;/strong&gt;.
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;태그&lt;/strong&gt;를 달 순 있지만, 개인적인 견해나 요약을 달기에는 부적절 해보인다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;직접-필기-아이패드-good-note-이용-httpswww457deepcom56qytoxontzojeyoijrzxl3b3jkx3r5cguio3m6mzoiywxsijt9bmodeviewidx6412760tboard&#34;&gt;직접 필기 (아이패드 Good Note 이용) &lt;a class=&#34;link&#34; href=&#34;https://www.457deep.com/56/?q=YToxOntzOjEyOiJrZXl3b3JkX3R5cGUiO3M6MzoiYWxsIjt9&amp;amp;bmode=view&amp;amp;idx=6412760&amp;amp;t=board&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;h3 id=&#34;장점-6&#34;&gt;장점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;보기 깔끔하다.&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;직접 &lt;strong&gt;원하는 부분을 강조&lt;/strong&gt;할 수 있고, &lt;strong&gt;필기&lt;/strong&gt;도 가능하다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;단점-6&#34;&gt;단점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;아무래도 &lt;strong&gt;귀찮다&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;멀티 플랫폼이 아니다.&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;PC에서 보려면 일일히 PDF로 만들어서 iCloud로 동기화 해야한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;google-keep-httpskeepgooglecom&#34;&gt;Google Keep &lt;a class=&#34;link&#34; href=&#34;https://keep.google.com/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;참고한 리뷰&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://kfact.tistory.com/309&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;블로그 포스팅에 유용한 어플 추천(Keep, Pocket, Over)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;장점-7&#34;&gt;장점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;메모&lt;/strong&gt;를 달 수있다.
+&lt;ul&gt;
+&lt;li&gt;그리고 이를 &lt;strong&gt;검색&lt;/strong&gt;할 수 있다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;추 후 알려주는 &lt;strong&gt;알림 기능&lt;/strong&gt;을 사용할 수 있다.&lt;/li&gt;
+&lt;li&gt;사진 내에서 글자를 추출해주는 **OCR 기능(Grab Image Text)**이 있다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;단점-7&#34;&gt;단점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;태그(라벨)를 하나&lt;/strong&gt; 밖에 못 단다.&lt;/li&gt;
+&lt;li&gt;글을 저장할 순 없다.
+&lt;ul&gt;
+&lt;li&gt;링크 거는것만 가능하고, &lt;strong&gt;자동으로 글을 저장해주진 않는것&lt;/strong&gt;으로 보인다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;omnivore&#34;&gt;Omnivore&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;참고한 리뷰&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://s-ji.tistory.com/20&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;옵시디언 스크랩 방법 - 내가 써본 무료앱 중 가장 편한 방법&amp;hellip;.&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;장점-8&#34;&gt;장점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;멀티 플랫폼&lt;/strong&gt;을 지원한다.
+&lt;ul&gt;
+&lt;li&gt;PC(브라우저 확장앱, Obsidian 플러그인), 모바일(iOS, Android)을 지원한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;무료&lt;/strong&gt;이다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;단점-8&#34;&gt;단점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;기사 &lt;strong&gt;저장이 안된다&lt;/strong&gt;?
+&lt;ul&gt;
+&lt;li&gt;테스트로 네이버 뉴스 기사를 Add Link 했는데 에러가 발생한다.&lt;/li&gt;
+&lt;li&gt;근데 로그인도 안했는데 기사 저장하는 페이지가 왜 나오는거지?&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;가입이 안된다!&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;어떤 username을 입력하던 &lt;strong&gt;This username is not available&lt;/strong&gt;라면서 가입이 이뤄지지 않는다.&lt;/li&gt;
+&lt;li&gt;콘솔로 확인해보니 graphQL을 통해 username 중복을 체크하는듯 한데, CORS 에러로 이 절차가 정상적으로 이뤄지지 않는 것 같다.&lt;br&gt;
+&lt;img src=&#34;https://cloudsoswift.github.io/post/self-development/230709/20230709_065008.png&#34;
+	
+	
+	
+	loading=&#34;lazy&#34;
+	
+		alt=&#34;Error_Pic&#34;
+	
+	
+&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;readwise-httpsreadwiseio&#34;&gt;Readwise &lt;a class=&#34;link&#34; href=&#34;https://readwise.io/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;참고한 리뷰&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://blog.naver.com/millie-kasten/222918204997&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;생산성도구 리뷰 #1: Readwise 리드와이즈&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;장점-9&#34;&gt;장점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Notion, Roam, Evernote, Obsidian 등의 서비스로 &lt;strong&gt;하이라이트 한 내용을 내보낼 수 있다&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;이메일&lt;/strong&gt;을 통해 &lt;strong&gt;하이라이트 한 부분을 랜덤으로 보내주는 기능&lt;/strong&gt;이 있다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;단점-9&#34;&gt;단점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;유료&lt;/strong&gt;다
+&lt;ul&gt;
+&lt;li&gt;30일 체험 이후 월 $7.99를 결제해야 한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;reader-by-readwise-httpsreadwiseioread&#34;&gt;Reader by Readwise &lt;a class=&#34;link&#34; href=&#34;https://readwise.io/read&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;참고한 리뷰&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.canda.blog/reader-by-readwise/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;새로운 읽는 경험: Reader by Readwise&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;장점-10&#34;&gt;장점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;UI가 깔끔&lt;/strong&gt;하다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;검색(Full-context search)&lt;/strong&gt; 기능이 &lt;strong&gt;강력&lt;/strong&gt;하다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;태그&lt;/strong&gt;, &lt;strong&gt;노트&lt;/strong&gt; 모두 &lt;strong&gt;지원&lt;/strong&gt;한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;단점-10&#34;&gt;단점&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;노트 기준&lt;/strong&gt;으론 &lt;strong&gt;검색이 안 된다&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;유료&lt;/strong&gt;다.
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Readwise 구독&lt;/strong&gt;이 필요하다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;조건&#34;&gt;조건&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;어플&lt;/strong&gt;로 서비스 되고 있어야 한다.
+&lt;ul&gt;
+&lt;li&gt;물론 &lt;strong&gt;PC에서도 사용 가능&lt;/strong&gt;하여야 하며, 따라서 &lt;strong&gt;멀티 플랫폼으로 동기화&lt;/strong&gt;가 되어야 한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;요약을 달기 위해 추가적인 &lt;strong&gt;코멘트를 달 수 있는 기능&lt;/strong&gt;이 있어야 한다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;기사 내용을 저장&lt;/strong&gt;할 수 있어야 한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;후보군&#34;&gt;후보군&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;크게 위의 두 조건을 만족하는 서비스는 아래와 같았다.
+&lt;ul&gt;
+&lt;li&gt;Notion&lt;/li&gt;
+&lt;li&gt;Instapaper&lt;/li&gt;
+&lt;li&gt;Evernote&lt;/li&gt;
+&lt;li&gt;Readwise&lt;/li&gt;
+&lt;li&gt;Omnivore&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;그래서-뭐-쓸건데&#34;&gt;그래서 뭐 쓸건데?&lt;/h1&gt;
+&lt;p&gt;솔직히 이렇게 많은 RIL 서비스들이 있는줄 몰랐고, 다들 장,단점이 있어서 고르기 많이 힘들었다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;특히 한글로 정리되어 있는 글이 많이 없어서 더 힘들었던 것도 있다.&lt;br&gt;
+(리뷰 올려주신 분들 정말 감사합니다&amp;hellip; (_ _))&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;좀 믿을만한(운영 주체가 대기업인) 서비스의 경우, &lt;em&gt;한 두군데씩 나사빠진 부분&lt;/em&gt;(&lt;em&gt;노트가 불가능하다거나, 사용이 불편하다거나&amp;hellip;&lt;/em&gt;)이 있었고,&lt;br&gt;
+나한테 맞고 쓸만해보이는 서비스의 경우 신생이거나 점유율이 높지않아&lt;br&gt;
+&lt;em&gt;데이터 보관&lt;/em&gt;에 대한 &lt;strong&gt;신뢰성&lt;/strong&gt;이 떨어져서 고민이 되었다.&lt;/p&gt;
+&lt;h2 id=&#34;결론&#34;&gt;결론&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;데이터 저장이 믿을만한 &lt;strong&gt;Notion&lt;/strong&gt; 또는 &lt;strong&gt;Obsidian&lt;/strong&gt;을 사용하기로 했다.
+&lt;ul&gt;
+&lt;li&gt;그 중에서도 Local 단에서 데이터 저장이 가능한 &lt;strong&gt;Obsidian&lt;/strong&gt;을 Main으로 사용할 것 같다.&lt;/li&gt;
+&lt;li&gt;대신 기사 스크랩에 있어 효율성을 높이기 위해 &lt;strong&gt;Readwise&lt;/strong&gt; 또는 &lt;strong&gt;Omnivore&lt;/strong&gt;를 사용할 것 같다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Omnivore&lt;/strong&gt;를 시도해보고, 원활한 작동이 이뤄지지 않는다면 &lt;strong&gt;Readwise&lt;/strong&gt;가 제공하는 30일 free trial을 시도해보고 결제할지 말지 고민할 듯 싶다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;ps. 이 문서는 많이 정리가 부족하다고 느껴져서 추후에 Omnivore, Readwise를 시도해보고 업데이트 할 예정이다.&lt;/p&gt;
+</description>
+        </item>
+        <item>
         <title>[Javascript] 순환 참조 (Circular Import)</title>
         <link>https://cloudsoswift.github.io/post/develop/230219/circular_import/</link>
         <pubDate>Sun, 19 Feb 2023 11:22:33 +0900</pubDate>
@@ -138,11 +535,11 @@
         </item>
         <item>
         <title>블로그 시작</title>
-        <link>https://cloudsoswift.github.io/post/etc/start/</link>
+        <link>https://cloudsoswift.github.io/post/etc/230124/2023-01-24-start/</link>
         <pubDate>Tue, 24 Jan 2023 08:35:50 +0900</pubDate>
         
-        <guid>https://cloudsoswift.github.io/post/etc/start/</guid>
-        <description>&lt;img src="https://cloudsoswift.github.io/post/etc/2022-01-28-first-init-hugo.png" alt="Featured image of post 블로그 시작" /&gt;&lt;p&gt;블로그를 시작하면서 마주치는 선택지와 내가 선택한 것들을 정리해보고자 한다.&lt;/p&gt;
+        <guid>https://cloudsoswift.github.io/post/etc/230124/2023-01-24-start/</guid>
+        <description>&lt;img src="https://cloudsoswift.github.io/post/etc/230124/2022-01-28-first-init-hugo.png" alt="Featured image of post 블로그 시작" /&gt;&lt;p&gt;블로그를 시작하면서 마주치는 선택지와 내가 선택한 것들을 정리해보고자 한다.&lt;/p&gt;
 &lt;h2 id=&#34;플랫폼&#34;&gt;플랫폼&lt;/h2&gt;
 &lt;h3 id=&#34;기존의-blog-서비스--tistory-naver-velog-등-&#34;&gt;기존의 blog 서비스 ( Tistory, Naver, velog 등&amp;hellip; )&lt;/h3&gt;
 &lt;ul&gt;
@@ -212,8 +609,8 @@
 &lt;h3 id=&#34;테마-추가&#34;&gt;테마 추가&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://themes.gohugo.io/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Hugo Themes&lt;/a&gt;에 들어가서 원하는 테마를 찾아본다.
-- 본인의 경우, &lt;a class=&#34;link&#34; href=&#34;https://github.com/CaiJimmy/hugo-theme-stack&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Hugo Themes&lt;/a&gt;에 들어가서 원하는 테마를 찾아본다.&lt;/li&gt;
+&lt;li&gt;본인의 경우, &lt;a class=&#34;link&#34; href=&#34;https://github.com/CaiJimmy/hugo-theme-stack&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
     &gt;Hugo Theme Stack&lt;/a&gt; 이라는 테마를 선택함.&lt;/li&gt;
 &lt;li&gt;웬만하면 Downloads 링크가 Github Repository로 연결되어 있을 것인데, 해당 Repo를 Site 폴더의 submodule로 추가해준다.&lt;!-- raw HTML omitted --&gt;
 &lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;git init
@@ -266,10 +663,10 @@ git submodule add -b master [실제 Github Pages에 올릴 Repo 주소] public
         </item>
         <item>
         <title>첫 글</title>
-        <link>https://cloudsoswift.github.io/post/etc/first-init/</link>
+        <link>https://cloudsoswift.github.io/post/etc/2023-01-23-first-init/</link>
         <pubDate>Mon, 23 Jan 2023 01:32:17 +0900</pubDate>
         
-        <guid>https://cloudsoswift.github.io/post/etc/first-init/</guid>
+        <guid>https://cloudsoswift.github.io/post/etc/2023-01-23-first-init/</guid>
         <description>&lt;h1 id=&#34;블로그에-쓰는-첫-글이다&#34;&gt;블로그에 쓰는 첫 글이다.&lt;/h1&gt;
 &lt;ol start=&#34;2023&#34;&gt;
 &lt;li&gt;

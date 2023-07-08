@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
-        <title>개발 on Blog of cloudsoswift</title>
+        <title>개발 on 내자가추 백절불굴</title>
         <link>https://cloudsoswift.github.io/tags/%EA%B0%9C%EB%B0%9C/</link>
-        <description>Recent content in 개발 on Blog of cloudsoswift</description>
+        <description>Recent content in 개발 on 내자가추 백절불굴</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>ko</language>
         <lastBuildDate>Sun, 19 Feb 2023 11:22:33 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/tags/%EA%B0%9C%EB%B0%9C/index.xml" rel="self" type="application/rss+xml" /><item>
@@ -138,10 +138,10 @@
         </item>
         <item>
         <title>첫 글</title>
-        <link>https://cloudsoswift.github.io/post/etc/first-init/</link>
+        <link>https://cloudsoswift.github.io/post/etc/2023-01-23-first-init/</link>
         <pubDate>Mon, 23 Jan 2023 01:32:17 +0900</pubDate>
         
-        <guid>https://cloudsoswift.github.io/post/etc/first-init/</guid>
+        <guid>https://cloudsoswift.github.io/post/etc/2023-01-23-first-init/</guid>
         <description>&lt;h1 id=&#34;블로그에-쓰는-첫-글이다&#34;&gt;블로그에 쓰는 첫 글이다.&lt;/h1&gt;
 &lt;ol start=&#34;2023&#34;&gt;
 &lt;li&gt;

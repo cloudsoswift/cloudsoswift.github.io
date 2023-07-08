@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
-        <title>etc on Blog of cloudsoswift</title>
+        <title>etc on 내자가추 백절불굴</title>
         <link>https://cloudsoswift.github.io/tags/etc/</link>
-        <description>Recent content in etc on Blog of cloudsoswift</description>
+        <description>Recent content in etc on 내자가추 백절불굴</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>ko</language>
         <lastBuildDate>Tue, 24 Jan 2023 08:35:50 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/tags/etc/index.xml" rel="self" type="application/rss+xml" /><item>
         <title>블로그 시작</title>
-        <link>https://cloudsoswift.github.io/post/etc/start/</link>
+        <link>https://cloudsoswift.github.io/post/etc/230124/2023-01-24-start/</link>
         <pubDate>Tue, 24 Jan 2023 08:35:50 +0900</pubDate>
         
-        <guid>https://cloudsoswift.github.io/post/etc/start/</guid>
-        <description>&lt;img src="https://cloudsoswift.github.io/post/etc/2022-01-28-first-init-hugo.png" alt="Featured image of post 블로그 시작" /&gt;&lt;p&gt;블로그를 시작하면서 마주치는 선택지와 내가 선택한 것들을 정리해보고자 한다.&lt;/p&gt;
+        <guid>https://cloudsoswift.github.io/post/etc/230124/2023-01-24-start/</guid>
+        <description>&lt;img src="https://cloudsoswift.github.io/post/etc/230124/2022-01-28-first-init-hugo.png" alt="Featured image of post 블로그 시작" /&gt;&lt;p&gt;블로그를 시작하면서 마주치는 선택지와 내가 선택한 것들을 정리해보고자 한다.&lt;/p&gt;
 &lt;h2 id=&#34;플랫폼&#34;&gt;플랫폼&lt;/h2&gt;
 &lt;h3 id=&#34;기존의-blog-서비스--tistory-naver-velog-등-&#34;&gt;기존의 blog 서비스 ( Tistory, Naver, velog 등&amp;hellip; )&lt;/h3&gt;
 &lt;ul&gt;
@@ -82,8 +82,8 @@
 &lt;h3 id=&#34;테마-추가&#34;&gt;테마 추가&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://themes.gohugo.io/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Hugo Themes&lt;/a&gt;에 들어가서 원하는 테마를 찾아본다.
-- 본인의 경우, &lt;a class=&#34;link&#34; href=&#34;https://github.com/CaiJimmy/hugo-theme-stack&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;Hugo Themes&lt;/a&gt;에 들어가서 원하는 테마를 찾아본다.&lt;/li&gt;
+&lt;li&gt;본인의 경우, &lt;a class=&#34;link&#34; href=&#34;https://github.com/CaiJimmy/hugo-theme-stack&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
     &gt;Hugo Theme Stack&lt;/a&gt; 이라는 테마를 선택함.&lt;/li&gt;
 &lt;li&gt;웬만하면 Downloads 링크가 Github Repository로 연결되어 있을 것인데, 해당 Repo를 Site 폴더의 submodule로 추가해준다.&lt;!-- raw HTML omitted --&gt;
 &lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;git init
@@ -136,10 +136,10 @@ git submodule add -b master [실제 Github Pages에 올릴 Repo 주소] public
         </item>
         <item>
         <title>첫 글</title>
-        <link>https://cloudsoswift.github.io/post/etc/first-init/</link>
+        <link>https://cloudsoswift.github.io/post/etc/2023-01-23-first-init/</link>
         <pubDate>Mon, 23 Jan 2023 01:32:17 +0900</pubDate>
         
-        <guid>https://cloudsoswift.github.io/post/etc/first-init/</guid>
+        <guid>https://cloudsoswift.github.io/post/etc/2023-01-23-first-init/</guid>
         <description>&lt;h1 id=&#34;블로그에-쓰는-첫-글이다&#34;&gt;블로그에 쓰는 첫 글이다.&lt;/h1&gt;
 &lt;ol start=&#34;2023&#34;&gt;
 &lt;li&gt;
