@@ -63,7 +63,7 @@
 &lt;li&gt;소위 홍대병이라고 하는 힙스터 기질이 발동해서(&amp;hellip;.)&lt;/li&gt;
 &lt;li&gt;+ &lt;a class=&#34;link&#34; href=&#34;https://themes.gohugo.io/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
     &gt;Hugo Themes&lt;/a&gt;에서 Theme를 찾아보는데, 맘에 드는 &lt;a class=&#34;link&#34; href=&#34;https://themes.gohugo.io/themes/hugo-theme-stack/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Theme&lt;/a&gt;를 발견했다. &lt;!-- raw HTML omitted --&gt;(반응형도 잘 되길래 더 꽂혀버림&amp;hellip;)&lt;/li&gt;
+    &gt;Theme&lt;/a&gt;를 발견했다. &lt;br/&gt;(반응형도 잘 되길래 더 꽂혀버림&amp;hellip;)&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 id=&#34;hugo-설치-및-설정&#34;&gt;Hugo 설치 및 설정&lt;/h2&gt;
 &lt;ul&gt;
@@ -85,7 +85,7 @@
     &gt;Hugo Themes&lt;/a&gt;에 들어가서 원하는 테마를 찾아본다.&lt;/li&gt;
 &lt;li&gt;본인의 경우, &lt;a class=&#34;link&#34; href=&#34;https://github.com/CaiJimmy/hugo-theme-stack&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
     &gt;Hugo Theme Stack&lt;/a&gt; 이라는 테마를 선택함.&lt;/li&gt;
-&lt;li&gt;웬만하면 Downloads 링크가 Github Repository로 연결되어 있을 것인데, 해당 Repo를 Site 폴더의 submodule로 추가해준다.&lt;!-- raw HTML omitted --&gt;
+&lt;li&gt;웬만하면 Downloads 링크가 Github Repository로 연결되어 있을 것인데, 해당 Repo를 Site 폴더의 submodule로 추가해준다.&lt;br&gt;
 &lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;git init
 git submodule add [theme repo 주소] themes/[테마 이름] 
 &lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
