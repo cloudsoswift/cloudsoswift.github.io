@@ -1,35 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-    <channel>
-        <title>Categories on 내자가추 백절불굴</title>
-        <link>https://cloudsoswift.github.io/categories/</link>
-        <description>Recent content in Categories on 내자가추 백절불굴</description>
-        <generator>Hugo -- gohugo.io</generator>
-        <language>ko</language>
-        <lastBuildDate>Fri, 04 Aug 2023 05:16:01 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/categories/index.xml" rel="self" type="application/rss+xml" /><item>
-        <title>develop</title>
-        <link>https://cloudsoswift.github.io/categories/develop/</link>
-        <pubDate>Fri, 04 Aug 2023 05:16:01 +0900</pubDate>
-        
-        <guid>https://cloudsoswift.github.io/categories/develop/</guid>
-        <description></description>
-        </item>
-        <item>
-        <title>self-development</title>
-        <link>https://cloudsoswift.github.io/categories/self-development/</link>
-        <pubDate>Sun, 09 Jul 2023 03:07:19 +0900</pubDate>
-        
-        <guid>https://cloudsoswift.github.io/categories/self-development/</guid>
-        <description></description>
-        </item>
-        <item>
-        <title>etc</title>
-        <link>https://cloudsoswift.github.io/categories/etc/</link>
-        <pubDate>Tue, 24 Jan 2023 08:35:50 +0900</pubDate>
-        
-        <guid>https://cloudsoswift.github.io/categories/etc/</guid>
-        <description></description>
-        </item>
-        
-    </channel>
+  <channel>
+    <title>Categories on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/categories/</link>
+    <description>오늘도 개발을 한다. (Categories)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Fri, 04 Aug 2023 05:16:01 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+  </channel>
 </rss>

@@ -1,93 +1,152 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-    <channel>
-        <title>nodejs on 내자가추 백절불굴</title>
-        <link>https://cloudsoswift.github.io/tags/nodejs/</link>
-        <description>Recent content in nodejs on 내자가추 백절불굴</description>
-        <generator>Hugo -- gohugo.io</generator>
-        <language>ko</language>
-        <lastBuildDate>Fri, 04 Aug 2023 05:16:01 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/tags/nodejs/index.xml" rel="self" type="application/rss+xml" /><item>
-        <title>Node.js 스터디 1주차 - Node.js의 Thread에 대하여</title>
-        <link>https://cloudsoswift.github.io/post/develop/230804/about-thread-of-node-js/</link>
-        <pubDate>Fri, 04 Aug 2023 05:16:01 +0900</pubDate>
-        
-        <guid>https://cloudsoswift.github.io/post/develop/230804/about-thread-of-node-js/</guid>
-        <description>&lt;img src="https://cloudsoswift.github.io/post/develop/230804/thumbnail.png" alt="Featured image of post Node.js 스터디 1주차 - Node.js의 Thread에 대하여" /&gt;&lt;h1 id=&#34;발단&#34;&gt;발단&lt;/h1&gt;
-&lt;ul&gt;
+  <channel>
+    <title>nodejs on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/nodejs/</link>
+    <description>오늘도 개발을 한다. (nodejs)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Fri, 04 Aug 2023 05:16:01 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/nodejs/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Node.js 스터디 1주차 - Node.js의 Thread에 대하여</title>
+      <link>https://cloudsoswift.github.io/post/develop/230804/about-thread-of-node-js/</link>
+      <pubDate>Fri, 04 Aug 2023 05:16:01 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/230804/about-thread-of-node-js/</guid>
+      <description>&lt;h1 id=&#34;발단&#34; &gt;발단
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%9c%eb%8b%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
 &lt;li&gt;Node.js의 경우 Multi-Thread이지만 하나의 Thread만 유저가 사용가능하게 하고, 나머지는 내부적으로 사용&lt;/li&gt;
 &lt;li&gt;최근에는 worker_thread와 같은 기능으로 유저도 Multi-Thread 환경에서 개발할 수 있도록 하는것으로 알고있음.&lt;/li&gt;
 &lt;li&gt;여기서 Node.js의 Thread는 어떻게 구성되어 있고, 어떻게 작동하는지, 왜 하나의 Thread만 유저가 사용할 수 있게 한건지, worker_thread 기능은 또 뭔지 궁금해졌음.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3 id=&#34;궁금한-점&#34;&gt;궁금한 점&lt;/h3&gt;
-&lt;ol&gt;
+&lt;h2 id=&#34;궁금한-점&#34; &gt;궁금한 점
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b6%81%ea%b8%88%ed%95%9c-%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ol&gt;
 &lt;li&gt;Node.js의 &lt;strong&gt;Thread 구조&lt;/strong&gt;는 어떻게 될 까?&lt;/li&gt;
 &lt;li&gt;Node.js의 &lt;strong&gt;Thread는 어떻게 작동&lt;/strong&gt;할까?&lt;/li&gt;
 &lt;li&gt;왜 Node.js는 하나의 Thread만 유저가 사용할 수 있게 한걸까?(&lt;strong&gt;왜 싱글스레드 모델을 선택&lt;/strong&gt;했을까?)&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;worker_threads&lt;/strong&gt; 기능은 무엇일까?&lt;/li&gt;
 &lt;/ol&gt;
-&lt;h1 id=&#34;진행&#34;&gt;진행&lt;/h1&gt;
-&lt;h2 id=&#34;1-nodejs의-thread-구조는-어떻게-될까&#34;&gt;1. Node.js의 Thread 구조는 어떻게 될까?&lt;/h2&gt;
-&lt;hr&gt;
+&lt;h1 id=&#34;진행&#34; &gt;진행
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a7%84%ed%96%89&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;h2 id=&#34;1-nodejs의-thread-구조는-어떻게-될까&#34; &gt;1. Node.js의 Thread 구조는 어떻게 될까?
+&lt;span&gt;
+    &lt;a href=&#34;#1-nodejs%ec%9d%98-thread-%ea%b5%ac%ec%a1%b0%eb%8a%94-%ec%96%b4%eb%96%bb%ea%b2%8c-%eb%90%a0%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;hr&gt;
 &lt;p&gt;Node.js는 Event-Driven Architecture를 채용해 &lt;mark style=&#34;background: #FFF3A3A6;&#34;&gt;(1) 오케스트레이션을 위한 Event Loop&lt;/mark&gt;와 &lt;mark style=&#34;background: #FFF3A3A6;&#34;&gt;(2)고비용 작업을 위한 Worker Pool&lt;/mark&gt;을 포함하고 있습니다.&lt;/p&gt;
-&lt;h3 id=&#34;event-loop&#34;&gt;Event Loop&lt;/h3&gt;
-&lt;p&gt;main loop, main thread, event thread 라고도 부릅니다.&lt;br&gt;
+&lt;h3 id=&#34;event-loop&#34; &gt;Event Loop
+&lt;span&gt;
+    &lt;a href=&#34;#event-loop&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;main loop, main thread, event thread 라고도 부릅니다.&lt;br&gt;
 간단히 말하면 Event에 등록된 Javascript callback 함수를 실행하고, Non-Blocking 비동기 요청(ex. 네트워크 I/O) 역시 처리하는 스레드 입니다.&lt;br&gt;
 Node.js 애플리케이션이 시작되면 먼저 초기화 phase를 완료하고, module들을 require하고 Event에 대한 callback들을 등록합니다.&lt;br&gt;
 그 다음 Node.js 애플리케이션은 Event Loop에 진입해 들어오는 Client 요청들에 대해 그에 해당하는 callback들을 실행시키므로써 응답합니다. 이러한 callback들은 동기적으로 실행되며, 완료된 후에도 계속 처리하기 위해 비동기 요청들을 등록할 수도 있습니다.&lt;/p&gt;
-&lt;h3 id=&#34;worker-poolthread-pool&#34;&gt;Worker Pool(Thread Pool)&lt;/h3&gt;
-&lt;p&gt;Task를 처리하는 Worker로 이루어진 Pool 입니다.&lt;br&gt;
-Node.js의 Worker Pool은 &lt;a class=&#34;link&#34; href=&#34;https://docs.libuv.org/en/v1.x/threadpool.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;libuv&lt;/a&gt;의 구현체로, libuv는 일반적인 Task Submission API(&lt;code&gt;uv_queue_work&lt;/code&gt;)를 노출하고 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;worker-poolthread-pool&#34; &gt;Worker Pool(Thread Pool)
+&lt;span&gt;
+    &lt;a href=&#34;#worker-poolthread-pool&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;Task를 처리하는 Worker로 이루어진 Pool 입니다.&lt;br&gt;
+Node.js의 Worker Pool은 &lt;a href=&#34;https://docs.libuv.org/en/v1.x/threadpool.html&#34;&gt;libuv&lt;/a&gt;의 구현체로, libuv는 일반적인 Task Submission API(&lt;code&gt;uv_queue_work&lt;/code&gt;)를 노출하고 있습니다.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;int uv_queue_work(*loop, *req, work_cb, after_work_cb)&lt;/code&gt; : threadpool의 스레드에서,  &lt;code&gt;work_cb&lt;/code&gt;를 실행하는 작업 request를 initialize 합니다. &lt;code&gt;work_cb&lt;/code&gt;가 완료되고 나면, loop thread에서 &lt;code&gt;after_work_cb&lt;/code&gt;를 호출합니다.&lt;br&gt;
 Node.js에서는 Worker Pool을 &lt;strong&gt;&amp;ldquo;비싼&amp;rdquo;&lt;/strong&gt; 작업을 처리하기 위해 사용합니다. &lt;strong&gt;&amp;ldquo;비싼&amp;rdquo;&lt;/strong&gt; 작업으로는 OS단에서 non-blocking 버전을 제공하지 않는 I/O 작업(특히 CPU 집약적인 작업)이 있습니다.&lt;br&gt;
 Worker Pool을 사용하는 Node.js Module API는 다음과 같습니다.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h5 id=&#34;io-집약적인-api&#34;&gt;I/O-집약적인 API&lt;/h5&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://nodejs.org/api/dns.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;DNS&lt;/a&gt; : Node.js에서 Name Resolution을 가능케 해주는 Module로, host name의 IP 주소를 조회하는 등의 작업을 수행할 때 사용할 수 있습니다.&lt;br&gt;
+&lt;h5 id=&#34;io-집약적인-api&#34; &gt;I/O-집약적인 API
+&lt;span&gt;
+    &lt;a href=&#34;#io-%ec%a7%91%ec%95%bd%ec%a0%81%ec%9d%b8-api&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ol&gt;
+&lt;li&gt;&lt;a href=&#34;https://nodejs.org/api/dns.html&#34;&gt;DNS&lt;/a&gt; : Node.js에서 Name Resolution을 가능케 해주는 Module로, host name의 IP 주소를 조회하는 등의 작업을 수행할 때 사용할 수 있습니다.&lt;br&gt;
 (조회시 항상 DNS 프로토콜을 사용하는 건 아니고, OS 기능을 이용해 이름 확인을 할 수도 있습니다.)&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://nodejs.org/api/fs.html#fs_threadpool_usage&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;File System&lt;/a&gt; : (&lt;code&gt;fs.FSWatcher()&lt;/code&gt;와 명시적으로 동기 방식인 API를 제외한) 대부분의 File System API가 libuv의 threadpool을 사용합니다.
+&lt;li&gt;&lt;a href=&#34;https://nodejs.org/api/fs.html#fs_threadpool_usage&#34;&gt;File System&lt;/a&gt; : (&lt;code&gt;fs.FSWatcher()&lt;/code&gt;와 명시적으로 동기 방식인 API를 제외한) 대부분의 File System API가 libuv의 threadpool을 사용합니다.
 &lt;ul&gt;
 &lt;li&gt;참고로 libuv이 제공하는 threadpool은 내부적으로 모든 File System 작업과 &lt;code&gt;getaddrinfo&lt;/code&gt;, &lt;code&gt;getnameinfo&lt;/code&gt;와 같은 요청을 실행하는데 사용됩니다.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ol&gt;
-&lt;h5 id=&#34;cpu-집약적인-api&#34;&gt;CPU-집약적인 API&lt;/h5&gt;
-&lt;ol&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://nodejs.org/api/crypto.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Crypto&lt;/a&gt;: Node.js에서 암호화를 위해 사용하는 Module로, 주로 Hashing같은 고비용 작업을 처리하는데에 libuv의 threadpool을 사용합니다.
+&lt;h5 id=&#34;cpu-집약적인-api&#34; &gt;CPU-집약적인 API
+&lt;span&gt;
+    &lt;a href=&#34;#cpu-%ec%a7%91%ec%95%bd%ec%a0%81%ec%9d%b8-api&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ol&gt;
+&lt;li&gt;&lt;a href=&#34;https://nodejs.org/api/crypto.html&#34;&gt;Crypto&lt;/a&gt;: Node.js에서 암호화를 위해 사용하는 Module로, 주로 Hashing같은 고비용 작업을 처리하는데에 libuv의 threadpool을 사용합니다.
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;crypto.pbkdf2()&lt;/code&gt;, &lt;code&gt;crypto.scrypt()&lt;/code&gt;, &lt;code&gt;crypto.randomBytes()&lt;/code&gt;,&lt;br&gt;
 &lt;code&gt;crypto.randomFill()&lt;/code&gt;, &lt;code&gt;crypto.generateKeyPair()&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://nodejs.org/api/zlib.html#zlib_threadpool_usage&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Zlib&lt;/a&gt;: Node.js에서 파일 압축을 위해 사용하는 Module로, 명시적으로 동기적인 몇몇을 제외하면 대부분의 작업이 libuv의 threadpool을 사용합니다.&lt;br&gt;
+&lt;li&gt;&lt;a href=&#34;https://nodejs.org/api/zlib.html#zlib_threadpool_usage&#34;&gt;Zlib&lt;/a&gt;: Node.js에서 파일 압축을 위해 사용하는 Module로, 명시적으로 동기적인 몇몇을 제외하면 대부분의 작업이 libuv의 threadpool을 사용합니다.&lt;br&gt;
 이러한 API들만이 Worker Pool의 task 원천입니다.&lt;br&gt;
-&lt;a class=&#34;link&#34; href=&#34;https://nodejs.org/api/addons.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;C++ add-on&lt;/a&gt;을 사용하는 애플리케이션과 모듈은 다른 task들을 Worker Pool에 submit 할 수 있습니다.&lt;/li&gt;
+&lt;a href=&#34;https://nodejs.org/api/addons.html&#34;&gt;C++ add-on&lt;/a&gt;을 사용하는 애플리케이션과 모듈은 다른 task들을 Worker Pool에 submit 할 수 있습니다.&lt;/li&gt;
 &lt;/ol&gt;
-&lt;h2 id=&#34;2-nodejs의-thread는-어떻게-작동할까&#34;&gt;2. Node.js의 Thread는 어떻게 작동할까?&lt;/h2&gt;
-&lt;hr&gt;
-&lt;h3 id=&#34;api-호출과-task-submit&#34;&gt;API 호출과 task submit&lt;/h3&gt;
-&lt;p&gt;위에서 언급한 API들 중 하나를 Event Loop의 callback 에서 호출한다면, Event Loop는 해당 API에 대한 Node.js C++ bindings에 들어가 task를 submit할 때 약간의 설정 비용(setup cost)를 지불합니다.&lt;br&gt;
+&lt;h2 id=&#34;2-nodejs의-thread는-어떻게-작동할까&#34; &gt;2. Node.js의 Thread는 어떻게 작동할까?
+&lt;span&gt;
+    &lt;a href=&#34;#2-nodejs%ec%9d%98-thread%eb%8a%94-%ec%96%b4%eb%96%bb%ea%b2%8c-%ec%9e%91%eb%8f%99%ed%95%a0%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;hr&gt;
+&lt;h3 id=&#34;api-호출과-task-submit&#34; &gt;API 호출과 task submit
+&lt;span&gt;
+    &lt;a href=&#34;#api-%ed%98%b8%ec%b6%9c%ea%b3%bc-task-submit&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;위에서 언급한 API들 중 하나를 Event Loop의 callback 에서 호출한다면, Event Loop는 해당 API에 대한 Node.js C++ bindings에 들어가 task를 submit할 때 약간의 설정 비용(setup cost)를 지불합니다.&lt;br&gt;
 설정 비용들은 task의 전체 비용에 비해 무시할 수 있는 수준이라 Event Loop는 이를 &lt;code&gt;offloading&lt;/code&gt; 합니다.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;offloading&lt;/code&gt;: 리소스 집약적인 컴퓨팅 작업을 하드웨어 가속기와 같은 별도의 프로세서나 클러스터, 그리드 또는 클라우드와 같은 외부 플랫폼으로 전송하는 것.&lt;br&gt;
 task를 submit할 때, Node.js는 Node.js C++ bindings 내부의 해당 C++ 함수에 대한 Pointer를 제공합니다.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3 id=&#34;nodejs가-다음으로-실행할-code를-정하는-방법&#34;&gt;Node.js가 다음으로 실행할 code를 정하는 방법&lt;/h3&gt;
-&lt;p&gt;Event Loop와 Worker Pool은 각각 대기중인 event, 대기중인 task들 위한 Queue를 추상적으로 유지합니다.&lt;br&gt;
+&lt;h3 id=&#34;nodejs가-다음으로-실행할-code를-정하는-방법&#34; &gt;Node.js가 다음으로 실행할 code를 정하는 방법
+&lt;span&gt;
+    &lt;a href=&#34;#nodejs%ea%b0%80-%eb%8b%a4%ec%9d%8c%ec%9c%bc%eb%a1%9c-%ec%8b%a4%ed%96%89%ed%95%a0-code%eb%a5%bc-%ec%a0%95%ed%95%98%eb%8a%94-%eb%b0%a9%eb%b2%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;Event Loop와 Worker Pool은 각각 대기중인 event, 대기중인 task들 위한 Queue를 추상적으로 유지합니다.&lt;br&gt;
 &lt;strong&gt;추상적&lt;/strong&gt;이라고 말한 이유는, 사실 Event Loop는 queue를 유지하고 있지 않습니다.&lt;br&gt;
 대신 OS에 요청한 file descriptor들의 집합을 갖고 있는데, 이를 통해 OS에 OS별 메커니즘(epoll (linux), kqueue (OSX), event ports (Solaris), IOCP (Windows))을 이용해 모니터링을 요청합니다.&lt;br&gt;
 file descriptor로는 &lt;strong&gt;network socket&lt;/strong&gt;, &lt;strong&gt;감시중인 파일&lt;/strong&gt;들이 있습니다.&lt;br&gt;
 OS가 이들 중 하나 준비되었다고 말하면, Event Loop는 이를 적절한 Event로 변환하고 해당 Event와 관련된 callback을 호출합니다.&lt;br&gt;
 반면 이와 대조적으로 Worker Pool은 실행되어야 하는 Task들에 대한 실제 Queue를 사용합니다. Worker는 queue에서 task를 pop하여 처리한 뒤, task가 완료되면 &lt;em&gt;&amp;ldquo;적어도 하나의 작업이 완료되었음(At least one task is finished)&amp;rdquo;&lt;/em&gt; event를 Event Loop에 발생시킵니다.&lt;/p&gt;
-&lt;h3 id=&#34;개발자가-구현시-중요하게-생각해야-할-점&#34;&gt;개발자가 구현시 중요하게 생각해야 할 점&lt;/h3&gt;
-&lt;p&gt;위에서 언급한 (적은 thread로 많은 client를 처리하는)Node.js의 구조상, thread가 어떤 request 때문에 block될 경우 끼치는 피해가 더 막대하므로 공정한 스케줄링(fair scheduling)을 개발자가 보장할 필요가 있게 됩니다.&lt;br&gt;
+&lt;h3 id=&#34;개발자가-구현시-중요하게-생각해야-할-점&#34; &gt;개발자가 구현시 중요하게 생각해야 할 점
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%9c%eb%b0%9c%ec%9e%90%ea%b0%80-%ea%b5%ac%ed%98%84%ec%8b%9c-%ec%a4%91%ec%9a%94%ed%95%98%ea%b2%8c-%ec%83%9d%ea%b0%81%ed%95%b4%ec%95%bc-%ed%95%a0-%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;위에서 언급한 (적은 thread로 많은 client를 처리하는)Node.js의 구조상, thread가 어떤 request 때문에 block될 경우 끼치는 피해가 더 막대하므로 공정한 스케줄링(fair scheduling)을 개발자가 보장할 필요가 있게 됩니다.&lt;br&gt;
 따라서 개발자는 구현시 requset에 대한 scheduling에 좀 더 신경써야 합니다.&lt;br&gt;
 다시 한 번 말하면, 모든 들어오는 요청과 나가는 응답이 Event Loop를 통과하므로 Event Loop가 한 작업에 대해 너무 오래걸리지 않도록, 즉 &lt;strong&gt;Block&lt;/strong&gt;되지 않도록 Javascript callback들이 빠르게 처리되도록 해야합니다.&lt;br&gt;
 따라서 개발자는 input에 제한을 걸고, input이 너무 긴 작업은 거절하는 것을 고려해야 합니다.&lt;br&gt;
@@ -95,28 +154,45 @@ OS가 이들 중 하나 준비되었다고 말하면, Event Loop는 이를 적�
 &lt;ul&gt;
 &lt;li&gt;사실 뒤에 block을 유발할 수 있는 작업들에 대한 내용이 있는데, 이러한 내용은 공식 문서를 정리하는 것만 해도 길어질 것 같아 추후 따로 글을 작성하도록 하겠습니다.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id=&#34;3-nodejs의-싱글-스레드-모델-선택-이유&#34;&gt;3. Node.js의 싱글-스레드 모델 선택 이유&lt;/h2&gt;
-&lt;hr&gt;
-&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://nodejs.org/en/about&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Node.js 공식문서&lt;/a&gt;에 따르면, Node.js는 &lt;em&gt;(싱글 스레드 모델을 선택하므로써)&lt;/em&gt; &lt;strong&gt;현대의 일반적인 동시성 모델들과 달리&lt;/strong&gt;&lt;mark style=&#34;background: #FFF3A3A6;&#34;&gt; 비효율적이고 사용하기 어려운 &amp;lsquo;스레드-기반 네트워킹&amp;rsquo;&lt;/mark&gt;을 피할 수 있으며, lock이 발생하지 않아 사용자들이 dead-lock의 위험으로 부터 자유로울 수 있게 됐다고 말하고 있습니다.&lt;/p&gt;
+&lt;h2 id=&#34;3-nodejs의-싱글-스레드-모델-선택-이유&#34; &gt;3. Node.js의 싱글-스레드 모델 선택 이유
+&lt;span&gt;
+    &lt;a href=&#34;#3-nodejs%ec%9d%98-%ec%8b%b1%ea%b8%80-%ec%8a%a4%eb%a0%88%eb%93%9c-%eb%aa%a8%eb%8d%b8-%ec%84%a0%ed%83%9d-%ec%9d%b4%ec%9c%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;hr&gt;
+&lt;p&gt;&lt;a href=&#34;https://nodejs.org/en/about&#34;&gt;Node.js 공식문서&lt;/a&gt;에 따르면, Node.js는 &lt;em&gt;(싱글 스레드 모델을 선택하므로써)&lt;/em&gt; &lt;strong&gt;현대의 일반적인 동시성 모델들과 달리&lt;/strong&gt;&lt;mark style=&#34;background: #FFF3A3A6;&#34;&gt; 비효율적이고 사용하기 어려운 &amp;lsquo;스레드-기반 네트워킹&amp;rsquo;&lt;/mark&gt;을 피할 수 있으며, lock이 발생하지 않아 사용자들이 dead-lock의 위험으로 부터 자유로울 수 있게 됐다고 말하고 있습니다.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;Node.js에서는 적은 수의 Thread를 사용하므로써, Thread의 Memory, Context Switching으로 인해 발생하는 공간과 시간 Overhead를 줄일 수 있다고 말합니다.&lt;br&gt;
 그를 통해 시스템에서는 더 많은 시간과 메모리를 클라이언트들에게 사용할 수 있다는 이점을 얻을 수 있습니다.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3 id=&#34;영향-받은-모델&#34;&gt;영향 받은 모델&lt;/h3&gt;
-&lt;p&gt;또한 Node.js의 Event Loop Runtime 구조는 Ruby의 &lt;code&gt;Event Machine&lt;/code&gt;과 Python의 &lt;code&gt;Twisted&lt;/code&gt;로 부터 영향을 받았으며, 유사한 설계를 갖고있다고 말합니다.&lt;/p&gt;
-&lt;h4 id=&#34;event-machine&#34;&gt;Event Machine&lt;/h4&gt;
-&lt;p&gt;Ruby를 위한 Event-Driven IO 및 경량 동시성 라이브러리로, Node.js, libev와 마찬가지로 &lt;strong&gt;&lt;code&gt;Reactor&lt;/code&gt;&lt;/strong&gt; 패턴을 사용해 Event-Driven I/O를 제공합니다.&lt;br&gt;
+&lt;h3 id=&#34;영향-받은-모델&#34; &gt;영향 받은 모델
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%81%ed%96%a5-%eb%b0%9b%ec%9d%80-%eb%aa%a8%eb%8d%b8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;또한 Node.js의 Event Loop Runtime 구조는 Ruby의 &lt;code&gt;Event Machine&lt;/code&gt;과 Python의 &lt;code&gt;Twisted&lt;/code&gt;로 부터 영향을 받았으며, 유사한 설계를 갖고있다고 말합니다.&lt;/p&gt;
+&lt;h4 id=&#34;event-machine&#34; &gt;Event Machine
+&lt;span&gt;
+    &lt;a href=&#34;#event-machine&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;Ruby를 위한 Event-Driven IO 및 경량 동시성 라이브러리로, Node.js, libev와 마찬가지로 &lt;strong&gt;&lt;code&gt;Reactor&lt;/code&gt;&lt;/strong&gt; 패턴을 사용해 Event-Driven I/O를 제공합니다.&lt;br&gt;
 Event Machine은 &amp;lsquo;높은 확장성, 성능, 안정성&amp;rsquo; 그리고 &amp;lsquo;개발자가 애플리케이션의 로직에 집중할 수 있도록 하는 API(스레드 네트워크 프로그래밍의 복잡성을 제거한)&amp;rsquo; 이라는 두 핵심 요구사항을 만족하도록 설계되어 있습니다.&lt;br&gt;
 정리하자면,  &amp;lsquo;&lt;em&gt;Scalable해서 규모를 증감&lt;/em&gt;시킬 수 있으면서, &lt;strong&gt;Thread에 대해 신경쓰지 않고 개발&lt;/strong&gt;할 수 있는 &lt;strong&gt;동시성을 지닌 API&lt;/strong&gt;를 만들도록 돕는 라이브러리&amp;rsquo; 라고 정리할 수 있을 것 같습니다.&lt;/p&gt;
-&lt;h5 id=&#34;reactor-패턴&#34;&gt;&lt;strong&gt;&lt;code&gt;Reactor 패턴&lt;/code&gt;&lt;/strong&gt;&lt;/h5&gt;
-&lt;ul&gt;
+&lt;h5 id=&#34;reactor-패턴&#34; &gt;&lt;strong&gt;&lt;code&gt;Reactor 패턴&lt;/code&gt;&lt;/strong&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#reactor-%ed%8c%a8%ed%84%b4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
 &lt;li&gt;참고 문서
 &lt;ul&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;http://www.dre.vanderbilt.edu/~schmidt/PDF/reactor-siemens.pdf&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Reactor - An Object Behavioral Pattern for Demultiplexing and Dispatching Handles for Synchronous Events&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://en.wikipedia.org/wiki/Reactor_pattern&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Reactor pattern - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.dre.vanderbilt.edu/~schmidt/PDF/reactor-siemens.pdf&#34;&gt;Reactor - An Object Behavioral Pattern for Demultiplexing and Dispatching Handles for Synchronous Events&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Reactor_pattern&#34;&gt;Reactor pattern - Wikipedia&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
@@ -125,8 +201,7 @@ Service Handler는 들어오는 요청을 &lt;strong&gt;역다중화&lt;/strong&
 모든 Reactor 시스템은 정의대로라면 싱글-스레드이지만, 멀티스레드 환경에서도 존재할 수 있습니다.&lt;br&gt;
 애플리케이션 부분 코드를 Reactor 구현과 분리해 코드를 모듈화해 재사용이 가능하다는 장점이 있지만, 제어의 흐름이 역전되어 있어 절차적 패턴(Procedural Pattern)보다 디버깅하기 힘들고 Request Handler 호출이 동기적이라는 점과 Demultiplexer 때문에 최대 동시성이 제한(&lt;em&gt;대칭형 멀티프로세싱 하드웨어에서 특히&lt;/em&gt;) 된다는 한계가 존재합니다.&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;역다중화&lt;/strong&gt; : 물리적 장치의 효율성을 높이기 위해 최소한의 물리적 요소를 사용해 최대한 데이터를 전달하는 &lt;strong&gt;다중화(Multiplex)&lt;/strong&gt; 작업을 거쳐 전달받은 데이터를 다시 합치는 작업. &lt;a class=&#34;link&#34; href=&#34;https://dbehdrhs.tistory.com/98&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;#&lt;/a&gt;
+&lt;li&gt;&lt;strong&gt;역다중화&lt;/strong&gt; : 물리적 장치의 효율성을 높이기 위해 최소한의 물리적 요소를 사용해 최대한 데이터를 전달하는 &lt;strong&gt;다중화(Multiplex)&lt;/strong&gt; 작업을 거쳐 전달받은 데이터를 다시 합치는 작업. &lt;a href=&#34;https://dbehdrhs.tistory.com/98&#34;&gt;#&lt;/a&gt;
 &lt;ul&gt;
 &lt;li&gt;Event Demultiplexer의 경우 &lt;code&gt;Handles&lt;/code&gt;에서 발생하는 이벤트를 Block하며, Blocking 없이 Handle에 대한 작업을 시작할 수 있을 때 반환됩니다.&lt;/li&gt;
 &lt;li&gt;I/O Event에 대한 일반적인 Demultiplexer는 &lt;code&gt;select&lt;/code&gt;라는, UNIX 및 WIN32 OS에서 제공되는 Event Demultiplexing System Call 입니다.
@@ -139,34 +214,37 @@ Service Handler는 들어오는 요청을 &lt;strong&gt;역다중화&lt;/strong&
 &lt;/li&gt;
 &lt;li&gt;참고할만한 글
 &lt;ul&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.linkedin.com/pulse/leveraging-event-multiplexing-even-driven-guillermo-wrba/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Leveraging Event Multiplexing in Even-Driven Architectures | Guillermo Wrba&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://engineering.linecorp.com/ko/blog/do-not-block-the-event-loop-part1&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;비동기 서버에서 이벤트 루프를 블록하면 안 되는 이유 1부 - 멀티플렉싱 기반의 다중 접속 서버로 가기까지 (linecorp.com)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://blog.naver.com/n_cloudplatform/222189669084&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;[네이버클라우드 기술&amp;amp;경험] IO Multip.. : 네이버블로그 (naver.com)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://dbehdrhs.tistory.com/98&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;12장 IO 멀티플렉싱(Multiplexing) (tistory.com)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.geeksforgeeks.org/what-is-a-demultiplexer/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;What is a demultiplexer ? - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.linkedin.com/pulse/leveraging-event-multiplexing-even-driven-guillermo-wrba/&#34;&gt;Leveraging Event Multiplexing in Even-Driven Architectures | Guillermo Wrba&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://engineering.linecorp.com/ko/blog/do-not-block-the-event-loop-part1&#34;&gt;비동기 서버에서 이벤트 루프를 블록하면 안 되는 이유 1부 - 멀티플렉싱 기반의 다중 접속 서버로 가기까지 (linecorp.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.naver.com/n_cloudplatform/222189669084&#34;&gt;[네이버클라우드 기술&amp;amp;경험] IO Multip.. : 네이버블로그 (naver.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dbehdrhs.tistory.com/98&#34;&gt;12장 IO 멀티플렉싱(Multiplexing) (tistory.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/what-is-a-demultiplexer/&#34;&gt;What is a demultiplexer ? - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h4 id=&#34;twisted&#34;&gt;Twisted&lt;/h4&gt;
-&lt;p&gt;Python으로 작성된 Event-Driven Networking Engine으로  Event-Driven Web Server는 물론 mail, SSH Client 등을 포함하고 있어 웹 애플리케이션이 구현 가능합니다.&lt;br&gt;
+&lt;h4 id=&#34;twisted&#34; &gt;Twisted
+&lt;span&gt;
+    &lt;a href=&#34;#twisted&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;Python으로 작성된 Event-Driven Networking Engine으로  Event-Driven Web Server는 물론 mail, SSH Client 등을 포함하고 있어 웹 애플리케이션이 구현 가능합니다.&lt;br&gt;
 Event Engine과 마찬가지로 &lt;code&gt;Reactor&lt;/code&gt; 패턴이 적용되어 있습니다.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;참고할만한 글
 &lt;ul&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://dataonair.or.kr/db-tech-reference/d-lounge/expert-column/?mod=document&amp;amp;uid=53875&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;네트워크 프로그램 개발을 위한 파이썬 프레임워크 – DATA ON-AIR (dataonair.or.kr)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://docs.twisted.org/en/stable/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Twisted 22.10.0 documentation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dataonair.or.kr/db-tech-reference/d-lounge/expert-column/?mod=document&amp;amp;uid=53875&#34;&gt;네트워크 프로그램 개발을 위한 파이썬 프레임워크 – DATA ON-AIR (dataonair.or.kr)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.twisted.org/en/stable/&#34;&gt;Twisted 22.10.0 documentation&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id=&#34;4-worker_threads&#34;&gt;4. worker_threads&lt;/h2&gt;
-&lt;hr&gt;
+&lt;h2 id=&#34;4-worker_threads&#34; &gt;4. worker_threads
+&lt;span&gt;
+    &lt;a href=&#34;#4-worker_threads&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;hr&gt;
 &lt;p&gt;&lt;code&gt;worker_threads&lt;/code&gt;는 Javascript를 병렬 실행하는 Thread를 사용할 수 있게 해주는 모듈입니다.&lt;br&gt;
 Node.js에 내장되어 있는 동기 I/O 작업이 더 효율적이므로 I/O-집약적인 작업보다 CPU-집약적인 연산을 수행하는 Javascript 실행에 더 유용합니다.&lt;br&gt;
 &lt;code&gt;isMainThread&lt;/code&gt;, &lt;code&gt;Worker&lt;/code&gt;, &lt;code&gt;parentPort&lt;/code&gt;등을 통해 메인 스레드로 부터 Worker들을 만들고, Worker들이 어떤 작업을 수행할 지를 지정할 수 있습니다.&lt;br&gt;
@@ -174,38 +252,38 @@ Node.js에 내장되어 있는 동기 I/O 작업이 더 효율적이므로 I/O-�
 &lt;ul&gt;
 &lt;li&gt;worker_threads 역시 이 문서에서 다루면 너무 길어질 것 같아 추후 따로 글을 작성하겠습니다.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h1 id=&#34;정리-후기&#34;&gt;정리 후기&lt;/h1&gt;
-&lt;ul&gt;
+&lt;h1 id=&#34;정리-후기&#34; &gt;정리 후기
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a0%95%eb%a6%ac-%ed%9b%84%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
 &lt;li&gt;공식 문서를 찾기보다 검색을 먼저 하는 습관이 어느순간부터 들어있었는데, 이번에 여러 공식 문서들을 찾아보며 공식 문서만 잘 찾아봐도 검색할 일이 많이 줄겠다는 생각이 들었다.&lt;/li&gt;
 &lt;li&gt;개인적으로 역다중화, 다중화와 같은 개념부터 I/O Blocking, Non-Blocking 등 모르던 개념들을 많이 알게 되어서 나중에 이들에 대해 따로 정리하는 글을 작성해보고 싶어졌다.&lt;/li&gt;
 &lt;li&gt;FE만 공부하던 입장에서 이런 동시성 관련된 문제에 공부하니 머리가 많이 깨질것 같지만(&amp;hellip;) 흥미도 많이 생기게 되었다!&lt;/li&gt;
 &lt;li&gt;다음 주는 주제를 하나만 잡던가 좀 쉬운걸로 잡아야겠다.. 다른 것들도 하면서 글 정리하려니 한 주 가지고는 택도 없을 것 같다.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h1 id=&#34;이외-참고한-문서-및-블로그-포스트&#34;&gt;이외 참고한 문서 및 블로그 포스트&lt;/h1&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://nodejs.org/api/worker_threads.html&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Worker threads | Node.js v20.5.0 Documentation (nodejs.org)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://nodejs.org/en/docs/guides/dont-block-the-event-loop&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Don&amp;rsquo;t Block the Event Loop (or the Worker Pool) | Node.js (nodejs.org)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://nodejs.dev/en/learn/introduction-to-nodejs/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Introduction to Node.js (nodejs.dev)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;The Node.js Event Loop, Timers, and process.nextTick() | Node.js (nodejs.org)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://www.linkedin.com/pulse/leveraging-event-multiplexing-even-driven-guillermo-wrba/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Leveraging Event Multiplexing in Even-Driven Architectures | LinkedIn&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://engineering.linecorp.com/ko/blog/do-not-block-the-event-loop-part1&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;비동기 서버에서 이벤트 루프를 블록하면 안 되는 이유 1부 - 멀티플렉싱 기반의 다중 접속 서버로 가기까지 (linecorp.com)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://engineering.linecorp.com/ko/blog/do-not-block-the-event-loop-part3&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;비동기 서버에서 이벤트 루프를 블록하면 안 되는 이유 3부 - Reactor 패턴과 이벤트 루프 (linecorp.com)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://blog.naver.com/n_cloudplatform/222189669084&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;[네이버클라우드 기술&amp;amp;경험] IO Multiplexing (IO 멀티플렉싱) 기본 개념부터 심화까지 -1부- : 네이버블로그 (naver.com)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://dbehdrhs.tistory.com/98&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;12장 IO 멀티플렉싱(Multiplexing) (tistory.com)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://plummmm.tistory.com/68&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;입출력 다중화 (I/O Multiplexing) (tistory.com)&lt;/a&gt;&lt;/li&gt;
+&lt;h1 id=&#34;이외-참고한-문서-및-블로그-포스트&#34; &gt;이외 참고한 문서 및 블로그 포스트
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b4%ec%99%b8-%ec%b0%b8%ea%b3%a0%ed%95%9c-%eb%ac%b8%ec%84%9c-%eb%b0%8f-%eb%b8%94%eb%a1%9c%ea%b7%b8-%ed%8f%ac%ec%8a%a4%ed%8a%b8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://nodejs.org/api/worker_threads.html&#34;&gt;Worker threads | Node.js v20.5.0 Documentation (nodejs.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://nodejs.org/en/docs/guides/dont-block-the-event-loop&#34;&gt;Don&amp;rsquo;t Block the Event Loop (or the Worker Pool) | Node.js (nodejs.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://nodejs.dev/en/learn/introduction-to-nodejs/&#34;&gt;Introduction to Node.js (nodejs.dev)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://nodejs.org/en/docs/guides/event-loop-timers-and-nexttick&#34;&gt;The Node.js Event Loop, Timers, and process.nextTick() | Node.js (nodejs.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.linkedin.com/pulse/leveraging-event-multiplexing-even-driven-guillermo-wrba/&#34;&gt;Leveraging Event Multiplexing in Even-Driven Architectures | LinkedIn&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://engineering.linecorp.com/ko/blog/do-not-block-the-event-loop-part1&#34;&gt;비동기 서버에서 이벤트 루프를 블록하면 안 되는 이유 1부 - 멀티플렉싱 기반의 다중 접속 서버로 가기까지 (linecorp.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://engineering.linecorp.com/ko/blog/do-not-block-the-event-loop-part3&#34;&gt;비동기 서버에서 이벤트 루프를 블록하면 안 되는 이유 3부 - Reactor 패턴과 이벤트 루프 (linecorp.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.naver.com/n_cloudplatform/222189669084&#34;&gt;[네이버클라우드 기술&amp;amp;경험] IO Multiplexing (IO 멀티플렉싱) 기본 개념부터 심화까지 -1부- : 네이버블로그 (naver.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dbehdrhs.tistory.com/98&#34;&gt;12장 IO 멀티플렉싱(Multiplexing) (tistory.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://plummmm.tistory.com/68&#34;&gt;입출력 다중화 (I/O Multiplexing) (tistory.com)&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-        </item>
-        
-    </channel>
+    </item>
+    
+  </channel>
 </rss>

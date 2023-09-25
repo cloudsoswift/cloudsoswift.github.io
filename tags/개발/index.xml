@@ -1,24 +1,38 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-    <channel>
-        <title>개발 on 내자가추 백절불굴</title>
-        <link>https://cloudsoswift.github.io/tags/%EA%B0%9C%EB%B0%9C/</link>
-        <description>Recent content in 개발 on 내자가추 백절불굴</description>
-        <generator>Hugo -- gohugo.io</generator>
-        <language>ko</language>
-        <lastBuildDate>Sun, 19 Feb 2023 11:22:33 +0900</lastBuildDate><atom:link href="https://cloudsoswift.github.io/tags/%EA%B0%9C%EB%B0%9C/index.xml" rel="self" type="application/rss+xml" /><item>
-        <title>[Javascript] 순환 참조 (Circular Import)</title>
-        <link>https://cloudsoswift.github.io/post/develop/230219/circular_import/</link>
-        <pubDate>Sun, 19 Feb 2023 11:22:33 +0900</pubDate>
-        
-        <guid>https://cloudsoswift.github.io/post/develop/230219/circular_import/</guid>
-        <description>&lt;img src="https://cloudsoswift.github.io/post/develop/230219/after_circular_import.png" alt="Featured image of post [Javascript] 순환 참조 (Circular Import)" /&gt;&lt;p&gt;오늘은 Javascript, Python같은 언어에서 import시 발생할 수 있는 순환 참조 에러에 대한 포스트를 작성하고자 한다.&lt;/p&gt;
-&lt;h1 id=&#34;순환-참조&#34;&gt;순환 참조&lt;/h1&gt;
-&lt;h2 id=&#34;메모리-관점에서의-순환-참조--in-javascript-&#34;&gt;메모리 관점에서의 순환 참조 ( In Javascript )&lt;/h2&gt;
-&lt;ul&gt;
+  <channel>
+    <title>개발 on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/%EA%B0%9C%EB%B0%9C/</link>
+    <description>오늘도 개발을 한다. (개발)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Sun, 19 Feb 2023 11:22:33 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/%EA%B0%9C%EB%B0%9C/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[Javascript] 순환 참조 (Circular Import)</title>
+      <link>https://cloudsoswift.github.io/post/develop/230219/circular_import/</link>
+      <pubDate>Sun, 19 Feb 2023 11:22:33 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/230219/circular_import/</guid>
+      <description>&lt;p&gt;오늘은 Javascript, Python같은 언어에서 import시 발생할 수 있는 순환 참조 에러에 대한 포스트를 작성하고자 한다.&lt;/p&gt;
+&lt;h1 id=&#34;순환-참조&#34; &gt;순환 참조
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%88%9c%ed%99%98-%ec%b0%b8%ec%a1%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;h2 id=&#34;메모리-관점에서의-순환-참조--in-javascript-&#34; &gt;메모리 관점에서의 순환 참조 ( In Javascript )
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a9%94%eb%aa%a8%eb%a6%ac-%ea%b4%80%ec%a0%90%ec%97%90%ec%84%9c%ec%9d%98-%ec%88%9c%ed%99%98-%ec%b0%b8%ec%a1%b0--in-javascript-&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
 &lt;li&gt;간단히 요약하자면, 서로 다른 두 객체가 서로를 참조하여, 가비지 컬렉션 알고리즘의 대상에 포함되지 않아 해당 객체들이 불필요해져도 메모리 회수되지 않고 존속하게되는 문제이다.&lt;/li&gt;
-&lt;li&gt;&lt;a class=&#34;link&#34; href=&#34;https://developer.mozilla.org/ko/docs/Web/JavaScript/Memory_Management&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;Mozilla Developer Network의 문서&lt;/a&gt;의 예시를 드는게 이해하기 쉽다.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/ko/docs/Web/JavaScript/Memory_Management&#34;&gt;Mozilla Developer Network의 문서&lt;/a&gt;의 예시를 드는게 이해하기 쉽다.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;b&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;from&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;b&amp;#34;&lt;/span&gt;;
 &lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;f&lt;/span&gt;() {
@@ -39,38 +53,30 @@
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;참조-세기(Reference-counting) 알고리즘&lt;/strong&gt; : 가비지 컬렉션시 사용하는 알고리즘으로, &amp;ldquo;어떤 다른 객체도 참조하지 않는 객체&amp;quot;를 더 이상 필요없는 객체로 인식하고 가비지 컬렉션을 수행.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id=&#34;import에서의-순환-참조circular-dependencies-in-javascript&#34;&gt;import에서의 순환 참조(Circular Dependencies) (In Javascript)&lt;/h2&gt;
-&lt;ul&gt;
+&lt;h2 id=&#34;import에서의-순환-참조circular-dependencies-in-javascript&#34; &gt;import에서의 순환 참조(Circular Dependencies) (In Javascript)
+&lt;span&gt;
+    &lt;a href=&#34;#import%ec%97%90%ec%84%9c%ec%9d%98-%ec%88%9c%ed%99%98-%ec%b0%b8%ec%a1%b0circular-dependencies-in-javascript&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
 &lt;li&gt;2가지 이상의 모듈에서 import가 꼬리의 꼬리를 물어 순환 구조를 이루어 에러가 발생하는 경우.&lt;/li&gt;
 &lt;li&gt;예시
-&lt;img src=&#34;https://cloudsoswift.github.io/post/develop/230219/circular.png&#34;
-	
-	
-	
-	loading=&#34;lazy&#34;
-	
-		alt=&#34;circular import&#34;
-	
-	
-&gt;&lt;/li&gt;
+&lt;img src=&#34;https://cloudsoswift.github.io/post/develop/230219/circular.png&#34; alt=&#34;circular import&#34;&gt;&lt;/li&gt;
 &lt;li&gt;위와 같이 참조의 순환 고리가 발생하게 될 경우, 그 고리의 어느 한 모듈(&lt;em&gt;순환 고리안의 다른 모듈을 참조하는&lt;/em&gt;)을 이용하려 하면&lt;br&gt;
 &lt;code&gt;ReferenceError: Cannot access &#39;모듈 이름&#39; before initialization&lt;/code&gt;&lt;br&gt;
 라며 에러가 발생한다.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3 id=&#34;나의-사례&#34;&gt;나의 사례&lt;/h3&gt;
-&lt;ul&gt;
+&lt;h3 id=&#34;나의-사례&#34; &gt;나의 사례
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%82%98%ec%9d%98-%ec%82%ac%eb%a1%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
 &lt;li&gt;본인은 &lt;em&gt;Axios 모듈&lt;/em&gt;, &lt;em&gt;Redux 객체(store)를 export 하는 모듈&lt;/em&gt;, &lt;em&gt;Redux Toolkit의 slice 객체를 export하는 모듈&lt;/em&gt;를 사용하며 React 프로젝트를 개발하고 있었다.&lt;/li&gt;
 &lt;li&gt;개발 초-중반기에만 해도 &lt;em&gt;&lt;strong&gt;&amp;lsquo;Redux 객체 -&amp;gt; Redux Toolkit의 Slice 객체&amp;rsquo;&lt;/strong&gt;&lt;/em&gt;, &lt;em&gt;&lt;strong&gt;&amp;lsquo;Slice 객체 -&amp;gt; Axios 모듈&amp;rsquo;&lt;/strong&gt;&lt;/em&gt; 로의 참조 외에는 모듈간의 연관관계가 존재하지 않아 순환 참조가 발생하지 않아 에러가 발생하지 않았다.
-&lt;img src=&#34;https://cloudsoswift.github.io/post/develop/230219/before_circular_import.png&#34;
-	
-	
-	
-	loading=&#34;lazy&#34;
-	
-		alt=&#34;before_circular_import&#34;
-	
-	
-&gt;
+&lt;img src=&#34;https://cloudsoswift.github.io/post/develop/230219/before_circular_import.png&#34; alt=&#34;before_circular_import&#34;&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;em&gt;&lt;strong&gt;&amp;lsquo;Redux 객체 -&amp;gt; Redux Toolkit의 Slice 객체&amp;rsquo;&lt;/strong&gt;&lt;/em&gt;
 &lt;ul&gt;
@@ -86,34 +92,34 @@
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h4 id=&#34;사건의-발단&#34;&gt;사건의 발단&lt;/h4&gt;
-&lt;ul&gt;
+&lt;h4 id=&#34;사건의-발단&#34; &gt;사건의 발단
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%82%ac%ea%b1%b4%ec%9d%98-%eb%b0%9c%eb%8b%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
 &lt;li&gt;그러다 Axios 모듈에 interceptor를 설정해, request를 보내기 전 &amp;lsquo;유저 Slice&amp;rsquo;에 저장된 AccessToken을 불러와 Header에 첨부해주려 했는데 순환 참조 에러가 발생했다.&lt;br&gt;
 &lt;code&gt;Uncaught ReferenceError: Cannot access &#39;__WEBPACK_DEFAULT_EXPORT__&#39; before initialization&lt;/code&gt;
 &lt;ul&gt;
 &lt;li&gt;해당 에러를 맞닥들인 당시, 나는 &amp;lsquo;순환 참조&amp;rsquo;라는 개념도 잘 알지 못했고 이러한 행위가 에러를 발생시킨다는 것 역시 알지 못했다.&lt;/li&gt;
-&lt;li&gt;그리고 여러 글들을 찾아 보다가, 관련된 &lt;a class=&#34;link&#34; href=&#34;https://stackoverflow.com/questions/65038253/uncaught-referenceerror-cannot-access-webpack-default-export-before-initi&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
-    &gt;stackoverflow 글&lt;/a&gt;을 보고 어느정도 왜 에러를 발생시키는 행위인지 알 수 있었다.&lt;/li&gt;
+&lt;li&gt;그리고 여러 글들을 찾아 보다가, 관련된 &lt;a href=&#34;https://stackoverflow.com/questions/65038253/uncaught-referenceerror-cannot-access-webpack-default-export-before-initi&#34;&gt;stackoverflow 글&lt;/a&gt;을 보고 어느정도 왜 에러를 발생시키는 행위인지 알 수 있었다.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h4 id=&#34;원인&#34;&gt;원인&lt;/h4&gt;
-&lt;ul&gt;
+&lt;h4 id=&#34;원인&#34; &gt;원인
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9b%90%ec%9d%b8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
 &lt;li&gt;request를 보내기 전에 Redux Store를 확인하고 만약 AccessToken이 존재하면 해당 값 가져와서 &lt;em&gt;Header의 Authorization&lt;/em&gt;으로 설정한 뒤 요청을 보내는 로직을 수행하는 interceptor를 Axios 모듈에다 달아주고 싶었다.&lt;/li&gt;
 &lt;li&gt;React에서 자주 쓰던것 처럼, &lt;code&gt;useDispatch()&lt;/code&gt;훅을 통해 dispatch 함수를 반환 받아, Action Creator를 통해 만든 Action을 dispatch하는 방식으로 AccessToken을 가져오는 것이 원래 계획이었다.&lt;/li&gt;
 &lt;li&gt;그러나 &lt;em&gt;Axios 모듈&lt;/em&gt;은 React Component가 아니기 때문에, React Component 외부에서는 &lt;em&gt;Redux Store 모듈&lt;/em&gt;을 불러와 Store 객체가 갖고있는 dispatch 함수를 호출해야 했다.&lt;/li&gt;
 &lt;li&gt;그래서 &lt;em&gt;Redux Store 모듈&lt;/em&gt;을 불러와 dispatch를 함수를 호출하려 했는데, Redux Store를 불러오는 로직을 추가하니 상기한 내용의 에러를 내놓고 있었다.&lt;/li&gt;
 &lt;li&gt;즉, &lt;em&gt;Axios 모듈&lt;/em&gt;에서 &lt;em&gt;Redux Store 모듈&lt;/em&gt;을 import함으로써 아래와 같은 구조가 형성되어 버린것이었다.
-&lt;img src=&#34;https://cloudsoswift.github.io/post/develop/230219/after_circular_import.png&#34;
-	
-	
-	
-	loading=&#34;lazy&#34;
-	
-		alt=&#34;after_circular_import&#34;
-	
-	
-&gt;&lt;/li&gt;
+&lt;img src=&#34;https://cloudsoswift.github.io/post/develop/230219/after_circular_import.png&#34; alt=&#34;after_circular_import&#34;&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;blockquote&gt;
 &lt;ol&gt;
@@ -122,28 +128,44 @@
 &lt;li&gt;Axios 모듈에서는 store 객체 안에 저장된 AccessToken을 가져오기 위해 &lt;em&gt;store 객체가 필요&lt;/em&gt;해 &lt;em&gt;&lt;strong&gt;store.js를 import&lt;/strong&gt;&lt;/em&gt;&lt;/li&gt;
 &lt;/ol&gt;
 &lt;/blockquote&gt;
-&lt;h4 id=&#34;해결&#34;&gt;해결?&lt;/h4&gt;
-&lt;ul&gt;
+&lt;h4 id=&#34;해결&#34; &gt;해결?
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%b4%ea%b2%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
 &lt;li&gt;&lt;em&gt;Action Creator 함수&lt;/em&gt;, Store에 접근하는 &lt;em&gt;interceptor&lt;/em&gt;, Slice들의 reducer를 combine해 사용하는 &lt;em&gt;store 객체&lt;/em&gt; 모두 놓치고 싶지 않았지만, 에러를 해결해야 해 어쩔 수 없이 &lt;em&gt;&lt;strong&gt;Action Creator 함수&lt;/strong&gt;&lt;/em&gt;를 사용하지 않는 방향으로 코드를 수정했다.
 &lt;ul&gt;
 &lt;li&gt;Axios 모듈을 사용하는 Action Creator 함수로 로그인, 로그아웃이 있었는데, 해당 작업을 각 기능을 사용하는 component(로그인 - 로그인 페이지, 로그아웃 - 네비게이션 바)에서 정의하도록 하여 순환 관계를 끊었다.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h4 id=&#34;결론&#34;&gt;결론?&lt;/h4&gt;
-&lt;ul&gt;
+&lt;h4 id=&#34;결론&#34; &gt;결론?
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b2%b0%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
 &lt;li&gt;순환 참조가 발생할 경우, 순환 고리에 포함된 모듈(객체)들은 생성이 안 되어 사용이 불가능하므로 순환 참조가 발생하지 않도록 코드를 짜는것이 중요하다는걸 몇 시간의 실랑이 끝에 알 수 있었다&amp;hellip;.&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-        </item>
-        <item>
-        <title>첫 글</title>
-        <link>https://cloudsoswift.github.io/post/etc/2023-01-23-first-init/</link>
-        <pubDate>Mon, 23 Jan 2023 01:32:17 +0900</pubDate>
-        
-        <guid>https://cloudsoswift.github.io/post/etc/2023-01-23-first-init/</guid>
-        <description>&lt;h1 id=&#34;블로그에-쓰는-첫-글이다&#34;&gt;블로그에 쓰는 첫 글이다.&lt;/h1&gt;
-&lt;ol start=&#34;2023&#34;&gt;
+    </item>
+    
+    <item>
+      <title>첫 글</title>
+      <link>https://cloudsoswift.github.io/post/etc/2023-01-23-first-init/</link>
+      <pubDate>Mon, 23 Jan 2023 01:32:17 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/etc/2023-01-23-first-init/</guid>
+      <description>&lt;h1 id=&#34;블로그에-쓰는-첫-글이다&#34; &gt;블로그에 쓰는 첫 글이다.
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b8%94%eb%a1%9c%ea%b7%b8%ec%97%90-%ec%93%b0%eb%8a%94-%ec%b2%ab-%ea%b8%80%ec%9d%b4%eb%8b%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ol start=&#34;2023&#34;&gt;
 &lt;li&gt;
 &lt;ol&gt;
 &lt;li&gt;23&lt;/li&gt;
@@ -151,7 +173,7 @@
 &lt;/li&gt;
 &lt;/ol&gt;
 </description>
-        </item>
-        
-    </channel>
+    </item>
+    
+  </channel>
 </rss>
