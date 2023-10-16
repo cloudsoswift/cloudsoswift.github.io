@@ -6,13 +6,81 @@
     <description>오늘도 개발을 한다.</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Mon, 09 Oct 2023 01:25:47 +0900</lastBuildDate>
+    <lastBuildDate>Mon, 16 Oct 2023 23:54:33 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>[알고리즘 주간 기록] 2023/10/첫 주차</title>
+      <title>[알고리즘 주간 기록] 2023/10/2주차</title>
+      <link>https://cloudsoswift.github.io/post/algorithm/2023_october_second_week/</link>
+      <pubDate>Mon, 16 Oct 2023 23:54:33 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/algorithm/2023_october_second_week/</guid>
+      <description>&lt;p&gt;2023년 10월 둘 째주 풀었던 알고리즘 문제들을 기록합니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;회고가 필요하다고 생각하는 문제&lt;/strong&gt;(&lt;em&gt;시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제&lt;/em&gt;)만 별도로 문서를 작성해 정리합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;일자&lt;/th&gt;
+&lt;th&gt;푼 문제&lt;/th&gt;
+&lt;th&gt;비고&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 9일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/14890&#34;&gt;14890. 경사로&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/67753848&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 10일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/15684&#34;&gt;15684. 사다리 조작&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/67818933&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/67833362&#34;&gt;개선 시도한 코드&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 11일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/16234&#34;&gt;16234. 인구 이동&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/67846150&#34;&gt;코드&lt;/a&gt;&lt;br&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/13458&#34;&gt;13458. 시험 감독&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/67855173&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 12일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/3190&#34;&gt;3190. 뱀&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/67901770&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 13일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/13460&#34;&gt;13460. 구슬 탈출2&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/67958721&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 14일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/15685&#34;&gt;15685. 드래곤 커브&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68000132&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 15일&lt;/td&gt;
+&lt;td&gt;삼성 SW 테스트 응시&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;이번 주는 일요일에 삼성전자 SW 테스트 응시가 예정되어 있어서 최대한 기출문제, 그 중에서도 시뮬레이션이나 구현 위주로 풀었습니다.&lt;/p&gt;
+&lt;p&gt;아쉽게도 SW테스트는 한 문제도 맞추지 못한, 0솔로 마감을 했습니다.&lt;br&gt;
+원 계획은 3시간 안에 1번을 풀고, 2번은 남은 1시간 동안 최대한 풀어보는 것이었습니다.&lt;/p&gt;
+&lt;p&gt;1번 문제를 2시간 가량 풀고, 나머지 2시간 동안 오류나는 부분을 어느정도 고치고 왜 테스트 케이스가 안 맞는지 수 십번 체크를 했는데도 틀려서 스스로 너무 화가 난 시험이었습니다.&lt;br&gt;
+그 뒤로 스터디카페 가서 한 3시간은 복기 했는데도 도저히 틀린 부분을 모르겠어서.. 🥲&lt;/p&gt;
+&lt;p&gt;빨리 코드트리 같은 문제풀이 사이트에서 복원하면 제대로 풀어보고 싶네요!&lt;/p&gt;
+&lt;p align=&#34;center&#34;&gt;
+  &lt;img src=&#34;https://cloudsoswift.github.io/post/algorithm/2023_october_second_week_grass.png&#34;&gt;
+  끊겨버린 streak 😥
+&lt;/p&gt;
+&lt;p&gt;이번 주도 열심히 하겠습니다. 🫡&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>[알고리즘 주간 기록] 2023/10/1주차</title>
       <link>https://cloudsoswift.github.io/post/algorithm/2023_october_first_week/</link>
       <pubDate>Mon, 09 Oct 2023 01:25:47 +0900</pubDate>
       
@@ -50,17 +118,17 @@
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;10월 6일&lt;/td&gt;
-&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/&#34;&gt;14503. 로봇 청소기&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/67629642&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/14503&#34;&gt;14503. 로봇 청소기&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/67629642&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
 &lt;td&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;10월 7일&lt;/td&gt;
-&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/&#34;&gt;14891. 톱니 바퀴&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/67673262&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/14891&#34;&gt;14891. 톱니 바퀴&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/67673262&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
 &lt;td&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;10월 8일&lt;/td&gt;
-&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/&#34;&gt;14499. 주사위&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/67710519&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/14499&#34;&gt;14499. 주사위 굴리기&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/67710519&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
 &lt;td&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
