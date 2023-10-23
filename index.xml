@@ -6,10 +6,73 @@
     <description>오늘도 개발을 한다.</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Mon, 16 Oct 2023 23:54:33 +0900</lastBuildDate>
+    <lastBuildDate>Tue, 24 Oct 2023 00:29:13 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[알고리즘 주간 기록] 2023/10/3주차</title>
+      <link>https://cloudsoswift.github.io/post/algorithm/2023_october_third_week/</link>
+      <pubDate>Tue, 24 Oct 2023 00:29:13 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/algorithm/2023_october_third_week/</guid>
+      <description>&lt;p&gt;2023년 10월 셋 째주 풀었던 알고리즘 문제들을 기록합니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;회고가 필요하다고 생각하는 문제&lt;/strong&gt;(&lt;em&gt;시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제&lt;/em&gt;)만 별도로 문서를 작성해 정리합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;일자&lt;/th&gt;
+&lt;th&gt;푼 문제&lt;/th&gt;
+&lt;th&gt;비고&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 16일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/16235&#34;&gt;16235. 나무재테크&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68078467&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 17일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/9252&#34;&gt;9252. LCS 2&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68170165&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 18일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/9466&#34;&gt;9466. 텀 프로젝트&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68177025&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 19일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/12100&#34;&gt;12100. 2048 (Easy)&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68211948&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 20일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/9328&#34;&gt;9328. 열쇠&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68268158&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 21일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/12015&#34;&gt;12015. 가장 긴 증가하는 부분 수열 2&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68287871&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 22일&lt;/td&gt;
+&lt;td&gt;ADEX 방문 및 하나은행 면접 준비&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;이번 주에도 하루에 한 문제씩은 풀려고 노력했는데 23일에 면접이 있다보니 안타깝게도 streak이 끊겨버렸습니다&amp;hellip; 😓&lt;/p&gt;
+&lt;p&gt;개선 하도록 노력하겠습니다 🙇&lt;/p&gt;
+&lt;p align=&#34;center&#34;&gt;
+  &lt;img src=&#34;https://cloudsoswift.github.io/post/algorithm/2023_october_third_week_list.png&#34;&gt;
+  &lt;img src=&#34;https://cloudsoswift.github.io/post/algorithm/2023_october_third_week_grass.png&#34;&gt;
+  이번 주에도 끊겨버린 streak 😥
+&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>[알고리즘 주간 기록] 2023/10/2주차</title>
