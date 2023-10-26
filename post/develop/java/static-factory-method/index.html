@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>정적 팩토리 메서드(Static Factory Method) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="정적 팩토리 메서드란 무엇인지, 그리고 어떤 장점과 단점이 있는지를 정리해보고자 한다.
+정적 팩토리 메서드(Static Factory Method)클래스 인스턴스를 반환하는 단순한 정적 메서드이다.
+public 생성자를 사용하는 방법과 함께 클래스의 인스턴스를 생성하는 대표적인 방법 중 하나이다.
+예시 - Boolean클래스의 valueOfpublic static Boolean valueOf(boolean b) { // 인자로 받은 boolean 값에 따라 Boolean 클래스 인스턴스를 반환한다. return b ? Boolean.True : Boolean.FALSE; } Effective Java의 Item.2.에 따르면 생성자 대신 정적 팩터리 메서드를 고려하라 라는데, 이를 통해 얻는 이점과 실은 무엇일까?">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.eaefe0f95d1fe64ef0a3932347fc8e07ff4e3de4515423d0ad22b33474042778.css" integrity="sha256-6u/g&#43;V0f5k7wo5MjR/yOB/9OPeRRVCPQrSKzNHQEJ3g=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="정적 팩토리 메서드(Static Factory Method)" />
+<meta property="og:description" content="정적 팩토리 메서드란 무엇인지, 그리고 어떤 장점과 단점이 있는지를 정리해보고자 한다.
+정적 팩토리 메서드(Static Factory Method)클래스 인스턴스를 반환하는 단순한 정적 메서드이다.
+public 생성자를 사용하는 방법과 함께 클래스의 인스턴스를 생성하는 대표적인 방법 중 하나이다.
+예시 - Boolean클래스의 valueOfpublic static Boolean valueOf(boolean b) { // 인자로 받은 boolean 값에 따라 Boolean 클래스 인스턴스를 반환한다. return b ? Boolean.True : Boolean.FALSE; } Effective Java의 Item.2.에 따르면 생성자 대신 정적 팩터리 메서드를 고려하라 라는데, 이를 통해 얻는 이점과 실은 무엇일까?" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/java/static-factory-method/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2023-10-25T00:55:00+09:00" />
+<meta property="article:modified_time" content="2023-10-25T00:55:00+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="정적 팩토리 메서드(Static Factory Method)"/>
+<meta name="twitter:description" content="정적 팩토리 메서드란 무엇인지, 그리고 어떤 장점과 단점이 있는지를 정리해보고자 한다.
+정적 팩토리 메서드(Static Factory Method)클래스 인스턴스를 반환하는 단순한 정적 메서드이다.
+public 생성자를 사용하는 방법과 함께 클래스의 인스턴스를 생성하는 대표적인 방법 중 하나이다.
+예시 - Boolean클래스의 valueOfpublic static Boolean valueOf(boolean b) { // 인자로 받은 boolean 값에 따라 Boolean 클래스 인스턴스를 반환한다. return b ? Boolean.True : Boolean.FALSE; } Effective Java의 Item.2.에 따르면 생성자 대신 정적 팩터리 메서드를 고려하라 라는데, 이를 통해 얻는 이점과 실은 무엇일까?"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">정적 팩토리 메서드(Static Factory Method)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#정적-팩토리-메서드static-factory-method">정적 팩토리 메서드(Static Factory Method)</a>
+      <ul>
+        <li><a href="#예시---boolean클래스의-valueof">예시 - <code>Boolean</code>클래스의 <code>valueOf</code></a></li>
+      </ul>
+    </li>
+    <li><a href="#정적-팩토리-메서드의-장점">정적 팩토리 메서드의 장점</a>
+      <ul>
+        <li><a href="#1-이름을-가질-수-있다">1. 이름을 가질 수 있다.</a></li>
+        <li><a href="#2-호출될-때마다-인스턴스를-새로-생성하지-않아도-된다">2. 호출될 때마다 인스턴스를 새로 생성하지 않아도 된다.</a></li>
+        <li><a href="#3-반환-타입의-하위-타입-객체를-반환-가능하다">3. 반환 타입의 <code>하위 타입 객체</code>를 반환 가능하다.</a></li>
+        <li><a href="#4-입력-매개변수에-따라-매번-다른-클래스의-객체를-반환할-수-있다">4. 입력 매개변수에 따라 매번 다른 클래스의 객체를 반환할 수 있다.</a></li>
+        <li><a href="#5-정적-팩토리-메서드를-작성할-당시엔-반환할-객체의-클래스가-존재하지-않아도-된다">5. 정적 팩토리 메서드를 작성할 당시엔 반환할 객체의 클래스가 존재하지 않아도 된다.</a></li>
+      </ul>
+    </li>
+    <li><a href="#정적-팩토리-메서드의-단점">정적 팩토리 메서드의 단점</a>
+      <ul>
+        <li><a href="#1-정적-팩토리-메서드만-제공하면-하위-클래스-생성이-불가능하다">1. 정적 팩토리 메서드만 제공하면 하위 클래스 생성이 불가능하다.</a></li>
+        <li><a href="#2-네이밍이-정확하지-않으면-다른-사람이-한-번에-알아채기-힘들다">2. 네이밍이 정확하지 않으면 다른 사람이 한 번에 알아채기 힘들다.</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <p>정적 팩토리 메서드란 무엇인지, 그리고 어떤 장점과 단점이 있는지를 정리해보고자 한다.</p>
+<h2 id="정적-팩토리-메서드static-factory-method" >정적 팩토리 메서드(Static Factory Method)
+<span>
+    <a href="#%ec%a0%95%ec%a0%81-%ed%8c%a9%ed%86%a0%eb%a6%ac-%eb%a9%94%ec%84%9c%eb%93%9cstatic-factory-method">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>클래스 인스턴스를 반환하는 단순한 정적 메서드이다.<br>
+<code>public 생성자</code>를 사용하는 방법과 함께 클래스의 인스턴스를 생성하는 대표적인 방법 중 하나이다.</p>
+<h3 id="예시---boolean클래스의-valueof" >예시 - <code>Boolean</code>클래스의 <code>valueOf</code>
+<span>
+    <a href="#%ec%98%88%ec%8b%9c---boolean%ed%81%b4%eb%9e%98%ec%8a%a4%ec%9d%98-valueof">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> Boolean <span style="color:#a6e22e">valueOf</span><span style="color:#f92672">(</span><span style="color:#66d9ef">boolean</span> b<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 인자로 받은 boolean 값에 따라 Boolean 클래스 인스턴스를 반환한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">return</span> b <span style="color:#f92672">?</span> Boolean<span style="color:#f92672">.</span><span style="color:#a6e22e">True</span> <span style="color:#f92672">:</span> Boolean<span style="color:#f92672">.</span><span style="color:#a6e22e">FALSE</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>Effective Java의 Item.2.에 따르면 <strong><code>생성자 대신 정적 팩터리 메서드를 고려하라</code></strong> 라는데, 이를 통해 얻는 이점과 실은 무엇일까?</p>
+<h2 id="정적-팩토리-메서드의-장점" >정적 팩토리 메서드의 장점
+<span>
+    <a href="#%ec%a0%95%ec%a0%81-%ed%8c%a9%ed%86%a0%eb%a6%ac-%eb%a9%94%ec%84%9c%eb%93%9c%ec%9d%98-%ec%9e%a5%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="1-이름을-가질-수-있다" >1. 이름을 가질 수 있다.
+<span>
+    <a href="#1-%ec%9d%b4%eb%a6%84%ec%9d%84-%ea%b0%80%ec%a7%88-%ec%88%98-%ec%9e%88%eb%8b%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><em>반환될 객체의 특성을 제대로 설명하지 못하는</em> <mark style="background: #ADCCFFA6;">생성자</mark>와 달리, <mark style="background: #FFB86CA6;">정적 팩토리 메서드</mark>는 <mark style="background: #FFB86CA6;">이름만 잘 지으면 어떤 특성을 지녔는지를 쉽게 묘사</mark> 할 수 있다.<br>
+또한, 생성자는 <mark style="background: #ADCCFFA6;"><b>한 시그니처에 하나의 생성자</b></mark>만 만들 수 있다. 이와 달리, 정적 팩토리 메서드는 <em>이름을 가질 수 있기 때문에</em> 시그니처가 같은 생성자가 여러 개 필요한 경우 <mark style="background: #FFB86CA6;">이름을 통해 구분</mark>지을 수 있다.</p>
+<ul>
+<li><mark style="background: #ADCCFFA6;"><b>시그니처</b></mark>: 함수의 <em>이름, 공개 범위, 매개 변수</em> 같은 함수에 대한 일반적인 정보. <a href="https://developer.mozilla.org/en-US/docs/Glossary/Signature/Function">#</a></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">A</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int</span> a
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// O
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">A</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> a<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">a</span> <span style="color:#f92672">=</span> a<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// X : 이미 같은 시그니처의 생성자가 존재해 선언 불가
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">A</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> b<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">a</span> <span style="color:#f92672">=</span> b<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h3 id="2-호출될-때마다-인스턴스를-새로-생성하지-않아도-된다" >2. 호출될 때마다 인스턴스를 새로 생성하지 않아도 된다.
+<span>
+    <a href="#2-%ed%98%b8%ec%b6%9c%eb%90%a0-%eb%95%8c%eb%a7%88%eb%8b%a4-%ec%9d%b8%ec%8a%a4%ed%84%b4%ec%8a%a4%eb%a5%bc-%ec%83%88%eb%a1%9c-%ec%83%9d%ec%84%b1%ed%95%98%ec%a7%80-%ec%95%8a%ec%95%84%eb%8f%84-%eb%90%9c%eb%8b%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>이러한 특성 덕분에 <code>불변 클래스(immutable class)</code>의 경우, (1)인스턴스를 미리 만들어 놓거나 (2)새로 생성한 인스턴스를 캐싱해 재활용하는 식으로 불필요한 객체 생성을 피할 수 있다.<br>
+이를 활용해 같은 객체(<em>특히 생성비용이 큰</em>)가 자주 요청되는 상황에 성능을 끌어올릴 수 있다.</p>
+<ul>
+<li><code>불변 객체(Immuntable Objects)</code>: <strong>모든 필드가 final, private</strong>이고, setter를 제공하지 않는 객체. 대표적인 예시론 <code>String</code> 클래스가 있다. <a href="https://docs.oracle.com/javase/tutorial/essential/concurrency/imstrat.html">#</a></li>
+</ul>
+<p>또한, 언제 어느 인스턴스가 살아 있게 할지를 통제하는 <strong><code>인스턴스 통제 클래스(instance-controlled class)</code></strong> 와 같이 작동할 수 있다.
+인스턴스를 통제하면 클래스를 <code>싱글턴</code>, <code>인스턴스화 불가</code>로 만들 수 있다. 또한 불변 클래스에서 <strong>동치인 인스턴스가 단 하나임을 보장</strong>할 수 있다.<br>
+인스턴스 통제는 열거 타입이 인스턴스가 하나만 만들어짐을 보장한다.</p>
+<h3 id="3-반환-타입의-하위-타입-객체를-반환-가능하다" >3. 반환 타입의 <code>하위 타입 객체</code>를 반환 가능하다.
+<span>
+    <a href="#3-%eb%b0%98%ed%99%98-%ed%83%80%ec%9e%85%ec%9d%98-%ed%95%98%ec%9c%84-%ed%83%80%ec%9e%85-%ea%b0%9d%ec%b2%b4%eb%a5%bc-%eb%b0%98%ed%99%98-%ea%b0%80%eb%8a%a5%ed%95%98%eb%8b%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>반환할 객체 클래스를 <strong>자유롭게 선택</strong> 할 수 있다. 이러한 유연함을 바탕으로 <strong><code>인터페이스 기반 프레임워크</code></strong> 를 만들 수 있다.</p>
+<ul>
+<li><strong><code>인터페이스 기반 프레임워크</code></strong> : 인터페이스와 그 구현으로 설계된 프레임워크로, <mark style="background: lightskyblue;">구현자(implementor)에겐 구현에 대한 완전한 제어권을 제공</mark>하고, <mark style="background: lightsalmon;">클라이언트에게는 안정적인 API를 제공</mark>하는 이점이 있다.</li>
+</ul>
+<p><strong><code>Java 8</code></strong> 이전에는 <em>인터페이스에 정적 메서드를 선언할 수 없어서</em> 인터페이스 <code>XXX</code>를 반환하는 정적 메서드가 필요하면, <code>XXXs</code>라는 <strong><code>동반 클래스</code></strong> (<em>companion class, 인스턴스화 불가한 클래스</em>)를 만들어 그 안에 정의해왔다.</p>
+<ul>
+<li><code>Collection</code>(인터페이스) 과 <code>Collections</code>(동반 클래스)가 대표적인 예시다.</li>
+</ul>
+<p><code>Collection</code>의 경우 <em>부가 기능들을 포함한 유틸리티 구현체들</em>이 <strong>인터페이스대로 동작할 것임을 예상할 수 있기 때문</strong>에 구현체들을 공개하지 않았고, API를 작고 가볍게 만들 수 있었다.</p>
+<p><strong><code>Java 8 이후</code></strong> 로는 <strong>인터페이스</strong>가 디폴트 메서드와 <strong>정적 메서드를 가질 수 있게</strong> 되므로써 동반 클래스를 둘 이유가 없어졌다.<br>
+다만, <code>public static</code>만 가능하므로 별도의 package-private 클래스에 둬야 할 수도 있다.<br>
+<strong><code>Java 9</code></strong> 에서는 <code>private static</code> 메서드도 지원하지만, <strong>static 필드</strong>와 <strong>static 멤버 클래스</strong>는 <strong>여전히 공개</strong>되어 있어야 한다.</p>
+<h3 id="4-입력-매개변수에-따라-매번-다른-클래스의-객체를-반환할-수-있다" >4. 입력 매개변수에 따라 매번 다른 클래스의 객체를 반환할 수 있다.
+<span>
+    <a href="#4-%ec%9e%85%eb%a0%a5-%eb%a7%a4%ea%b0%9c%eb%b3%80%ec%88%98%ec%97%90-%eb%94%b0%eb%9d%bc-%eb%a7%a4%eb%b2%88-%eb%8b%a4%eb%a5%b8-%ed%81%b4%eb%9e%98%ec%8a%a4%ec%9d%98-%ea%b0%9d%ec%b2%b4%eb%a5%bc-%eb%b0%98%ed%99%98%ed%95%a0-%ec%88%98-%ec%9e%88%eb%8b%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>반환 타입의 하위 타입이기만 하면 어떤 클래스의 객체건 상관없다.<br>
+일례로 <a href="https://docs.oracle.com/javase/8/docs/api/java/util/EnumSet.html">EnumSet</a> 클래스의 경우, public 생성자 없이 정적 팩토리만 제공하는데 원소의 수(64개 이하, 초과)에 따라 두 하위 클래스(<code>RegularEnumSet</code>, <code>JumboEnumSet</code>) 중 하나의 인스턴스를 반환한다.</p>
+<ul>
+<li>참고로, <code>RegularEnumSet</code>과 <code>JumboEnumSet</code>은 java 레퍼런스 사이트에는 명세되어 있지 않지만, IDE를 통해 EnumSet의 Declaration을 들어가보면 확인 가능하다.
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// EnumSet.class
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#f92672">&lt;</span>E <span style="color:#66d9ef">extends</span> Enum<span style="color:#f92672">&lt;</span>E<span style="color:#f92672">&gt;&gt;</span> EnumSet<span style="color:#f92672">&lt;</span>E<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">noneOf</span><span style="color:#f92672">(</span>Class<span style="color:#f92672">&lt;</span>E<span style="color:#f92672">&gt;</span> elementType<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        Enum<span style="color:#f92672">&lt;?&gt;[]</span> universe <span style="color:#f92672">=</span> getUniverse<span style="color:#f92672">(</span>elementType<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>universe <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> ClassCastException<span style="color:#f92672">(</span>elementType <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; not an enum&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>universe<span style="color:#f92672">.</span><span style="color:#a6e22e">length</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">64</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 원소의 개수가 64개 이하면 RegularEnumSet을 반환.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> RegularEnumSet<span style="color:#f92672">&lt;&gt;(</span>elementType<span style="color:#f92672">,</span> universe<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 원소의 개수가 64개 초과면 JumboEnumSet을 반환.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> JumboEnumSet<span style="color:#f92672">&lt;&gt;(</span>elementType<span style="color:#f92672">,</span> universe<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span></code></pre></div></li>
+</ul>
+<p>클라이언트는 정적 팩토리가 반환하는 객체가 <strong>어떤 클래스의 인스턴스인지 알 수도, 알 필요도 없다</strong>.<br>
+오직 반환 타입인 <code>EnumSet</code>의 하위 클래스이기만 하면 된다.</p>
+<h3 id="5-정적-팩토리-메서드를-작성할-당시엔-반환할-객체의-클래스가-존재하지-않아도-된다" >5. 정적 팩토리 메서드를 작성할 당시엔 반환할 객체의 클래스가 존재하지 않아도 된다.
+<span>
+    <a href="#5-%ec%a0%95%ec%a0%81-%ed%8c%a9%ed%86%a0%eb%a6%ac-%eb%a9%94%ec%84%9c%eb%93%9c%eb%a5%bc-%ec%9e%91%ec%84%b1%ed%95%a0-%eb%8b%b9%ec%8b%9c%ec%97%94-%eb%b0%98%ed%99%98%ed%95%a0-%ea%b0%9d%ec%b2%b4%ec%9d%98-%ed%81%b4%eb%9e%98%ec%8a%a4%ea%b0%80-%ec%a1%b4%ec%9e%ac%ed%95%98%ec%a7%80-%ec%95%8a%ec%95%84%eb%8f%84-%eb%90%9c%eb%8b%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>이런 유연함이 <code>JDBC</code>와 같은 <code>서비스 제공자 프레임워크(Service Provider Framework)</code>를 만드는데 근간이 된다.<br>
+<strong><code>서비스 제공자 프레임워크</code></strong> 는 서드파티가 <em>서비스를 implement 하거나 extend</em>해 <strong>제공자(provider, 서비스의 구현체)</strong> 를 <strong>구현</strong>하도록 <strong>의도된 API</strong>이며, 클라이언트에 구현체 제공하는것을 통제해 클라이언트 / 구현체를 분리한다.</p>
+<ol>
+<li>구현체의 동작 정의된 <strong><code>서비스 인터페이스(Service Interface)</code></strong> 를 구현하는 구현체를 만든다.</li>
+<li>제공자가 구현체를 <strong><code>제공자 등록 API(Provider Registration API)</code></strong> 를 통해 등록한다.</li>
+<li>클라이언트가 <strong><code>서비스 접근 API(Service Access API, 정적 팩터리 메서드)</code></strong> 를 이용해 서비스 인스턴스를 얻는다. 이때, <em>어떤 구현체를 원하는지 조건을 명시</em>할 수 있다.</li>
+</ol>
+<p>이러한 방식을 통해, 제공자가 추후 구현체를 작성하여 프레임워크에 제공해도 정상적으로 작동할 수 있다.</p>
+<p>이렇듯 다양한 장점이 있는 정적 팩토리 메서드이지만, 단점 역시 존재한다.</p>
+<h2 id="정적-팩토리-메서드의-단점" >정적 팩토리 메서드의 단점
+<span>
+    <a href="#%ec%a0%95%ec%a0%81-%ed%8c%a9%ed%86%a0%eb%a6%ac-%eb%a9%94%ec%84%9c%eb%93%9c%ec%9d%98-%eb%8b%a8%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="1-정적-팩토리-메서드만-제공하면-하위-클래스-생성이-불가능하다" >1. 정적 팩토리 메서드만 제공하면 하위 클래스 생성이 불가능하다.
+<span>
+    <a href="#1-%ec%a0%95%ec%a0%81-%ed%8c%a9%ed%86%a0%eb%a6%ac-%eb%a9%94%ec%84%9c%eb%93%9c%eb%a7%8c-%ec%a0%9c%ea%b3%b5%ed%95%98%eb%a9%b4-%ed%95%98%ec%9c%84-%ed%81%b4%eb%9e%98%ec%8a%a4-%ec%83%9d%ec%84%b1%ec%9d%b4-%eb%b6%88%ea%b0%80%eb%8a%a5%ed%95%98%eb%8b%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>상속을 하려면 <code>public</code> 또는 <code>protected</code> 생성자가 필요하기 때문이다.<br>
+따라서 개발자는 상속보다 <strong><code>컴포지션</code></strong> 을 사용하도록 유도된다.</p>
+<ul>
+<li><strong><code>컴포지션(Composition)</code></strong> : <strong>has-a 관계</strong>를 구현하기 위한 설계 기법으로, 객체가 다른 객체를 참조하는 인스턴스 변수를 사용하는 방법이다. <a href="https://www.geeksforgeeks.org/composition-in-java/">#</a></li>
+</ul>
+<h3 id="2-네이밍이-정확하지-않으면-다른-사람이-한-번에-알아채기-힘들다" >2. 네이밍이 정확하지 않으면 다른 사람이 한 번에 알아채기 힘들다.
+<span>
+    <a href="#2-%eb%84%a4%ec%9d%b4%eb%b0%8d%ec%9d%b4-%ec%a0%95%ed%99%95%ed%95%98%ec%a7%80-%ec%95%8a%ec%9c%bc%eb%a9%b4-%eb%8b%a4%eb%a5%b8-%ec%82%ac%eb%9e%8c%ec%9d%b4-%ed%95%9c-%eb%b2%88%ec%97%90-%ec%95%8c%ec%95%84%ec%b1%84%ea%b8%b0-%ed%9e%98%eb%93%a4%eb%8b%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>생성자 같이 API에 대한 설명이 명확히 드러나지 않아, 클라이언트는 <strong>정적 팩터리 메서드 방식을 채용한 클래스</strong> 의 인스턴스화 방법을 알아내야 한다.<br>
+따라서, <strong>API 문서의 명확한 작성</strong>과 <strong>적절한 네이밍 규칙</strong>을 통해 이를 방지해야 한다.</p>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/static-factory-method/"><time datetime="2023-10-25">2023-10-25 00:55 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/static-factory-method/">https://cloudsoswift.github.io/post/develop/java/static-factory-method/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/effective-java/">#Effective Java</a></li>
+                
+                    
+                    <li><a href="">#생성자</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item ">
+            
+                <a href="/post/develop/java/builder-pattern/">빌더 패턴</a>
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/algorithm/2023_october_third_week/">[알고리즘 주간 기록] 2023/10/3주차</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2023<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>
