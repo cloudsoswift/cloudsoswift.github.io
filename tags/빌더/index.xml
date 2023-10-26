@@ -60,6 +60,14 @@
     &lt;/a&gt;
 &lt;/span&gt;
 &lt;/h4&gt;&lt;p&gt;생성 중인 복잡한 객체. 일반적으로 시스템은 디렉터와 프로덕트와만 접촉하고, 콘크리트 빌더의 존재는 알지못함.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;참고
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.gofpattern.com/creational/patterns/builder-pattern.php&#34;&gt;Builder Pattern (Seperate construction of complex object : GofPatterns(gofpattern.com))&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Builder_pattern&#34;&gt;Builder pattern - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 id=&#34;java에서의-빌더-패턴&#34; &gt;Java에서의 빌더 패턴
 &lt;span&gt;
     &lt;a href=&#34;#java%ec%97%90%ec%84%9c%ec%9d%98-%eb%b9%8c%eb%8d%94-%ed%8c%a8%ed%84%b4&#34;&gt;
