@@ -6,10 +6,71 @@
     <description>오늘도 개발을 한다. (Posts)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Thu, 26 Oct 2023 02:22:40 +0900</lastBuildDate>
+    <lastBuildDate>Mon, 30 Oct 2023 21:18:05 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[알고리즘 주간 기록] 2023/10/4주차</title>
+      <link>https://cloudsoswift.github.io/post/algorithm/2023_october_fourth_week/</link>
+      <pubDate>Mon, 30 Oct 2023 21:18:05 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/algorithm/2023_october_fourth_week/</guid>
+      <description>&lt;p&gt;2023년 10월 넷 째주 풀었던 알고리즘 문제들을 기록합니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;회고가 필요하다고 생각하는 문제&lt;/strong&gt;(&lt;em&gt;시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제&lt;/em&gt;)만 별도로 문서를 작성해 정리합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;일자&lt;/th&gt;
+&lt;th&gt;푼 문제&lt;/th&gt;
+&lt;th&gt;비고&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 23일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/17140&#34;&gt;17140. 이차원 배열과 연산&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68374904&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 24일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/10942&#34;&gt;10942. 팰린드롬?&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68414250&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 25일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/11049&#34;&gt;11049. 행렬 곱셈 순서&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68458535&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 26일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/17144&#34;&gt;17144. 미세먼지 안녕!&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68486669&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 27일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/16724&#34;&gt;16724. 피리 부는 사나이&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68526396&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 28일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/17404&#34;&gt;17404. RGB거리 2&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68569841&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 29일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/11404&#34;&gt;11404. 플로이드&lt;/a&gt; - &lt;a href=&#34;https://www.acmicpc.net/source/68600008&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;이번주에는 그래도 다행스럽게 streak이 끊기지 않았네요.&lt;br&gt;
+이번 달도 이제 얼마 남지 않았는데 다음 달도 열심히 정진하겠습니다.&lt;/p&gt;
+&lt;p align=&#34;center&#34;&gt;
+  &lt;img src=&#34;https://cloudsoswift.github.io/post/algorithm/2023_october_fourth_week_list.png&#34;&gt;
+&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>빌더 패턴</title>
