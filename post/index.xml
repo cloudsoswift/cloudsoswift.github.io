@@ -6,10 +6,77 @@
     <description>오늘도 개발을 한다. (Posts)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Mon, 30 Oct 2023 21:18:05 +0900</lastBuildDate>
+    <lastBuildDate>Tue, 07 Nov 2023 18:46:26 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[알고리즘 주간 기록] 2023/10/5주차 ~ 2023/11/1주차</title>
+      <link>https://cloudsoswift.github.io/post/algorithm/2023_november_first_week/</link>
+      <pubDate>Tue, 07 Nov 2023 18:46:26 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/algorithm/2023_november_first_week/</guid>
+      <description>&lt;p&gt;2023년 10월 다섯 째주 ~ 11월 첫 째주 풀었던 알고리즘 문제들을 기록합니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;회고가 필요하다고 생각하는 문제&lt;/strong&gt;(&lt;em&gt;시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제&lt;/em&gt;)만 별도로 문서를 작성해 정리합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;일자&lt;/th&gt;
+&lt;th&gt;푼 문제 / 못 푼 사유&lt;/th&gt;
+&lt;th&gt;코드&lt;/th&gt;
+&lt;th&gt;비고&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 30일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/12738&#34;&gt;12738. 가장 긴 증가하는 부분 수열 3&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/68635619&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;10월 31일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/10942&#34;&gt;2240. 자두나무&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/68680821&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 1일&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 2일&lt;/td&gt;
+&lt;td&gt;LIGNex1 1차 면접&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 3일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/20303&#34;&gt;20303. 할로윈의 양아치&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/68786961&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 4일&lt;/td&gt;
+&lt;td&gt;우리카드 필기 시험&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 5일&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;이번 주는 미흡한 일정 관리때문에 밤새고 그 후유증으로 반나절 자고 이런게 많아서 숭덩숭덩 비었네요..&lt;/p&gt;
+&lt;p&gt;이번 주는 이런 일이 없도록&amp;hellip; 노력하겠습니다. 😓&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>[알고리즘 주간 기록] 2023/10/4주차</title>
