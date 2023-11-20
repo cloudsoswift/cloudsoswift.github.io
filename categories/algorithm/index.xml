@@ -6,10 +6,150 @@
     <description>오늘도 개발을 한다. (algorithm)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Tue, 07 Nov 2023 18:46:26 +0900</lastBuildDate>
+    <lastBuildDate>Tue, 21 Nov 2023 00:48:57 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/categories/algorithm/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[알고리즘 주간 기록] 2023/11/3주차</title>
+      <link>https://cloudsoswift.github.io/post/algorithm/2023_november_third_week/</link>
+      <pubDate>Tue, 21 Nov 2023 00:48:57 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/algorithm/2023_november_third_week/</guid>
+      <description>&lt;p&gt;2023년 11월 셋 째주 풀었던 알고리즘 문제들을 기록합니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;회고가 필요하다고 생각하는 문제&lt;/strong&gt;(&lt;em&gt;시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제&lt;/em&gt;)만 별도로 문서를 작성해 정리합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;일자&lt;/th&gt;
+&lt;th&gt;푼 문제 / 못 푼 사유&lt;/th&gt;
+&lt;th&gt;코드&lt;/th&gt;
+&lt;th&gt;비고&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 13일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/11505&#34;&gt;11505. 구간 곱 구하기&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69232159&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 14일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/17387&#34;&gt;17387. 선분 교차&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69247525&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;답 보고 푼 문제&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 15일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/2573&#34;&gt;2573. 빙산&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69285361&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 16일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/2230&#34;&gt;2230. 수 고르기&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69339948&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 17일&lt;/td&gt;
+&lt;td&gt;우리카드 1차 면접&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 18일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/5427&#34;&gt;5427. 불&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69431103&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 19일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/27172&#34;&gt;27172. 수 나누기 게임&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69468016&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;답 보고 푼 문제&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;이번 주는 중간에 면접 때문에 빈 칸이 생겨버렸네요&amp;hellip; 😓&lt;br&gt;
+노력 하겠습니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cloudsoswift.github.io/post/algorithm/2023_november_third_week_list.png&#34; alt=&#34;list&#34;&gt;&lt;/p&gt;
+&lt;p&gt;이번 주에 답 보고 푼 문제들도 정리해서 글 올리도록 하겠습니다.&lt;/p&gt;
+&lt;p&gt;사실 이것 외에도 Effective Java 스터디하면서 정리한 글도 올려야 하는데 블로그 플랫폼을 올릴지 고민하다가 너무 밀렸네요. 😓&lt;/p&gt;
+&lt;p&gt;열심히 글 다시 올려 보겠습니다.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>[알고리즘 주간 기록] 2023/11/2주차</title>
+      <link>https://cloudsoswift.github.io/post/algorithm/2023_november_second_week/</link>
+      <pubDate>Tue, 21 Nov 2023 00:18:57 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/algorithm/2023_november_second_week/</guid>
+      <description>&lt;p&gt;2023년 11월 둘 째주 풀었던 알고리즘 문제들을 기록합니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;회고가 필요하다고 생각하는 문제&lt;/strong&gt;(&lt;em&gt;시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제&lt;/em&gt;)만 별도로 문서를 작성해 정리합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;일자&lt;/th&gt;
+&lt;th&gt;푼 문제 / 못 푼 사유&lt;/th&gt;
+&lt;th&gt;코드&lt;/th&gt;
+&lt;th&gt;비고&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 6일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/2342&#34;&gt;2342. Dance Dance Revolution&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/68901641&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 7일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/10775&#34;&gt;10775. 공항&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/68974852&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 8일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/14003&#34;&gt;14003. 가장 긴 증가하는 부분 수열 5&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/68998346&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 9일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/1916&#34;&gt;1916. 최소비용 구하기&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69079488&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 10일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/2042&#34;&gt;2042. 구간 합 구하기&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69229998&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 11일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/20040&#34;&gt;20040. 사이클 게임&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69148919&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 12일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/1043&#34;&gt;1043. 거짓말&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69211860&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;이번 주는 깔끔하게 1일 1알고리즘을 했습니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cloudsoswift.github.io/post/algorithm/2023_november_second_week_list.png&#34; alt=&#34;list&#34;&gt;&lt;/p&gt;
+&lt;p&gt;다 쉽지는 않았는데, 특히 구간 합 구하기 문제를 풀때 &amp;lsquo;세그먼트 트리&amp;rsquo; 개념을 몰라서 좀 애를 먹었네요.&lt;/p&gt;
+&lt;p&gt;그래서 한 번 세그먼트 트리 정리 글을 추후에 올려보려고 합니다.&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>[알고리즘 주간 기록] 2023/10/5주차 ~ 2023/11/1주차</title>
