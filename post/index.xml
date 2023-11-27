@@ -6,10 +6,80 @@
     <description>오늘도 개발을 한다. (Posts)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Tue, 21 Nov 2023 00:48:57 +0900</lastBuildDate>
+    <lastBuildDate>Mon, 27 Nov 2023 17:57:22 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[알고리즘 주간 기록] 2023/11/4주차</title>
+      <link>https://cloudsoswift.github.io/post/algorithm/2023_november_fourth_week/</link>
+      <pubDate>Mon, 27 Nov 2023 17:57:22 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/algorithm/2023_november_fourth_week/</guid>
+      <description>&lt;p&gt;2023년 11월 넷 째주 풀었던 알고리즘 문제들을 기록합니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;회고가 필요하다고 생각하는 문제&lt;/strong&gt;(&lt;em&gt;시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제&lt;/em&gt;)만 별도로 문서를 작성해 정리합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;일자&lt;/th&gt;
+&lt;th&gt;푼 문제 / 못 푼 사유&lt;/th&gt;
+&lt;th&gt;코드&lt;/th&gt;
+&lt;th&gt;비고&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 20일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/13334&#34;&gt;13334. 철로&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69503083&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;답 보고 푼 문제&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 21일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/2357&#34;&gt;2357. 최솟값과 최댓값&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69534862&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;문제 유형 보고 푼 문제&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 22일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/2533&#34;&gt;2533. 사회망 서비스(SNS)&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69584476&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;문제 유형 보고 푼 문제&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 23일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/16946&#34;&gt;16946. 벽 부수고 이동하기 4&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69602873&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 24일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/5719&#34;&gt;5719. 거의 최단 경로&lt;/a&gt; 풀다가 실패&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 25일&lt;/td&gt;
+&lt;td&gt;카카오 겨울 인턴십 코딩테스트&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 26일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/1987&#34;&gt;1987. 알파벳&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69712195&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;이번 주도 답 보거나 문제 유형을 보고 푼게 많아서 만족스럽지는 못하네요&amp;hellip;&lt;/p&gt;
+&lt;p&gt;카카오 겨울 인턴십 코딩테스트는 5문제를 다 통과하긴 했는데 엣지 케이스가 있을까 겁나네요.&lt;br&gt;
+추후 한 번 풀었던 방법을 정리하는 글도 올리도록 하겠습니다.&lt;/p&gt;
+&lt;p&gt;요즘 블로그 글을 못올리고 있어서 이펙티브 자바 스터디 한 것도 슬슬 좀 다듬어서 올려야겠네요.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://cloudsoswift.github.io/post/algorithm/2023_november_fourth_week_list.png&#34; alt=&#34;list&#34;&gt;&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>[알고리즘 주간 기록] 2023/11/3주차</title>
