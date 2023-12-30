@@ -6,10 +6,166 @@
     <description>오늘도 개발을 한다.</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Mon, 27 Nov 2023 17:57:22 +0900</lastBuildDate>
+    <lastBuildDate>Sun, 31 Dec 2023 00:51:54 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[알고리즘 주간 기록] 2023/12/2주 차</title>
+      <link>https://cloudsoswift.github.io/post/algorithm/2023_december_second_week/</link>
+      <pubDate>Sun, 31 Dec 2023 00:51:54 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/algorithm/2023_december_second_week/</guid>
+      <description>&lt;p&gt;2023년 11월 다섯째 주 ~ 12월 첫째 주 풀었던 알고리즘 문제들을 기록한다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;회고가 필요하다고 생각하는 문제&lt;/strong&gt;(&lt;em&gt;시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제&lt;/em&gt;)만 별도로 문서를 작성해 정리한다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;일자&lt;/th&gt;
+&lt;th&gt;푼 문제 / 못 푼 사유&lt;/th&gt;
+&lt;th&gt;코드&lt;/th&gt;
+&lt;th&gt;비고&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;12월 4일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/5719&#34;&gt;5719. 거의 최단 경로&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/70027194&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;답 보고 푼 문제&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;12월 5일&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;12월 6일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/1707&#34;&gt;1707. 이분 그래프&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69857685&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;답 보고 푼 문제&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;12월 7일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/1911&#34;&gt;1911. 흙길 보수하기&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/70131545&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;12월 8일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/17822&#34;&gt;17822. 원판 돌리기&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/70142215&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;12월 9일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/10868&#34;&gt;10868. 최솟값&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/70142347&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;12월 10일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://school.programmers.co.kr/learn/courses/30/lessons/150366&#34;&gt;150366. 표 병합&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;내 코드 첨부&lt;br/&gt; 기능이 없음.&lt;/td&gt;
+&lt;td&gt;프로그래머스&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;마지막으로 쓰는 알고리즘 주간 기록이 될 것 같다. (물론 모르는 문제 정리는 올릴 예정)&lt;/p&gt;
+&lt;p&gt;이렇게 일기를 끝내니 아직 쓰지 못한 다양한 기업들 면접 후기와, 미라콤, 카카오 등 SW테스트에서의 내 풀이 정리 글을 작성할 생각을 하니 머리가 깨질 것 같다&amp;hellip;&lt;/p&gt;
+&lt;p&gt;하지만 열심히 작성해야겠지&amp;hellip;&lt;/p&gt;
+&lt;p&gt;아마 올해의 마지막 포스트인 것 같은데 많진 않지만 블로그를 찾아와주시는 분들 모두 새해 복 많이 받기를 바랍니다.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>[알고리즘 주간 기록] 2023/11/5주차 ~ 2023/12/1주차</title>
+      <link>https://cloudsoswift.github.io/post/algorithm/2023_november_fifth_week/</link>
+      <pubDate>Sun, 31 Dec 2023 00:16:22 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/algorithm/2023_november_fifth_week/</guid>
+      <description>&lt;p&gt;2023년 11월 다섯째 주 ~ 12월 첫째 주 풀었던 알고리즘 문제들을 기록합니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;회고가 필요하다고 생각하는 문제&lt;/strong&gt;(&lt;em&gt;시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제&lt;/em&gt;)만 별도로 문서를 작성해 정리합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;일자&lt;/th&gt;
+&lt;th&gt;푼 문제 / 못 푼 사유&lt;/th&gt;
+&lt;th&gt;코드&lt;/th&gt;
+&lt;th&gt;비고&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 27일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/2493&#34;&gt;2493. 탑&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69751772&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 28일&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 29일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/1707&#34;&gt;1707. 이분 그래프&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69857685&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;답 보고 푼 문제&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;11월 30일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/5972&#34;&gt;5972. 택배 배송&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/source/69890832&#34;&gt;코드&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;12월 1일&lt;/td&gt;
+&lt;td&gt;&lt;a href=&#34;https://www.acmicpc.net/problem/5719&#34;&gt;5719. 거의 최단 경로&lt;/a&gt; 풀다가 실패&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;12월 2일&lt;/td&gt;
+&lt;td&gt;거의 최단 경로 또 풀려고 했지만 실패&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;12월 3일&lt;/td&gt;
+&lt;td&gt;거의 최단 경로 풀려고 했지만 또 실패&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;최근 게을러져 이달 초 일기를 지금 올리게되었다.&lt;br&gt;
+미뤄졌던 11월 5주 차~12월 1주 차, 12월 2주 차 일기를 쓰고 이제 주간 알고리즘 일기는 &lt;strong&gt;그만 작성&lt;/strong&gt;하고자 한다.&lt;br&gt;
+이렇게 결심하게 된 이유는 다음과 같다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;&lt;em&gt;억지&lt;/em&gt;로 일기를 쓰는 경우&lt;/strong&gt;가 많아졌다.
+&lt;ul&gt;
+&lt;li&gt;내 고질적인 악습관 중 하나인 &amp;lsquo;안 풀리는 문제는 꼭 내 손으로 풀고자 하는 고집&amp;rsquo; 때문에 평소에도 하루의 3시간 4시간 이상씩 잡아먹으니 서류 시즌, 또는 면접 준비 기간이 겹치면 이들을 동시에 진행하기 힘들어졌다.&lt;/li&gt;
+&lt;li&gt;또한, 매일 문제 푸는 streak을 이어야 된다는 강박에, 내가 보완해야하는 알고리즘 종류가 아닌 이미 어느정도 숙달된(ex. SSAFY를 통해 단련한 &lt;strong&gt;완탐&lt;/strong&gt;) 알고리즘 종류의 문제를 풀기 시작하니 이것이 의미가 있는지 의구심이 들었다.&lt;/li&gt;
+&lt;li&gt;따라서, 문제는 &lt;strong&gt;선택적&lt;/strong&gt;으로 풀다가, 정말 답을 모르겠어서 &lt;em&gt;해답 보고 푼 문제들&lt;/em&gt;만 &lt;strong&gt;정리&lt;/strong&gt;해서 포스트하는 것이 낫다 생각하게 되었다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;알고리즘 풀이를 지속할 필요성에 대한 회의감이 들었다.
+&lt;ul&gt;
+&lt;li&gt;정작 알고리즘을 계속 풀어대도 삼성전자 공채, 미라콤 공채, 카카오 인턴십 같이 PS역량이 중요한 기업의 SW테스트를 뚫지 못했다.
+&lt;ul&gt;
+&lt;li&gt;특히, 카카오의 경우 나처럼 5풀을 했어도 붙지 못한 사람이 꽤 있어서 포트폴리오, 자소서 등 역시 갈고 닦아야 한다고 판단했다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;아직도(&amp;hellip;) 올리지 못한 &amp;lsquo;Effective Java 스터디 내용 정리&amp;rsquo; 포스팅과, SSAFY 친구와 함께 진행하기로 한 PJT 관련 정리들은 성실히 올리도록 하겠다.&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>[알고리즘 주간 기록] 2023/11/4주차</title>
@@ -17,7 +173,7 @@
       <pubDate>Mon, 27 Nov 2023 17:57:22 +0900</pubDate>
       
       <guid>https://cloudsoswift.github.io/post/algorithm/2023_november_fourth_week/</guid>
-      <description>&lt;p&gt;2023년 11월 넷 째주 풀었던 알고리즘 문제들을 기록합니다.&lt;/p&gt;
+      <description>&lt;p&gt;2023년 11월 넷째 주 풀었던 알고리즘 문제들을 기록합니다.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;회고가 필요하다고 생각하는 문제&lt;/strong&gt;(&lt;em&gt;시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제&lt;/em&gt;)만 별도로 문서를 작성해 정리합니다.&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
@@ -158,7 +314,7 @@
       <pubDate>Tue, 21 Nov 2023 00:18:57 +0900</pubDate>
       
       <guid>https://cloudsoswift.github.io/post/algorithm/2023_november_second_week/</guid>
-      <description>&lt;p&gt;2023년 11월 둘 째주 풀었던 알고리즘 문제들을 기록합니다.&lt;/p&gt;
+      <description>&lt;p&gt;2023년 11월 둘째 주 풀었던 알고리즘 문제들을 기록합니다.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;회고가 필요하다고 생각하는 문제&lt;/strong&gt;(&lt;em&gt;시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제&lt;/em&gt;)만 별도로 문서를 작성해 정리합니다.&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
