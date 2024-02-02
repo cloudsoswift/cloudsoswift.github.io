@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>JVM의 구조 간략하게 알아보기 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론최근에 시작한 CS 스터디에서 첫 주제가 &lsquo;JVM&rsquo;에 관해 조사하는것으로 정해져 이를 문서로 정리 후 발표를 진행했었다.
+이를 블로그에도 일부분 정리를 해서 포스팅하고자 한다.
+여담으로 해당 문서를 작성하면서 최대한 Oracle과 같은 회사에서 올린 공식적인 문서를 참고하고자 노력했는데, JVM 구현을 위한 스펙 문서는 발견할 수 있었으나 총체적인 구조에 대한 정보는 없는 것 같아 GeeksforGeeks, Freecodecamp와 같은 학습 사이트도 참고하여 작성하였다.
+JVMJVM이란?**JVM(Java Virtual Machine, 자바 가상 머신)**은 Java Application을 실행하는 런타임 엔진 역할을 하는 컴포넌트로, JRE(Java Runtime Environment)의 일부입니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.eaefe0f95d1fe64ef0a3932347fc8e07ff4e3de4515423d0ad22b33474042778.css" integrity="sha256-6u/g&#43;V0f5k7wo5MjR/yOB/9OPeRRVCPQrSKzNHQEJ3g=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="JVM의 구조 간략하게 알아보기" />
+<meta property="og:description" content="서론최근에 시작한 CS 스터디에서 첫 주제가 &lsquo;JVM&rsquo;에 관해 조사하는것으로 정해져 이를 문서로 정리 후 발표를 진행했었다.
+이를 블로그에도 일부분 정리를 해서 포스팅하고자 한다.
+여담으로 해당 문서를 작성하면서 최대한 Oracle과 같은 회사에서 올린 공식적인 문서를 참고하고자 노력했는데, JVM 구현을 위한 스펙 문서는 발견할 수 있었으나 총체적인 구조에 대한 정보는 없는 것 같아 GeeksforGeeks, Freecodecamp와 같은 학습 사이트도 참고하여 작성하였다.
+JVMJVM이란?**JVM(Java Virtual Machine, 자바 가상 머신)**은 Java Application을 실행하는 런타임 엔진 역할을 하는 컴포넌트로, JRE(Java Runtime Environment)의 일부입니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/java/architecture-of-jvm/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-02-02T13:19:37+09:00" />
+<meta property="article:modified_time" content="2024-02-02T13:19:37+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="JVM의 구조 간략하게 알아보기"/>
+<meta name="twitter:description" content="서론최근에 시작한 CS 스터디에서 첫 주제가 &lsquo;JVM&rsquo;에 관해 조사하는것으로 정해져 이를 문서로 정리 후 발표를 진행했었다.
+이를 블로그에도 일부분 정리를 해서 포스팅하고자 한다.
+여담으로 해당 문서를 작성하면서 최대한 Oracle과 같은 회사에서 올린 공식적인 문서를 참고하고자 노력했는데, JVM 구현을 위한 스펙 문서는 발견할 수 있었으나 총체적인 구조에 대한 정보는 없는 것 같아 GeeksforGeeks, Freecodecamp와 같은 학습 사이트도 참고하여 작성하였다.
+JVMJVM이란?**JVM(Java Virtual Machine, 자바 가상 머신)**은 Java Application을 실행하는 런타임 엔진 역할을 하는 컴포넌트로, JRE(Java Runtime Environment)의 일부입니다."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">JVM의 구조 간략하게 알아보기</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#jvm이란">JVM이란?</a>
+      <ul>
+        <li><a href="#java-se8-사양-문서의-설명httpsdocsoraclecomjavasespecsjvmsse8htmljvms-1htmljvms-12"><a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-1.html#jvms-1.2">Java SE8 사양 문서의 설명</a></a></li>
+      </ul>
+    </li>
+    <li><a href="#jvm의-구조-httpswwwgeeksforgeeksorgjvm-works-jvm-architecture">JVM의 구조 <a href="https://www.geeksforgeeks.org/jvm-works-jvm-architecture/">#</a></a>
+      <ul>
+        <li><a href="#클래스-로더class-loader">클래스 로더(Class Loader)</a></li>
+        <li><a href="#jvm-메모리-영역jvm-memory-runtime-data-area">JVM 메모리 영역(JVM Memory, Runtime Data Area)</a></li>
+        <li><a href="#실행-엔진execution-engine">실행 엔진(Execution Engine)</a></li>
+        <li><a href="#자바-네이티브-인터페이스java-native-interface-jni">자바 네이티브 인터페이스(Java Native Interface, JNI)</a></li>
+        <li><a href="#네이티브-메서드-라이브러리native-method-libraries">네이티브 메서드 라이브러리(Native Method Libraries)</a></li>
+      </ul>
+    </li>
+    <li><a href="#jvm의-기능">JVM의 기능</a></li>
+    <li><a href="#jvm-위에선-java만-동작할-수-있나">JVM 위에선 Java만 동작할 수 있나?</a></li>
+    <li><a href="#jvm-계열-언어를-기계어로-컴파일해서-쓸-순-없나">JVM 계열 언어를 기계어로 컴파일해서 쓸 순 없나?</a></li>
+    <li><a href="#jvm을-사용함으로써-얻을-수-있는-장단점">JVM을 사용함으로써 얻을 수 있는 장/단점</a>
+      <ul>
+        <li><a href="#장점">장점</a></li>
+        <li><a href="#단점">단점</a></li>
+      </ul>
+    </li>
+    <li><a href="#jvm과-그-위에서-실행되는-프로그램은-부모-자식-관계인가">JVM과 그 위에서 실행되는 프로그램은 부모-자식 관계인가?</a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p>최근에 시작한 <a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 첫 주제가 &lsquo;JVM&rsquo;에 관해 조사하는것으로 정해져 이를 문서로 정리 후 발표를 진행했었다.<br>
+이를 블로그에도 일부분 정리를 해서 포스팅하고자 한다.<br>
+여담으로 해당 문서를 작성하면서 최대한 Oracle과 같은 회사에서 올린 공식적인 문서를 참고하고자 노력했는데, <a href="https://docs.oracle.com/javase/specs/jvms/se8/html/">JVM 구현을 위한 스펙 문서</a>는 발견할 수 있었으나 총체적인 구조에 대한 정보는 없는 것 같아 GeeksforGeeks, Freecodecamp와 같은 학습 사이트도 참고하여 작성하였다.</p>
+<h1 id="jvm" >JVM
+<span>
+    <a href="#jvm">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><h2 id="jvm이란" >JVM이란?
+<span>
+    <a href="#jvm%ec%9d%b4%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>**<code>JVM(Java Virtual Machine, 자바 가상 머신)</code>**은 Java Application을 실행하는 <strong>런타임 엔진</strong> 역할을 하는 컴포넌트로, JRE(Java Runtime Environment)의 일부입니다.</p>
+<h3 id="java-se8-사양-문서의-설명httpsdocsoraclecomjavasespecsjvmsse8htmljvms-1htmljvms-12" ><a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-1.html#jvms-1.2">Java SE8 사양 문서의 설명</a>
+<span>
+    <a href="#java-se8-%ec%82%ac%ec%96%91-%eb%ac%b8%ec%84%9c%ec%9d%98-%ec%84%a4%eb%aa%85httpsdocsoraclecomjavasespecsjvmsse8htmljvms-1htmljvms-12">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><blockquote>
+<p>Java Platform의 주춧돌 역할을 하는 컴포넌트로 하드웨어 및 운영체제 독립성, 컴파일된 코드의 작은 크기, 악의적인 프로그램으로부터의 사용자 보호를 담당합니다.<br>
+JVM은 실제 컴퓨터처럼 <mark style="background: #FFB86CA6;">추상적인 연산 기계</mark>입니다. 따라서 <strong>명령어 셋</strong>을 가지고 있고, 런타임에 <strong>다양한 메모리 영역을 조작</strong>합니다.<br>
+이러한 형태는 가상 머신을 쓰는 프로그래밍 언어를 구현하는데 있어 일반적인 형태로, JVM 이외에도 <code>P-Code(UCSD Pascal)</code>, <code>Squeak(Smalltalk)</code> 등이 있습니다.<br>
+JVM의 첫 프로토타입은 썬-마이크로시스템에서 구현되었으며, PDA와 유사한 장비상에 호스팅되는 소프트웨어 안의 JVM 명령어 셋을 에뮬레이트 했습니다.<br>
+Oracle의 현재 구현은 JVM을 모바일, 데스크톱 및 서버장치상에서 에뮬레이트 하지만, JVM은 특정 구현 기술, 종속 하드웨어, 종속 운영체제를 가정하지 않습니다. 이는 선천적으로 해석(interpret)되지 않지만, JVM의 명령어 셋을 실리콘 CPU의 명령어 셋으로 컴파일링하므로써 구현할 수 있습니다.<br>
+유효한 클래스 파일로 표현될 수 있는 기능성(<strong>functionality</strong>)을 갖춘 모든 언어는 JVM에 의해 호스팅 될 수 있습니다.</p>
+</blockquote>
+<h2 id="jvm의-구조-httpswwwgeeksforgeeksorgjvm-works-jvm-architecture" >JVM의 구조 <a href="https://www.geeksforgeeks.org/jvm-works-jvm-architecture/">#</a>
+<span>
+    <a href="#jvm%ec%9d%98-%ea%b5%ac%ec%a1%b0-httpswwwgeeksforgeeksorgjvm-works-jvm-architecture">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><img src="architecture_of_jvm.png" alt="architecture_of_jvm">
+JVM의 구조는 위 그림과 같습니다.<br>
+크게 <strong><code>클래스 로더</code></strong>, <strong><code>메모리 영역</code></strong>, <strong><code>실행 엔진</code></strong> 등으로 구성되어 있습니다.</p>
+<h3 id="클래스-로더class-loader" >클래스 로더(Class Loader)
+<span>
+    <a href="#%ed%81%b4%eb%9e%98%ec%8a%a4-%eb%a1%9c%eb%8d%94class-loader">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>클래스 로더는 클래스 파일을 로드하는데 사용되는 JVM의 하위 시스템입니다. <code>로딩(Loading)</code>, <code>링킹(Linking)</code>, <code>초기화(Initialization)</code> 세 가지 동작을 담당합니다.</p>
+<h4 id="로딩loading" >로딩(Loading)
+<span>
+    <a href="#%eb%a1%9c%eb%94%a9loading">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>클래스 로더가 <code>.class</code> 파일을 읽고, 대응되는 binary data를 생성해 JVM 메모리내의 <code>메서드 영역</code>에 <strong>저장</strong>합니다.<br>
+불러온 class와 해당 class의 바로 위 부모 클래스의 <strong>정규화된 이름</strong>, <code>.class</code> 파일이 클래스/인터페이스/Enum 중 어느것과 관련 있는지, <strong>접근 제어자</strong>, <strong>변수 및 메서드 정보</strong> 등 을 저장합니다.<br>
+<code>.class</code> 파일을 불러온 뒤, JVM은 Heap 메모리에 해당 파일을 표현하기 위해 <strong><code>Class(java.lang)</code></strong> 타입의 객체를 생성합니다.</p>
+<ul>
+<li>개발자는 해당 클래스를 통해 <em>클래스의 이름, 부모 클래스의 이름, 변수 및 메서드 정보 등</em>을 얻을 수 있습니다.</li>
+</ul>
+<h4 id="링킹linking" >링킹(Linking)
+<span>
+    <a href="#%eb%a7%81%ed%82%b9linking">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>검증(Verification)</code>, <code>준비(Preparation)</code>, <code>해결(Resolution)</code> 작업을 수행합니다.</p>
+<ul>
+<li><code>검증(Verification)</code>: <code>ByteCodeVerifier</code>에 의해 <code>.class</code> 파일이 올바른 컴파일러에 의해 적절하게 포맷되고 생성되었는지 <strong>확인</strong>합니다.<br>
+만약 실패한다면 <code>java.lang.VerifyError</code> 라는 런타임 예외가 발생하게 됩니다.</li>
+<li><code>준비(Preparation)</code>: 클래스 정적 변수(class static variable)에 대한 메모리를 할당하고, 메모리를 기본값으로 초기화합니다.</li>
+<li><code>해결(Resolution)</code>: 객체를 이름으로 참조(<strong><code>Symbolic References</code></strong>)하는 것을 직접 주소 값을 참조하도록 대체합니다.<br>
+이 과정에서 이름으로 참조된 객체를 찾기 위해 JVM 메모리 내 <code>메서드 영역</code>을 검색합니다.</li>
+</ul>
+<h4 id="클래스-로더의-종류" >클래스 로더의 종류
+<span>
+    <a href="#%ed%81%b4%eb%9e%98%ec%8a%a4-%eb%a1%9c%eb%8d%94%ec%9d%98-%ec%a2%85%eb%a5%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>클래스 로더는 3가지 종류가 있고, 각 클래스 로더들은 JVM의 <strong><code>위임-계층 원칙(Delegation-Hierarchy Principle)</code></strong> 을 따릅니다.<br>
+따라서, (클래스 로딩 요청) -&gt; 시스템 -&gt; 확장 -&gt; 부트스트랩 순으로 클래스 로딩 요청을 위임하게 됩니다.<br>
+부트스트랩 경로에서 클래스가 발견되지 않으면 확장 클래스 로더에게 요청을 전송하고, 확장 클래스 로더도 찾지 못하면 시스템 클래스 로더에게 전송됩니다. 시스템 클래스 로더도 발견하지 못하면 런타임 에러(<code>java.lang.ClassNotFoundException</code>) 가 발생합니다.</p>
+<ul>
+<li><code>부트스트랩 클래스 로더(Bootstrap class loader)</code>: <code>%JAVA_HOME%/jre/lib</code>에 존재하는 <strong>코어 Java API 클래스</strong>들을 불러옵니다. C/C++과 같은 네이티브 언어로 구현됩니다.</li>
+<li><code>확장 클래스 로더(Extension class loader)</code>: <code>부트스트랩 클래스 로더</code>의 자식으로, <code>%JAVA_HOME%/jre/lib/ext</code> 또는 <code>java.ext.dirs</code>  속성에 의해 정의된 디렉토리에 존재하는 클래스들을 불러옵니다. Java의 <code>sun.misc.Launcher$ExtClassLoader</code> 클래스로 구현됩니다.</li>
+<li><code>시스템 클래스 로더(System/Application class loader)</code>: <code>확장 클래스 로더</code>의 자식으로, 애플리케이션 <code>classpath</code>(<em>내부적으로 <code>java.class.path</code>에 매핑된 환경 변수 사용</em>)에 존재하는 클래스들을 불러옵니다. Java의 <code>sun.misc.Launcher$AppClassLoader</code>클래스로 구현됩니다.</li>
+</ul>
+<h4 id="초기화initialization" >초기화(Initialization)
+<span>
+    <a href="#%ec%b4%88%ea%b8%b0%ed%99%94initialization">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><em>부모 클래스에서 자식 클래스로</em>, <em>클래스 내에서는 위에서 아래로</em> 진행하며 <strong>모든 정적 변수(static variable)들</strong>을 코드 및 정적 블럭에 정의된 값으로 할당합니다.</p>
+<h3 id="jvm-메모리-영역jvm-memory-runtime-data-area" >JVM 메모리 영역(JVM Memory, Runtime Data Area)
+<span>
+    <a href="#jvm-%eb%a9%94%eb%aa%a8%eb%a6%ac-%ec%98%81%ec%97%adjvm-memory-runtime-data-area">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>메서드 영역(Method Area)</code>, <code>힙 영역(Heap Area)</code>, <code>스택 영역(Stack Area)</code>, <code>PC 레지스터(PC Registers)</code>, <code>네이티브 메서드 스택(Native Method Stacks)</code>으로 구성되어 있습니다.</p>
+<h4 id="공유-자원" >공유 자원
+<span>
+    <a href="#%ea%b3%b5%ec%9c%a0-%ec%9e%90%ec%9b%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>메서드 영역(Method Area)</code>: <em>클래스 이름, 직속 부모 클래스 이름, 메서드 및 변수</em>(<em>정적 변수 포함</em>)와 같은 모든 <code><strong>클래스 레벨 정보</strong></code>들이 저장됩니다. JVM 당 하나만 존재하며, 공유됩니다.</li>
+<li><code>힙 영역(Heap Area)</code>: 모든 <code>동적으로 생성된 객체(즉, 인스턴스)의 정보</code>가 저장되어 있습니다. JVM 당 하나만 존재하며, 공유됩니다.</li>
+</ul>
+<h4 id="개별-자원" >개별 자원
+<span>
+    <a href="#%ea%b0%9c%eb%b3%84-%ec%9e%90%ec%9b%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>스택 영역(Stack Area)</code>: JVM이 각 스레드마다 사용할 런타임 스택을 생성하는 공간입니다. 런타임 스택의 모든 블록은 <code>활성화 레코드(Activation Record)</code> 또는 <code>스택 프레임(Stack Frame)</code>이라고 부르는 <code><strong>메서드 호출</strong></code>을 저장하는 블록입니다.<br>
+프레임에는 해당 <code><strong>메서드에서 사용되는 모든 로컬 변수</strong></code>가 저장됩니다. 런타임 스택을 사용하던 스레드가 종료되면 JVM에 의해 스택이 파괴됩니다.</li>
+<li><code>PC 레지스터(PC Registers)</code>: 각 스레드 별로 존재하며, <code><strong>스레드의 현재 실행 명령의 주소</strong></code>를 저장합니다.</li>
+<li><code>네이티브 메서드 스택(Native Method Stacks)</code>: 각 스레드 별로 존재하며, <code><strong>네이티브 메서드 정보</strong></code>를 저장합니다. 만약 네이티브 메서드를 호출할 때 매개변수를 넘겼다면 해당 매개변수를 저장합니다.
+네이티브 메서드가 실행되면 스레드는 자바 스택에서 네이티브 메서드 스택으로 전환합니다.<br>
+<img src="switch_native_method_stacks.png" alt="switch_native_method_stacks.png"></li>
+</ul>
+<h3 id="실행-엔진execution-engine" >실행 엔진(Execution Engine)
+<span>
+    <a href="#%ec%8b%a4%ed%96%89-%ec%97%94%ec%a7%84execution-engine">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>바이트 코드로 변환된 <code>.class</code> 파일을 한 줄씩 읽고 메모리 영역에 존재하는 데이터와 정보를 이용해 명령어를 실행합니다.<br>
+<code>인터프리터(Interpreter)</code>, <code>JIT 컴파일러(Just-In-Time Compiler)</code>, <code>가비지 컬렉터(Garbage Collector)</code> 로 구성되어 있습니다.</p>
+<ul>
+<li><code>인터프리터(Interpreter)</code>: 바이트 코드를 한 줄씩 해석하고 실행합니다. 인터프리터이기 때문에 한 메서드가 여러 번 호출될 떄 마다 매번 코드를 다시 해석합니다.</li>
+<li><code>JIT 컴파일러(Just-In-Time Compiler)</code>: 인터프리터의 효율을 높이기 위해, 반복되는 메서드 호출에 대해 런타임에 바이트 코드를 컴파일해 네이티브 코드로 바꾼 뒤 직접 네이티브 코드를 제공합니다.<br>
+따라서 한 메서드를 여러 번 해석하지 않아 효율성이 향상됩니다.<br>
+JVM이 내부적으로 함수가 호출될 때 마다 호출 횟수를 카운트하다가, 임계점 이상 호출되는 경우 JIT 컴파일러를 통한 컴파일이 진행됩니다. <a href="https://www.ibm.com/docs/en/sdk-java-technology/8?topic=reference-jit-compiler">참고</a></li>
+<li><code>가비지 컬렉터(Garbage Collector)</code>: 더 이상 참조되지 않는 객체들을 파괴합니다.</li>
+</ul>
+<h3 id="자바-네이티브-인터페이스java-native-interface-jni" >자바 네이티브 인터페이스(Java Native Interface, JNI)
+<span>
+    <a href="#%ec%9e%90%eb%b0%94-%eb%84%a4%ec%9d%b4%ed%8b%b0%eb%b8%8c-%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4java-native-interface-jni">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>네이티브 메서드 라이브러라와 상호작용하고, 실행에 필요한 네이티브 라이브러리(C/C++)를 제공하는 인터페이스 입니다.<br>
+JVM이 C/C++ 라이브러리를 호출하거나, 특정 하드웨어에서는 C/C++ 라이브러리에 의해 호출될 수 있도록 해줍니다.</p>
+<h3 id="네이티브-메서드-라이브러리native-method-libraries" >네이티브 메서드 라이브러리(Native Method Libraries)
+<span>
+    <a href="#%eb%84%a4%ec%9d%b4%ed%8b%b0%eb%b8%8c-%eb%a9%94%ec%84%9c%eb%93%9c-%eb%9d%bc%ec%9d%b4%eb%b8%8c%eb%9f%ac%eb%a6%acnative-method-libraries">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>실행 엔진에 필요한 네이티브 라이브러리(C/C++)의 집합입니다.</p>
+<h2 id="jvm의-기능" >JVM의 기능
+<span>
+    <a href="#jvm%ec%9d%98-%ea%b8%b0%eb%8a%a5">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>바이트 코드를 포함하고 있는 .class 형태의 파일를 읽고, 검증한 뒤 실행합니다. 또한 해당 코드가 동작할 수 있는 런타임 환경을 제공합니다.</p>
+<h2 id="jvm-위에선-java만-동작할-수-있나" >JVM 위에선 Java만 동작할 수 있나?
+<span>
+    <a href="#jvm-%ec%9c%84%ec%97%90%ec%84%a0-java%eb%a7%8c-%eb%8f%99%ec%9e%91%ed%95%a0-%ec%88%98-%ec%9e%88%eb%82%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>자바 이외에도 <code>Scala</code>, <code>Kotlin</code>, <code>Groovy</code>, <code>Clojure</code> 등 다른 언어들을 실행할 수 있습니다.<br>
+JVM에 의해 호스팅 될 수 있는 유효한 class 파일로 표현할 수 있는 기능(Functionality)를 가진 언어라면 JVM 상에서 실행될 수 있습니다.<br>
+또한 이들은 호환 가능한데, Scala의 라이브러리를 Java 프로그램에서 사용할 수 있는것이 그 예 입니다. <a href="https://en.wikipedia.org/wiki/Java_virtual_machine#JVM_languages">#위키피디아 문서의 설명</a> <a href="https://pinnsg.com/using-java-libraries-scala/">#Scala에서 Java 라이브러리 사용하기</a></p>
+<h2 id="jvm-계열-언어를-기계어로-컴파일해서-쓸-순-없나" >JVM 계열 언어를 기계어로 컴파일해서 쓸 순 없나?
+<span>
+    <a href="#jvm-%ea%b3%84%ec%97%b4-%ec%96%b8%ec%96%b4%eb%a5%bc-%ea%b8%b0%ea%b3%84%ec%96%b4%eb%a1%9c-%ec%bb%b4%ed%8c%8c%ec%9d%bc%ed%95%b4%ec%84%9c-%ec%93%b8-%ec%88%9c-%ec%97%86%eb%82%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>가능은 합니다. Java의 경우 GNU Project에서 만든 <a href="https://en.wikipedia.org/wiki/GNU_Compiler_Collection">GCC(GNU Compiler Collection)</a>의 Java 컴파일러를 이용하면 네이티브 기계어로 컴파일해 사용할 수 있습니다.<br>
+하지만 가비지 콜렉터와 같은 런타임 지원을 받을 수 없기 때문에 정확하게 동작하지 않을 수 있습니다. <a href="https://www.quora.com/Can-a-Java-program-run-without-JVM">#</a></p>
+<h2 id="jvm을-사용함으로써-얻을-수-있는-장단점" >JVM을 사용함으로써 얻을 수 있는 장/단점
+<span>
+    <a href="#jvm%ec%9d%84-%ec%82%ac%ec%9a%a9%ed%95%a8%ec%9c%bc%eb%a1%9c%ec%8d%a8-%ec%96%bb%ec%9d%84-%ec%88%98-%ec%9e%88%eb%8a%94-%ec%9e%a5%eb%8b%a8%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="장점" >장점
+<span>
+    <a href="#%ec%9e%a5%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="하드웨어-및-운영체제-독립성" >하드웨어 및 운영체제 독립성
+<span>
+    <a href="#%ed%95%98%eb%93%9c%ec%9b%a8%ec%96%b4-%eb%b0%8f-%ec%9a%b4%ec%98%81%ec%b2%b4%ec%a0%9c-%eb%8f%85%eb%a6%bd%ec%84%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>C/C++과 같은 언어로 작성된 프로그램은</p>
+<ol>
+<li>CPU마다 기계어가 다르고,</li>
+<li>운영체제마다 API와 실행파일 형식이 다르기 때문에</li>
+</ol>
+<p>프로그램이 개발된 환경과 다른 환경에서 실행하려하면 실행되지 않습니다.<br>
+반면 Java의 경우 JVM을 이용해 동일한 자바 실행 환경을 제공하므로 WORA(Write Once Run Anywhere), 즉 한 번 프로그램을 작성하기만 하면 어느 환경에서든 실행 할 수 있습니다.</p>
+<ul>
+<li>다만 JVM 자체는 플랫폼에 종속적이므로 각 플랫폼마다 작성됩니다.</li>
+</ul>
+<h4 id="자동-메모리-관리" >자동 메모리 관리
+<span>
+    <a href="#%ec%9e%90%eb%8f%99-%eb%a9%94%eb%aa%a8%eb%a6%ac-%ea%b4%80%eb%a6%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>JVM 내부의 가비지 컬렉터가 계속해서 참조되지 않는 객체를 인식하고 파괴해 메모리 공간을 확보해줍니다.   따라서 개발자는 메모리 할당/할당 해제를 위해 별다른 작업을 수행하지 않아도 되고, 실수로 메모리 누수가 일어나거나 <code>댕글링 포인터</code>, <code>더블 프리</code>와 같은 메모리 관련 오류를 줄일 수 있습니다.</p>
+<ul>
+<li><code>댕글링 포인터(Dangling Pointer)</code>: 포인터가 참조중인 객체가 포인터의 수정 없이 삭제, 또는 할당 해제되어 포인터가 계속 할당해제된 메모리를 가리키는 메모리 보안 위반 현상입니다.</li>
+<li><a href="https://learn.microsoft.com/en-us/cpp/sanitizers/error-double-free?view=msvc-170"><code>더블 프리(Double Free)</code></a>: 동일한 heap 메모리 공간에 대해 free(메모리 해제)를 두 번 시도해 발생하는 취약점입니다.<br>
+같은 인수로 free 함수를 두 번 호출할 경우, 메모리 관련 데이터 구조가 손상되어 프로그램이 중단되거나, 이후 두 번의 <code>malloc()</code> 명령에 대해 똑같은 포인터를 반환 할 수 있습니다. 이는 프로그램을 버퍼 오버 플로 공격에 취약하게 만듭니다. <a href="https://cwe.mitre.org/data/definitions/415.html">참고</a></li>
+</ul>
+<h4 id="코드-가독성-및-유지보수성-향상" >코드 가독성 및 유지보수성 향상
+<span>
+    <a href="#%ec%bd%94%eb%93%9c-%ea%b0%80%eb%8f%85%ec%84%b1-%eb%b0%8f-%ec%9c%a0%ec%a7%80%eb%b3%b4%ec%88%98%ec%84%b1-%ed%96%a5%ec%83%81">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>개발자가 로우-레벨 메모리 세부 사항에 대해 신경 쓸 필요가 없기 때문에 코드 가독성과 유지보수성이 향상됩니다.</p>
+<h3 id="단점" >단점
+<span>
+    <a href="#%eb%8b%a8%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="성능" >성능
+<span>
+    <a href="#%ec%84%b1%eb%8a%a5">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>Java의 <em>하드웨어 및 운영체제 독립성에 의해</em>, 바이트 코드를 특정 하드웨어나 시스템에 맞게 최적화시킬 수 없습니다.<br>
+또한 클래스에서 바이트 코드로, 바이트 코드에서 기계 코드로 <strong>두 번 변환하는 과정</strong>을 거쳐야 하기 때문에 C/C++과 같은 언어에 비해 느릴 수 밖에 없습니다.<br>
+또한 계속해서 객체 생성/삭제를 추적하고, 사용하지 않는 메모리를 회수하기 위해 <strong>가비지 컬렉터를 주기적으로 수행</strong>해 <strong>오버헤드가 발생</strong>합니다.<br>
+또한 GC 과정에서 자바 애플리케이션의 스레드가 멈출 수 있어 해당 어플리케이션의 응답 및 대기 시간에 영향을 미칠 수 있습니다.</p>
+<h4 id="jvm-자체" >JVM 자체
+<span>
+    <a href="#jvm-%ec%9e%90%ec%b2%b4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>Java 프로그램이 JVM 자체에 의존하기 때문에, 희박한 확률이지만 JVM 자체가 오작동을 일으켜 에러가 발생할 수도 있습니다.</p>
+<h4 id="메모리-관리" >메모리 관리
+<span>
+    <a href="#%eb%a9%94%eb%aa%a8%eb%a6%ac-%ea%b4%80%eb%a6%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>JVM에서 메모리 할당 밎 관리를 수행하기 때문에, 수동으로 메모리 할당/할당 해제를 할 수 없습니다.</p>
+<h2 id="jvm과-그-위에서-실행되는-프로그램은-부모-자식-관계인가" >JVM과 그 위에서 실행되는 프로그램은 부모-자식 관계인가?
+<span>
+    <a href="#jvm%ea%b3%bc-%ea%b7%b8-%ec%9c%84%ec%97%90%ec%84%9c-%ec%8b%a4%ed%96%89%eb%90%98%eb%8a%94-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%a8%ec%9d%80-%eb%b6%80%eb%aa%a8-%ec%9e%90%ec%8b%9d-%ea%b4%80%ea%b3%84%ec%9d%b8%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>JVM과 그 위에 실행되는 프로그램은 부모 - 자식 관계를 갖는다고 보기 힘듭니다. JVM에서 관리하는 스레드를 통해 동작한다고 봐야 합니다.<br>
+JVM은 Java Application 코드를 실행하기 위해 <em><code>main()</code> 메서드를 실행하는 스레드를 포함해</em> 하나 이상의 스레드를 관리합니다.<br>
+또한 자식 프로세스가 부모로 부터 완전히 독립적인 &lsquo;부모 - 자식 프로세스&rsquo; 관계와 달리, Java Application은 JVM과 긴밀하고 JVM으로부터 메모리 할당, GC 등의 지원을 받습니다.
+따라서 프로세스 - 스레드 관계에 있다고 봐야합니다.</p>
+<h1 id="참고-문서" >참고 문서
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://www.artima.com/insidejvm/ed2/jvm.html">The Java Virtual Machine by Bill Venners</a></li>
+<li><a href="https://www.geeksforgeeks.org/jvm-works-jvm-architecture/">How JVM Works – JVM Architecture? - GeeksForGeeks</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Java_virtual_machine">Java virtual machine - Wikipedia</a></li>
+<li><a href="https://docs.oracle.com/javase/specs/jvms/se8/html/">The Java® Virtual Machine Specification Java SE 8 Edition</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/architecture-of-jvm/"><time datetime="2024-02-02">2024-02-02 13:19 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/architecture-of-jvm/">https://cloudsoswift.github.io/post/develop/java/architecture-of-jvm/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/algorithm/2023_december_second_week/">[알고리즘 주간 기록] 2023/12/2주 차</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>
