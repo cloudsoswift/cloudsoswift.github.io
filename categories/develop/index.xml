@@ -38,14 +38,9 @@
         &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
     &lt;/a&gt;
 &lt;/span&gt;
-&lt;/h2&gt;&lt;p&gt;**&lt;code&gt;JVM(Java Virtual Machine, 자바 가상 머신)&lt;/code&gt;**은 Java Application을 실행하는 &lt;strong&gt;런타임 엔진&lt;/strong&gt; 역할을 하는 컴포넌트로, JRE(Java Runtime Environment)의 일부입니다.&lt;/p&gt;
-&lt;h3 id=&#34;java-se8-사양-문서의-설명httpsdocsoraclecomjavasespecsjvmsse8htmljvms-1htmljvms-12&#34; &gt;&lt;a href=&#34;https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-1.html#jvms-1.2&#34;&gt;Java SE8 사양 문서의 설명&lt;/a&gt;
-&lt;span&gt;
-    &lt;a href=&#34;#java-se8-%ec%82%ac%ec%96%91-%eb%ac%b8%ec%84%9c%ec%9d%98-%ec%84%a4%eb%aa%85httpsdocsoraclecomjavasespecsjvmsse8htmljvms-1htmljvms-12&#34;&gt;
-        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
-    &lt;/a&gt;
-&lt;/span&gt;
-&lt;/h3&gt;&lt;blockquote&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;JVM(Java Virtual Machine, 자바 가상 머신)&lt;/code&gt;&lt;/strong&gt; 은 Java Application을 실행하는 &lt;strong&gt;런타임 엔진&lt;/strong&gt; 역할을 하는 컴포넌트로, JRE(Java Runtime Environment)의 일부입니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-1.html#jvms-1.2&#34;&gt;Java SE8 사양 문서의 설명&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
 &lt;p&gt;Java Platform의 주춧돌 역할을 하는 컴포넌트로 하드웨어 및 운영체제 독립성, 컴파일된 코드의 작은 크기, 악의적인 프로그램으로부터의 사용자 보호를 담당합니다.&lt;br&gt;
 JVM은 실제 컴퓨터처럼 &lt;mark style=&#34;background: #FFB86CA6;&#34;&gt;추상적인 연산 기계&lt;/mark&gt;입니다. 따라서 &lt;strong&gt;명령어 셋&lt;/strong&gt;을 가지고 있고, 런타임에 &lt;strong&gt;다양한 메모리 영역을 조작&lt;/strong&gt;합니다.&lt;br&gt;
 이러한 형태는 가상 머신을 쓰는 프로그래밍 언어를 구현하는데 있어 일반적인 형태로, JVM 이외에도 &lt;code&gt;P-Code(UCSD Pascal)&lt;/code&gt;, &lt;code&gt;Squeak(Smalltalk)&lt;/code&gt; 등이 있습니다.&lt;br&gt;
@@ -191,7 +186,7 @@ JVM이 C/C++ 라이브러리를 호출하거나, 특정 하드웨어에서는 C/
     &lt;/a&gt;
 &lt;/span&gt;
 &lt;/h2&gt;&lt;p&gt;자바 이외에도 &lt;code&gt;Scala&lt;/code&gt;, &lt;code&gt;Kotlin&lt;/code&gt;, &lt;code&gt;Groovy&lt;/code&gt;, &lt;code&gt;Clojure&lt;/code&gt; 등 다른 언어들을 실행할 수 있습니다.&lt;br&gt;
-JVM에 의해 호스팅 될 수 있는 유효한 class 파일로 표현할 수 있는 기능(Functionality)를 가진 언어라면 JVM 상에서 실행될 수 있습니다.&lt;br&gt;
+JVM에 의해 호스팅 될 수 있는 유효한 class 파일로 표현할 수 있는 &lt;code&gt;기능(Functionality)&lt;/code&gt;를 가진 언어라면 JVM 상에서 실행될 수 있습니다.&lt;br&gt;
 또한 이들은 호환 가능한데, Scala의 라이브러리를 Java 프로그램에서 사용할 수 있는것이 그 예 입니다. &lt;a href=&#34;https://en.wikipedia.org/wiki/Java_virtual_machine#JVM_languages&#34;&gt;#위키피디아 문서의 설명&lt;/a&gt; &lt;a href=&#34;https://pinnsg.com/using-java-libraries-scala/&#34;&gt;#Scala에서 Java 라이브러리 사용하기&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&#34;jvm-계열-언어를-기계어로-컴파일해서-쓸-순-없나&#34; &gt;JVM 계열 언어를 기계어로 컴파일해서 쓸 순 없나?
 &lt;span&gt;
@@ -199,7 +194,7 @@ JVM에 의해 호스팅 될 수 있는 유효한 class 파일로 표현할 수 �
         &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
     &lt;/a&gt;
 &lt;/span&gt;
-&lt;/h2&gt;&lt;p&gt;가능은 합니다. Java의 경우 GNU Project에서 만든 &lt;a href=&#34;https://en.wikipedia.org/wiki/GNU_Compiler_Collection&#34;&gt;GCC(GNU Compiler Collection)&lt;/a&gt;의 Java 컴파일러를 이용하면 네이티브 기계어로 컴파일해 사용할 수 있습니다.&lt;br&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;가능&lt;/strong&gt;은 합니다. Java의 경우 GNU Project에서 만든 &lt;a href=&#34;https://en.wikipedia.org/wiki/GNU_Compiler_Collection&#34;&gt;GCC(GNU Compiler Collection)&lt;/a&gt;의 Java 컴파일러를 이용하면 네이티브 기계어로 컴파일해 사용할 수 있습니다.&lt;br&gt;
 하지만 가비지 콜렉터와 같은 런타임 지원을 받을 수 없기 때문에 정확하게 동작하지 않을 수 있습니다. &lt;a href=&#34;https://www.quora.com/Can-a-Java-program-run-without-JVM&#34;&gt;#&lt;/a&gt;&lt;/p&gt;
 &lt;h2 id=&#34;jvm을-사용함으로써-얻을-수-있는-장단점&#34; &gt;JVM을 사용함으로써 얻을 수 있는 장/단점
 &lt;span&gt;
@@ -284,8 +279,8 @@ JVM에 의해 호스팅 될 수 있는 유효한 class 파일로 표현할 수 �
         &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
     &lt;/a&gt;
 &lt;/span&gt;
-&lt;/h2&gt;&lt;p&gt;JVM과 그 위에 실행되는 프로그램은 부모 - 자식 관계를 갖는다고 보기 힘듭니다. JVM에서 관리하는 스레드를 통해 동작한다고 봐야 합니다.&lt;br&gt;
-JVM은 Java Application 코드를 실행하기 위해 &lt;em&gt;&lt;code&gt;main()&lt;/code&gt; 메서드를 실행하는 스레드를 포함해&lt;/em&gt; 하나 이상의 스레드를 관리합니다.&lt;br&gt;
+&lt;/h2&gt;&lt;p&gt;JVM과 그 위에 실행되는 프로그램은 부모 - 자식 관계를 갖는다고 보기 &lt;strong&gt;힘듭니다&lt;/strong&gt;. &lt;strong&gt;JVM에서 관리하는 스레드를 통해 동작&lt;/strong&gt;한다고 봐야 합니다.&lt;br&gt;
+JVM은 Java Application 코드를 실행하기 위해 &lt;em&gt;&lt;code&gt;main()&lt;/code&gt; 메서드를 실행하는 스레드를 포함해&lt;/em&gt; 하나 이상의 &lt;strong&gt;스레드를 관리&lt;/strong&gt;합니다.&lt;br&gt;
 또한 자식 프로세스가 부모로 부터 완전히 독립적인 &amp;lsquo;부모 - 자식 프로세스&amp;rsquo; 관계와 달리, Java Application은 JVM과 긴밀하고 JVM으로부터 메모리 할당, GC 등의 지원을 받습니다.
 따라서 프로세스 - 스레드 관계에 있다고 봐야합니다.&lt;/p&gt;
 &lt;h1 id=&#34;참고-문서&#34; &gt;참고 문서
