@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>B&#43;Tree on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/b&#43;tree/</link>
+    <description>오늘도 개발을 한다. (B&#43;Tree)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Sun, 18 Feb 2024 09:58:46 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/b+tree/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>B Tree와 B&#43;tree 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/database/b-tree-b&#43;tree/</link>
+      <pubDate>Sun, 18 Feb 2024 09:58:46 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/database/b-tree-b&#43;tree/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) &lt;strong&gt;Java&lt;/strong&gt;의 &lt;strong&gt;Reflection&lt;/strong&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h1 id=&#34;b-tree와-btree에-대해-설명해-주세요&#34; &gt;B-Tree와 B+Tree에 대해 설명해 주세요
+&lt;span&gt;
+    &lt;a href=&#34;#b-tree%ec%99%80-btree%ec%97%90-%eb%8c%80%ed%95%b4-%ec%84%a4%eb%aa%85%ed%95%b4-%ec%a3%bc%ec%84%b8%ec%9a%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;h2 id=&#34;b-트리-b-tree&#34; &gt;B 트리 (B-Tree)
+&lt;span&gt;
+    &lt;a href=&#34;#b-%ed%8a%b8%eb%a6%ac-b-tree&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;img src=&#34;B-tree-architecture.png&#34; alt=&#34;B-tree-architecture.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;이진 트리를 확장해 한 노드가 가질 수 있는 자식 노드의 갯수가 2개 이상인 &lt;code&gt;자가 균형 이진 검색 트리(Self Balancing Binary Search Tree)&lt;/code&gt;의 일종이며, 각 노드가 갖고있는 키 들은 정렬되어 있습니다.&lt;br&gt;
+다른 자체 균형 이진 검색 트리와 달리, B 트리는 DB, File System과 같이 큰 데이터 블록을 읽고 써야하는 스토리지 시스템에 적합합니다.&lt;/p&gt;
+&lt;h3 id=&#34;b-트리의-성질&#34; &gt;B 트리의 성질
+&lt;span&gt;
+    &lt;a href=&#34;#b-%ed%8a%b8%eb%a6%ac%ec%9d%98-%ec%84%b1%ec%a7%88&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;차수 m(&lt;em&gt;노드 중 가장 많은 자식을 갖는 노드의 자식 수&lt;/em&gt;)을 갖는 B 트리는 아래와 같은 성질을 만족합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;모든 노드는 최대 m개의 자식이 존재합니다.&lt;/li&gt;
+&lt;li&gt;모든 내부 노드는 최소 ⌈m/2⌉ 개의 자식이 존재합니다.&lt;/li&gt;
+&lt;li&gt;루트 노드는 (&lt;em&gt;리프가 아닌 한&lt;/em&gt;) 최소 2개의 자식이 존재합니다.&lt;/li&gt;
+&lt;li&gt;k개의 자식이 있는 &lt;em&gt;리프가 아닌&lt;/em&gt; 노드는 k-1 개의 키를 갖고 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;b-트리의-노드들&#34; &gt;B 트리의 노드들
+&lt;span&gt;
+    &lt;a href=&#34;#b-%ed%8a%b8%eb%a6%ac%ec%9d%98-%eb%85%b8%eb%93%9c%eb%93%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;B 트리를 이루는 노드는 내부 노드, 루트 노드, 리프 노드로 구성됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;내부-노드-internal-node&#34; &gt;내부 노드 (Internal Node)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%82%b4%eb%b6%80-%eb%85%b8%eb%93%9c-internal-node&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;em&gt;적어도 하나의 자식&lt;/em&gt;을 갖는 노드로, &lt;em&gt;리프 노드와 루트 노드를 제외&lt;/em&gt;한 &lt;strong&gt;모든 노드&lt;/strong&gt;입니다.&lt;br&gt;
+이들은 일반적으로 하위 포인터, 데이터 포인터, 검색 키의 순서 집합으로 표현됩니다.&lt;br&gt;
+모든 &lt;code&gt;내부 노드&lt;/code&gt;는 최대 U개에서 최소 L개의 자식을 포함합니다. 따라서 &lt;code&gt;내부 노드&lt;/code&gt; 내 요소 수는 &amp;lsquo;하위 포인터 수 - 1&amp;rsquo; 입니다. (요소 수는 L-1 보다 높고, U-1 보다 낮습니다.)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;따라서 U는 2L 또는 2L - 1 이고, 각 &lt;code&gt;내부 노드&lt;/code&gt;들은 &lt;strong&gt;최소 절반&lt;/strong&gt; 이상 채워져 있습니다.
+&lt;ul&gt;
+&lt;li&gt;이는 두 &lt;em&gt;절반이 가득 찬&lt;/em&gt; 내부 노드를 하나의 노드로 &lt;strong&gt;병합하거나&lt;/strong&gt;, 하나의 완전한 노드를 두 개의 정상적인 노드로 &lt;strong&gt;나눌 수 있음&lt;/strong&gt;을 의미합니다.&lt;/li&gt;
+&lt;li&gt;이러한 점을 통해, B 트리는 새 값을 삽입하거나 삭제하고 &lt;em&gt;B 트리 속성을 유지하도록&lt;/em&gt; 트리를 조절할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;내부-노드의-구조&#34; &gt;내부 노드의 구조
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%82%b4%eb%b6%80-%eb%85%b8%eb%93%9c%ec%9d%98-%ea%b5%ac%ec%a1%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;$pt_0$&lt;/th&gt;
+&lt;th&gt;$k_0$&lt;/th&gt;
+&lt;th&gt;$pt_1$&lt;/th&gt;
+&lt;th&gt;$pr_0$&lt;/th&gt;
+&lt;th&gt;$k_1$&lt;/th&gt;
+&lt;th&gt;$pt_2$&lt;/th&gt;
+&lt;th&gt;$pr_1$&lt;/th&gt;
+&lt;th&gt;&amp;hellip;&lt;/th&gt;
+&lt;th&gt;$k_{K-1}$&lt;/th&gt;
+&lt;th&gt;$pt_K$&lt;/th&gt;
+&lt;th&gt;$pr_{K-1}$&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;/table&gt;
+&lt;ul&gt;
+&lt;li&gt;$pt_i$ : 하위 서브 트리의 루트 노드를 가리키는 포인터&lt;/li&gt;
+&lt;li&gt;$pr_i$ : 데이터를 갖고 있는 레코드를 가리키는 포인터&lt;/li&gt;
+&lt;li&gt;$k_i$: zero-based 노드 인덱스 $i$의 검색 키&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;또한, 각 내부 노드의 키는 해당 노드의 서브 트리를 나누는 기준 값으로 사용됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;만약 내부 노드에 3가지 자식 노드(&lt;em&gt;또는 트리&lt;/em&gt;)가 있는 경우, 내부 노드에는 최소 2개의 키(예시로 $a_1$, $a_2$)가 있어야 합니다.
+&lt;ul&gt;
+&lt;li&gt;가장 왼쪽 서브 트리의 모든 값은 $a_1$보다 작고, 중간의 서브 트리의 모든 값은 $a_1$ 보다 크고 $a_2$보다 작으며, 가장 오른쪽 서브 트리의 모든 값은 $a_2$보다 큽니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;루트-노드-root-node&#34; &gt;루트 노드 (Root Node)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a3%a8%ed%8a%b8-%eb%85%b8%eb%93%9c-root-node&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;루트 노드의 자식 수는 내부 노드와 동일한 상한이 존재하지만, 하한은 존재하지 않습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;전체 트리에 L-1 보다 적은 요소가 존재한다면, 루트 노드는 트리에서 자식이 전혀 없는 유일한 노드가 됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;리프-노드-leaf-node&#34; &gt;리프 노드 (Leaf Node)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a6%ac%ed%94%84-%eb%85%b8%eb%93%9c-leaf-node&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;실질적인 데이터 객체/청크를 갖는 노드입니다. 모든 리프 노드들은 &lt;strong&gt;같은 레벨에 존재&lt;/strong&gt;해야 합니다.&lt;/p&gt;
+&lt;h3 id=&#34;b-트리의-장점&#34; &gt;B 트리의 장점
+&lt;span&gt;
+    &lt;a href=&#34;#b-%ed%8a%b8%eb%a6%ac%ec%9d%98-%ec%9e%a5%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;정렬되어있는-키&#34; &gt;정렬되어있는 키
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a0%95%eb%a0%ac%eb%90%98%ec%96%b4%ec%9e%88%eb%8a%94-%ed%82%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;저장된 키들이 정렬되어 있어, 순차적인 순회에 유용합니다.&lt;/p&gt;
+&lt;h4 id=&#34;동일한-삽입삭제검색-시간-복잡도&#34; &gt;동일한 삽입/삭제/검색 시간 복잡도
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8f%99%ec%9d%bc%ed%95%9c-%ec%82%bd%ec%9e%85%ec%82%ad%ec%a0%9c%ea%b2%80%ec%83%89-%ec%8b%9c%ea%b0%84-%eb%b3%b5%ec%9e%a1%eb%8f%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;기존의 이진 탐색 트리와 달리, 한 노드에 저장할 수 있는 키의 수가 많아 트리는 더 얕은 높이를 가질 수 있게 되었습니다.&lt;br&gt;
+이러한 계층형 인덱스를 사용하므로써 디스크 I/O가 줄어들어 더 낮은 삽입/삭제/검색 시간 복잡도를 가집니다.
+이러한 점 때문에 B 트리는 대용량 데이터 셋, 실시간 애플리케이션에 적합합니다.&lt;br&gt;
+특히 DB에서 B 트리 인덱스를 사용하면 검색 성능을 크게 향상 시킬 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;DBMS에서는 인덱스 키 - PK가 매칭이 되어있는 B 트리를 만들어두고 이를 사용합니다.
+&lt;ul&gt;
+&lt;li&gt;인덱스를 통해 PK를 찾고, 찾은 PK를 통해 레코드를 찾습니다.&lt;/li&gt;
+&lt;li&gt;DBMS가 PK를 통해 레코드를 찾으려면, 테이블 전체를 뒤져 검색 해야하지만, B 트리 인덱스를 활용하면 트리를 몇 단계 탐색하므로써 PK를 찾을 수 있고 그 PK를 통해 레코드를 찾아올 수 있으므로 속도가 더 빠릅니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;자체-균형&#34; &gt;자체 균형
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%ec%b2%b4-%ea%b7%a0%ed%98%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;B 트리는 &lt;code&gt;자체 균형 이진 검색 트리(Self Balancing Binary Search Tree)&lt;/code&gt;의 일종이므로 항상 최적의 높이를 유지하고자 지속적으로 스스로 균형을 맞추려고 합니다.&lt;br&gt;
+따라서 기존의 이진 검색 트리의 경우 작업이 최악의 경우(&lt;em&gt;트리가 한쪽으로 쏠린 경우&lt;/em&gt;) O(N)의 시간 복잡도를 가졌지만, B 트리는 작업이 최악의 경우에도 O(logN)의 시간복잡도를 유지하도록 보장합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;자체 균형 이진 검색 트리(Self Balancing Binary Search Tree)&lt;/code&gt; : 임의의 아이템 삽입/삭제 이후 자동으로 높이를 낮게 유지하는 노드 기반의 이진 검색 트리를 의미합니다. 대표적인 예시로 AVL 트리, B 트리, RBT 등이 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;b-트리의-단점&#34; &gt;B 트리의 단점
+&lt;span&gt;
+    &lt;a href=&#34;#b-%ed%8a%b8%eb%a6%ac%ec%9d%98-%eb%8b%a8%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;더많은-디스크-공간-사용&#34; &gt;더많은 디스크 공간 사용
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8d%94%eb%a7%8e%ec%9d%80-%eb%94%94%ec%8a%a4%ed%81%ac-%ea%b3%b5%ea%b0%84-%ec%82%ac%ec%9a%a9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;균형 유지를 위해 추가적인 포인터 및 헤더 정보를 유지해야 하므로 더 많은 공간을 사용합니다.&lt;/p&gt;
+&lt;h4 id=&#34;다른-자료-구조에-비해-느린-속도&#34; &gt;다른 자료 구조에 비해 느린 속도
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8b%a4%eb%a5%b8-%ec%9e%90%eb%a3%8c-%ea%b5%ac%ec%a1%b0%ec%97%90-%eb%b9%84%ed%95%b4-%eb%8a%90%eb%a6%b0-%ec%86%8d%eb%8f%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;삽입/삭제 연산 이후 균형 유지를 위해 회전, 병합과 같은 재배치 작업을 수행할 수 있으며, 이 과정에서 오버헤드가 발생할 수 있습니다.&lt;/p&gt;
+&lt;h2 id=&#34;b-트리-b-tree-1&#34; &gt;B+ 트리 (B+ Tree)
+&lt;span&gt;
+    &lt;a href=&#34;#b-%ed%8a%b8%eb%a6%ac-b-tree-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;img src=&#34;B-plus-tree-architecure.png&#34; alt=&#34;B-plus-tree-architecure.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;위는 분기 인자 b=4이며, 1~7 범위의 키와 $d_1$ ~ $d_7$의 데이터 값들을 연결하는 b+ 트리 예시 입니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;B 트리의 변종 중 하나로, 각 노드가 키-값 쌍이 아닌 &lt;strong&gt;키만 포함&lt;/strong&gt;하며(인덱스 인트리) 하단에 &lt;strong&gt;링크드 리프 노드&lt;/strong&gt;들로 이뤄진 &lt;strong&gt;추가적인 레벨&lt;/strong&gt;(데이터 엔트리)이 붙어있는 B 트리로 볼 수 있습니다.&lt;br&gt;
+노드 당 m개 이하의 자식이 있는 &lt;code&gt;다항 트리(m-ary tree)&lt;/code&gt; 라고도 일컬어지며, &lt;code&gt;분기 인자(branching factor, 각 노드 당 자식의 수)&lt;/code&gt; $b$ 를 기준으로 삽입/삭제/검색 작업이 $O(log_b{N})$ 의 시간 복잡도를 가집니다.&lt;br&gt;
+B+ 트리의 핵심 가치는 &lt;code&gt;블록 지향 스토리지(block-oriented storage)&lt;/code&gt;(&lt;em&gt;특히 파일 시스템&lt;/em&gt;)에서 &lt;strong&gt;효율적인 검색&lt;/strong&gt;이 가능하도록 데이터를 저장하는 것입니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;이진 검색 트리와 달리, B+ 트리는 팬아웃이 매우 높아 트리 내 요소를 찾는데 필요한 I/O 작업 횟수를 줄일 수 있기 때문입니다.&lt;br&gt;
+B+ 트리는 MS SQL, Oracle, SQLite 등의 RDBMS에서 &lt;strong&gt;테이블 인덱스&lt;/strong&gt;를 구현하는데 활용됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;b-트리의-성질-1&#34; &gt;B+ 트리의 성질
+&lt;span&gt;
+    &lt;a href=&#34;#b-%ed%8a%b8%eb%a6%ac%ec%9d%98-%ec%84%b1%ec%a7%88-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;분기 인자가 $b$ 이며, 높이 h인 b+ 트리는 다음과 같은 성질을 갖습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;저장된 레코드는 최대 $n_{max} = b^h - b^{h-1}$ 개여야 합니다.&lt;/li&gt;
+&lt;li&gt;저장된 레코드는 최소 $n_{min} = 2\lceil {b\over2} \rceil^{h-1} - 2\lceil {b\over2}\rceil^{h-2}$ 개여야 합니다.&lt;/li&gt;
+&lt;li&gt;트리를 저장하기 위한 공간 복잡도는 O(n) 입니다.&lt;/li&gt;
+&lt;li&gt;레코드를 삽입/삭제/검색하는데 $O(log_b n)$의 시간 복잡도를 갖습니다.&lt;/li&gt;
+&lt;li&gt;B+ 트리 구조는 레코드 수가 증가/감소 함에 따라 확장/수축 할 수 있으며, 크기에 제한이 없습니다.&lt;/li&gt;
+&lt;li&gt;리프 노드들이 링크드 리스트 형태로 이어져 있어 빠른 &lt;code&gt;중위 순회(in-order traversal)&lt;/code&gt;가 가능합니다.&lt;/li&gt;
+&lt;li&gt;리프 노드에서 부모 노드가 갖고 있는 키를 &lt;strong&gt;중복적&lt;/strong&gt;으로 가질 수 있습니다(&lt;code&gt;Key Duplication&lt;/code&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;b-트리의-장점-1&#34; &gt;B+ 트리의 장점
+&lt;span&gt;
+    &lt;a href=&#34;#b-%ed%8a%b8%eb%a6%ac%ec%9d%98-%ec%9e%a5%ec%a0%90-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;순서대로-탐색이-가능&#34; &gt;순서대로 탐색이 가능
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%88%9c%ec%84%9c%eb%8c%80%eb%a1%9c-%ed%83%90%ec%83%89%ec%9d%b4-%ea%b0%80%eb%8a%a5&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;B 트리의 경우 모든 데이터 포인터가 리프 노드에 있지 않기 때문에 순서대로 연결된 리스트를 만들 수 없지만, B+ 트리의 경우 모든 데이터 포인터가 리프 노드에 존재하므로 순서대로 연결된 리스트를 만들 수 있습니다. 이를 통해 범위 쿼리나 정렬된 데이터가 필요한 작업들을 쉽게 수행할 수 있습니다.&lt;br&gt;
+이러한 점 때문에, B+ 트리는 DB 시스템 인덱스를 구축하는데 유용합니다.&lt;/p&gt;
+&lt;h4 id=&#34;정렬되어있는-키-1&#34; &gt;정렬되어있는 키
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a0%95%eb%a0%ac%eb%90%98%ec%96%b4%ec%9e%88%eb%8a%94-%ed%82%a4-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h4 id=&#34;자체-균형-1&#34; &gt;자체 균형
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%ec%b2%b4-%ea%b7%a0%ed%98%95-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h4 id=&#34;동일한-삽입삭제검색-시간-복잡도-1&#34; &gt;동일한 삽입/삭제/검색 시간 복잡도
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8f%99%ec%9d%bc%ed%95%9c-%ec%82%bd%ec%9e%85%ec%82%ad%ec%a0%9c%ea%b2%80%ec%83%89-%ec%8b%9c%ea%b0%84-%eb%b3%b5%ec%9e%a1%eb%8f%84-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h3 id=&#34;b-트리의-단점-1&#34; &gt;B+ 트리의 단점
+&lt;span&gt;
+    &lt;a href=&#34;#b-%ed%8a%b8%eb%a6%ac%ec%9d%98-%eb%8b%a8%ec%a0%90-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;b-트리-대비-더-높은-메모리-사용&#34; &gt;B 트리 대비 더 높은 메모리 사용
+&lt;span&gt;
+    &lt;a href=&#34;#b-%ed%8a%b8%eb%a6%ac-%eb%8c%80%eb%b9%84-%eb%8d%94-%eb%86%92%ec%9d%80-%eb%a9%94%eb%aa%a8%eb%a6%ac-%ec%82%ac%ec%9a%a9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;em&gt;키, 값(데이터 포인터)을 각 노드에 저장&lt;/em&gt;하는 B 트리와 달리, B+ 트리는 내부 노드에는 키만 저장하고 리프 노드 층에 데이터를 저장하기 때문에 &lt;em&gt;키의 개수에 비례해&lt;/em&gt; &lt;strong&gt;추가적인 메모리가 필요&lt;/strong&gt;합니다.&lt;/p&gt;
+&lt;h1 id=&#34;b-tree가-b-tree에-비해-반드시-좋다고-할-수-있을까-그렇지-않다면-어떤-단점이&#34; &gt;B+ Tree가 B Tree에 비해 반드시 좋다고 할 수 있을까? 그렇지 않다면 어떤 단점이?
+&lt;span&gt;
+    &lt;a href=&#34;#b-tree%ea%b0%80-b-tree%ec%97%90-%eb%b9%84%ed%95%b4-%eb%b0%98%eb%93%9c%ec%8b%9c-%ec%a2%8b%eb%8b%a4%ea%b3%a0-%ed%95%a0-%ec%88%98-%ec%9e%88%ec%9d%84%ea%b9%8c-%ea%b7%b8%eb%a0%87%ec%a7%80-%ec%95%8a%eb%8b%a4%eb%a9%b4-%ec%96%b4%eb%96%a4-%eb%8b%a8%ec%a0%90%ec%9d%b4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;img src=&#34;B-tree-and-B+tree.png&#34; alt=&#34;B-tree-and-B+tree.png&#34;&gt;&lt;br&gt;
+&lt;em&gt;웬만한 경우&lt;/em&gt; &lt;strong&gt;B+ 트리&lt;/strong&gt;가 B 트리 보다 &lt;strong&gt;더 빠르게 검색&lt;/strong&gt;할 수 있기 때문에 좋다고 할 수 있습니다. &lt;br&gt;
+B+ 트리는 &lt;em&gt;B 트리와 달리&lt;/em&gt; 내부 노드에 값(데이터)을 저장하지 않으므로써 내부 노드에 저장되는 키의 수, 즉 &lt;strong&gt;&lt;code&gt;팬아웃&lt;/code&gt;을 최대화&lt;/strong&gt; 했고, 이를 통해 &lt;strong&gt;트리의 높이를 최소화&lt;/strong&gt; 하기 때문입니다.&lt;br&gt;
+또한 &lt;strong&gt;&lt;code&gt;범위 검색 작업&lt;/code&gt;&lt;/strong&gt; 을 &lt;strong&gt;효율적&lt;/strong&gt;으로 진행할 수 있습니다. &lt;strong&gt;리프 노드가 서로 연결&lt;/strong&gt;되어 있기 때문입니다.&lt;br&gt;
+그리고 삽입/삭제 작업이 &lt;strong&gt;리프 노드에서 수행&lt;/strong&gt;되어 &lt;strong&gt;더 쉽고 시간 소모가 적습니다&lt;/strong&gt;.&lt;br&gt;
+하지만, B 트리의 경우 &lt;em&gt;특정 노드를 자주 사용하는 경우&lt;/em&gt; &lt;strong&gt;더 빠를 수&lt;/strong&gt; 있습니다. 자주 사용되는 &lt;strong&gt;노드를 &lt;code&gt;상승&lt;/code&gt;&lt;/strong&gt; 시킬 수 있기 때문에, 원하는 데이터에 도달하는데 필요한 비교 작업이 적어지기 때문입니다.&lt;/p&gt;
+&lt;h1 id=&#34;db에서-굳이-rbt와-같은-트리를-사용하지-않고-b-treebtree를-사용하는-이유는&#34; &gt;DB에서 굳이 RBT와 같은 트리를 사용하지 않고, B-Tree/B+Tree를 사용하는 이유는?
+&lt;span&gt;
+    &lt;a href=&#34;#db%ec%97%90%ec%84%9c-%ea%b5%b3%ec%9d%b4-rbt%ec%99%80-%ea%b0%99%ec%9d%80-%ed%8a%b8%eb%a6%ac%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%98%ec%a7%80-%ec%95%8a%ea%b3%a0-b-treebtree%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%98%eb%8a%94-%ec%9d%b4%ec%9c%a0%eb%8a%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;strong&gt;더 빠르기 때문&lt;/strong&gt;입니다.&lt;br&gt;
+이를 설명하려면 먼저 RBT, 즉 &lt;code&gt;레드-블랙 트리(Red-Black Tree)&lt;/code&gt;의 구조에 대해 알아야 합니다.&lt;br&gt;
+RBT는 B 트리/B+ 트리와 마찬가지로 &lt;code&gt;자가 균형 이진 검색 트리(Self Balancing Binary Search Tree)&lt;/code&gt; 의 일종으로, 각각의 노드가 &lt;strong&gt;레드&lt;/strong&gt; 또는 &lt;strong&gt;블랙&lt;/strong&gt;의 색상 속성을 갖습니다.&lt;br&gt;
+루트 노드와 모든 리프 노드들은 블랙이며, 레드 노드의 양 자식 노드들은 모두 블랙이라는 특징 때문에, RBT는 블랙과 레드가 번갈아 나오는 형태를 띄게 됩니다(물론 &lt;em&gt;블랙 다음에 블랙이 나올 수도&lt;/em&gt; 있습니다).&lt;br&gt;
+이러한 특징 때문에 &lt;em&gt;루트 노드로 부터&lt;/em&gt; &lt;mark style=&#34;background: orange;&#34;&gt;가장 먼 리프 노드까지의 거리&lt;/mark&gt;가 &lt;mark style=&#34;background: skyblue;&#34;&gt;가장 가까운 리프 노드까지의 거리&lt;/mark&gt;의 &lt;strong&gt;2배 보다 항상 짧다&lt;/strong&gt;는 특성을 지니고, 이 때문에 삽입/삭제/탐색에 있어 B 트리와 마찬가지로 $O(logN)$의 시간 복잡도를 갖게 됩니다.&lt;br&gt;
+하지만, &lt;strong&gt;RBT&lt;/strong&gt;는 일반적인 BST와 같이 &lt;strong&gt;자식을 둘 밖에&lt;/strong&gt; 가질 수 없으나 &lt;strong&gt;B 트리&lt;/strong&gt;는 &lt;strong&gt;둘 이상&lt;/strong&gt; 가질 수 있기 때문에 훨씬 &lt;strong&gt;트리 높이가 짧아지고&lt;/strong&gt; &lt;strong&gt;더 적은 디스크 I/O 작업을 수행&lt;/strong&gt;해 결과적으로 더 빠른 속도로 탐색을 진행할 수 있습니다.&lt;br&gt;
+또한 &lt;em&gt;B 트리의 경우&lt;/em&gt; 내부 노드의 두 개 이상의 키들을 &lt;strong&gt;&lt;code&gt;배열&lt;/code&gt;&lt;/strong&gt; 로 다루므로 RBT가 하위 노드들을 참조해 탐색하는 것 보다 &lt;strong&gt;더 빠른 접근 속도&lt;/strong&gt;를 갖게 됩니다.&lt;br&gt;
+이러한 차이 때문에 DB에서 B 트리/B+ 트리를 사용하게 됩니다.&lt;/p&gt;
+&lt;h1 id=&#34;오름차순으로-정렬된-인덱스가-있다고-할-때-내림차순-정렬을-시도할-경우-성능이-어떻게-될까-b-treebtree의-구조를-기반으로&#34; &gt;오름차순으로 정렬된 인덱스가 있다고 할 때, 내림차순 정렬을 시도할 경우 성능이 어떻게 될까? (B-Tree/B+Tree의 구조를 기반으로)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%a4%eb%a6%84%ec%b0%a8%ec%88%9c%ec%9c%bc%eb%a1%9c-%ec%a0%95%eb%a0%ac%eb%90%9c-%ec%9d%b8%eb%8d%b1%ec%8a%a4%ea%b0%80-%ec%9e%88%eb%8b%a4%ea%b3%a0-%ed%95%a0-%eb%95%8c-%eb%82%b4%eb%a6%bc%ec%b0%a8%ec%88%9c-%ec%a0%95%eb%a0%ac%ec%9d%84-%ec%8b%9c%eb%8f%84%ed%95%a0-%ea%b2%bd%ec%9a%b0-%ec%84%b1%eb%8a%a5%ec%9d%b4-%ec%96%b4%eb%96%bb%ea%b2%8c-%eb%90%a0%ea%b9%8c-b-treebtree%ec%9d%98-%ea%b5%ac%ec%a1%b0%eb%a5%bc-%ea%b8%b0%eb%b0%98%ec%9c%bc%eb%a1%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;h2 id=&#34;b-트리의-경우&#34; &gt;B 트리의 경우
+&lt;span&gt;
+    &lt;a href=&#34;#b-%ed%8a%b8%eb%a6%ac%ec%9d%98-%ea%b2%bd%ec%9a%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;B 트리의 경우 내림차순 정렬을 시도할 경우, 모든 노드들을 역순으로 하나 하나 탐색해야 합니다. 따라서 B+ 트리 대비 낮은 성능을 보입니다.&lt;/p&gt;
+&lt;h2 id=&#34;b-트리의-경우-1&#34; &gt;B+ 트리의 경우
+&lt;span&gt;
+    &lt;a href=&#34;#b-%ed%8a%b8%eb%a6%ac%ec%9d%98-%ea%b2%bd%ec%9a%b0-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;B+ 트리의 경우 내림차순 정렬을 시도할 경우, 리프 노드만 역순으로 탐색하면 되고, 리프 노드들이 링크드 리스트 형태를 띄고 있으므로 순차 접근에 최적화 되어있어 더 높은 성능을 보입니다.&lt;/p&gt;
+&lt;h1 id=&#34;참고-문서&#34; &gt;참고 문서
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Self-balancing_binary_search_tree&#34;&gt;Self-balancing binary search tree - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/cs/self-balancing-bts&#34;&gt;Self-Balancing Binary Search Trees | Baeldung on Computer Science&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/B-tree&#34;&gt;B-tree - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/introduction-of-b-tree-2/&#34;&gt;Introduction of B-Tree - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/B%2B_tree&#34;&gt;B+ tree - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/introduction-of-b-tree/&#34;&gt;Introduction of B+ Tree - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/difference-between-b-tree-and-b-tree/&#34;&gt;Difference between B tree and B+ tree - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/cs/b-trees-vs-btrees&#34;&gt;The Difference Between B-trees and B+trees | Baeldung on Computer Science&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://tech.kakao.com/2018/06/19/mysql-ascending-index-vs-descending-index/&#34;&gt;MySQL Ascending index vs Descending index - tech.kakao.com&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Red%E2%80%93black_tree&#34;&gt;Red–black tree - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.allegro.tech/2023/11/how-does-btree-make-your-queries-fast.html&#34;&gt;How does B-tree make your queries fast? - allegro.tech&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

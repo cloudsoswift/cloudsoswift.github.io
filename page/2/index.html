@@ -186,7 +186,28 @@
     </nav>
 
 
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
 
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 
 
@@ -200,6 +221,108 @@
 
     <div class="articles h-feed">
         
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/algorithm/2023_december_second_week/">[알고리즘 주간 기록] 2023/12/2주 차</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            2023년 11월 다섯째 주 ~ 12월 첫째 주 풀었던 알고리즘 문제들을 기록한다.
+회고가 필요하다고 생각하는 문제(시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제)만 별도로 문서를 작성해 정리한다.
+일자 푼 문제 / 못 푼 사유 코드 비고 12월 4일 5719. 거의 최단 경로 코드 답 보고 푼 문제 12월 5일 12월 6일 1707. 이분 그래프 코드 답 보고 푼 문제 12월 7일 1911. 흙길 보수하기 코드 12월 8일 17822. 원판 돌리기 코드 12월 9일 10868.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/algorithm/2023_december_second_week/"><time datetime="2023-12-31">2023-12-31 00:51 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/algorithm/2023_december_second_week/">https://cloudsoswift.github.io/post/algorithm/2023_december_second_week/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/algorithm/">algorithm</a></li>
+                
+            </ul>
+        
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/algorithm/2023_november_fifth_week/">[알고리즘 주간 기록] 2023/11/5주차 ~ 2023/12/1주차</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            2023년 11월 다섯째 주 ~ 12월 첫째 주 풀었던 알고리즘 문제들을 기록합니다.
+회고가 필요하다고 생각하는 문제(시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제)만 별도로 문서를 작성해 정리합니다.
+일자 푼 문제 / 못 푼 사유 코드 비고 11월 27일 2493. 탑 코드 11월 28일 11월 29일 1707. 이분 그래프 코드 답 보고 푼 문제 11월 30일 5972. 택배 배송 코드 12월 1일 5719. 거의 최단 경로 풀다가 실패 12월 2일 거의 최단 경로 또 풀려고 했지만 실패 12월 3일 거의 최단 경로 풀려고 했지만 또 실패 최근 게을러져 이달 초 일기를 지금 올리게되었다.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/algorithm/2023_november_fifth_week/"><time datetime="2023-12-31">2023-12-31 00:16 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/algorithm/2023_november_fifth_week/">https://cloudsoswift.github.io/post/algorithm/2023_november_fifth_week/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/algorithm/">algorithm</a></li>
+                
+            </ul>
+        
+        
+        
+    </div>
+</div>
+
+</article>
         
             <article class="post-list h-feed">
     <div class="post-header">
@@ -233,108 +356,6 @@
     
 
     <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/algorithm/2023_november_fourth_week/">https://cloudsoswift.github.io/post/algorithm/2023_november_fourth_week/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/algorithm/">algorithm</a></li>
-                
-            </ul>
-        
-        
-        
-    </div>
-</div>
-
-</article>
-        
-            <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/algorithm/2023_november_third_week/">[알고리즘 주간 기록] 2023/11/3주차</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            2023년 11월 셋째 주 풀었던 알고리즘 문제들을 기록합니다.
-회고가 필요하다고 생각하는 문제(시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제)만 별도로 문서를 작성해 정리합니다.
-일자 푼 문제 / 못 푼 사유 코드 비고 11월 13일 11505. 구간 곱 구하기 코드 11월 14일 17387. 선분 교차 코드 답 보고 푼 문제 11월 15일 2573. 빙산 코드 11월 16일 2230. 수 고르기 코드 11월 17일 우리카드 1차 면접 11월 18일 5427. 불 코드 11월 19일 27172.
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/algorithm/2023_november_third_week/"><time datetime="2023-11-21">2023-11-21 00:48 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/algorithm/2023_november_third_week/">https://cloudsoswift.github.io/post/algorithm/2023_november_third_week/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/algorithm/">algorithm</a></li>
-                
-            </ul>
-        
-        
-        
-    </div>
-</div>
-
-</article>
-        
-            <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/algorithm/2023_november_second_week/">[알고리즘 주간 기록] 2023/11/2주차</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            2023년 11월 둘째 주 풀었던 알고리즘 문제들을 기록합니다.
-회고가 필요하다고 생각하는 문제(시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제)만 별도로 문서를 작성해 정리합니다.
-일자 푼 문제 / 못 푼 사유 코드 비고 11월 6일 2342. Dance Dance Revolution 코드 11월 7일 10775. 공항 코드 11월 8일 14003. 가장 긴 증가하는 부분 수열 5 코드 11월 9일 1916. 최소비용 구하기 코드 11월 10일 2042. 구간 합 구하기 코드 11월 11일 20040. 사이클 게임 코드 11월 12일 1043.
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/algorithm/2023_november_second_week/"><time datetime="2023-11-21">2023-11-21 00:18 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/algorithm/2023_november_second_week/">https://cloudsoswift.github.io/post/algorithm/2023_november_second_week/</a>
     <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
 
 

@@ -185,7 +185,28 @@
     </nav>
 
 
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
 
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
 
 
@@ -203,7 +224,31 @@
             
             
                 <li>
+                    <a href="/tags/b&#43;tree/">B+Tree</a>
+                    (1)
+                </li>
+            
+        
+            
+            
+                <li>
+                    <a href="/tags/b-tree/">B-Tree</a>
+                    (1)
+                </li>
+            
+        
+            
+            
+                <li>
                     <a href="/tags/blog/">blog</a>
+                    (1)
+                </li>
+            
+        
+            
+            
+                <li>
+                    <a href="/tags/db/">DB</a>
                     (1)
                 </li>
             
@@ -244,7 +289,7 @@
             
                 <li>
                     <a href="/tags/java/">Java</a>
-                    (2)
+                    (3)
                 </li>
             
         
@@ -260,6 +305,14 @@
             
                 <li>
                     <a href="/tags/nodejs/">nodejs</a>
+                    (1)
+                </li>
+            
+        
+            
+            
+                <li>
+                    <a href="/tags/reflection/">Reflection</a>
                     (1)
                 </li>
             
@@ -340,6 +393,14 @@
             
                 <li>
                     <a href="/tags/%EC%9E%90%EA%B8%B0%EA%B3%84%EB%B0%9C/">자기계발</a>
+                    (1)
+                </li>
+            
+        
+            
+            
+                <li>
+                    <a href="/tags/%EC%9E%90%EB%A3%8C%EA%B5%AC%EC%A1%B0/">자료구조</a>
                     (1)
                 </li>
             

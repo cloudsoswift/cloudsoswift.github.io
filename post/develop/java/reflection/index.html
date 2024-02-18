@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>Java의 Reflection에 대해 알아보기 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 2월 6일에 발표한 Java의 Reflection에 대해 정리한 문서를 블로그에 공유하고자 한다.
+Reflection이란? #Oracle 공식 문서Reflection은 Java의 기능 중 하나로, 실행중인 Java 프로그램이 스스로를 검사하거나, 프로그램 내부 속성(클래스, 인터페이스, 필드 값 및 메서드)을 조작할 수 있게 해줍니다.
+이는 컴파일 시간에 이름을 모르는 속성을 사용해야 할 때 특히 유용합니다.
+또한, Reflection을 통해 새로운 객체를 인스턴스화 하거나, 메서드를 호출(invoke) 하고 필드 값을 얻거나 설정할 수 있습니다. 이러한 기능은 Java만의 특징 으로 Reflection이 처음 나온 1997년 당시에는 Pascal, C, C&#43;&#43;와 같은 언어로 작성된 프로그램은 프로그램 내에서 정의된 함수에 대한 정보를 얻을 수 있는 방법이 없습니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.eaefe0f95d1fe64ef0a3932347fc8e07ff4e3de4515423d0ad22b33474042778.css" integrity="sha256-6u/g&#43;V0f5k7wo5MjR/yOB/9OPeRRVCPQrSKzNHQEJ3g=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="Java의 Reflection에 대해 알아보기" />
+<meta property="og:description" content="서론CS 스터디에서 2월 6일에 발표한 Java의 Reflection에 대해 정리한 문서를 블로그에 공유하고자 한다.
+Reflection이란? #Oracle 공식 문서Reflection은 Java의 기능 중 하나로, 실행중인 Java 프로그램이 스스로를 검사하거나, 프로그램 내부 속성(클래스, 인터페이스, 필드 값 및 메서드)을 조작할 수 있게 해줍니다.
+이는 컴파일 시간에 이름을 모르는 속성을 사용해야 할 때 특히 유용합니다.
+또한, Reflection을 통해 새로운 객체를 인스턴스화 하거나, 메서드를 호출(invoke) 하고 필드 값을 얻거나 설정할 수 있습니다. 이러한 기능은 Java만의 특징 으로 Reflection이 처음 나온 1997년 당시에는 Pascal, C, C&#43;&#43;와 같은 언어로 작성된 프로그램은 프로그램 내에서 정의된 함수에 대한 정보를 얻을 수 있는 방법이 없습니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/java/reflection/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-02-18T09:55:12+09:00" />
+<meta property="article:modified_time" content="2024-02-18T09:55:12+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Java의 Reflection에 대해 알아보기"/>
+<meta name="twitter:description" content="서론CS 스터디에서 2월 6일에 발표한 Java의 Reflection에 대해 정리한 문서를 블로그에 공유하고자 한다.
+Reflection이란? #Oracle 공식 문서Reflection은 Java의 기능 중 하나로, 실행중인 Java 프로그램이 스스로를 검사하거나, 프로그램 내부 속성(클래스, 인터페이스, 필드 값 및 메서드)을 조작할 수 있게 해줍니다.
+이는 컴파일 시간에 이름을 모르는 속성을 사용해야 할 때 특히 유용합니다.
+또한, Reflection을 통해 새로운 객체를 인스턴스화 하거나, 메서드를 호출(invoke) 하고 필드 값을 얻거나 설정할 수 있습니다. 이러한 기능은 Java만의 특징 으로 Reflection이 처음 나온 1997년 당시에는 Pascal, C, C&#43;&#43;와 같은 언어로 작성된 프로그램은 프로그램 내에서 정의된 함수에 대한 정보를 얻을 수 있는 방법이 없습니다."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">Java의 Reflection에 대해 알아보기</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#클래스메서드-정보-가져오기">클래스/메서드 정보 가져오기</a>
+      <ul>
+        <li><a href="#클래스-이름-가져오기">클래스 이름 가져오기</a></li>
+        <li><a href="#클래스필드메서드-수식어또는-지정자-제한자-가져오기">클래스/필드/메서드 수식어(또는 지정자, 제한자) 가져오기</a></li>
+        <li><a href="#패키지-정보-가져오기">패키지 정보 가져오기</a></li>
+        <li><a href="#부모-클래스superclass-정보-가져오기">부모 클래스(Superclass) 정보 가져오기</a></li>
+        <li><a href="#클래스가-구현한-인터페이스-정보-가져오기">클래스가 구현한 인터페이스 정보 가져오기</a></li>
+      </ul>
+    </li>
+    <li><a href="#생성자메서드필드-값-다루기">생성자/메서드/필드 값 다루기</a>
+      <ul>
+        <li><a href="#생성자-다루기">생성자 다루기</a></li>
+        <li><a href="#메서드-다루기">메서드 다루기</a></li>
+        <li><a href="#필드-값-다루기">필드 값 다루기</a></li>
+      </ul>
+    </li>
+    <li><a href="#reflection의-장점">Reflection의 장점</a>
+      <ul>
+        <li><a href="#동적-구성">동적 구성</a></li>
+        <li><a href="#확장성">확장성</a></li>
+        <li><a href="#코드-분석">코드 분석</a></li>
+      </ul>
+    </li>
+    <li><a href="#reflection의-단점">Reflection의 단점</a>
+      <ul>
+        <li><a href="#성능-오버헤드">성능 오버헤드</a></li>
+        <li><a href="#내부-사항의-노출">내부 사항의 노출</a></li>
+        <li><a href="#컴파일-시간-안전성의-손실">컴파일 시간 안전성의 손실</a></li>
+        <li><a href="#코드의-유지보수성-저하">코드의 유지보수성 저하</a></li>
+        <li><a href="#보안-문제">보안 문제</a></li>
+      </ul>
+    </li>
+  </ul>
+
+  <ul>
+    <li><a href="#방지책---module">방지책 - <code>Module</code></a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 2월 6일에 발표한 Java의 Reflection에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h1 id="reflection이란-oracle-공식-문서httpswwworaclecomtechnical-resourcesarticlesjavajavareflectionhtml" >Reflection이란? <a href="https://www.oracle.com/technical-resources/articles/java/javareflection.html">#Oracle 공식 문서</a>
+<span>
+    <a href="#reflection%ec%9d%b4%eb%9e%80-oracle-%ea%b3%b5%ec%8b%9d-%eb%ac%b8%ec%84%9chttpswwworaclecomtechnical-resourcesarticlesjavajavareflectionhtml">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><code>Reflection</code>은 Java의 기능 중 하나로, 실행중인 Java 프로그램이 스스로를 검사하거나, 프로그램 내부 속성(<code>클래스</code>, <code>인터페이스</code>, <code>필드 값</code> 및 <code>메서드</code>)을 조작할 수 있게 해줍니다.<br>
+이는 <em>컴파일 시간</em>에 <strong>이름을 모르는 속성</strong>을 <strong>사용</strong>해야 할 때 <strong>특히 유용</strong>합니다.<br>
+또한, Reflection을 통해 <strong>새로운 객체를 인스턴스화</strong> 하거나, <strong>메서드를 호출(invoke)</strong> 하고 <strong>필드 값을 얻거나 설정</strong>할 수 있습니다.
+이러한 기능은 <strong><code>Java만의 특징</code></strong> 으로 Reflection이 처음 나온 <em>1997년 당시</em>에는 Pascal, C, C++와 같은 언어로 작성된 프로그램은 프로그램 내에서 정의된 함수에 대한 정보를 얻을 수 있는 방법이 없습니다.</p>
+<ul>
+<li>다만 현대에는 C#, Javascript, Python, PHP와 같은 언어에서 Reflection을 지원하고 있습니다.</li>
+</ul>
+<h2 id="클래스메서드-정보-가져오기" >클래스/메서드 정보 가져오기
+<span>
+    <a href="#%ed%81%b4%eb%9e%98%ec%8a%a4%eb%a9%94%ec%84%9c%eb%93%9c-%ec%a0%95%eb%b3%b4-%ea%b0%80%ec%a0%b8%ec%98%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>먼저 Reflection을 사용하기 위해선 JDK내에 있는 <code>java.lang.reflect</code> 패키지를 import 해야 합니다.<br>
+이후 클래스, 필드 값 및 메서드 정보를 얻고자하는 인스턴스에 대해 <code>getClass()</code>(<code>Object</code>) 메서드를 호출해 해당 객체의 런타임 클래스 표현을 얻어옵니다.</p>
+<ul>
+<li>반환된 <code>Class</code> 타입의 객체는 클래스 정보에 접근하기 위한 메서드들을 제공합니다.</li>
+</ul>
+<h3 id="클래스-이름-가져오기" >클래스 이름 가져오기
+<span>
+    <a href="#%ed%81%b4%eb%9e%98%ec%8a%a4-%ec%9d%b4%eb%a6%84-%ea%b0%80%ec%a0%b8%ec%98%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>Class</code> 클래스의 <code>getSimpleName()</code>, <code>getName()</code>, <code>getCanonicalName()</code> 메서드를 통해 인스턴스의 클래스 이름을 얻을 수 있습니다.<br>
+또한, <code>Class.forName(&quot;정규화된 클래스 이름&quot;)</code>을 통해 해당 클래스의 인스턴스를 만들 수 있습니다. 이때, 일치하는 클래스 이름이 없으면 <em><code>ClassNotFoundException</code></em> 이 발생합니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	Object abc <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ABC<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> classInfo <span style="color:#f92672">=</span> abc<span style="color:#f92672">.</span><span style="color:#a6e22e">getClass</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 1. Class.getSimpleName() : 객체의 선언에 나타있는 기본 이름을 반환한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// &#34;ABC&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>classInfo<span style="color:#f92672">.</span><span style="color:#a6e22e">getSimpleName</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 2. Class.getName(), `Class.getCanonicalName()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// &#34;패키지 선언을 포함한&#34; 정규화된 클래스 이름을 반환합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// &#34;com.example.reflection.ABC&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>classInfo<span style="color:#f92672">.</span><span style="color:#a6e22e">getName</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>	System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>classInfo<span style="color:#f92672">.</span><span style="color:#a6e22e">getCanonicalName</span><span style="color:#f92672">());</span>
+</span></span></code></pre></div><p>이외에도 필드 값의 이름을 가져오고프면 <code>Field</code> 클래스의 <code>getName()</code>을 호출하고, 메서드의 이름을 가져오고프면 <code>Method</code>  클래스의 <code>getName()</code>을 호출하면 된다.</p>
+<h3 id="클래스필드메서드-수식어또는-지정자-제한자-가져오기" >클래스/필드/메서드 수식어(또는 지정자, 제한자) 가져오기
+<span>
+    <a href="#%ed%81%b4%eb%9e%98%ec%8a%a4%ed%95%84%eb%93%9c%eb%a9%94%ec%84%9c%eb%93%9c-%ec%88%98%ec%8b%9d%ec%96%b4%eb%98%90%eb%8a%94-%ec%a7%80%ec%a0%95%ec%9e%90-%ec%a0%9c%ed%95%9c%ec%9e%90-%ea%b0%80%ec%a0%b8%ec%98%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>Class</code>/<code>Field</code>/<code>Method</code> 클래스의 <code>getModifiers()</code> 메서드를 호출하면 해당 속성의 수식어 정보를 저장하고 있는 int 타입의 <strong>플래그 비트</strong>를 반환합니다.<br>
+이 플래그 비트는 <code>java.lang.reflect.Modifier</code>에서 제공하는 <code>isPublic()</code>, <code>isAbstract()</code>정적 메서드들을 통해 특정 수식어가 존재하는지 확인하는데 사용할 수 있습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	Object abc <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ABC<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> classInfo <span style="color:#f92672">=</span> abc<span style="color:#f92672">.</span><span style="color:#a6e22e">getClass</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">int</span> abcMods <span style="color:#f92672">=</span> classInfo<span style="color:#f92672">.</span><span style="color:#a6e22e">getModifiers</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ABC 클래스가 public으로 선언되어 있는지 출력합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// &#34;true&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>Modifier<span style="color:#f92672">.</span><span style="color:#a6e22e">isPublic</span><span style="color:#f92672">(</span>abcMods<span style="color:#f92672">));</span>
+</span></span></code></pre></div><h3 id="패키지-정보-가져오기" >패키지 정보 가져오기
+<span>
+    <a href="#%ed%8c%a8%ed%82%a4%ec%a7%80-%ec%a0%95%eb%b3%b4-%ea%b0%80%ec%a0%b8%ec%98%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>Class</code> 클래스의 <code>getPackage()</code> 메서드를 호출하면 해당 클래스가 속한 패키지에 대한 정보들로 번들링된 <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Package.html"><code>Package</code></a> 클래스 객체를 반환합니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	Object abc <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ABC<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> classInfo <span style="color:#f92672">=</span> abc<span style="color:#f92672">.</span><span style="color:#a6e22e">getClass</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	Package pkgInfo <span style="color:#f92672">=</span> classInfo<span style="color:#f92672">.</span><span style="color:#a6e22e">getPackage</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ABC 클래스가 속한 패키지 이름을 출력합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// &#34;com.example.reflection&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>pkgInfo<span style="color:#f92672">.</span><span style="color:#a6e22e">getName</span><span style="color:#f92672">());</span>
+</span></span></code></pre></div><h3 id="부모-클래스superclass-정보-가져오기" >부모 클래스(Superclass) 정보 가져오기
+<span>
+    <a href="#%eb%b6%80%eb%aa%a8-%ed%81%b4%eb%9e%98%ec%8a%a4superclass-%ec%a0%95%eb%b3%b4-%ea%b0%80%ec%a0%b8%ec%98%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>Class</code> 클래스의 <code>getSuperclass()</code> 메서드를 호출하면 해당 클래스의 부모 클래스 <code>Class</code> 객체를 얻을 수 있습니다.</p>
+<ul>
+<li><strong>라이브러리</strong> 또는 <strong>Java에 빌트인 되어있는 클래스</strong>의 경우, 객체의 부모 클래스를 알기 힘든 경우가 많은데 이런 경우 유용합니다.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	Object abc <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ABC<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> classInfo <span style="color:#f92672">=</span> abc<span style="color:#f92672">.</span><span style="color:#a6e22e">getClass</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> superClassInfo <span style="color:#f92672">=</span> classInfo<span style="color:#f92672">.</span><span style="color:#a6e22e">getSuperclass</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ABC 클래스의 부모인 Object 클래스를 출력합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// &#34;Object&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>superClassInfo<span style="color:#f92672">.</span><span style="color:#a6e22e">getSimpleName</span><span style="color:#f92672">());</span>
+</span></span></code></pre></div><h3 id="클래스가-구현한-인터페이스-정보-가져오기" >클래스가 구현한 인터페이스 정보 가져오기
+<span>
+    <a href="#%ed%81%b4%eb%9e%98%ec%8a%a4%ea%b0%80-%ea%b5%ac%ed%98%84%ed%95%9c-%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4-%ec%a0%95%eb%b3%b4-%ea%b0%80%ec%a0%b8%ec%98%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>Class</code> 클래스의 <code>getInterfaces()</code> 메서드를 호출하면 해당 클래스가 구현한 인터페이스 <code>Class</code> 객체의 배열을 얻을 수 있습니다.</p>
+<ul>
+<li>이때, 해당 클래스가 <code>implements</code> 키워드를 통해 &lsquo;<strong>구현할 것</strong>이라고 <strong>선언</strong>&lsquo;한 인터페이스들만 반환 됩니다. 즉, <em>부모 클래스들이 구현한 인터페이스들</em>은 <strong>반환되지 않습니다</strong>.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	Object abc <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ABC<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> classInfo <span style="color:#f92672">=</span> abc<span style="color:#f92672">.</span><span style="color:#a6e22e">getClass</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ABC 클래스의 경우 구현한 인터페이스가 없으므로
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 아래 배열은 빈 배열 입니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Class<span style="color:#f92672">&lt;?&gt;</span> abcInterfaceInfo<span style="color:#f92672">[]</span> <span style="color:#f92672">=</span> classInfo<span style="color:#f92672">.</span><span style="color:#a6e22e">getInterfaces</span><span style="color:#f92672">();</span>
+</span></span></code></pre></div><h2 id="생성자메서드필드-값-다루기" >생성자/메서드/필드 값 다루기
+<span>
+    <a href="#%ec%83%9d%ec%84%b1%ec%9e%90%eb%a9%94%ec%84%9c%eb%93%9c%ed%95%84%eb%93%9c-%ea%b0%92-%eb%8b%a4%eb%a3%a8%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><blockquote>
+<p>아래에서 <code>getXXX</code>/<code>getDeclaredXXX</code>이 혼용되어 나옵니다.<br>
+<code>getXXX</code>와 <code>getDeclaredXXX</code>의 차이: <code>getXXX</code>의 경우 <em>해당 클래스는 물론</em>  <strong>상속한 클래스</strong>, <strong>구현한 인터페이스</strong>에서 선언된 것도 반환하지만, <code>getDeclaredXXX</code>의 경우 현재 <strong>클래스내에서</strong> 선언된 것만 반환합니다.<br>
+또한, <code>getXXX</code>의 경우 <strong>public으로 선언된 것</strong>만 반환하지만, <code>getDeclaredXXX</code>의 경우 클래스내에서 선언된 <strong>모든 요소들</strong>을 가져옵니다.</p>
+</blockquote>
+<h3 id="생성자-다루기" >생성자 다루기
+<span>
+    <a href="#%ec%83%9d%ec%84%b1%ec%9e%90-%eb%8b%a4%eb%a3%a8%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>Class</code> 클래스의 <code>getConstructors()</code> 메서드를 호출하면 해당 클래스의 <em>생성자 정보들로 번들링 된</em> <code>Constructor</code> 클래스 배열을 반환합니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> abcClass <span style="color:#f92672">=</span> Class<span style="color:#f92672">.</span><span style="color:#a6e22e">forName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.example.reflection.ABC&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	Constructor<span style="color:#f92672">&lt;?&gt;[]</span> constructors <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getConstructors</span><span style="color:#f92672">();</span>
+</span></span></code></pre></div><h4 id="특정-생성자-가져오기" >특정 생성자 가져오기
+<span>
+    <a href="#%ed%8a%b9%ec%a0%95-%ec%83%9d%ec%84%b1%ec%9e%90-%ea%b0%80%ec%a0%b8%ec%98%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>getConstructor()</code>에 <em>실제 선언되어있는 순서대로</em> 인수들의 클래스(ex. int라면 <code>int.class</code>)를 파라미터로 넘겨주면 해당 시그니처를 갖는 생성자를 반환합니다.</p>
+<ul>
+<li>만약 일치하는 시그니처를 갖는 생성자가 존재하지 않는다면 <code>NoSuchMethodException</code>이 발생합니다.
+이는 Java에서 <strong>생성자 간 메서드 시그니처가 겹칠 수 없다</strong>는 점을 활용한 것 입니다.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ABC</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	ABC<span style="color:#f92672">(</span>String Str<span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span> Int<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> abcClass <span style="color:#f92672">=</span> Class<span style="color:#f92672">.</span><span style="color:#a6e22e">forName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.example.reflection.ABC&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 첫 번째 인자로 String 값을 받고 두 번째 인자로 int 값을 받는 생성자를 반환합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Constructor<span style="color:#f92672">&lt;?&gt;</span> constructor <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getConstructor</span><span style="color:#f92672">(</span>String<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span><span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">);</span>
+</span></span></code></pre></div><h4 id="constructor-클래스로-인스턴스-만들기" ><code>Constructor</code> 클래스로 인스턴스 만들기
+<span>
+    <a href="#constructor-%ed%81%b4%eb%9e%98%ec%8a%a4%eb%a1%9c-%ec%9d%b8%ec%8a%a4%ed%84%b4%ec%8a%a4-%eb%a7%8c%eb%93%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>Constructor</code> 클래스의 <code>newInstance(매개변수)</code> 메서드를 호출하면 됩니다. 이때, 디폴트로 <code>Object</code> 형태로 반환됩니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> abcClass <span style="color:#f92672">=</span> Class<span style="color:#f92672">.</span><span style="color:#a6e22e">forName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.example.reflection.ABC&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	Constructor<span style="color:#f92672">&lt;?&gt;</span> constructor <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getConstructor</span><span style="color:#f92672">(</span>String<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span><span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 기본 반환타입이 Object이므로, ABC 클래스 변수에 할당하려면 명시적 형변환이 필요합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	ABC abc <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>ABC<span style="color:#f92672">)</span> constructor<span style="color:#f92672">.</span><span style="color:#a6e22e">newInstance</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;HI&#34;</span><span style="color:#f92672">,</span> <span style="color:#ae81ff">123</span><span style="color:#f92672">);</span>
+</span></span></code></pre></div><ul>
+<li><code>Class</code> 클래스의 <code>newInstance()</code> 메서드를 이용해 인스턴스를 만들 수도 있지만, 이는 <strong>Java 9</strong>부터 <strong><code>Deprecated</code></strong> 되었기 때문에 <code>Constructor</code> <strong>클래스를 활용</strong>해 인스턴스를 만드는 것이 <strong>권장</strong>됩니다.</li>
+</ul>
+<h3 id="메서드-다루기" >메서드 다루기
+<span>
+    <a href="#%eb%a9%94%ec%84%9c%eb%93%9c-%eb%8b%a4%eb%a3%a8%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>Reflection을 이용하면 <em>메서드는 물론</em> <strong>오버로딩된 메서드</strong>를 <strong>런타임 시간</strong>에 호출할 수 있습니다.</p>
+<h4 id="메서드-가져오기" >메서드 가져오기
+<span>
+    <a href="#%eb%a9%94%ec%84%9c%eb%93%9c-%ea%b0%80%ec%a0%b8%ec%98%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>Class</code> 클래스의 <code>getMethods()</code>  또는 <code>getDeclaredMethods()</code>를 호출하면 해당 클래스의 메서드들을 불러옵니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> abcClass <span style="color:#f92672">=</span> Class<span style="color:#f92672">.</span><span style="color:#a6e22e">forName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.example.reflection.ABC&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 해당 클래스에서는 물론 상속한 클래스, 구현한 인터페이스에서 갖고있는 public 메서드들을 가져옵니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Method methods1<span style="color:#f92672">[]</span> <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getMethods</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 해당 클래스 내에서 선언된 모든 메서드들을 가져옵니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Method methods2<span style="color:#f92672">[]</span> <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getDeclaredMethods</span><span style="color:#f92672">();</span>
+</span></span></code></pre></div><h4 id="단일-메서드-가져오기" >단일 메서드 가져오기
+<span>
+    <a href="#%eb%8b%a8%ec%9d%bc-%eb%a9%94%ec%84%9c%eb%93%9c-%ea%b0%80%ec%a0%b8%ec%98%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>getMethod(함수 명, 인수 클래스...)</code>또는 <code>getDeclaredMethod()</code>를 통해 단일 메서드를 불러올 수 있습니다.
+이때 인자로 <strong>함수 명</strong>을(<em>있다면 인수들의 타입 클래스까지</em>) 넘겨주면 됩니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> abcClass <span style="color:#f92672">=</span> Class<span style="color:#f92672">.</span><span style="color:#a6e22e">forName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.example.reflection.ABC&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 해당 클래스 내에서 선언된 메서드 중 첫 번째 인자로 int를 받는 &#34;make&#34; 라는 메서드를 가져옵니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Method method <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getDeclaredMethod</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;make&#34;</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span><span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">);</span>
+</span></span></code></pre></div><h4 id="메서드-호출하기" >메서드 호출하기
+<span>
+    <a href="#%eb%a9%94%ec%84%9c%eb%93%9c-%ed%98%b8%ec%b6%9c%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>Method</code> 클래스의 <code>invoke(instance, 인자들)</code> 메서드를 호출하면 해당 메서드를 실행할 수 있습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> abcClass <span style="color:#f92672">=</span> Class<span style="color:#f92672">.</span><span style="color:#a6e22e">forName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.example.reflection.ABC&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	ABC abc <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>ABC<span style="color:#f92672">)</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getConstructor</span><span style="color:#f92672">().</span><span style="color:#a6e22e">newInstance</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 해당 클래스 내에서 선언된 메서드 중 첫 번째 인자로 int를 받는 &#34;make&#34; 라는 메서드를 가져옵니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Method method <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getDeclaredMethod</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;make&#34;</span><span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span><span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// abc 변수에 저장된 인스턴스로 make 라는 함수를 인자로 10을 넘겨 실행하는 코드입니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	method<span style="color:#f92672">.</span><span style="color:#a6e22e">invoke</span><span style="color:#f92672">(</span>abc<span style="color:#f92672">,</span> <span style="color:#ae81ff">10</span><span style="color:#f92672">);</span>
+</span></span></code></pre></div><h3 id="필드-값-다루기" >필드 값 다루기
+<span>
+    <a href="#%ed%95%84%eb%93%9c-%ea%b0%92-%eb%8b%a4%eb%a3%a8%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>Class 클래스의 <code>getFields()</code>또는 <code>getDeclaredFields()</code> 메서드를 호출하면 해당 클래스의 필드의 <em>필드 값에 대한 정보를 갖는</em> <code>Field</code> 클래스들을 반환합니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> abcClass <span style="color:#f92672">=</span> Class<span style="color:#f92672">.</span><span style="color:#a6e22e">forName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.example.reflection.ABC&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ABC 클래스는 물론 부모 클래스, 구현한 인터페이스가 갖고있는 public 필드들을 가져옵니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Field fields1<span style="color:#f92672">[]</span> <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getFields</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ABC 클래스내에서 선언된 모든 필드들을 가져옵니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Field fields2<span style="color:#f92672">[]</span> <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getDeclaredFields</span><span style="color:#f92672">();</span>
+</span></span></code></pre></div><h4 id="단일-필드-가져오기" >단일 필드 가져오기
+<span>
+    <a href="#%eb%8b%a8%ec%9d%bc-%ed%95%84%eb%93%9c-%ea%b0%80%ec%a0%b8%ec%98%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>만약 하나의 필드 값을 가져오고 싶다면 <code>getDeclaredField(fieldName)</code> 또는 <code>getField(fieldName)</code>을 이용하면 가져올 수 있습니다.</p>
+<ul>
+<li>만약 올바른 필드 이름을 넘기지 못했다면, <code>NoSuchFieldException</code>을 던지게 됩니다.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> abcClass <span style="color:#f92672">=</span> Class<span style="color:#f92672">.</span><span style="color:#a6e22e">forName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.example.reflection.ABC&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ABC 클래스는 물론 부모 클래스, 구현한 인터페이스가 갖고있는 public 필드들 중 &#34;Number&#34; 라는 이름의 필드를 가져옵니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Field field1 <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getField</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Number&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// ABC 클래스내에서 선언된 필드들 중 &#34;Age&#34; 라는 이름의 필드를 가져옵니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Field field2 <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getDeclaredField</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Age&#34;</span><span style="color:#f92672">);</span>
+</span></span></code></pre></div><h4 id="필드-타입-가져오기" >필드 타입 가져오기
+<span>
+    <a href="#%ed%95%84%eb%93%9c-%ed%83%80%ec%9e%85-%ea%b0%80%ec%a0%b8%ec%98%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>Field</code> 클래스의 <code>getType()</code> 메서드를 호출하면 해당 필드의 타입 <code>Class</code> 객체를 반환합니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	Class<span style="color:#f92672">&lt;?&gt;</span> abcClass <span style="color:#f92672">=</span> Class<span style="color:#f92672">.</span><span style="color:#a6e22e">forName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.example.reflection.ABC&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	Field field <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getField</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Number&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// &#34;Number&#34; 필드의 타입에 대한 정보를 갖는 Class를 반환합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Class<span style="color:#f92672">&lt;?&gt;</span> fieldClass <span style="color:#f92672">=</span> field<span style="color:#f92672">.</span><span style="color:#a6e22e">getType</span><span style="color:#f92672">();</span>
+</span></span></code></pre></div><h4 id="필드-값-가져오기" >필드 값 가져오기
+<span>
+    <a href="#%ed%95%84%eb%93%9c-%ea%b0%92-%ea%b0%80%ec%a0%b8%ec%98%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>Field</code> 클래스의 <code>get(instance)</code> 또는 <code>getXXX(instance)</code> 메서드를 호출하면 주어진 인스턴스에서 해당 필드가 어떤 값을 갖고있는지 반환합니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	<span style="color:#75715e">// ABC 클래스는 int 타입의 Number 필드를 갖고 있습니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Class<span style="color:#f92672">&lt;?&gt;</span> abcClass <span style="color:#f92672">=</span> Class<span style="color:#f92672">.</span><span style="color:#a6e22e">forName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.example.reflection.ABC&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	ABC abc <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>ABC<span style="color:#f92672">)</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getConstructor</span><span style="color:#f92672">().</span><span style="color:#a6e22e">newInstance</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	Field field <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getField</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Number&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// abc 변수에 저장된 인스턴스가 갖고있는 Number 필드 값을 반환합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// get() 메서드를 호출하면 Object 타입으로,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 여기서는 Number가 int 타입이므로, 래퍼 클래스인 Integer 타입으로 반환됩니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Object fieldValue <span style="color:#f92672">=</span> field<span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>abc<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// getXXX() (XXX = Int, Boolean 등 원시 타입) 메서드를 호출하면 해당 타입으로 반환합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">int</span> fieldIntValue <span style="color:#f92672">=</span> field<span style="color:#f92672">.</span><span style="color:#a6e22e">getInt</span><span style="color:#f92672">(</span>abc<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 해당 필드의 디폴트 값을 가져오고 싶다면 instance로 null을 넘겨주면 됩니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 만약 정적 필드라면, 별도로 instance를 넘기지 않아도 값을 불러올 수 있습니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// (instance를 넘겨도 해당 instance는 무시됩니다.)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">int</span> defaultValue <span style="color:#f92672">=</span> field<span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span><span style="color:#66d9ef">null</span><span style="color:#f92672">);</span>	
+</span></span></code></pre></div><h4 id="필드-값-바꾸기" >필드 값 바꾸기
+<span>
+    <a href="#%ed%95%84%eb%93%9c-%ea%b0%92-%eb%b0%94%ea%be%b8%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>Field</code> 클래스의 <code>set(instance, 값)</code> 메서드를 호출하면 필드 값을 바꿀 수 있습니다.
+<code>Field</code> 클래스의 <code>setAccessible(boolean)</code> 메서드를 호출하면 필드 <strong>접근 가능 여부</strong>를 조작할 수 있습니다.</p>
+<ul>
+<li>이때, 접근 가능 여부란, <em>실제 필드의 접근 제어자</em>를 <em>바꾸는 것이 아니라</em>, <code>AccessibleObject</code>(여기선 <code>Field</code>)의 동작을 바꾸는 것입니다.
+<blockquote>
+<p>해당 값이 true인 경우 <strong>reflection의 대상이 된 객체</strong>(여기서는 <code>Field</code>)는 사용 될 때 <code>자바 언어 접근 체킹(Java Language Access checking)</code>을 억제해야 함을 의미합니다.
+즉, 해당 객체를 사용할 때 이것이 <em>public 인지 여부</em>와 같은 것을 검사하는 <strong>액세스 검사</strong>가 <strong>이뤄지지 않음</strong>을 의미합니다.</p>
+</blockquote>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	<span style="color:#75715e">// ABC 클래스는 private으로 설정된 int 타입의 Number 필드를 갖고 있습니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Class<span style="color:#f92672">&lt;?&gt;</span> abcClass <span style="color:#f92672">=</span> Class<span style="color:#f92672">.</span><span style="color:#a6e22e">forName</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;com.example.reflection.ABC&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	ABC abc <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>ABC<span style="color:#f92672">)</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getConstructor</span><span style="color:#f92672">().</span><span style="color:#a6e22e">newInstance</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Number 필드를 가져왔지만 값에 접근할 순 없습니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Field field <span style="color:#f92672">=</span> abcClass<span style="color:#f92672">.</span><span style="color:#a6e22e">getDeclaredField</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Number&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// java.lang.IllegalAccessException
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Class &#34;main이 존재하는 클래스 명&#34; can not access a member of class ABC with modifiers &#34;private&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>field<span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>abc<span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 해당 필드의 Accessible을 true로 바꾸었기 때문에 이제 접근할 수 있습니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	field<span style="color:#f92672">.</span><span style="color:#a6e22e">setAccessible</span><span style="color:#f92672">(</span><span style="color:#66d9ef">true</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// &#34;10&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>field<span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">(</span>abc<span style="color:#f92672">));</span>
+</span></span></code></pre></div><h2 id="reflection의-장점" >Reflection의 장점
+<span>
+    <a href="#reflection%ec%9d%98-%ec%9e%a5%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="동적-구성" >동적 구성
+<span>
+    <a href="#%eb%8f%99%ec%a0%81-%ea%b5%ac%ec%84%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>Reflection이 동적 프로그래밍을 할 수 있게 해주어, 애플리케이션의 유연성과 융통성을 향사시킵니다.
+이러한 장점은 필요한 클래스나 모듈이 런타임 시간 전에는 알 수 없는 경우 특히 유용합니다.
+Reflection의 유연함을 활용해, 개발자는 코드 변경의 번거로움 없이 실시간으로 구성을 바꿀 수 있는 시스템을 만들 수 있습니다.</p>
+<h4 id="예시---spring" >예시 - Spring
+<span>
+    <a href="#%ec%98%88%ec%8b%9c---spring">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>일례로, Spring은 Reflection을 이용해 Bean들을 생성하고 구성합니다.
+이러한 과정은 classpath 내 컴포넌트들을 감지하고 동적으로 인스턴스화 한 뒤, 애너테이션과 XML 설정을 바탕으로 구성하므로써 이뤄집니다.
+이를 통해 개발자들은 소스 코드의 수정 없이 Bean을 추가하거나 수정할 수 있습니다.</p>
+<h3 id="확장성" >확장성
+<span>
+    <a href="#%ed%99%95%ec%9e%a5%ec%84%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>Reflection을 이용해 개발자는 애플리케이션의 핵심 코드의 변경 없이 새로운 기능(Functionality)이나 모듈을 런타임에 포함시킬 수 있습니다.
+예시로, 우리가 베이스 클래스를 정의하고 <code>다형성 역직렬화(Polymorphic Deserialization)</code>를 위해 여러 서브타입들을 통합하는 서드 파티 라이브러리를 쓴다고 가정하겠습니다.
+이때, 우리는 베이스 클래스를 확장하는 자체 커스텀 서브타입을 도입해 기능을 확장하고자 합니다.<br>
+이러한 경우 Reflection을 사용하면 커스텀 서브 타입을 런타임에 동적으로 등록할 수 있고, 서드 파티 라이브러리와 쉽게 통합 할 수 있게 됩니다.
+따라서, 우리는 코드를 변경치 않고, 라이브러리를 특정 요구사항에 맞게 조정할 수 있습니다.</p>
+<ul>
+<li><code>다형성 역직렬화(Polymorphic Deserialization)</code>: JSON 직렬화/역직렬화 라이브러리인 <code>Jackson</code>의 특징 중 하나로, 하나의 부모와 여러 하위 클래스가 있을 때 역직렬화 시 객체의 올바른 실제 유형을 결정하는 것입니다.</li>
+</ul>
+<h3 id="코드-분석" >코드 분석
+<span>
+    <a href="#%ec%bd%94%eb%93%9c-%eb%b6%84%ec%84%9d">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>소프트웨어 퀄리티를 높이기 위해 Reflection을 통해 코드를 동적으로 분석할 수 도 있습니다.
+일례로 <a href="https://www.archunit.org/"><code>ArchUnit</code></a> 이라는 자바 구조 단위 테스트 라이브러리의 경우, <a href="https://www.archunit.org/motivation">Reflection과 Bytecode 분석을 이용</a>합니다.<br>
+만약 Reflection 단에서 가져올 수 없는 정보가 있다면, Bytecode 수준의 분석을 통해 정보를 가져옵니다.</p>
+<h2 id="reflection의-단점" >Reflection의 단점
+<span>
+    <a href="#reflection%ec%9d%98-%eb%8b%a8%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="성능-오버헤드" >성능 오버헤드
+<span>
+    <a href="#%ec%84%b1%eb%8a%a5-%ec%98%a4%eb%b2%84%ed%97%a4%eb%93%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>Reflection은 동적으로 타입을 결정하기 때문에 이는 JVM의 최적화를 제한할 수 있습니다.<br>
+따라서 성능에 민감한 상황이라면 자주 호출되는 코드에서 Reflection 사용을 자제하는 것을 고려해야 합니다.</p>
+<h3 id="내부-사항의-노출" >내부 사항의 노출
+<span>
+    <a href="#%eb%82%b4%eb%b6%80-%ec%82%ac%ed%95%ad%ec%9d%98-%eb%85%b8%ec%b6%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>Reflection을 활용하면 그렇지 않은 코드에서는 제한될 수 있는 동작을 수행할 수 있습니다.<br>
+앞서 사용 용례에서도 보였듯이, private 필드와 메서드에 접근하고 조작할 수 있던 것이 그 예입니다.
+이러한 행위는 객체지향 프로그래밍의 중요 원칙 중 하나인 캡슐화를 위반하는 행위입니다.</p>
+<h3 id="컴파일-시간-안전성의-손실" >컴파일 시간 안전성의 손실
+<span>
+    <a href="#%ec%bb%b4%ed%8c%8c%ec%9d%bc-%ec%8b%9c%ea%b0%84-%ec%95%88%ec%a0%84%ec%84%b1%ec%9d%98-%ec%86%90%ec%8b%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>일반적인 Java 개발에선 컴파일러의 도움으로 타입 검사는 물론 클래스, 메서드, 필드가 올바르게 사용되는지 확인할 수 있습니다.<br>
+Reflection을 사용하면 이러한 검사가 이뤄지지 않으므로 탐지하기 힘든, 런타임 상에서 발생하는 버그를 유발할 수 있습니다.</p>
+<h3 id="코드의-유지보수성-저하" >코드의 유지보수성 저하
+<span>
+    <a href="#%ec%bd%94%eb%93%9c%ec%9d%98-%ec%9c%a0%ec%a7%80%eb%b3%b4%ec%88%98%ec%84%b1-%ec%a0%80%ed%95%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>애플리케이션의 코드가 Reflection에 크게 의존할 경우, 코드 가독성이 떨어지게 되고 이는 유지보수성의 저하를 유도합니다.
+또한 모든 개발 툴이나 IDE가 완전히 Reflection을 지원하지 않기때문에 몇몇 부분은 개발자가 수동으로 검사해야할 수 있습니다.</p>
+<h3 id="보안-문제" >보안 문제
+<span>
+    <a href="#%eb%b3%b4%ec%95%88-%eb%ac%b8%ec%a0%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>특정 환경에서 악성코드가 Reflection을 활용해 민감한 자원에 허가되지 않은 접근을 하거나, 보안 규정을 위반하는 동작을 수행할 수 있기 때문에 Reflection 접근을 허용토록 하는것은 위험합니다.</p>
+<h1 id="reflection은-보안적인-문제가-있는가" >Reflection은 보안적인 문제가 있는가?
+<span>
+    <a href="#reflection%ec%9d%80-%eb%b3%b4%ec%95%88%ec%a0%81%ec%9d%b8-%eb%ac%b8%ec%a0%9c%ea%b0%80-%ec%9e%88%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p>Reflection의 메서드들을 이용하면 <strong>private으로 선언된 값에 접근</strong>할 수 있어 객체지향 프로그래밍의 중요 원칙 중 하나인 <strong>캡슐화</strong>를 <strong>위반</strong>합니다.<br>
+따라서 특정 환경에서 악성코드가 Reflection을 이용해 중요한 리소스에 무단 접근하거나, 보안 정책을 위반할 수 있습니다.</p>
+<h2 id="방지책---module" >방지책 - <code>Module</code>
+<span>
+    <a href="#%eb%b0%a9%ec%a7%80%ec%b1%85---module">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>Java 9 부터 도입된 <code>Module</code>을 사용하면 더 이상 내부를 노출하지 않을 수 있습니다. 또한, Reflection 액세스 권한을 부여할 수 있는 방법(<code>open</code> 키워드 사용)도 존재해 필요한 경우 내부를 들여다 볼 수 있게 할 수 있습니다.</p>
+<h1 id="reflection은-어떻게-활용-가능할까" >Reflection은 어떻게 활용 가능할까?
+<span>
+    <a href="#reflection%ec%9d%80-%ec%96%b4%eb%96%bb%ea%b2%8c-%ed%99%9c%ec%9a%a9-%ea%b0%80%eb%8a%a5%ed%95%a0%ea%b9%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p>앞서 나온 장점들의 예시처럼, Reflection은 <strong>동적인 객체 생성</strong>, <strong>코드 분석</strong> 등 다양한 작업에 유용하게 사용할 수 있습니다.
+<code>Spring</code>, <code>Hibernate</code>와 같은 유명 라이브러리에서 의존성 주입, Bean 조작 등을 수행할 때, Reflection을 활용합니다.</p>
+<h1 id="참고-문서" >참고 문서
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://www.baeldung.com/java-reflection">https://www.baeldung.com/java-reflection</a></li>
+<li><a href="https://www.baeldung.com/java-reflection-benefits-drawbacks">https://www.baeldung.com/java-reflection-benefits-drawbacks</a></li>
+<li><a href="https://www.oracle.com/technical-resources/articles/java/javareflection.html">https://www.oracle.com/technical-resources/articles/java/javareflection.html</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/reflection/"><time datetime="2024-02-18">2024-02-18 09:55 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/reflection/">https://cloudsoswift.github.io/post/develop/java/reflection/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/reflection/">#Reflection</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/java/builder-pattern/">빌더 패턴</a></li>
+                
+                <li><a href="/post/develop/java/static-factory-method/">정적 팩토리 메서드(Static Factory Method)</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item ">
+            
+                <a href="/post/develop/database/b-tree-b&#43;tree/">B Tree와 B+tree 알아보기</a>
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/java/architecture-of-jvm/">JVM의 구조 간략하게 알아보기</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>
