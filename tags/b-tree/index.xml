@@ -23,7 +23,7 @@
         &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
     &lt;/a&gt;
 &lt;/span&gt;
-&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) &lt;strong&gt;Java&lt;/strong&gt;의 &lt;strong&gt;Reflection&lt;/strong&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) &lt;strong&gt;B 트리와 B+ 트리&lt;/strong&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
 &lt;h1 id=&#34;b-tree와-btree에-대해-설명해-주세요&#34; &gt;B-Tree와 B+Tree에 대해 설명해 주세요
 &lt;span&gt;
     &lt;a href=&#34;#b-tree%ec%99%80-btree%ec%97%90-%eb%8c%80%ed%95%b4-%ec%84%a4%eb%aa%85%ed%95%b4-%ec%a3%bc%ec%84%b8%ec%9a%94&#34;&gt;

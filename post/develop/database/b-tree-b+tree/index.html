@@ -12,7 +12,7 @@
 
 <title>B Tree와 B&#43;tree 알아보기 - 오늘도 개발을 한다.</title>
 
-<meta name="description" content="서론CS 스터디에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) Java의 Reflection에 대해 정리한 문서를 블로그에 공유하고자 한다.
+<meta name="description" content="서론CS 스터디에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) B 트리와 B&#43; 트리에 대해 정리한 문서를 블로그에 공유하고자 한다.
 B-Tree와 B&#43;Tree에 대해 설명해 주세요B 트리 (B-Tree)이진 트리를 확장해 한 노드가 가질 수 있는 자식 노드의 갯수가 2개 이상인 자가 균형 이진 검색 트리(Self Balancing Binary Search Tree)의 일종이며, 각 노드가 갖고있는 키 들은 정렬되어 있습니다.
 다른 자체 균형 이진 검색 트리와 달리, B 트리는 DB, File System과 같이 큰 데이터 블록을 읽고 써야하는 스토리지 시스템에 적합합니다.">
 
@@ -94,7 +94,7 @@ B-Tree와 B&#43;Tree에 대해 설명해 주세요B 트리 (B-Tree)이진 트�
 
 
 <meta property="og:title" content="B Tree와 B&#43;tree 알아보기" />
-<meta property="og:description" content="서론CS 스터디에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) Java의 Reflection에 대해 정리한 문서를 블로그에 공유하고자 한다.
+<meta property="og:description" content="서론CS 스터디에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) B 트리와 B&#43; 트리에 대해 정리한 문서를 블로그에 공유하고자 한다.
 B-Tree와 B&#43;Tree에 대해 설명해 주세요B 트리 (B-Tree)이진 트리를 확장해 한 노드가 가질 수 있는 자식 노드의 갯수가 2개 이상인 자가 균형 이진 검색 트리(Self Balancing Binary Search Tree)의 일종이며, 각 노드가 갖고있는 키 들은 정렬되어 있습니다.
 다른 자체 균형 이진 검색 트리와 달리, B 트리는 DB, File System과 같이 큰 데이터 블록을 읽고 써야하는 스토리지 시스템에 적합합니다." />
 <meta property="og:type" content="article" />
@@ -104,7 +104,7 @@ B-Tree와 B&#43;Tree에 대해 설명해 주세요B 트리 (B-Tree)이진 트�
 
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="B Tree와 B&#43;tree 알아보기"/>
-<meta name="twitter:description" content="서론CS 스터디에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) Java의 Reflection에 대해 정리한 문서를 블로그에 공유하고자 한다.
+<meta name="twitter:description" content="서론CS 스터디에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) B 트리와 B&#43; 트리에 대해 정리한 문서를 블로그에 공유하고자 한다.
 B-Tree와 B&#43;Tree에 대해 설명해 주세요B 트리 (B-Tree)이진 트리를 확장해 한 노드가 가질 수 있는 자식 노드의 갯수가 2개 이상인 자가 균형 이진 검색 트리(Self Balancing Binary Search Tree)의 일종이며, 각 노드가 갖고있는 키 들은 정렬되어 있습니다.
 다른 자체 균형 이진 검색 트리와 달리, B 트리는 DB, File System과 같이 큰 데이터 블록을 읽고 써야하는 스토리지 시스템에 적합합니다."/>
 
@@ -268,7 +268,7 @@ B-Tree와 B&#43;Tree에 대해 설명해 주세요B 트리 (B-Tree)이진 트�
         <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
     </a>
 </span>
-</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) <strong>Java</strong>의 <strong>Reflection</strong>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) <strong>B 트리와 B+ 트리</strong>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
 <h1 id="b-tree와-btree에-대해-설명해-주세요" >B-Tree와 B+Tree에 대해 설명해 주세요
 <span>
     <a href="#b-tree%ec%99%80-btree%ec%97%90-%eb%8c%80%ed%95%b4-%ec%84%a4%eb%aa%85%ed%95%b4-%ec%a3%bc%ec%84%b8%ec%9a%94">
