@@ -6,13 +6,543 @@
     <description>오늘도 개발을 한다.</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Sun, 18 Feb 2024 09:58:46 +0900</lastBuildDate>
+    <lastBuildDate>Mon, 26 Feb 2024 01:13:22 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
-      <title>B Tree와 B&#43;tree 알아보기</title>
+      <title>[DB] DB Locking 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/database/db-locking/</link>
+      <pubDate>Mon, 26 Feb 2024 01:13:22 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/database/db-locking/</guid>
+      <description>&lt;h2 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 2월 20일에 발표한 &lt;strong&gt;DB Locking&lt;/strong&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;db-locking이란&#34; &gt;DB Locking이란?
+&lt;span&gt;
+    &lt;a href=&#34;#db-locking%ec%9d%b4%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;em&gt;병행 트랜잭션이 가능한 환경에서&lt;/em&gt;, 변경중인 record를 다른 transaction들이 접근하지 못하도록 막음으로써, 병행 수행 문제를 해결하려는 접근 방법입니다.&lt;br&gt;
+이러한 Locking을 위한 규약(Protocol)으로는 &lt;code&gt;Shared Locking Protocol&lt;/code&gt;, &lt;code&gt;2PLP(2-Phase Locking Protocol)&lt;/code&gt;, &lt;code&gt;Multiple Granularity Locking Protocol&lt;/code&gt; 이 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;병행-트랜잭션concurrent-transaction-이란&#34; &gt;병행 트랜잭션(Concurrent Transaction) 이란?
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b3%91%ed%96%89-%ed%8a%b8%eb%9e%9c%ec%9e%ad%ec%85%98concurrent-transaction-%ec%9d%b4%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;동시에 실행되고 있는 둘 이상의 트랜잭션을 의미합니다.&lt;/p&gt;
+&lt;h4 id=&#34;병행-트랜잭션의-장점&#34; &gt;병행 트랜잭션의 장점
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b3%91%ed%96%89-%ed%8a%b8%eb%9e%9c%ec%9e%ad%ec%85%98%ec%9d%98-%ec%9e%a5%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;db의-공용도sharability-제고&#34; &gt;DB의 공용도(Sharability) 제고
+&lt;span&gt;
+    &lt;a href=&#34;#db%ec%9d%98-%ea%b3%b5%ec%9a%a9%eb%8f%84sharability-%ec%a0%9c%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h5 id=&#34;응답시간response-time-단축&#34; &gt;응답시간(Response Time) 단축
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%91%eb%8b%b5%ec%8b%9c%ea%b0%84response-time-%eb%8b%a8%ec%b6%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h5 id=&#34;시스템-활용도system-utilization-증대&#34; &gt;시스템 활용도(System Utilization) 증대
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%8b%9c%ec%8a%a4%ed%85%9c-%ed%99%9c%ec%9a%a9%eb%8f%84system-utilization-%ec%a6%9d%eb%8c%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h4 id=&#34;병행-트랜잭션의-동시성-문제&#34; &gt;병행 트랜잭션의 동시성 문제
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b3%91%ed%96%89-%ed%8a%b8%eb%9e%9c%ec%9e%ad%ec%85%98%ec%9d%98-%eb%8f%99%ec%8b%9c%ec%84%b1-%eb%ac%b8%ec%a0%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;병행 트랜잭션의 병행 수행률이 상승할수록, 아래와 같은 병행 문제들의 발생률도 상승합니다. &lt;br&gt;
+설명의 편의를 위해 병행 실행되는 트랜잭션 두 가지를 아래에서 T1, T2라고 부르도록 하겠습니다.&lt;/p&gt;
+&lt;h5 id=&#34;갱신-분실lost-update&#34; &gt;갱신 분실(Lost Update)
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%b1%ec%8b%a0-%eb%b6%84%ec%8b%a4lost-update&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;img src=&#34;Lost-Update.png&#34; alt=&#34;Lost-Update.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;두 트랜잭션이 병렬로 같은 데이터를 읽고 갱신하는 과정에서, 한 트랜잭션이 다른 트랜잭션의 갱신 값을 덮어쓰는 문제입니다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;예시) T1이 연산 후 갱신 작업을 수행한 뒤, 이후에 T2가 갱신된 값이 아닌 이전의 값을 기준으로 연산 후 갱신 작업을 수행해 T1의 갱신이 무효화 됩니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h5 id=&#34;모순적-읽기inconsistent-read&#34; &gt;모순적 읽기(Inconsistent Read)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%aa%a8%ec%88%9c%ec%a0%81-%ec%9d%bd%ea%b8%b0inconsistent-read&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;두 트랜잭션이 병렬로 같은 데이터를 읽고 갱신하는 과정에서, 데이터 불일치가 발생하는 문제입니다.&lt;/p&gt;
+&lt;h6 id=&#34;dirty-read&#34; &gt;Dirty Read
+&lt;span&gt;
+    &lt;a href=&#34;#dirty-read&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;p&gt;&lt;img src=&#34;Dirty-Read.png&#34; alt=&#34;Dirty-Read.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;격리성 수준이 &lt;code&gt;Read Uncommitted&lt;/code&gt; 이하인 환경에서 발생가능한 문제로, 한 트랜잭션이 다른 트랜잭션으로부터 &lt;strong&gt;커밋되지 않은 값을 읽어 발생&lt;/strong&gt;하는 문제입니다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;예시) T1이 커밋되기 전, 중간에 T2가 T1에서 작업하던 데이터(&lt;em&gt;T1의 &lt;strong&gt;수정&lt;/strong&gt;이 &lt;strong&gt;반영되지 않은&lt;/strong&gt;&lt;/em&gt;)을 읽고 작업을 수행해 T1 연산 이전의 값으로 T2가 수행되게 됩니다. 이는 정확하지 않거나 일관되지 않은 결과를 야기할 수 있습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h6 id=&#34;non-repeatable-read&#34; &gt;Non-repeatable Read
+&lt;span&gt;
+    &lt;a href=&#34;#non-repeatable-read&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;p&gt;&lt;img src=&#34;Non-repeatable-Read.png&#34; alt=&#34;Non-repeatable-Read.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;같은 데이터를 한 트랜잭션 내에서 읽었음에도, 둘의 값이 다른 문제입니다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;예시) T1이 한 데이터를 두 번 읽을 때, 중간에 T2가 해당 데이터의 값을 변경한 뒤 커밋하게 되면 두 번째로 읽었을 때의 값은 처음 읽었던 값과 다르게 됩니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h6 id=&#34;phantom-read&#34; &gt;Phantom Read
+&lt;span&gt;
+    &lt;a href=&#34;#phantom-read&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;p&gt;&lt;img src=&#34;Phantom-Read.png&#34; alt=&#34;Phantom-Read.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;같은 조건에 대한 검색을 한 트랜잭션 내에서 수행했음에도, 다시 읽으려 할 때 이전에 존재하던 값이 없어지거나, 새로운 값이 추가로 검색되는 문제입니다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;예시) T1이 한 데이터를 두 번 읽을 때, 중간에 T2가 해당 데이터를 삭제한 뒤 커밋하게 되면 두 번째로 읽었을 때 해당 데이터는 존재하지 않게 됩니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h5 id=&#34;연쇄적-롤백cascading-rollback&#34; &gt;연쇄적 롤백(Cascading Rollback)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%97%b0%ec%87%84%ec%a0%81-%eb%a1%a4%eb%b0%b1cascading-rollback&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;img src=&#34;Cascading-Rollback.png&#34; alt=&#34;Cascading-Rollback.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;한 트랜잭션이 갱신한 데이터를 다른 트랜잭션이 또 다시 갱신한 뒤, 앞선 트랜잭션을 롤백하려할 때 이후 실행했던 트랜잭션도 롤백해야 하나 이미 해당 트랜잭션은 완료되어 롤백이 불가능한 문제입니다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;예시) T1이 한 데이터를 갱신한 뒤, T2이 해당 데이터를 또 갱신한 뒤 완료처리한 상태에서 T1을 롤백하려 하면 T2이 처리한 부분에 대해서는 롤백이 불가능하게 됩니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;transaction-schedule이란&#34; &gt;Transaction Schedule이란?
+&lt;span&gt;
+    &lt;a href=&#34;#transaction-schedule%ec%9d%b4%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;트랜잭션들이 연산을 실행하는 순서를 의미합니다.&lt;br&gt;
+스케줄의 개수는 &lt;code&gt;Interleaving(트랜잭션을 쪼개서 수행하는 것)&lt;/code&gt;이 가능한 경우 거의 무한대이고, 허용되지 않으면 $n!$ 개 입니다.&lt;br&gt;
+병행 수행상 문제가 야기되느냐 그렇지 않느냐에 따라 직렬/비직렬 스케줄로 나뉩니다.&lt;/p&gt;
+&lt;h4 id=&#34;직렬-스케줄serial-schedule&#34; &gt;직렬 스케줄(serial Schedule)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a7%81%eb%a0%ac-%ec%8a%a4%ec%bc%80%ec%a4%84serial-schedule&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;스케줄에 포함된 모든 트랜잭션이 하나씩 실행되는 스케줄을 의미합니다.&lt;br&gt;
+병행 수행의 문제가 발생하지 않으나, 병행 트랜잭션으로 실행되지 않게 됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;비직렬-스케줄non-serial-schedule&#34; &gt;비직렬 스케줄(non-serial Schedule)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b9%84%ec%a7%81%eb%a0%ac-%ec%8a%a4%ec%bc%80%ec%a4%84non-serial-schedule&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;스케줄에 포함된 모든 트랜잭션이 서로 interleaved되는 스케줄을 의미합니다.&lt;br&gt;
+같은 트랜잭션 내 작업이라도 쪼개서 수행될 수 있기 때문에 쪼개진 작업이 실행되는 시점에 따라 잘못된 결과를 얻을 수 있습니다.&lt;/p&gt;
+&lt;h5 id=&#34;직렬-가능-스케줄serializable-schedule&#34; &gt;직렬 가능 스케줄(serializable Schedule)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a7%81%eb%a0%ac-%ea%b0%80%eb%8a%a5-%ec%8a%a4%ec%bc%80%ec%a4%84serializable-schedule&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;어떤 직렬 스케줄과 &lt;strong&gt;동등&lt;/strong&gt;한 비직렬 스케줄을 의미합니다.&lt;br&gt;
+&lt;strong&gt;모든 충돌 직렬 가능 스케줄&lt;/strong&gt;은 &lt;strong&gt;뷰 직렬 가능 스케줄&lt;/strong&gt;이지만, &lt;em&gt;&lt;strong&gt;역은 성립하지 않습니다&lt;/strong&gt;&lt;/em&gt;.&lt;/p&gt;
+&lt;h6 id=&#34;충돌-직렬-가능-스케줄&#34; &gt;충돌 직렬 가능 스케줄
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b6%a9%eb%8f%8c-%ec%a7%81%eb%a0%ac-%ea%b0%80%eb%8a%a5-%ec%8a%a4%ec%bc%80%ec%a4%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;p&gt;비직렬 스케줄 S에 대해 &lt;strong&gt;충돌 동등&lt;/strong&gt;한 직렬 스케줄 S&amp;rsquo;가 존재하면, S를 &lt;code&gt;충돌 직렬 가능 스케줄&lt;/code&gt; 이라고 합니다.&lt;/p&gt;
+&lt;h6 id=&#34;뷰-직렬-가능-스케줄&#34; &gt;뷰 직렬 가능 스케줄
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b7%b0-%ec%a7%81%eb%a0%ac-%ea%b0%80%eb%8a%a5-%ec%8a%a4%ec%bc%80%ec%a4%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;p&gt;비직렬 스케줄 S에 대해 &lt;strong&gt;뷰 동등&lt;/strong&gt;한 직렬 스케줄 S&amp;rsquo;가 존재하면, S를 &lt;code&gt;뷰 직렬 가능 스케줄&lt;/code&gt; 이라고 합니다.&lt;/p&gt;
+&lt;h5 id=&#34;스케줄-동등&#34; &gt;스케줄 동등
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%8a%a4%ec%bc%80%ec%a4%84-%eb%8f%99%eb%93%b1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h6 id=&#34;결과result-동등&#34; &gt;결과(result) 동등
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b2%b0%ea%b3%bcresult-%eb%8f%99%eb%93%b1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;p&gt;결과가 동일한 스케줄을 의미합니다.&lt;/p&gt;
+&lt;h6 id=&#34;충돌conflict-동등&#34; &gt;충돌(conflict) 동등
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b6%a9%eb%8f%8cconflict-%eb%8f%99%eb%93%b1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;p&gt;충돌 연산의 순서가 동일한 스케줄을 의미합니다.&lt;/p&gt;
+&lt;h6 id=&#34;뷰view-동등&#34; &gt;뷰(view) 동등
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b7%b0view-%eb%8f%99%eb%93%b1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;p&gt;스케줄 S1, S2에 포함된 트랜잭션이 같고 아래 조건을 만족하는 경우를 의미합니다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;S1에서 $T_i$가 $x$의 초기 값을 읽는다면, S2에서도 그러해야 합니다.&lt;/li&gt;
+&lt;li&gt;S1에서 $T_i$의 모든 read(x)가 $T_j$가 write한 x값을 읽는다면, S2에서도 그러해야 합니다.&lt;/li&gt;
+&lt;li&gt;S1에서 $T_i$가 write(x)를 마지막으로 수행하면, S2에서도 그러해야 합니다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;lock-이란&#34; &gt;Lock 이란?
+&lt;span&gt;
+    &lt;a href=&#34;#lock-%ec%9d%b4%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;DB상의 데이터 항목에 대한 잠금장치입니다.&lt;br&gt;
+Lock이 걸린 데이터 항목은 Lock을 건 트랜잭션만 접근할 수 있습니다.&lt;br&gt;
+Lcok은 Lock을 건 트랜잭션에 의해서만 Unlock할 수 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;lock의-종류&#34; &gt;Lock의 종류
+&lt;span&gt;
+    &lt;a href=&#34;#lock%ec%9d%98-%ec%a2%85%eb%a5%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;공용-로크shared-lock-s-lock&#34; &gt;공용 로크(Shared Lock, S-Lock)
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ec%9a%a9-%eb%a1%9c%ed%81%acshared-lock-s-lock&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;다른 트랜잭션이 해당 데이터를 Read 할 수 있습니다.&lt;/p&gt;
+&lt;h5 id=&#34;전용-로크exclusive-lock-x-lock&#34; &gt;전용 로크(Exclusive Lock, X-Lock)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a0%84%ec%9a%a9-%eb%a1%9c%ed%81%acexclusive-lock-x-lock&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;다른 트랜잭션이 해당 데이터를 Read/Write 할 수 없습니다.&lt;/p&gt;
+&lt;h4 id=&#34;로크-단위lock-granularity&#34; &gt;로크 단위(Lock granularity)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a1%9c%ed%81%ac-%eb%8b%a8%ec%9c%84lock-granularity&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;row, table, database 등 Locking할 자원의 크기를 말합니다.&lt;br&gt;
+단위의 크기가 커질수록 병행성 수준은 낮아지고, 병행 제어 기법은 간단해집니다.&lt;/p&gt;
+&lt;h4 id=&#34;로크-호환성-lock-compatibility&#34; &gt;로크 호환성 (Lock Compatibility)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a1%9c%ed%81%ac-%ed%98%b8%ed%99%98%ec%84%b1-lock-compatibility&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;이미 자원에 특정 Lock이 설정되어 있는 경우, 다른 트랜잭션도 해당 자원에 대해 Lock을 설정할 수 있는지 여부를 말합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;구 분&lt;/th&gt;
+&lt;th&gt;Request S-lock&lt;/th&gt;
+&lt;th&gt;Request X-lock&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;S-locked data item&lt;/td&gt;
+&lt;td&gt;ok&lt;/td&gt;
+&lt;td&gt;not ok&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;X-locked data item&lt;/td&gt;
+&lt;td&gt;not ok&lt;/td&gt;
+&lt;td&gt;not ok&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3 id=&#34;locking-protocol&#34; &gt;Locking Protocol
+&lt;span&gt;
+    &lt;a href=&#34;#locking-protocol&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;아래 설명된 Protocol들 이외에도 기본적인 Locking Protocol은 다음과 같습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;트랜잭션 T가 x에 대해 read(x)/write(x) 연산을 하려면 먼저 lock(x) 연산을 실행해야 한다.&lt;/li&gt;
+&lt;li&gt;트랜잭션 T가 실행한 lock(x)에 대해서는 T가 모든 실행(Task)을 종료하기 전에 unlock(x) 연산을 수행해야 한다.&lt;/li&gt;
+&lt;li&gt;트랜잭션 T는 &lt;em&gt;다른 트랜잭션에 의해 lock이 걸려있는&lt;/em&gt; x에 대해 &lt;strong&gt;lock(x)&lt;/strong&gt; 를 &lt;strong&gt;실행할 수 없다&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;트랜잭션 T는 &lt;em&gt;자신이 lock을 걸지않은 x&lt;/em&gt;에 대해 &lt;strong&gt;unlock(x)&lt;/strong&gt; 을 &lt;strong&gt;실행할 수 없다&lt;/strong&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;shared-locking-protocol공용-로킹-규약&#34; &gt;&lt;code&gt;Shared Locking Protocol(공용 로킹 규약)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#shared-locking-protocol%ea%b3%b5%ec%9a%a9-%eb%a1%9c%ed%82%b9-%ea%b7%9c%ec%95%bd&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;트랜잭션 T는 &lt;strong&gt;read(x)&lt;/strong&gt; 전 반드시 &lt;mark style=&#34;background: #ADCCFFA6;&#34;&gt;lock-S(x)&lt;/mark&gt; 또는 &lt;mark style=&#34;background: #FFB86CA6;&#34;&gt;lock-X(x)&lt;/mark&gt;를 실행해야 함.&lt;/li&gt;
+&lt;li&gt;트랜잭션 T는 &lt;strong&gt;write(x)&lt;/strong&gt; 전 반드시 &lt;mark style=&#34;background: #FFB86CA6;&#34;&gt;lock-X(x)&lt;/mark&gt;를 실행해야 함.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;이러한 규약 때문에 공용 로킹 규약은 &lt;strong&gt;&lt;code&gt;직렬가능성(serializability)&lt;/code&gt;&lt;/strong&gt; 을 보장하지 못합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;직렬가능성(serializability)&lt;/code&gt;&lt;/strong&gt; : 비직렬 스케줄을 직렬 스케줄로 변환할 수 있는지를 의미합니다.
+&lt;ul&gt;
+&lt;li&gt;lock과 unlock이 병렬로 수행될 수 있으므로 병행 처리되는 트랜잭션들이 서로 간섭할 수 있어 직렬 가능성이 보장되지 않습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;2plp2-phase-locking-protocol-2단계-로킹-규약&#34; &gt;&lt;code&gt;2PLP(2-Phase Locking Protocol, 2단계 로킹 규약)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#2plp2-phase-locking-protocol-2%eb%8b%a8%ea%b3%84-%eb%a1%9c%ed%82%b9-%ea%b7%9c%ec%95%bd&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;lock만 가능한 Phase와 unlock만 가능한 phase를 나누어 로킹을 수행하는 규약입니다.&lt;br&gt;
+&lt;code&gt;직렬가능성&lt;/code&gt;을 &lt;strong&gt;보장&lt;/strong&gt;하지만, &lt;strong&gt;&lt;code&gt;Deadlock&lt;/code&gt;&lt;/strong&gt; 문제가 존재하는 규약입니다.&lt;br&gt;
+변형으로는 &lt;code&gt;Strict 2PLP&lt;/code&gt;, &lt;code&gt;Rigorous 2PLP&lt;/code&gt;가 존재하며, 상용 DBMS에서는 이 둘 중 하나를 사용합니다.&lt;/p&gt;
+&lt;h5 id=&#34;1-단계growing-phase&#34; &gt;1 단계(Growing Phase)
+&lt;span&gt;
+    &lt;a href=&#34;#1-%eb%8b%a8%ea%b3%84growing-phase&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;트랜잭션은 계속해 lock을 획득할 수 있으나, unlock 연산은 실행할 수 없습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;2-단계shrink-phase&#34; &gt;2 단계(Shrink Phase)
+&lt;span&gt;
+    &lt;a href=&#34;#2-%eb%8b%a8%ea%b3%84shrink-phase&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;unlock 연산만 실행할 수 있으며, 일단 Lock을 해제하면 더 이상 lock을 획득할 수 없습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h6 id=&#34;strict-2plp엄격-2단계-로킹-규약&#34; &gt;Strict 2PLP(엄격 2단계 로킹 규약)
+&lt;span&gt;
+    &lt;a href=&#34;#strict-2plp%ec%97%84%ea%b2%a9-2%eb%8b%a8%ea%b3%84-%eb%a1%9c%ed%82%b9-%ea%b7%9c%ec%95%bd&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;ul&gt;
+&lt;li&gt;2PLP에 &amp;lsquo;모든 &lt;strong&gt;X-lock&lt;/strong&gt;은 &lt;em&gt;트랜잭션 완료시까지&lt;/em&gt; &lt;strong&gt;unlock 할 수 없다&lt;/strong&gt;&amp;lsquo;는 규칙이 추가된 형태입니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;구현이 어려우나 성능이 높고&lt;/strong&gt;, &lt;strong&gt;&lt;code&gt;연쇄 복귀 문제(Cascading Rollback)&lt;/code&gt;&lt;/strong&gt; 가 발생하지 않습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h6 id=&#34;rigorous-2plp엄밀-2단계-로킹-규약&#34; &gt;Rigorous 2PLP(엄밀 2단계 로킹 규약)
+&lt;span&gt;
+    &lt;a href=&#34;#rigorous-2plp%ec%97%84%eb%b0%80-2%eb%8b%a8%ea%b3%84-%eb%a1%9c%ed%82%b9-%ea%b7%9c%ec%95%bd&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;ul&gt;
+&lt;li&gt;2PLP에 &amp;lsquo;모든 &lt;strong&gt;lock&lt;/strong&gt;은 &lt;em&gt;트랜잭션 완료시까지&lt;/em&gt; &lt;strong&gt;unlock 할 수 없다&lt;/strong&gt;&amp;lsquo;는 규칙이 추가된 형태입니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;구현은 쉬우나 성능이 낮다&lt;/strong&gt;는 단점이 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;multiple-granularity-locking-protocol다중-단위-로킹-규약&#34; &gt;&lt;code&gt;Multiple Granularity Locking Protocol(다중 단위 로킹 규약)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#multiple-granularity-locking-protocol%eb%8b%a4%ec%a4%91-%eb%8b%a8%ec%9c%84-%eb%a1%9c%ed%82%b9-%ea%b7%9c%ec%95%bd&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;병행성 수준을 감소시키지 않기 위해, 필요 이상의 크기로 locking 하지 않는 방법입니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;로킹 계층 트리 : DB -&amp;gt; 구역(Area) -&amp;gt; 파일(File) -&amp;gt; 레코드(Record)
+&lt;img src=&#34;Multi-Granularity-tree-Hiererchy.png&#34; alt=&#34;Multi-Granularity-tree-Hiererchy.png&#34;&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;DB: 모든 파일을 포함하는 데이터베이스입니다. 데이터베이스는 여러 파일로 구성됩니다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;구역(Area): 파일들로 이뤄진 데이터베이스 내 특정 영역입니다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;파일(File): 관련된 레코드들의 그룹입니다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;레코드(Record): DB 테이블에서 하나의 행입니다. 레코드는 여러 필드로 구성됩니다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;optimistic-lockpessimistic-lock란&#34; &gt;Optimistic Lock/Pessimistic Lock란?
+&lt;span&gt;
+    &lt;a href=&#34;#optimistic-lockpessimistic-lock%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;h3 id=&#34;낙관적-로크optimistic-lock&#34; &gt;낙관적 로크(Optimistic Lock)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%82%99%ea%b4%80%ec%a0%81-%eb%a1%9c%ed%81%acoptimistic-lock&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;다른 트랜잭션과 충돌하지 않는다고 가정하고, 별도의 Locking 없이 자원에 접근하는 것을 말합니다.&lt;br&gt;
+병행 제어를 위해 아래 세 과정을 수행하며, 각 과정마다 Start(T), Validation(T), Finish(T) 세 가지의 &lt;strong&gt;&lt;code&gt;타임스탬프&lt;/code&gt;&lt;/strong&gt; 를 사용합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;타임스탬프&lt;/code&gt;&lt;/strong&gt; : 시스템에서 &lt;strong&gt;트랜잭션&lt;/strong&gt;을 &lt;strong&gt;유일하게 식별&lt;/strong&gt;하기 위해 부여한 &lt;strong&gt;식별자(identifier)&lt;/strong&gt; 로, 트랜잭션이 &lt;strong&gt;시스템에 들어온 순서대로&lt;/strong&gt; 부여합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;과정&#34; &gt;과정
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%bc%ec%a0%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;판독 단계(Read Step)&lt;/code&gt; : 트랜잭션에 필요한 자료를 DB로 부터 읽어 &lt;strong&gt;Local Working Area에 복사&lt;/strong&gt;합니다. 이후 &lt;strong&gt;모든 갱신은 사본을 대상&lt;/strong&gt;으로 수행합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;확인 단계(Validation Step)&lt;/code&gt;: &lt;strong&gt;직렬(Serialization) 가능성 위반 여부&lt;/strong&gt;를 &lt;strong&gt;검사&lt;/strong&gt;합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;기록 단계(Write Step)&lt;/code&gt;: 확인 단계를 통과하면 &lt;strong&gt;DB에 반영&lt;/strong&gt;하고, &lt;em&gt;통과하지 못했다면 실행 결과는 취소&lt;/em&gt;하고 트랜잭션은 복귀합니다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;비관적-로크pessimistic-lock&#34; &gt;비관적 로크(Pessimistic Lock)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b9%84%ea%b4%80%ec%a0%81-%eb%a1%9c%ed%81%acpessimistic-lock&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;다른 트랜잭션과 충돌한다고 가정하고, 트랜잭션을 처리하기 전에 자원에 대해 Locking을 시도하는것을 말합니다.&lt;/p&gt;
+&lt;h4 id=&#34;과정-1&#34; &gt;과정
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%bc%ec%a0%95-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ol&gt;
+&lt;li&gt;자원에 대해 Lock을 겁니다.&lt;/li&gt;
+&lt;li&gt;트랜잭션을 실행합니다.&lt;/li&gt;
+&lt;li&gt;자원에 대해 Unlock을 수행합니다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;트랜잭션이-비정상-종료된-경우-lock을-해제할-해결책이-있는가-없다면-직접-해결-가능한가&#34; &gt;트랜잭션이 비정상 종료된 경우 Lock을 해제할 해결책이 있는가? 없다면 직접 해결 가능한가?
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%8a%b8%eb%9e%9c%ec%9e%ad%ec%85%98%ec%9d%b4-%eb%b9%84%ec%a0%95%ec%83%81-%ec%a2%85%eb%a3%8c%eb%90%9c-%ea%b2%bd%ec%9a%b0-lock%ec%9d%84-%ed%95%b4%ec%a0%9c%ed%95%a0-%ed%95%b4%ea%b2%b0%ec%b1%85%ec%9d%b4-%ec%9e%88%eb%8a%94%ea%b0%80-%ec%97%86%eb%8b%a4%eb%a9%b4-%ec%a7%81%ec%a0%91-%ed%95%b4%ea%b2%b0-%ea%b0%80%eb%8a%a5%ed%95%9c%ea%b0%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;잘 설계된 DBMS에서는 Lock이 오랫동안 유지되어 Deadlock과 같은 상황을 발생시키지 않도록 여러 대비책을 갖고 있으며, 대부분의 DBMS에서는 Lock 관리를 위한 기능을 제공합니다.&lt;/p&gt;
+&lt;h3 id=&#34;lock-timeout&#34; &gt;Lock Timeout
+&lt;span&gt;
+    &lt;a href=&#34;#lock-timeout&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;Lock을 걸 때, 타임아웃을 설정해 일정시간이 지나면 자동으로 Lock을 해제하도록 합니다.&lt;/p&gt;
+&lt;h3 id=&#34;deadlock-detection&#34; &gt;Deadlock Detection
+&lt;span&gt;
+    &lt;a href=&#34;#deadlock-detection&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;교착상태가 발생하면 사후에 트랜잭션들 중 하나를 강제종료(&lt;code&gt;rollback&lt;/code&gt;) 시키는 조치를 취하는 방식입니다.&lt;/p&gt;
+&lt;h3 id=&#34;일반적인-회복-방법&#34; &gt;일반적인 회복 방법
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%bc%eb%b0%98%ec%a0%81%ec%9d%b8-%ed%9a%8c%eb%b3%b5-%eb%b0%a9%eb%b2%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;이외에도 Redo, Undo와 같은 회복 방법을 통해 트랜잭션으로 손상된 부분을 회복시킬 수 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;redo-media-recovery&#34; &gt;Redo (Media Recovery)
+&lt;span&gt;
+    &lt;a href=&#34;#redo-media-recovery&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;비소멸장치(디스크, 테이프 등)의 내용 손상에 대한 회복 기법입니다.&lt;br&gt;
+가장 최근의 복제본(dump)을 적재시키고, 해당 복제본 이후의 변경을 log를 이용해 재실행하여 DB를 복원합니다.&lt;/p&gt;
+&lt;h4 id=&#34;undo&#34; &gt;Undo
+&lt;span&gt;
+    &lt;a href=&#34;#undo&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;log를 이용해 모든 변경을 취소시키므로써 DB를 복원합니다.&lt;/p&gt;
+&lt;h4 id=&#34;소멸-장치의-정보-회복&#34; &gt;소멸 장치의 정보 회복
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%86%8c%eb%a9%b8-%ec%9e%a5%ec%b9%98%ec%9d%98-%ec%a0%95%eb%b3%b4-%ed%9a%8c%eb%b3%b5&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;log-이용-회복&#34; &gt;Log 이용 회복
+&lt;span&gt;
+    &lt;a href=&#34;#log-%ec%9d%b4%ec%9a%a9-%ed%9a%8c%eb%b3%b5&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;트랜잭션이 Write 연산을 실행하거나, 트랜잭션의 시작/완료/철회와 같은 특별 활동시 기록되는 Log를 활용해 회복하는 방법입니다.&lt;br&gt;
+Log는 &lt;code&gt;On-line log(실행중인 트랜잭션에 대한 로그)&lt;/code&gt;, &lt;code&gt;Archival log(누적되는 로그를 안정 저장장치에 저장한 것)&lt;/code&gt;로 나뉩니다.&lt;/p&gt;
+&lt;h6 id=&#34;지연-갱신deferred-update의-회복&#34; &gt;지연 갱신(Deferred Update)의 회복
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a7%80%ec%97%b0-%ea%b0%b1%ec%8b%a0deferred-update%ec%9d%98-%ed%9a%8c%eb%b3%b5&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;p&gt;트랜잭션이 부분 완료될 때 까지 DB 변경내역을 log에 전부 기록한 뒤, 부분 완료되면 보류시킨 Output 연산을 log를 사용해 처리합니다.&lt;br&gt;
+트랜잭션 &lt;strong&gt;실행 중 장애가 발생&lt;/strong&gt;했다면 &lt;strong&gt;처음부터 다시 실행&lt;/strong&gt;하고, &lt;strong&gt;완료 후 장애가 발생&lt;/strong&gt;했다면 &lt;strong&gt;Log을 사용해 트랜잭션을 Redo&lt;/strong&gt; 합니다.&lt;/p&gt;
+&lt;h6 id=&#34;즉시-갱신immediate-update의-회복&#34; &gt;즉시 갱신(Immediate Update)의 회복
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a6%89%ec%8b%9c-%ea%b0%b1%ec%8b%a0immediate-update%ec%9d%98-%ed%9a%8c%eb%b3%b5&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;p&gt;트랜잭션이 실행되는 동안 발생한 변경 내용을 DB에 그대로 반영해 처리합니다.&lt;br&gt;
+트랜잭션 &lt;strong&gt;실행 중 장애가 발생&lt;/strong&gt;했다면 해당 &lt;strong&gt;트랜잭션에 대한 Undo&lt;/strong&gt;를 실행하고, &lt;strong&gt;완료 후 장애가 발생&lt;/strong&gt;했다면 &lt;strong&gt;트랜잭션을 Redo&lt;/strong&gt; 합니다.&lt;/p&gt;
+&lt;h5 id=&#34;검사시점check-point-회복&#34; &gt;검사시점(Check Point) 회복
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b2%80%ec%82%ac%ec%8b%9c%ec%a0%90check-point-%ed%9a%8c%eb%b3%b5&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;em&gt;Log를 이용할 경우&lt;/em&gt; Redo/Undo 대상 트랜잭션을 찾기위해 &lt;strong&gt;log 전체를 조사&lt;/strong&gt;하거나,&lt;strong&gt;불필요한 Redo를 반복&lt;/strong&gt;한다는 &lt;strong&gt;문제를 해결&lt;/strong&gt;하기 위해 일정 간격으로 &lt;strong&gt;CheckPoint를 설치&lt;/strong&gt;해 이를 사용하는 기법입니다.&lt;br&gt;
+Log를 차례로 검사하며 트랜잭션의 start를 만났다면 해당 트랜잭션을 Undo-list에, 트랜잭션의 commit을 만났다면 Undo-list에서 삭제하고 Redo-list에 추가합니다. 이후 Undo-list의 트랜잭션을 log에 기록된 역순으로 Undo를, Redo-list의 트랜잭션을 log에 기록된 순서로 Redo를 수행합니다.&lt;/p&gt;
+&lt;h5 id=&#34;그림자-페이징shadow-paging-기법&#34; &gt;그림자 페이징(Shadow Paging) 기법
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b7%b8%eb%a6%bc%ec%9e%90-%ed%8e%98%ec%9d%b4%ec%a7%95shadow-paging-%ea%b8%b0%eb%b2%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;트랜잭션을 실행하는 동안 2개의 page table을 유지하는 방법입니다.&lt;br&gt;
+current page table은 write 연산을 실행할 때 변경하며, shadow page table은 트랜잭션 실행 직전의 상태를 유지합니다.&lt;br&gt;
+트랜잭션 완료 전 장애가 발생한 경우 shadow page table을 복사해 실행 직전으로 복귀시킵니다.&lt;/p&gt;
+&lt;h2 id=&#34;참고-자료&#34; &gt;참고 자료
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0-%ec%9e%90%eb%a3%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;전공과목 강의자료&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Isolation_(database_systems)&#34;&gt;Isolation (database systems) - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/dbms-dirty-read-in-sql/&#34;&gt;Dirty Read in SQL - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/concurrency-problems-in-dbms-transactions/&#34;&gt;Concurrency problems in DBMS Transactions - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.jidum.com/jidums/view.do?jidumId=282&#34;&gt;동시성제어개요 - 지식덤프&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/serializability-in-dbms/&#34;&gt;Serializability in DBMS - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.jboss.org/hibernate/orm/4.1/devguide/en-US/html/ch05.html&#34;&gt;Chapter 5. Locking - Hibernate Community Documentation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/lock-based-concurrency-control-protocol-in-dbms/&#34;&gt;Lock Based Concurrency Control Protocol in DBMS - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.ibm.com/docs/en/db2/11.5?topic=overview-optimistic-locking&#34;&gt;Optimistic locking - IBM Documentation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-us/47/dc35af5bc33b8be10000000a421937/content.htm?no_cache=true&#34;&gt;How Optimistic Locks Work - SAP Documentation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://magicsoftware.my.salesforce-sites.com/PublicKnowledge/articles/bl_Reference/Physical-Locks-xpa-3x&#34;&gt;Reference: Physical Locks (Magic xpa 3.x) - Salesforce&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/multiple-granularity-locking-in-dbms/&#34;&gt;Multiple Granularity Locking in DBMS - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/8.0/en/innodb-locking.html&#34;&gt;MySQL :: MySQL 8.0 Reference Manual :: 17.7.1 InnoDB Locking&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.umsl.edu/~joshik/msis480/chapt06.htm&#34;&gt;6 Database Management - University of Missouri–St. Louis&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>[자료구조] B Tree와 B&#43;tree 알아보기</title>
       <link>https://cloudsoswift.github.io/post/develop/database/b-tree-b&#43;tree/</link>
       <pubDate>Sun, 18 Feb 2024 09:58:46 +0900</pubDate>
       
@@ -24,9 +554,9 @@
     &lt;/a&gt;
 &lt;/span&gt;
 &lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) &lt;strong&gt;B 트리와 B+ 트리&lt;/strong&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
-&lt;h1 id=&#34;b-tree와-btree에-대해-설명해-주세요&#34; &gt;B-Tree와 B+Tree에 대해 설명해 주세요
+&lt;h1 id=&#34;b-tree와-btree는-무엇일까&#34; &gt;B-Tree와 B+Tree는 무엇일까
 &lt;span&gt;
-    &lt;a href=&#34;#b-tree%ec%99%80-btree%ec%97%90-%eb%8c%80%ed%95%b4-%ec%84%a4%eb%aa%85%ed%95%b4-%ec%a3%bc%ec%84%b8%ec%9a%94&#34;&gt;
+    &lt;a href=&#34;#b-tree%ec%99%80-btree%eb%8a%94-%eb%ac%b4%ec%97%87%ec%9d%bc%ea%b9%8c&#34;&gt;
         &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
     &lt;/a&gt;
 &lt;/span&gt;
@@ -338,7 +868,7 @@ RBT는 B 트리/B+ 트리와 마찬가지로 &lt;code&gt;자가 균형 이진 �
     </item>
     
     <item>
-      <title>Java의 Reflection에 대해 알아보기</title>
+      <title>[Java] Reflection에 대해 알아보기</title>
       <link>https://cloudsoswift.github.io/post/develop/java/reflection/</link>
       <pubDate>Sun, 18 Feb 2024 09:55:12 +0900</pubDate>
       
@@ -770,7 +1300,7 @@ Reflection을 사용하면 이러한 검사가 이뤄지지 않으므로 탐지�
     </item>
     
     <item>
-      <title>JVM의 구조 간략하게 알아보기</title>
+      <title>[Java] JVM의 구조 간략하게 알아보기</title>
       <link>https://cloudsoswift.github.io/post/develop/java/architecture-of-jvm/</link>
       <pubDate>Fri, 02 Feb 2024 13:19:37 +0900</pubDate>
       

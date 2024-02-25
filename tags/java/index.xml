@@ -12,7 +12,7 @@
     
     
     <item>
-      <title>Java의 Reflection에 대해 알아보기</title>
+      <title>[Java] Reflection에 대해 알아보기</title>
       <link>https://cloudsoswift.github.io/post/develop/java/reflection/</link>
       <pubDate>Sun, 18 Feb 2024 09:55:12 +0900</pubDate>
       
@@ -439,6 +439,293 @@ Reflection을 사용하면 이러한 검사가 이뤄지지 않으므로 탐지�
 &lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/java-reflection&#34;&gt;https://www.baeldung.com/java-reflection&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/java-reflection-benefits-drawbacks&#34;&gt;https://www.baeldung.com/java-reflection-benefits-drawbacks&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://www.oracle.com/technical-resources/articles/java/javareflection.html&#34;&gt;https://www.oracle.com/technical-resources/articles/java/javareflection.html&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>[Java] JVM의 구조 간략하게 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/java/architecture-of-jvm/</link>
+      <pubDate>Fri, 02 Feb 2024 13:19:37 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/java/architecture-of-jvm/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;최근에 시작한 &lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 첫 주제가 &amp;lsquo;JVM&amp;rsquo;에 관해 조사하는것으로 정해져 이를 문서로 정리 후 발표를 진행했었다.&lt;br&gt;
+이를 블로그에도 일부분 정리를 해서 포스팅하고자 한다.&lt;br&gt;
+여담으로 해당 문서를 작성하면서 최대한 Oracle과 같은 회사에서 올린 공식적인 문서를 참고하고자 노력했는데, &lt;a href=&#34;https://docs.oracle.com/javase/specs/jvms/se8/html/&#34;&gt;JVM 구현을 위한 스펙 문서&lt;/a&gt;는 발견할 수 있었으나 총체적인 구조에 대한 정보는 없는 것 같아 GeeksforGeeks, Freecodecamp와 같은 학습 사이트도 참고하여 작성하였다.&lt;/p&gt;
+&lt;h1 id=&#34;jvm&#34; &gt;JVM
+&lt;span&gt;
+    &lt;a href=&#34;#jvm&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;h2 id=&#34;jvm이란&#34; &gt;JVM이란?
+&lt;span&gt;
+    &lt;a href=&#34;#jvm%ec%9d%b4%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;JVM(Java Virtual Machine, 자바 가상 머신)&lt;/code&gt;&lt;/strong&gt; 은 Java Application을 실행하는 &lt;strong&gt;런타임 엔진&lt;/strong&gt; 역할을 하는 컴포넌트로, JRE(Java Runtime Environment)의 일부입니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;a href=&#34;https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-1.html#jvms-1.2&#34;&gt;Java SE8 사양 문서의 설명&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Java Platform의 주춧돌 역할을 하는 컴포넌트로 하드웨어 및 운영체제 독립성, 컴파일된 코드의 작은 크기, 악의적인 프로그램으로부터의 사용자 보호를 담당합니다.&lt;br&gt;
+JVM은 실제 컴퓨터처럼 &lt;mark style=&#34;background: #FFB86CA6;&#34;&gt;추상적인 연산 기계&lt;/mark&gt;입니다. 따라서 &lt;strong&gt;명령어 셋&lt;/strong&gt;을 가지고 있고, 런타임에 &lt;strong&gt;다양한 메모리 영역을 조작&lt;/strong&gt;합니다.&lt;br&gt;
+이러한 형태는 가상 머신을 쓰는 프로그래밍 언어를 구현하는데 있어 일반적인 형태로, JVM 이외에도 &lt;code&gt;P-Code(UCSD Pascal)&lt;/code&gt;, &lt;code&gt;Squeak(Smalltalk)&lt;/code&gt; 등이 있습니다.&lt;br&gt;
+JVM의 첫 프로토타입은 썬-마이크로시스템에서 구현되었으며, PDA와 유사한 장비상에 호스팅되는 소프트웨어 안의 JVM 명령어 셋을 에뮬레이트 했습니다.&lt;br&gt;
+Oracle의 현재 구현은 JVM을 모바일, 데스크톱 및 서버장치상에서 에뮬레이트 하지만, JVM은 특정 구현 기술, 종속 하드웨어, 종속 운영체제를 가정하지 않습니다. 이는 선천적으로 해석(interpret)되지 않지만, JVM의 명령어 셋을 실리콘 CPU의 명령어 셋으로 컴파일링하므로써 구현할 수 있습니다.&lt;br&gt;
+유효한 클래스 파일로 표현될 수 있는 기능성(&lt;strong&gt;functionality&lt;/strong&gt;)을 갖춘 모든 언어는 JVM에 의해 호스팅 될 수 있습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;jvm의-구조-httpswwwgeeksforgeeksorgjvm-works-jvm-architecture&#34; &gt;JVM의 구조 &lt;a href=&#34;https://www.geeksforgeeks.org/jvm-works-jvm-architecture/&#34;&gt;#&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#jvm%ec%9d%98-%ea%b5%ac%ec%a1%b0-httpswwwgeeksforgeeksorgjvm-works-jvm-architecture&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;img src=&#34;architecture_of_jvm.png&#34; alt=&#34;architecture_of_jvm&#34;&gt;
+JVM의 구조는 위 그림과 같습니다.&lt;br&gt;
+크게 &lt;strong&gt;&lt;code&gt;클래스 로더&lt;/code&gt;&lt;/strong&gt;, &lt;strong&gt;&lt;code&gt;메모리 영역&lt;/code&gt;&lt;/strong&gt;, &lt;strong&gt;&lt;code&gt;실행 엔진&lt;/code&gt;&lt;/strong&gt; 등으로 구성되어 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;클래스-로더class-loader&#34; &gt;클래스 로더(Class Loader)
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%81%b4%eb%9e%98%ec%8a%a4-%eb%a1%9c%eb%8d%94class-loader&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;클래스 로더는 클래스 파일을 로드하는데 사용되는 JVM의 하위 시스템입니다. &lt;code&gt;로딩(Loading)&lt;/code&gt;, &lt;code&gt;링킹(Linking)&lt;/code&gt;, &lt;code&gt;초기화(Initialization)&lt;/code&gt; 세 가지 동작을 담당합니다.&lt;/p&gt;
+&lt;h4 id=&#34;로딩loading&#34; &gt;로딩(Loading)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a1%9c%eb%94%a9loading&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;클래스 로더가 &lt;code&gt;.class&lt;/code&gt; 파일을 읽고, 대응되는 binary data를 생성해 JVM 메모리내의 &lt;code&gt;메서드 영역&lt;/code&gt;에 &lt;strong&gt;저장&lt;/strong&gt;합니다.&lt;br&gt;
+불러온 class와 해당 class의 바로 위 부모 클래스의 &lt;strong&gt;정규화된 이름&lt;/strong&gt;, &lt;code&gt;.class&lt;/code&gt; 파일이 클래스/인터페이스/Enum 중 어느것과 관련 있는지, &lt;strong&gt;접근 제어자&lt;/strong&gt;, &lt;strong&gt;변수 및 메서드 정보&lt;/strong&gt; 등 을 저장합니다.&lt;br&gt;
+&lt;code&gt;.class&lt;/code&gt; 파일을 불러온 뒤, JVM은 Heap 메모리에 해당 파일을 표현하기 위해 &lt;strong&gt;&lt;code&gt;Class(java.lang)&lt;/code&gt;&lt;/strong&gt; 타입의 객체를 생성합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;개발자는 해당 클래스를 통해 &lt;em&gt;클래스의 이름, 부모 클래스의 이름, 변수 및 메서드 정보 등&lt;/em&gt;을 얻을 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;링킹linking&#34; &gt;링킹(Linking)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a7%81%ed%82%b9linking&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;검증(Verification)&lt;/code&gt;, &lt;code&gt;준비(Preparation)&lt;/code&gt;, &lt;code&gt;해결(Resolution)&lt;/code&gt; 작업을 수행합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;검증(Verification)&lt;/code&gt;: &lt;code&gt;ByteCodeVerifier&lt;/code&gt;에 의해 &lt;code&gt;.class&lt;/code&gt; 파일이 올바른 컴파일러에 의해 적절하게 포맷되고 생성되었는지 &lt;strong&gt;확인&lt;/strong&gt;합니다.&lt;br&gt;
+만약 실패한다면 &lt;code&gt;java.lang.VerifyError&lt;/code&gt; 라는 런타임 예외가 발생하게 됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;준비(Preparation)&lt;/code&gt;: 클래스 정적 변수(class static variable)에 대한 메모리를 할당하고, 메모리를 기본값으로 초기화합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;해결(Resolution)&lt;/code&gt;: 객체를 이름으로 참조(&lt;strong&gt;&lt;code&gt;Symbolic References&lt;/code&gt;&lt;/strong&gt;)하는 것을 직접 주소 값을 참조하도록 대체합니다.&lt;br&gt;
+이 과정에서 이름으로 참조된 객체를 찾기 위해 JVM 메모리 내 &lt;code&gt;메서드 영역&lt;/code&gt;을 검색합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;클래스-로더의-종류&#34; &gt;클래스 로더의 종류
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%81%b4%eb%9e%98%ec%8a%a4-%eb%a1%9c%eb%8d%94%ec%9d%98-%ec%a2%85%eb%a5%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;클래스 로더는 3가지 종류가 있고, 각 클래스 로더들은 JVM의 &lt;strong&gt;&lt;code&gt;위임-계층 원칙(Delegation-Hierarchy Principle)&lt;/code&gt;&lt;/strong&gt; 을 따릅니다.&lt;br&gt;
+따라서, (클래스 로딩 요청) -&amp;gt; 시스템 -&amp;gt; 확장 -&amp;gt; 부트스트랩 순으로 클래스 로딩 요청을 위임하게 됩니다.&lt;br&gt;
+부트스트랩 경로에서 클래스가 발견되지 않으면 확장 클래스 로더에게 요청을 전송하고, 확장 클래스 로더도 찾지 못하면 시스템 클래스 로더에게 전송됩니다. 시스템 클래스 로더도 발견하지 못하면 런타임 에러(&lt;code&gt;java.lang.ClassNotFoundException&lt;/code&gt;) 가 발생합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;부트스트랩 클래스 로더(Bootstrap class loader)&lt;/code&gt;: &lt;code&gt;%JAVA_HOME%/jre/lib&lt;/code&gt;에 존재하는 &lt;strong&gt;코어 Java API 클래스&lt;/strong&gt;들을 불러옵니다. C/C++과 같은 네이티브 언어로 구현됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;확장 클래스 로더(Extension class loader)&lt;/code&gt;: &lt;code&gt;부트스트랩 클래스 로더&lt;/code&gt;의 자식으로, &lt;code&gt;%JAVA_HOME%/jre/lib/ext&lt;/code&gt; 또는 &lt;code&gt;java.ext.dirs&lt;/code&gt;  속성에 의해 정의된 디렉토리에 존재하는 클래스들을 불러옵니다. Java의 &lt;code&gt;sun.misc.Launcher$ExtClassLoader&lt;/code&gt; 클래스로 구현됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;시스템 클래스 로더(System/Application class loader)&lt;/code&gt;: &lt;code&gt;확장 클래스 로더&lt;/code&gt;의 자식으로, 애플리케이션 &lt;code&gt;classpath&lt;/code&gt;(&lt;em&gt;내부적으로 &lt;code&gt;java.class.path&lt;/code&gt;에 매핑된 환경 변수 사용&lt;/em&gt;)에 존재하는 클래스들을 불러옵니다. Java의 &lt;code&gt;sun.misc.Launcher$AppClassLoader&lt;/code&gt;클래스로 구현됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;초기화initialization&#34; &gt;초기화(Initialization)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b4%88%ea%b8%b0%ed%99%94initialization&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;em&gt;부모 클래스에서 자식 클래스로&lt;/em&gt;, &lt;em&gt;클래스 내에서는 위에서 아래로&lt;/em&gt; 진행하며 &lt;strong&gt;모든 정적 변수(static variable)들&lt;/strong&gt;을 코드 및 정적 블럭에 정의된 값으로 할당합니다.&lt;/p&gt;
+&lt;h3 id=&#34;jvm-메모리-영역jvm-memory-runtime-data-area&#34; &gt;JVM 메모리 영역(JVM Memory, Runtime Data Area)
+&lt;span&gt;
+    &lt;a href=&#34;#jvm-%eb%a9%94%eb%aa%a8%eb%a6%ac-%ec%98%81%ec%97%adjvm-memory-runtime-data-area&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;메서드 영역(Method Area)&lt;/code&gt;, &lt;code&gt;힙 영역(Heap Area)&lt;/code&gt;, &lt;code&gt;스택 영역(Stack Area)&lt;/code&gt;, &lt;code&gt;PC 레지스터(PC Registers)&lt;/code&gt;, &lt;code&gt;네이티브 메서드 스택(Native Method Stacks)&lt;/code&gt;으로 구성되어 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;공유-자원&#34; &gt;공유 자원
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ec%9c%a0-%ec%9e%90%ec%9b%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;메서드 영역(Method Area)&lt;/code&gt;: &lt;em&gt;클래스 이름, 직속 부모 클래스 이름, 메서드 및 변수&lt;/em&gt;(&lt;em&gt;정적 변수 포함&lt;/em&gt;)와 같은 모든 &lt;code&gt;&lt;strong&gt;클래스 레벨 정보&lt;/strong&gt;&lt;/code&gt;들이 저장됩니다. JVM 당 하나만 존재하며, 공유됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;힙 영역(Heap Area)&lt;/code&gt;: 모든 &lt;code&gt;동적으로 생성된 객체(즉, 인스턴스)의 정보&lt;/code&gt;가 저장되어 있습니다. JVM 당 하나만 존재하며, 공유됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;개별-자원&#34; &gt;개별 자원
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%9c%eb%b3%84-%ec%9e%90%ec%9b%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;스택 영역(Stack Area)&lt;/code&gt;: JVM이 각 스레드마다 사용할 런타임 스택을 생성하는 공간입니다. 런타임 스택의 모든 블록은 &lt;code&gt;활성화 레코드(Activation Record)&lt;/code&gt; 또는 &lt;code&gt;스택 프레임(Stack Frame)&lt;/code&gt;이라고 부르는 &lt;code&gt;&lt;strong&gt;메서드 호출&lt;/strong&gt;&lt;/code&gt;을 저장하는 블록입니다.&lt;br&gt;
+프레임에는 해당 &lt;code&gt;&lt;strong&gt;메서드에서 사용되는 모든 로컬 변수&lt;/strong&gt;&lt;/code&gt;가 저장됩니다. 런타임 스택을 사용하던 스레드가 종료되면 JVM에 의해 스택이 파괴됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;PC 레지스터(PC Registers)&lt;/code&gt;: 각 스레드 별로 존재하며, &lt;code&gt;&lt;strong&gt;스레드의 현재 실행 명령의 주소&lt;/strong&gt;&lt;/code&gt;를 저장합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;네이티브 메서드 스택(Native Method Stacks)&lt;/code&gt;: 각 스레드 별로 존재하며, &lt;code&gt;&lt;strong&gt;네이티브 메서드 정보&lt;/strong&gt;&lt;/code&gt;를 저장합니다. 만약 네이티브 메서드를 호출할 때 매개변수를 넘겼다면 해당 매개변수를 저장합니다.
+네이티브 메서드가 실행되면 스레드는 자바 스택에서 네이티브 메서드 스택으로 전환합니다.&lt;br&gt;
+&lt;img src=&#34;switch_native_method_stacks.png&#34; alt=&#34;switch_native_method_stacks.png&#34;&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;실행-엔진execution-engine&#34; &gt;실행 엔진(Execution Engine)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%8b%a4%ed%96%89-%ec%97%94%ec%a7%84execution-engine&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;바이트 코드로 변환된 &lt;code&gt;.class&lt;/code&gt; 파일을 한 줄씩 읽고 메모리 영역에 존재하는 데이터와 정보를 이용해 명령어를 실행합니다.&lt;br&gt;
+&lt;code&gt;인터프리터(Interpreter)&lt;/code&gt;, &lt;code&gt;JIT 컴파일러(Just-In-Time Compiler)&lt;/code&gt;, &lt;code&gt;가비지 컬렉터(Garbage Collector)&lt;/code&gt; 로 구성되어 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;인터프리터(Interpreter)&lt;/code&gt;: 바이트 코드를 한 줄씩 해석하고 실행합니다. 인터프리터이기 때문에 한 메서드가 여러 번 호출될 떄 마다 매번 코드를 다시 해석합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;JIT 컴파일러(Just-In-Time Compiler)&lt;/code&gt;: 인터프리터의 효율을 높이기 위해, 반복되는 메서드 호출에 대해 런타임에 바이트 코드를 컴파일해 네이티브 코드로 바꾼 뒤 직접 네이티브 코드를 제공합니다.&lt;br&gt;
+따라서 한 메서드를 여러 번 해석하지 않아 효율성이 향상됩니다.&lt;br&gt;
+JVM이 내부적으로 함수가 호출될 때 마다 호출 횟수를 카운트하다가, 임계점 이상 호출되는 경우 JIT 컴파일러를 통한 컴파일이 진행됩니다. &lt;a href=&#34;https://www.ibm.com/docs/en/sdk-java-technology/8?topic=reference-jit-compiler&#34;&gt;참고&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;가비지 컬렉터(Garbage Collector)&lt;/code&gt;: 더 이상 참조되지 않는 객체들을 파괴합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;자바-네이티브-인터페이스java-native-interface-jni&#34; &gt;자바 네이티브 인터페이스(Java Native Interface, JNI)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%eb%b0%94-%eb%84%a4%ec%9d%b4%ed%8b%b0%eb%b8%8c-%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4java-native-interface-jni&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;네이티브 메서드 라이브러라와 상호작용하고, 실행에 필요한 네이티브 라이브러리(C/C++)를 제공하는 인터페이스 입니다.&lt;br&gt;
+JVM이 C/C++ 라이브러리를 호출하거나, 특정 하드웨어에서는 C/C++ 라이브러리에 의해 호출될 수 있도록 해줍니다.&lt;/p&gt;
+&lt;h3 id=&#34;네이티브-메서드-라이브러리native-method-libraries&#34; &gt;네이티브 메서드 라이브러리(Native Method Libraries)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%84%a4%ec%9d%b4%ed%8b%b0%eb%b8%8c-%eb%a9%94%ec%84%9c%eb%93%9c-%eb%9d%bc%ec%9d%b4%eb%b8%8c%eb%9f%ac%eb%a6%acnative-method-libraries&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;실행 엔진에 필요한 네이티브 라이브러리(C/C++)의 집합입니다.&lt;/p&gt;
+&lt;h2 id=&#34;jvm의-기능&#34; &gt;JVM의 기능
+&lt;span&gt;
+    &lt;a href=&#34;#jvm%ec%9d%98-%ea%b8%b0%eb%8a%a5&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;바이트 코드를 포함하고 있는 .class 형태의 파일를 읽고, 검증한 뒤 실행합니다. 또한 해당 코드가 동작할 수 있는 런타임 환경을 제공합니다.&lt;/p&gt;
+&lt;h2 id=&#34;jvm-위에선-java만-동작할-수-있나&#34; &gt;JVM 위에선 Java만 동작할 수 있나?
+&lt;span&gt;
+    &lt;a href=&#34;#jvm-%ec%9c%84%ec%97%90%ec%84%a0-java%eb%a7%8c-%eb%8f%99%ec%9e%91%ed%95%a0-%ec%88%98-%ec%9e%88%eb%82%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;자바 이외에도 &lt;code&gt;Scala&lt;/code&gt;, &lt;code&gt;Kotlin&lt;/code&gt;, &lt;code&gt;Groovy&lt;/code&gt;, &lt;code&gt;Clojure&lt;/code&gt; 등 다른 언어들을 실행할 수 있습니다.&lt;br&gt;
+JVM에 의해 호스팅 될 수 있는 유효한 class 파일로 표현할 수 있는 &lt;code&gt;기능(Functionality)&lt;/code&gt;를 가진 언어라면 JVM 상에서 실행될 수 있습니다.&lt;br&gt;
+또한 이들은 호환 가능한데, Scala의 라이브러리를 Java 프로그램에서 사용할 수 있는것이 그 예 입니다. &lt;a href=&#34;https://en.wikipedia.org/wiki/Java_virtual_machine#JVM_languages&#34;&gt;#위키피디아 문서의 설명&lt;/a&gt; &lt;a href=&#34;https://pinnsg.com/using-java-libraries-scala/&#34;&gt;#Scala에서 Java 라이브러리 사용하기&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;jvm-계열-언어를-기계어로-컴파일해서-쓸-순-없나&#34; &gt;JVM 계열 언어를 기계어로 컴파일해서 쓸 순 없나?
+&lt;span&gt;
+    &lt;a href=&#34;#jvm-%ea%b3%84%ec%97%b4-%ec%96%b8%ec%96%b4%eb%a5%bc-%ea%b8%b0%ea%b3%84%ec%96%b4%eb%a1%9c-%ec%bb%b4%ed%8c%8c%ec%9d%bc%ed%95%b4%ec%84%9c-%ec%93%b8-%ec%88%9c-%ec%97%86%eb%82%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;가능&lt;/strong&gt;은 합니다. Java의 경우 GNU Project에서 만든 &lt;a href=&#34;https://en.wikipedia.org/wiki/GNU_Compiler_Collection&#34;&gt;GCC(GNU Compiler Collection)&lt;/a&gt;의 Java 컴파일러를 이용하면 네이티브 기계어로 컴파일해 사용할 수 있습니다.&lt;br&gt;
+하지만 가비지 콜렉터와 같은 런타임 지원을 받을 수 없기 때문에 정확하게 동작하지 않을 수 있습니다. &lt;a href=&#34;https://www.quora.com/Can-a-Java-program-run-without-JVM&#34;&gt;#&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&#34;jvm을-사용함으로써-얻을-수-있는-장단점&#34; &gt;JVM을 사용함으로써 얻을 수 있는 장/단점
+&lt;span&gt;
+    &lt;a href=&#34;#jvm%ec%9d%84-%ec%82%ac%ec%9a%a9%ed%95%a8%ec%9c%bc%eb%a1%9c%ec%8d%a8-%ec%96%bb%ec%9d%84-%ec%88%98-%ec%9e%88%eb%8a%94-%ec%9e%a5%eb%8b%a8%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;h3 id=&#34;장점&#34; &gt;장점
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%a5%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;하드웨어-및-운영체제-독립성&#34; &gt;하드웨어 및 운영체제 독립성
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%98%eb%93%9c%ec%9b%a8%ec%96%b4-%eb%b0%8f-%ec%9a%b4%ec%98%81%ec%b2%b4%ec%a0%9c-%eb%8f%85%eb%a6%bd%ec%84%b1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;C/C++과 같은 언어로 작성된 프로그램은&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;CPU마다 기계어가 다르고,&lt;/li&gt;
+&lt;li&gt;운영체제마다 API와 실행파일 형식이 다르기 때문에&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;프로그램이 개발된 환경과 다른 환경에서 실행하려하면 실행되지 않습니다.&lt;br&gt;
+반면 Java의 경우 JVM을 이용해 동일한 자바 실행 환경을 제공하므로 WORA(Write Once Run Anywhere), 즉 한 번 프로그램을 작성하기만 하면 어느 환경에서든 실행 할 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;다만 JVM 자체는 플랫폼에 종속적이므로 각 플랫폼마다 작성됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;자동-메모리-관리&#34; &gt;자동 메모리 관리
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%eb%8f%99-%eb%a9%94%eb%aa%a8%eb%a6%ac-%ea%b4%80%eb%a6%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;JVM 내부의 가비지 컬렉터가 계속해서 참조되지 않는 객체를 인식하고 파괴해 메모리 공간을 확보해줍니다.   따라서 개발자는 메모리 할당/할당 해제를 위해 별다른 작업을 수행하지 않아도 되고, 실수로 메모리 누수가 일어나거나 &lt;code&gt;댕글링 포인터&lt;/code&gt;, &lt;code&gt;더블 프리&lt;/code&gt;와 같은 메모리 관련 오류를 줄일 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;댕글링 포인터(Dangling Pointer)&lt;/code&gt;: 포인터가 참조중인 객체가 포인터의 수정 없이 삭제, 또는 할당 해제되어 포인터가 계속 할당해제된 메모리를 가리키는 메모리 보안 위반 현상입니다.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://learn.microsoft.com/en-us/cpp/sanitizers/error-double-free?view=msvc-170&#34;&gt;&lt;code&gt;더블 프리(Double Free)&lt;/code&gt;&lt;/a&gt;: 동일한 heap 메모리 공간에 대해 free(메모리 해제)를 두 번 시도해 발생하는 취약점입니다.&lt;br&gt;
+같은 인수로 free 함수를 두 번 호출할 경우, 메모리 관련 데이터 구조가 손상되어 프로그램이 중단되거나, 이후 두 번의 &lt;code&gt;malloc()&lt;/code&gt; 명령에 대해 똑같은 포인터를 반환 할 수 있습니다. 이는 프로그램을 버퍼 오버 플로 공격에 취약하게 만듭니다. &lt;a href=&#34;https://cwe.mitre.org/data/definitions/415.html&#34;&gt;참고&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;코드-가독성-및-유지보수성-향상&#34; &gt;코드 가독성 및 유지보수성 향상
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%bd%94%eb%93%9c-%ea%b0%80%eb%8f%85%ec%84%b1-%eb%b0%8f-%ec%9c%a0%ec%a7%80%eb%b3%b4%ec%88%98%ec%84%b1-%ed%96%a5%ec%83%81&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;개발자가 로우-레벨 메모리 세부 사항에 대해 신경 쓸 필요가 없기 때문에 코드 가독성과 유지보수성이 향상됩니다.&lt;/p&gt;
+&lt;h3 id=&#34;단점&#34; &gt;단점
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8b%a8%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;성능&#34; &gt;성능
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%b1%eb%8a%a5&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;Java의 &lt;em&gt;하드웨어 및 운영체제 독립성에 의해&lt;/em&gt;, 바이트 코드를 특정 하드웨어나 시스템에 맞게 최적화시킬 수 없습니다.&lt;br&gt;
+또한 클래스에서 바이트 코드로, 바이트 코드에서 기계 코드로 &lt;strong&gt;두 번 변환하는 과정&lt;/strong&gt;을 거쳐야 하기 때문에 C/C++과 같은 언어에 비해 느릴 수 밖에 없습니다.&lt;br&gt;
+또한 계속해서 객체 생성/삭제를 추적하고, 사용하지 않는 메모리를 회수하기 위해 &lt;strong&gt;가비지 컬렉터를 주기적으로 수행&lt;/strong&gt;해 &lt;strong&gt;오버헤드가 발생&lt;/strong&gt;합니다.&lt;br&gt;
+또한 GC 과정에서 자바 애플리케이션의 스레드가 멈출 수 있어 해당 어플리케이션의 응답 및 대기 시간에 영향을 미칠 수 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;jvm-자체&#34; &gt;JVM 자체
+&lt;span&gt;
+    &lt;a href=&#34;#jvm-%ec%9e%90%ec%b2%b4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;Java 프로그램이 JVM 자체에 의존하기 때문에, 희박한 확률이지만 JVM 자체가 오작동을 일으켜 에러가 발생할 수도 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;메모리-관리&#34; &gt;메모리 관리
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a9%94%eb%aa%a8%eb%a6%ac-%ea%b4%80%eb%a6%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;JVM에서 메모리 할당 밎 관리를 수행하기 때문에, 수동으로 메모리 할당/할당 해제를 할 수 없습니다.&lt;/p&gt;
+&lt;h2 id=&#34;jvm과-그-위에서-실행되는-프로그램은-부모-자식-관계인가&#34; &gt;JVM과 그 위에서 실행되는 프로그램은 부모-자식 관계인가?
+&lt;span&gt;
+    &lt;a href=&#34;#jvm%ea%b3%bc-%ea%b7%b8-%ec%9c%84%ec%97%90%ec%84%9c-%ec%8b%a4%ed%96%89%eb%90%98%eb%8a%94-%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%a8%ec%9d%80-%eb%b6%80%eb%aa%a8-%ec%9e%90%ec%8b%9d-%ea%b4%80%ea%b3%84%ec%9d%b8%ea%b0%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;JVM과 그 위에 실행되는 프로그램은 부모 - 자식 관계를 갖는다고 보기 &lt;strong&gt;힘듭니다&lt;/strong&gt;. &lt;strong&gt;JVM에서 관리하는 스레드를 통해 동작&lt;/strong&gt;한다고 봐야 합니다.&lt;br&gt;
+JVM은 Java Application 코드를 실행하기 위해 &lt;em&gt;&lt;code&gt;main()&lt;/code&gt; 메서드를 실행하는 스레드를 포함해&lt;/em&gt; 하나 이상의 &lt;strong&gt;스레드를 관리&lt;/strong&gt;합니다.&lt;br&gt;
+또한 자식 프로세스가 부모로 부터 완전히 독립적인 &amp;lsquo;부모 - 자식 프로세스&amp;rsquo; 관계와 달리, Java Application은 JVM과 긴밀하고 JVM으로부터 메모리 할당, GC 등의 지원을 받습니다.
+따라서 프로세스 - 스레드 관계에 있다고 봐야합니다.&lt;/p&gt;
+&lt;h1 id=&#34;참고-문서&#34; &gt;참고 문서
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.artima.com/insidejvm/ed2/jvm.html&#34;&gt;The Java Virtual Machine by Bill Venners&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/jvm-works-jvm-architecture/&#34;&gt;How JVM Works – JVM Architecture? - GeeksForGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Java_virtual_machine&#34;&gt;Java virtual machine - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase/specs/jvms/se8/html/&#34;&gt;The Java® Virtual Machine Specification Java SE 8 Edition&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </description>
     </item>

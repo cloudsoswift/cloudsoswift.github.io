@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[DB] DB Locking 알아보기 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 2월 20일에 발표한 DB Locking에 대해 정리한 문서를 블로그에 공유하고자 한다.
+DB Locking이란?병행 트랜잭션이 가능한 환경에서, 변경중인 record를 다른 transaction들이 접근하지 못하도록 막음으로써, 병행 수행 문제를 해결하려는 접근 방법입니다.
+이러한 Locking을 위한 규약(Protocol)으로는 Shared Locking Protocol, 2PLP(2-Phase Locking Protocol), Multiple Granularity Locking Protocol 이 있습니다.
+병행 트랜잭션(Concurrent Transaction) 이란?동시에 실행되고 있는 둘 이상의 트랜잭션을 의미합니다.
+병행 트랜잭션의 장점DB의 공용도(Sharability) 제고응답시간(Response Time) 단축시스템 활용도(System Utilization) 증대병행 트랜잭션의 동시성 문제병행 트랜잭션의 병행 수행률이 상승할수록, 아래와 같은 병행 문제들의 발생률도 상승합니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.eaefe0f95d1fe64ef0a3932347fc8e07ff4e3de4515423d0ad22b33474042778.css" integrity="sha256-6u/g&#43;V0f5k7wo5MjR/yOB/9OPeRRVCPQrSKzNHQEJ3g=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[DB] DB Locking 알아보기" />
+<meta property="og:description" content="서론CS 스터디에서 2월 20일에 발표한 DB Locking에 대해 정리한 문서를 블로그에 공유하고자 한다.
+DB Locking이란?병행 트랜잭션이 가능한 환경에서, 변경중인 record를 다른 transaction들이 접근하지 못하도록 막음으로써, 병행 수행 문제를 해결하려는 접근 방법입니다.
+이러한 Locking을 위한 규약(Protocol)으로는 Shared Locking Protocol, 2PLP(2-Phase Locking Protocol), Multiple Granularity Locking Protocol 이 있습니다.
+병행 트랜잭션(Concurrent Transaction) 이란?동시에 실행되고 있는 둘 이상의 트랜잭션을 의미합니다.
+병행 트랜잭션의 장점DB의 공용도(Sharability) 제고응답시간(Response Time) 단축시스템 활용도(System Utilization) 증대병행 트랜잭션의 동시성 문제병행 트랜잭션의 병행 수행률이 상승할수록, 아래와 같은 병행 문제들의 발생률도 상승합니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/database/db-locking/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-02-26T01:13:22+09:00" />
+<meta property="article:modified_time" content="2024-02-26T01:13:22+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[DB] DB Locking 알아보기"/>
+<meta name="twitter:description" content="서론CS 스터디에서 2월 20일에 발표한 DB Locking에 대해 정리한 문서를 블로그에 공유하고자 한다.
+DB Locking이란?병행 트랜잭션이 가능한 환경에서, 변경중인 record를 다른 transaction들이 접근하지 못하도록 막음으로써, 병행 수행 문제를 해결하려는 접근 방법입니다.
+이러한 Locking을 위한 규약(Protocol)으로는 Shared Locking Protocol, 2PLP(2-Phase Locking Protocol), Multiple Granularity Locking Protocol 이 있습니다.
+병행 트랜잭션(Concurrent Transaction) 이란?동시에 실행되고 있는 둘 이상의 트랜잭션을 의미합니다.
+병행 트랜잭션의 장점DB의 공용도(Sharability) 제고응답시간(Response Time) 단축시스템 활용도(System Utilization) 증대병행 트랜잭션의 동시성 문제병행 트랜잭션의 병행 수행률이 상승할수록, 아래와 같은 병행 문제들의 발생률도 상승합니다."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[DB] DB Locking 알아보기</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#서론">서론</a></li>
+    <li><a href="#db-locking이란">DB Locking이란?</a>
+      <ul>
+        <li><a href="#병행-트랜잭션concurrent-transaction-이란">병행 트랜잭션(Concurrent Transaction) 이란?</a></li>
+        <li><a href="#transaction-schedule이란">Transaction Schedule이란?</a></li>
+        <li><a href="#lock-이란">Lock 이란?</a></li>
+        <li><a href="#locking-protocol">Locking Protocol</a></li>
+      </ul>
+    </li>
+    <li><a href="#optimistic-lockpessimistic-lock란">Optimistic Lock/Pessimistic Lock란?</a>
+      <ul>
+        <li><a href="#낙관적-로크optimistic-lock">낙관적 로크(Optimistic Lock)</a></li>
+        <li><a href="#비관적-로크pessimistic-lock">비관적 로크(Pessimistic Lock)</a></li>
+      </ul>
+    </li>
+    <li><a href="#트랜잭션이-비정상-종료된-경우-lock을-해제할-해결책이-있는가-없다면-직접-해결-가능한가">트랜잭션이 비정상 종료된 경우 Lock을 해제할 해결책이 있는가? 없다면 직접 해결 가능한가?</a>
+      <ul>
+        <li><a href="#lock-timeout">Lock Timeout</a></li>
+        <li><a href="#deadlock-detection">Deadlock Detection</a></li>
+        <li><a href="#일반적인-회복-방법">일반적인 회복 방법</a></li>
+      </ul>
+    </li>
+    <li><a href="#참고-자료">참고 자료</a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h2 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 2월 20일에 발표한 <strong>DB Locking</strong>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h2 id="db-locking이란" >DB Locking이란?
+<span>
+    <a href="#db-locking%ec%9d%b4%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><em>병행 트랜잭션이 가능한 환경에서</em>, 변경중인 record를 다른 transaction들이 접근하지 못하도록 막음으로써, 병행 수행 문제를 해결하려는 접근 방법입니다.<br>
+이러한 Locking을 위한 규약(Protocol)으로는 <code>Shared Locking Protocol</code>, <code>2PLP(2-Phase Locking Protocol)</code>, <code>Multiple Granularity Locking Protocol</code> 이 있습니다.</p>
+<h3 id="병행-트랜잭션concurrent-transaction-이란" >병행 트랜잭션(Concurrent Transaction) 이란?
+<span>
+    <a href="#%eb%b3%91%ed%96%89-%ed%8a%b8%eb%9e%9c%ec%9e%ad%ec%85%98concurrent-transaction-%ec%9d%b4%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>동시에 실행되고 있는 둘 이상의 트랜잭션을 의미합니다.</p>
+<h4 id="병행-트랜잭션의-장점" >병행 트랜잭션의 장점
+<span>
+    <a href="#%eb%b3%91%ed%96%89-%ed%8a%b8%eb%9e%9c%ec%9e%ad%ec%85%98%ec%9d%98-%ec%9e%a5%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h5 id="db의-공용도sharability-제고" >DB의 공용도(Sharability) 제고
+<span>
+    <a href="#db%ec%9d%98-%ea%b3%b5%ec%9a%a9%eb%8f%84sharability-%ec%a0%9c%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><h5 id="응답시간response-time-단축" >응답시간(Response Time) 단축
+<span>
+    <a href="#%ec%9d%91%eb%8b%b5%ec%8b%9c%ea%b0%84response-time-%eb%8b%a8%ec%b6%95">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><h5 id="시스템-활용도system-utilization-증대" >시스템 활용도(System Utilization) 증대
+<span>
+    <a href="#%ec%8b%9c%ec%8a%a4%ed%85%9c-%ed%99%9c%ec%9a%a9%eb%8f%84system-utilization-%ec%a6%9d%eb%8c%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><h4 id="병행-트랜잭션의-동시성-문제" >병행 트랜잭션의 동시성 문제
+<span>
+    <a href="#%eb%b3%91%ed%96%89-%ed%8a%b8%eb%9e%9c%ec%9e%ad%ec%85%98%ec%9d%98-%eb%8f%99%ec%8b%9c%ec%84%b1-%eb%ac%b8%ec%a0%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>병행 트랜잭션의 병행 수행률이 상승할수록, 아래와 같은 병행 문제들의 발생률도 상승합니다. <br>
+설명의 편의를 위해 병행 실행되는 트랜잭션 두 가지를 아래에서 T1, T2라고 부르도록 하겠습니다.</p>
+<h5 id="갱신-분실lost-update" >갱신 분실(Lost Update)
+<span>
+    <a href="#%ea%b0%b1%ec%8b%a0-%eb%b6%84%ec%8b%a4lost-update">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><img src="Lost-Update.png" alt="Lost-Update.png"></p>
+<p>두 트랜잭션이 병렬로 같은 데이터를 읽고 갱신하는 과정에서, 한 트랜잭션이 다른 트랜잭션의 갱신 값을 덮어쓰는 문제입니다.</p>
+<blockquote>
+<p>예시) T1이 연산 후 갱신 작업을 수행한 뒤, 이후에 T2가 갱신된 값이 아닌 이전의 값을 기준으로 연산 후 갱신 작업을 수행해 T1의 갱신이 무효화 됩니다.</p>
+</blockquote>
+<h5 id="모순적-읽기inconsistent-read" >모순적 읽기(Inconsistent Read)
+<span>
+    <a href="#%eb%aa%a8%ec%88%9c%ec%a0%81-%ec%9d%bd%ea%b8%b0inconsistent-read">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>두 트랜잭션이 병렬로 같은 데이터를 읽고 갱신하는 과정에서, 데이터 불일치가 발생하는 문제입니다.</p>
+<h6 id="dirty-read" >Dirty Read
+<span>
+    <a href="#dirty-read">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p><img src="Dirty-Read.png" alt="Dirty-Read.png"></p>
+<p>격리성 수준이 <code>Read Uncommitted</code> 이하인 환경에서 발생가능한 문제로, 한 트랜잭션이 다른 트랜잭션으로부터 <strong>커밋되지 않은 값을 읽어 발생</strong>하는 문제입니다.</p>
+<blockquote>
+<p>예시) T1이 커밋되기 전, 중간에 T2가 T1에서 작업하던 데이터(<em>T1의 <strong>수정</strong>이 <strong>반영되지 않은</strong></em>)을 읽고 작업을 수행해 T1 연산 이전의 값으로 T2가 수행되게 됩니다. 이는 정확하지 않거나 일관되지 않은 결과를 야기할 수 있습니다.</p>
+</blockquote>
+<h6 id="non-repeatable-read" >Non-repeatable Read
+<span>
+    <a href="#non-repeatable-read">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p><img src="Non-repeatable-Read.png" alt="Non-repeatable-Read.png"></p>
+<p>같은 데이터를 한 트랜잭션 내에서 읽었음에도, 둘의 값이 다른 문제입니다.</p>
+<blockquote>
+<p>예시) T1이 한 데이터를 두 번 읽을 때, 중간에 T2가 해당 데이터의 값을 변경한 뒤 커밋하게 되면 두 번째로 읽었을 때의 값은 처음 읽었던 값과 다르게 됩니다.</p>
+</blockquote>
+<h6 id="phantom-read" >Phantom Read
+<span>
+    <a href="#phantom-read">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p><img src="Phantom-Read.png" alt="Phantom-Read.png"></p>
+<p>같은 조건에 대한 검색을 한 트랜잭션 내에서 수행했음에도, 다시 읽으려 할 때 이전에 존재하던 값이 없어지거나, 새로운 값이 추가로 검색되는 문제입니다.</p>
+<blockquote>
+<p>예시) T1이 한 데이터를 두 번 읽을 때, 중간에 T2가 해당 데이터를 삭제한 뒤 커밋하게 되면 두 번째로 읽었을 때 해당 데이터는 존재하지 않게 됩니다.</p>
+</blockquote>
+<h5 id="연쇄적-롤백cascading-rollback" >연쇄적 롤백(Cascading Rollback)
+<span>
+    <a href="#%ec%97%b0%ec%87%84%ec%a0%81-%eb%a1%a4%eb%b0%b1cascading-rollback">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><img src="Cascading-Rollback.png" alt="Cascading-Rollback.png"></p>
+<p>한 트랜잭션이 갱신한 데이터를 다른 트랜잭션이 또 다시 갱신한 뒤, 앞선 트랜잭션을 롤백하려할 때 이후 실행했던 트랜잭션도 롤백해야 하나 이미 해당 트랜잭션은 완료되어 롤백이 불가능한 문제입니다.</p>
+<blockquote>
+<p>예시) T1이 한 데이터를 갱신한 뒤, T2이 해당 데이터를 또 갱신한 뒤 완료처리한 상태에서 T1을 롤백하려 하면 T2이 처리한 부분에 대해서는 롤백이 불가능하게 됩니다.</p>
+</blockquote>
+<h3 id="transaction-schedule이란" >Transaction Schedule이란?
+<span>
+    <a href="#transaction-schedule%ec%9d%b4%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>트랜잭션들이 연산을 실행하는 순서를 의미합니다.<br>
+스케줄의 개수는 <code>Interleaving(트랜잭션을 쪼개서 수행하는 것)</code>이 가능한 경우 거의 무한대이고, 허용되지 않으면 $n!$ 개 입니다.<br>
+병행 수행상 문제가 야기되느냐 그렇지 않느냐에 따라 직렬/비직렬 스케줄로 나뉩니다.</p>
+<h4 id="직렬-스케줄serial-schedule" >직렬 스케줄(serial Schedule)
+<span>
+    <a href="#%ec%a7%81%eb%a0%ac-%ec%8a%a4%ec%bc%80%ec%a4%84serial-schedule">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>스케줄에 포함된 모든 트랜잭션이 하나씩 실행되는 스케줄을 의미합니다.<br>
+병행 수행의 문제가 발생하지 않으나, 병행 트랜잭션으로 실행되지 않게 됩니다.</p>
+<h4 id="비직렬-스케줄non-serial-schedule" >비직렬 스케줄(non-serial Schedule)
+<span>
+    <a href="#%eb%b9%84%ec%a7%81%eb%a0%ac-%ec%8a%a4%ec%bc%80%ec%a4%84non-serial-schedule">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>스케줄에 포함된 모든 트랜잭션이 서로 interleaved되는 스케줄을 의미합니다.<br>
+같은 트랜잭션 내 작업이라도 쪼개서 수행될 수 있기 때문에 쪼개진 작업이 실행되는 시점에 따라 잘못된 결과를 얻을 수 있습니다.</p>
+<h5 id="직렬-가능-스케줄serializable-schedule" >직렬 가능 스케줄(serializable Schedule)
+<span>
+    <a href="#%ec%a7%81%eb%a0%ac-%ea%b0%80%eb%8a%a5-%ec%8a%a4%ec%bc%80%ec%a4%84serializable-schedule">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>어떤 직렬 스케줄과 <strong>동등</strong>한 비직렬 스케줄을 의미합니다.<br>
+<strong>모든 충돌 직렬 가능 스케줄</strong>은 <strong>뷰 직렬 가능 스케줄</strong>이지만, <em><strong>역은 성립하지 않습니다</strong></em>.</p>
+<h6 id="충돌-직렬-가능-스케줄" >충돌 직렬 가능 스케줄
+<span>
+    <a href="#%ec%b6%a9%eb%8f%8c-%ec%a7%81%eb%a0%ac-%ea%b0%80%eb%8a%a5-%ec%8a%a4%ec%bc%80%ec%a4%84">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p>비직렬 스케줄 S에 대해 <strong>충돌 동등</strong>한 직렬 스케줄 S&rsquo;가 존재하면, S를 <code>충돌 직렬 가능 스케줄</code> 이라고 합니다.</p>
+<h6 id="뷰-직렬-가능-스케줄" >뷰 직렬 가능 스케줄
+<span>
+    <a href="#%eb%b7%b0-%ec%a7%81%eb%a0%ac-%ea%b0%80%eb%8a%a5-%ec%8a%a4%ec%bc%80%ec%a4%84">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p>비직렬 스케줄 S에 대해 <strong>뷰 동등</strong>한 직렬 스케줄 S&rsquo;가 존재하면, S를 <code>뷰 직렬 가능 스케줄</code> 이라고 합니다.</p>
+<h5 id="스케줄-동등" >스케줄 동등
+<span>
+    <a href="#%ec%8a%a4%ec%bc%80%ec%a4%84-%eb%8f%99%eb%93%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><h6 id="결과result-동등" >결과(result) 동등
+<span>
+    <a href="#%ea%b2%b0%ea%b3%bcresult-%eb%8f%99%eb%93%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p>결과가 동일한 스케줄을 의미합니다.</p>
+<h6 id="충돌conflict-동등" >충돌(conflict) 동등
+<span>
+    <a href="#%ec%b6%a9%eb%8f%8cconflict-%eb%8f%99%eb%93%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p>충돌 연산의 순서가 동일한 스케줄을 의미합니다.</p>
+<h6 id="뷰view-동등" >뷰(view) 동등
+<span>
+    <a href="#%eb%b7%b0view-%eb%8f%99%eb%93%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p>스케줄 S1, S2에 포함된 트랜잭션이 같고 아래 조건을 만족하는 경우를 의미합니다.</p>
+<ol>
+<li>S1에서 $T_i$가 $x$의 초기 값을 읽는다면, S2에서도 그러해야 합니다.</li>
+<li>S1에서 $T_i$의 모든 read(x)가 $T_j$가 write한 x값을 읽는다면, S2에서도 그러해야 합니다.</li>
+<li>S1에서 $T_i$가 write(x)를 마지막으로 수행하면, S2에서도 그러해야 합니다.</li>
+</ol>
+<h3 id="lock-이란" >Lock 이란?
+<span>
+    <a href="#lock-%ec%9d%b4%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>DB상의 데이터 항목에 대한 잠금장치입니다.<br>
+Lock이 걸린 데이터 항목은 Lock을 건 트랜잭션만 접근할 수 있습니다.<br>
+Lcok은 Lock을 건 트랜잭션에 의해서만 Unlock할 수 있습니다.</p>
+<h4 id="lock의-종류" >Lock의 종류
+<span>
+    <a href="#lock%ec%9d%98-%ec%a2%85%eb%a5%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h5 id="공용-로크shared-lock-s-lock" >공용 로크(Shared Lock, S-Lock)
+<span>
+    <a href="#%ea%b3%b5%ec%9a%a9-%eb%a1%9c%ed%81%acshared-lock-s-lock">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>다른 트랜잭션이 해당 데이터를 Read 할 수 있습니다.</p>
+<h5 id="전용-로크exclusive-lock-x-lock" >전용 로크(Exclusive Lock, X-Lock)
+<span>
+    <a href="#%ec%a0%84%ec%9a%a9-%eb%a1%9c%ed%81%acexclusive-lock-x-lock">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>다른 트랜잭션이 해당 데이터를 Read/Write 할 수 없습니다.</p>
+<h4 id="로크-단위lock-granularity" >로크 단위(Lock granularity)
+<span>
+    <a href="#%eb%a1%9c%ed%81%ac-%eb%8b%a8%ec%9c%84lock-granularity">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>row, table, database 등 Locking할 자원의 크기를 말합니다.<br>
+단위의 크기가 커질수록 병행성 수준은 낮아지고, 병행 제어 기법은 간단해집니다.</p>
+<h4 id="로크-호환성-lock-compatibility" >로크 호환성 (Lock Compatibility)
+<span>
+    <a href="#%eb%a1%9c%ed%81%ac-%ed%98%b8%ed%99%98%ec%84%b1-lock-compatibility">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>이미 자원에 특정 Lock이 설정되어 있는 경우, 다른 트랜잭션도 해당 자원에 대해 Lock을 설정할 수 있는지 여부를 말합니다.</p>
+<table>
+<thead>
+<tr>
+<th>구 분</th>
+<th>Request S-lock</th>
+<th>Request X-lock</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S-locked data item</td>
+<td>ok</td>
+<td>not ok</td>
+</tr>
+<tr>
+<td>X-locked data item</td>
+<td>not ok</td>
+<td>not ok</td>
+</tr>
+</tbody>
+</table>
+<h3 id="locking-protocol" >Locking Protocol
+<span>
+    <a href="#locking-protocol">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>아래 설명된 Protocol들 이외에도 기본적인 Locking Protocol은 다음과 같습니다.</p>
+<ul>
+<li>트랜잭션 T가 x에 대해 read(x)/write(x) 연산을 하려면 먼저 lock(x) 연산을 실행해야 한다.</li>
+<li>트랜잭션 T가 실행한 lock(x)에 대해서는 T가 모든 실행(Task)을 종료하기 전에 unlock(x) 연산을 수행해야 한다.</li>
+<li>트랜잭션 T는 <em>다른 트랜잭션에 의해 lock이 걸려있는</em> x에 대해 <strong>lock(x)</strong> 를 <strong>실행할 수 없다</strong>.</li>
+<li>트랜잭션 T는 <em>자신이 lock을 걸지않은 x</em>에 대해 <strong>unlock(x)</strong> 을 <strong>실행할 수 없다</strong>.</li>
+</ul>
+<h4 id="shared-locking-protocol공용-로킹-규약" ><code>Shared Locking Protocol(공용 로킹 규약)</code>
+<span>
+    <a href="#shared-locking-protocol%ea%b3%b5%ec%9a%a9-%eb%a1%9c%ed%82%b9-%ea%b7%9c%ec%95%bd">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>트랜잭션 T는 <strong>read(x)</strong> 전 반드시 <mark style="background: #ADCCFFA6;">lock-S(x)</mark> 또는 <mark style="background: #FFB86CA6;">lock-X(x)</mark>를 실행해야 함.</li>
+<li>트랜잭션 T는 <strong>write(x)</strong> 전 반드시 <mark style="background: #FFB86CA6;">lock-X(x)</mark>를 실행해야 함.</li>
+</ul>
+<p>이러한 규약 때문에 공용 로킹 규약은 <strong><code>직렬가능성(serializability)</code></strong> 을 보장하지 못합니다.</p>
+<ul>
+<li><strong><code>직렬가능성(serializability)</code></strong> : 비직렬 스케줄을 직렬 스케줄로 변환할 수 있는지를 의미합니다.
+<ul>
+<li>lock과 unlock이 병렬로 수행될 수 있으므로 병행 처리되는 트랜잭션들이 서로 간섭할 수 있어 직렬 가능성이 보장되지 않습니다.</li>
+</ul>
+</li>
+</ul>
+<h4 id="2plp2-phase-locking-protocol-2단계-로킹-규약" ><code>2PLP(2-Phase Locking Protocol, 2단계 로킹 규약)</code>
+<span>
+    <a href="#2plp2-phase-locking-protocol-2%eb%8b%a8%ea%b3%84-%eb%a1%9c%ed%82%b9-%ea%b7%9c%ec%95%bd">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>lock만 가능한 Phase와 unlock만 가능한 phase를 나누어 로킹을 수행하는 규약입니다.<br>
+<code>직렬가능성</code>을 <strong>보장</strong>하지만, <strong><code>Deadlock</code></strong> 문제가 존재하는 규약입니다.<br>
+변형으로는 <code>Strict 2PLP</code>, <code>Rigorous 2PLP</code>가 존재하며, 상용 DBMS에서는 이 둘 중 하나를 사용합니다.</p>
+<h5 id="1-단계growing-phase" >1 단계(Growing Phase)
+<span>
+    <a href="#1-%eb%8b%a8%ea%b3%84growing-phase">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>트랜잭션은 계속해 lock을 획득할 수 있으나, unlock 연산은 실행할 수 없습니다.</li>
+</ul>
+<h5 id="2-단계shrink-phase" >2 단계(Shrink Phase)
+<span>
+    <a href="#2-%eb%8b%a8%ea%b3%84shrink-phase">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>unlock 연산만 실행할 수 있으며, 일단 Lock을 해제하면 더 이상 lock을 획득할 수 없습니다.</li>
+</ul>
+<h6 id="strict-2plp엄격-2단계-로킹-규약" >Strict 2PLP(엄격 2단계 로킹 규약)
+<span>
+    <a href="#strict-2plp%ec%97%84%ea%b2%a9-2%eb%8b%a8%ea%b3%84-%eb%a1%9c%ed%82%b9-%ea%b7%9c%ec%95%bd">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><ul>
+<li>2PLP에 &lsquo;모든 <strong>X-lock</strong>은 <em>트랜잭션 완료시까지</em> <strong>unlock 할 수 없다</strong>&lsquo;는 규칙이 추가된 형태입니다.</li>
+<li><strong>구현이 어려우나 성능이 높고</strong>, <strong><code>연쇄 복귀 문제(Cascading Rollback)</code></strong> 가 발생하지 않습니다.</li>
+</ul>
+<h6 id="rigorous-2plp엄밀-2단계-로킹-규약" >Rigorous 2PLP(엄밀 2단계 로킹 규약)
+<span>
+    <a href="#rigorous-2plp%ec%97%84%eb%b0%80-2%eb%8b%a8%ea%b3%84-%eb%a1%9c%ed%82%b9-%ea%b7%9c%ec%95%bd">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><ul>
+<li>2PLP에 &lsquo;모든 <strong>lock</strong>은 <em>트랜잭션 완료시까지</em> <strong>unlock 할 수 없다</strong>&lsquo;는 규칙이 추가된 형태입니다.</li>
+<li><strong>구현은 쉬우나 성능이 낮다</strong>는 단점이 있습니다.</li>
+</ul>
+<h4 id="multiple-granularity-locking-protocol다중-단위-로킹-규약" ><code>Multiple Granularity Locking Protocol(다중 단위 로킹 규약)</code>
+<span>
+    <a href="#multiple-granularity-locking-protocol%eb%8b%a4%ec%a4%91-%eb%8b%a8%ec%9c%84-%eb%a1%9c%ed%82%b9-%ea%b7%9c%ec%95%bd">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>병행성 수준을 감소시키지 않기 위해, 필요 이상의 크기로 locking 하지 않는 방법입니다.</p>
+<ul>
+<li>
+<p>로킹 계층 트리 : DB -&gt; 구역(Area) -&gt; 파일(File) -&gt; 레코드(Record)
+<img src="Multi-Granularity-tree-Hiererchy.png" alt="Multi-Granularity-tree-Hiererchy.png"></p>
+</li>
+<li>
+<p>DB: 모든 파일을 포함하는 데이터베이스입니다. 데이터베이스는 여러 파일로 구성됩니다.</p>
+</li>
+<li>
+<p>구역(Area): 파일들로 이뤄진 데이터베이스 내 특정 영역입니다.</p>
+</li>
+<li>
+<p>파일(File): 관련된 레코드들의 그룹입니다.</p>
+</li>
+<li>
+<p>레코드(Record): DB 테이블에서 하나의 행입니다. 레코드는 여러 필드로 구성됩니다.</p>
+</li>
+</ul>
+<h2 id="optimistic-lockpessimistic-lock란" >Optimistic Lock/Pessimistic Lock란?
+<span>
+    <a href="#optimistic-lockpessimistic-lock%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="낙관적-로크optimistic-lock" >낙관적 로크(Optimistic Lock)
+<span>
+    <a href="#%eb%82%99%ea%b4%80%ec%a0%81-%eb%a1%9c%ed%81%acoptimistic-lock">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>다른 트랜잭션과 충돌하지 않는다고 가정하고, 별도의 Locking 없이 자원에 접근하는 것을 말합니다.<br>
+병행 제어를 위해 아래 세 과정을 수행하며, 각 과정마다 Start(T), Validation(T), Finish(T) 세 가지의 <strong><code>타임스탬프</code></strong> 를 사용합니다.</p>
+<ul>
+<li><strong><code>타임스탬프</code></strong> : 시스템에서 <strong>트랜잭션</strong>을 <strong>유일하게 식별</strong>하기 위해 부여한 <strong>식별자(identifier)</strong> 로, 트랜잭션이 <strong>시스템에 들어온 순서대로</strong> 부여합니다.</li>
+</ul>
+<h4 id="과정" >과정
+<span>
+    <a href="#%ea%b3%bc%ec%a0%95">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ol>
+<li><code>판독 단계(Read Step)</code> : 트랜잭션에 필요한 자료를 DB로 부터 읽어 <strong>Local Working Area에 복사</strong>합니다. 이후 <strong>모든 갱신은 사본을 대상</strong>으로 수행합니다.</li>
+<li><code>확인 단계(Validation Step)</code>: <strong>직렬(Serialization) 가능성 위반 여부</strong>를 <strong>검사</strong>합니다.</li>
+<li><code>기록 단계(Write Step)</code>: 확인 단계를 통과하면 <strong>DB에 반영</strong>하고, <em>통과하지 못했다면 실행 결과는 취소</em>하고 트랜잭션은 복귀합니다.</li>
+</ol>
+<h3 id="비관적-로크pessimistic-lock" >비관적 로크(Pessimistic Lock)
+<span>
+    <a href="#%eb%b9%84%ea%b4%80%ec%a0%81-%eb%a1%9c%ed%81%acpessimistic-lock">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>다른 트랜잭션과 충돌한다고 가정하고, 트랜잭션을 처리하기 전에 자원에 대해 Locking을 시도하는것을 말합니다.</p>
+<h4 id="과정-1" >과정
+<span>
+    <a href="#%ea%b3%bc%ec%a0%95-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ol>
+<li>자원에 대해 Lock을 겁니다.</li>
+<li>트랜잭션을 실행합니다.</li>
+<li>자원에 대해 Unlock을 수행합니다.</li>
+</ol>
+<h2 id="트랜잭션이-비정상-종료된-경우-lock을-해제할-해결책이-있는가-없다면-직접-해결-가능한가" >트랜잭션이 비정상 종료된 경우 Lock을 해제할 해결책이 있는가? 없다면 직접 해결 가능한가?
+<span>
+    <a href="#%ed%8a%b8%eb%9e%9c%ec%9e%ad%ec%85%98%ec%9d%b4-%eb%b9%84%ec%a0%95%ec%83%81-%ec%a2%85%eb%a3%8c%eb%90%9c-%ea%b2%bd%ec%9a%b0-lock%ec%9d%84-%ed%95%b4%ec%a0%9c%ed%95%a0-%ed%95%b4%ea%b2%b0%ec%b1%85%ec%9d%b4-%ec%9e%88%eb%8a%94%ea%b0%80-%ec%97%86%eb%8b%a4%eb%a9%b4-%ec%a7%81%ec%a0%91-%ed%95%b4%ea%b2%b0-%ea%b0%80%eb%8a%a5%ed%95%9c%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>잘 설계된 DBMS에서는 Lock이 오랫동안 유지되어 Deadlock과 같은 상황을 발생시키지 않도록 여러 대비책을 갖고 있으며, 대부분의 DBMS에서는 Lock 관리를 위한 기능을 제공합니다.</p>
+<h3 id="lock-timeout" >Lock Timeout
+<span>
+    <a href="#lock-timeout">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>Lock을 걸 때, 타임아웃을 설정해 일정시간이 지나면 자동으로 Lock을 해제하도록 합니다.</p>
+<h3 id="deadlock-detection" >Deadlock Detection
+<span>
+    <a href="#deadlock-detection">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>교착상태가 발생하면 사후에 트랜잭션들 중 하나를 강제종료(<code>rollback</code>) 시키는 조치를 취하는 방식입니다.</p>
+<h3 id="일반적인-회복-방법" >일반적인 회복 방법
+<span>
+    <a href="#%ec%9d%bc%eb%b0%98%ec%a0%81%ec%9d%b8-%ed%9a%8c%eb%b3%b5-%eb%b0%a9%eb%b2%95">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>이외에도 Redo, Undo와 같은 회복 방법을 통해 트랜잭션으로 손상된 부분을 회복시킬 수 있습니다.</p>
+<h4 id="redo-media-recovery" >Redo (Media Recovery)
+<span>
+    <a href="#redo-media-recovery">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>비소멸장치(디스크, 테이프 등)의 내용 손상에 대한 회복 기법입니다.<br>
+가장 최근의 복제본(dump)을 적재시키고, 해당 복제본 이후의 변경을 log를 이용해 재실행하여 DB를 복원합니다.</p>
+<h4 id="undo" >Undo
+<span>
+    <a href="#undo">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>log를 이용해 모든 변경을 취소시키므로써 DB를 복원합니다.</p>
+<h4 id="소멸-장치의-정보-회복" >소멸 장치의 정보 회복
+<span>
+    <a href="#%ec%86%8c%eb%a9%b8-%ec%9e%a5%ec%b9%98%ec%9d%98-%ec%a0%95%eb%b3%b4-%ed%9a%8c%eb%b3%b5">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h5 id="log-이용-회복" >Log 이용 회복
+<span>
+    <a href="#log-%ec%9d%b4%ec%9a%a9-%ed%9a%8c%eb%b3%b5">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>트랜잭션이 Write 연산을 실행하거나, 트랜잭션의 시작/완료/철회와 같은 특별 활동시 기록되는 Log를 활용해 회복하는 방법입니다.<br>
+Log는 <code>On-line log(실행중인 트랜잭션에 대한 로그)</code>, <code>Archival log(누적되는 로그를 안정 저장장치에 저장한 것)</code>로 나뉩니다.</p>
+<h6 id="지연-갱신deferred-update의-회복" >지연 갱신(Deferred Update)의 회복
+<span>
+    <a href="#%ec%a7%80%ec%97%b0-%ea%b0%b1%ec%8b%a0deferred-update%ec%9d%98-%ed%9a%8c%eb%b3%b5">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p>트랜잭션이 부분 완료될 때 까지 DB 변경내역을 log에 전부 기록한 뒤, 부분 완료되면 보류시킨 Output 연산을 log를 사용해 처리합니다.<br>
+트랜잭션 <strong>실행 중 장애가 발생</strong>했다면 <strong>처음부터 다시 실행</strong>하고, <strong>완료 후 장애가 발생</strong>했다면 <strong>Log을 사용해 트랜잭션을 Redo</strong> 합니다.</p>
+<h6 id="즉시-갱신immediate-update의-회복" >즉시 갱신(Immediate Update)의 회복
+<span>
+    <a href="#%ec%a6%89%ec%8b%9c-%ea%b0%b1%ec%8b%a0immediate-update%ec%9d%98-%ed%9a%8c%eb%b3%b5">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p>트랜잭션이 실행되는 동안 발생한 변경 내용을 DB에 그대로 반영해 처리합니다.<br>
+트랜잭션 <strong>실행 중 장애가 발생</strong>했다면 해당 <strong>트랜잭션에 대한 Undo</strong>를 실행하고, <strong>완료 후 장애가 발생</strong>했다면 <strong>트랜잭션을 Redo</strong> 합니다.</p>
+<h5 id="검사시점check-point-회복" >검사시점(Check Point) 회복
+<span>
+    <a href="#%ea%b2%80%ec%82%ac%ec%8b%9c%ec%a0%90check-point-%ed%9a%8c%eb%b3%b5">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><em>Log를 이용할 경우</em> Redo/Undo 대상 트랜잭션을 찾기위해 <strong>log 전체를 조사</strong>하거나,<strong>불필요한 Redo를 반복</strong>한다는 <strong>문제를 해결</strong>하기 위해 일정 간격으로 <strong>CheckPoint를 설치</strong>해 이를 사용하는 기법입니다.<br>
+Log를 차례로 검사하며 트랜잭션의 start를 만났다면 해당 트랜잭션을 Undo-list에, 트랜잭션의 commit을 만났다면 Undo-list에서 삭제하고 Redo-list에 추가합니다. 이후 Undo-list의 트랜잭션을 log에 기록된 역순으로 Undo를, Redo-list의 트랜잭션을 log에 기록된 순서로 Redo를 수행합니다.</p>
+<h5 id="그림자-페이징shadow-paging-기법" >그림자 페이징(Shadow Paging) 기법
+<span>
+    <a href="#%ea%b7%b8%eb%a6%bc%ec%9e%90-%ed%8e%98%ec%9d%b4%ec%a7%95shadow-paging-%ea%b8%b0%eb%b2%95">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>트랜잭션을 실행하는 동안 2개의 page table을 유지하는 방법입니다.<br>
+current page table은 write 연산을 실행할 때 변경하며, shadow page table은 트랜잭션 실행 직전의 상태를 유지합니다.<br>
+트랜잭션 완료 전 장애가 발생한 경우 shadow page table을 복사해 실행 직전으로 복귀시킵니다.</p>
+<h2 id="참고-자료" >참고 자료
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0-%ec%9e%90%eb%a3%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>전공과목 강의자료</li>
+<li><a href="https://en.wikipedia.org/wiki/Isolation_(database_systems)">Isolation (database systems) - Wikipedia</a></li>
+<li><a href="https://www.geeksforgeeks.org/dbms-dirty-read-in-sql/">Dirty Read in SQL - GeeksforGeeks</a></li>
+<li><a href="https://www.geeksforgeeks.org/concurrency-problems-in-dbms-transactions/">Concurrency problems in DBMS Transactions - GeeksforGeeks</a></li>
+<li><a href="http://www.jidum.com/jidums/view.do?jidumId=282">동시성제어개요 - 지식덤프</a></li>
+<li><a href="https://www.geeksforgeeks.org/serializability-in-dbms/">Serializability in DBMS - GeeksforGeeks</a></li>
+<li><a href="https://docs.jboss.org/hibernate/orm/4.1/devguide/en-US/html/ch05.html">Chapter 5. Locking - Hibernate Community Documentation</a></li>
+<li><a href="https://www.geeksforgeeks.org/lock-based-concurrency-control-protocol-in-dbms/">Lock Based Concurrency Control Protocol in DBMS - GeeksforGeeks</a></li>
+<li><a href="https://www.ibm.com/docs/en/db2/11.5?topic=overview-optimistic-locking">Optimistic locking - IBM Documentation</a></li>
+<li><a href="https://help.sap.com/doc/saphelp_nw73ehp1/7.31.19/en-us/47/dc35af5bc33b8be10000000a421937/content.htm?no_cache=true">How Optimistic Locks Work - SAP Documentation</a></li>
+<li><a href="https://magicsoftware.my.salesforce-sites.com/PublicKnowledge/articles/bl_Reference/Physical-Locks-xpa-3x">Reference: Physical Locks (Magic xpa 3.x) - Salesforce</a></li>
+<li><a href="https://www.geeksforgeeks.org/multiple-granularity-locking-in-dbms/">Multiple Granularity Locking in DBMS - GeeksforGeeks</a></li>
+<li><a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-locking.html">MySQL :: MySQL 8.0 Reference Manual :: 17.7.1 InnoDB Locking</a></li>
+<li><a href="https://www.umsl.edu/~joshik/msis480/chapt06.htm">6 Database Management - University of Missouri–St. Louis</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/database/db-locking/"><time datetime="2024-02-26">2024-02-26 01:13 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/database/db-locking/">https://cloudsoswift.github.io/post/develop/database/db-locking/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/db/">#DB</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/locking/">#Locking</a></li>
+                
+                    
+                    <li><a href="">#동시성</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/database/b-tree-b&#43;tree/">[자료구조] B Tree와 B&#43;tree 알아보기</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/database/b-tree-b&#43;tree/">[자료구조] B Tree와 B+tree 알아보기</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>
