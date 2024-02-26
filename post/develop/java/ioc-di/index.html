@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Spring] IoC와 DI 알아보기 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 2월 27일에 발표 예정인 IoC와 DI에 대해 정리한 문서를 블로그에 공유하고자 한다.
+IoC와 DI란?IoC (Inversion of Control, 제어의 역전)제어의 역전 은 사용자가 작성한 코드가 제네릭 프레임워크로부터 제어의 흐름을 전달받는 디자인 패턴을 말합니다.
+절차적 프로그래밍에선 사용자의 코드가 일반적인 작업을 위해 라이브러리를 호출하지만, 제어의 역전에선 프레임워크가 사용자의 코드를 호출하게 됩니다.
+제어의 역전은 재사용 가능한 코드와 특정 문제를 위한 코드가 애플리케이션에서 함께 동작해도, 독립적으로 개발된다는 의미를 지닙니다.
+예시">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.eaefe0f95d1fe64ef0a3932347fc8e07ff4e3de4515423d0ad22b33474042778.css" integrity="sha256-6u/g&#43;V0f5k7wo5MjR/yOB/9OPeRRVCPQrSKzNHQEJ3g=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Spring] IoC와 DI 알아보기" />
+<meta property="og:description" content="서론CS 스터디에서 2월 27일에 발표 예정인 IoC와 DI에 대해 정리한 문서를 블로그에 공유하고자 한다.
+IoC와 DI란?IoC (Inversion of Control, 제어의 역전)제어의 역전 은 사용자가 작성한 코드가 제네릭 프레임워크로부터 제어의 흐름을 전달받는 디자인 패턴을 말합니다.
+절차적 프로그래밍에선 사용자의 코드가 일반적인 작업을 위해 라이브러리를 호출하지만, 제어의 역전에선 프레임워크가 사용자의 코드를 호출하게 됩니다.
+제어의 역전은 재사용 가능한 코드와 특정 문제를 위한 코드가 애플리케이션에서 함께 동작해도, 독립적으로 개발된다는 의미를 지닙니다.
+예시" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/java/ioc-di/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-02-27T01:55:34+09:00" />
+<meta property="article:modified_time" content="2024-02-27T01:55:34+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Spring] IoC와 DI 알아보기"/>
+<meta name="twitter:description" content="서론CS 스터디에서 2월 27일에 발표 예정인 IoC와 DI에 대해 정리한 문서를 블로그에 공유하고자 한다.
+IoC와 DI란?IoC (Inversion of Control, 제어의 역전)제어의 역전 은 사용자가 작성한 코드가 제네릭 프레임워크로부터 제어의 흐름을 전달받는 디자인 패턴을 말합니다.
+절차적 프로그래밍에선 사용자의 코드가 일반적인 작업을 위해 라이브러리를 호출하지만, 제어의 역전에선 프레임워크가 사용자의 코드를 호출하게 됩니다.
+제어의 역전은 재사용 가능한 코드와 특정 문제를 위한 코드가 애플리케이션에서 함께 동작해도, 독립적으로 개발된다는 의미를 지닙니다.
+예시"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Spring] IoC와 DI 알아보기</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#서론">서론</a></li>
+    <li><a href="#ioc와-di란">IoC와 DI란?</a>
+      <ul>
+        <li><a href="#ioc-inversion-of-control-제어의-역전">IoC (Inversion of Control, 제어의 역전)</a></li>
+        <li><a href="#di-dependency-injection-의존성-주입">DI (Dependency Injection, 의존성 주입)</a></li>
+      </ul>
+    </li>
+    <li><a href="#특정-기능을-하는-클래스가-하나인-경우-bean-대신-구체-클래스를-사용해도-되지-않나">특정 기능을 하는 클래스가 하나인 경우 Bean 대신 구체 클래스를 사용해도 되지 않나?</a>
+      <ul>
+        <li><a href="#결합도-증가">결합도 증가</a></li>
+        <li><a href="#유연성-감소">유연성 감소</a></li>
+        <li><a href="#테스트의-어려움">테스트의 어려움</a></li>
+      </ul>
+    </li>
+    <li><a href="#spring의-bean-생성-주기">Spring의 Bean 생성 주기</a>
+      <ul>
+        <li><a href="#bean의-생성-범위scope-공식-문서httpsdocsspringiospring-frameworkreferencecorebeansfactory-scopeshtml">Bean의 생성 범위(<code>scope</code>) <a href="https://docs.spring.io/spring-framework/reference/core/beans/factory-scopes.html">공식 문서</a></a></li>
+        <li><a href="#bean의-lifecycle">Bean의 Lifecycle</a></li>
+        <li><a href="#annotation-2">Annotation</a></li>
+      </ul>
+    </li>
+    <li><a href="#참고문서">참고문서</a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h2 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 2월 27일에 발표 예정인 <strong>IoC와 DI</strong>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h2 id="ioc와-di란" >IoC와 DI란?
+<span>
+    <a href="#ioc%ec%99%80-di%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="ioc-inversion-of-control-제어의-역전" >IoC (Inversion of Control, 제어의 역전)
+<span>
+    <a href="#ioc-inversion-of-control-%ec%a0%9c%ec%96%b4%ec%9d%98-%ec%97%ad%ec%a0%84">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><strong><code>제어의 역전</code></strong> 은 사용자가 작성한 코드가 제네릭 프레임워크로부터 제어의 흐름을 전달받는 <strong>디자인 패턴</strong>을 말합니다.<br>
+절차적 프로그래밍에선 <em>사용자의 코드가</em> 일반적인 작업을 위해 <em>라이브러리를 호출</em>하지만, 제어의 역전에선 <strong>프레임워크가 사용자의 코드를 호출</strong>하게 됩니다.<br>
+제어의 역전은 <code>재사용 가능한 코드</code>와 <code>특정 문제를 위한 코드</code>가 애플리케이션에서 <strong>함께 동작</strong>해도, <strong>독립적으로 개발</strong>된다는 의미를 지닙니다.</p>
+<blockquote>
+<p>예시<br>
+<strong>[기존의 방식]</strong><br>
+애플리케이션의 메인 함수가 사용자에게 표시할 명령어들의 목록을 불러오기 위해 메뉴 라이브러리의 함수를 호출합니다.<br>
+이후, 사용자가 선택한 명령어를 해당 함수가 반환하고, 메인 함수가 그 값을 토대로 관련된 명령을 실행합니다.<br>
+<strong>[제어의 역전을 적용한 방식]</strong><br>
+애플리케이션을 창 시스템, 메뉴, 마우스 제어와 같은 일반적인 동작 및 그래픽 요소를 알고 있는 프레임워크를 사용해 작성합니다.<br>
+해당 애플리케이션이 어떤 메뉴를 제공하고, 해당 메뉴는 어떤 코드 서브루틴을 수행하는지는 사용자가 작성한 코드에 따라 달라지게 됩니다.</p>
+</blockquote>
+<p><img src="tranditional-and-IoC.png" alt="tranditional-and-IoC.png"></p>
+<h4 id="spring에서" >Spring에서
+<span>
+    <a href="#spring%ec%97%90%ec%84%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><strong>Spring에선</strong> 이러한 IoC가 본래 의미보다, 애플리케이션 객체에 의해 사용되는 <strong>종속성의 구현체</strong>에 대한 <strong>제어 권한</strong>을 <strong>프레임워크에게 부여</strong>한다는 의미로 사용됩니다.</p>
+<h4 id="장점" >장점
+<span>
+    <a href="#%ec%9e%a5%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h5 id="작업의-실행과-구현의-분리" >작업의 실행과 구현의 분리
+<span>
+    <a href="#%ec%9e%91%ec%97%85%ec%9d%98-%ec%8b%a4%ed%96%89%ea%b3%bc-%ea%b5%ac%ed%98%84%ec%9d%98-%eb%b6%84%eb%a6%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><h5 id="쉬워지는-구현체-전환switch" >쉬워지는 구현체 전환(switch)
+<span>
+    <a href="#%ec%89%ac%ec%9b%8c%ec%a7%80%eb%8a%94-%ea%b5%ac%ed%98%84%ec%b2%b4-%ec%a0%84%ed%99%98switch">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><h5 id="프로그램-모듈성-향상" >프로그램 모듈성 향상
+<span>
+    <a href="#%ed%94%84%eb%a1%9c%ea%b7%b8%eb%9e%a8-%eb%aa%a8%eb%93%88%ec%84%b1-%ed%96%a5%ec%83%81">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><h5 id="테스트의-용이함" >테스트의 용이함
+<span>
+    <a href="#%ed%85%8c%ec%8a%a4%ed%8a%b8%ec%9d%98-%ec%9a%a9%ec%9d%b4%ed%95%a8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>컴포넌트들을 격리하거나, 종속성들을 모의 객체로 대체할 수 있어 테스트를 더욱 쉽게 할 수 있습니다.</p>
+<h3 id="di-dependency-injection-의존성-주입" >DI (Dependency Injection, 의존성 주입)
+<span>
+    <a href="#di-dependency-injection-%ec%9d%98%ec%a1%b4%ec%84%b1-%ec%a3%bc%ec%9e%85">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><strong><code>의존성 주입</code></strong> 은 어떤 객체나 함수가 필요로 하는 다른 객체나 함수를 내부에서 생성하는 것이 아닌, <strong>외부에서 전달 받는</strong> <strong>프로그래밍 기법</strong>입니다.<br>
+의존성 주입은 객체를 생성하고 사용하는데 있어 <strong><code>관심사(concern)</code>를 분리</strong>하므로써 프로그램이 <code>느슨한 결합(loosely coupled)</code>을 갖도록 하는것을 목표로 합니다.<br>
+이러한 관심사 분리를 통해 특정 서비스를 사용하려는 객체나 함수는 해당 서비스가 어떻게 생성되는지 알지 못해도 된다는 것을 보장합니다.</p>
+<h4 id="spring에서-1" >Spring에서
+<span>
+    <a href="#spring%ec%97%90%ec%84%9c-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><strong>의존성 주입(DI)</strong> 은 객체가 그들의 종속성을 정의하는 <strong>특수한 형태의 IoC</strong>입니다.<br>
+이러한 종속성 정의는 생성자 인수, 팩토리 메서드 인수, 인스턴스 내 속성(property)을 통해서만 정의됩니다. 이후 <strong><code>IoC 컨테이너</code></strong> (<code>BeanFactory</code>, <code>ApplicationContext</code> 등)에 의해 빈이 생성될 때 이러한 의존성들이 주입됩니다.<br>
+이 과정은 근본적으로 <em>클래스를 직접 생성하거나, 서비스 로케이터 패턴과 같은 기법을 사용해 종속성의 인스턴스화 및 위치 지정을 제어</em>하는 <strong>빈의 반대</strong>라고 할 수 있습니다.</p>
+<h4 id="유형" >유형
+<span>
+    <a href="#%ec%9c%a0%ed%98%95">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>Spring에서 의존성을 주입하는 방식으로는 <code>생성자 기반 DI</code>, <code>설정자 기반 DI</code>, <code>필드 기반 DI</code> 방식이 있습니다.<br>
+이중 <code>생성자 기반 DI</code> 방식이 <strong>권장</strong>되는데, <strong>NPE를 방지</strong> 할 수 있고 <strong>final 선언이 가능</strong>하기 때문입니다.</p>
+<ul>
+<li>생성자 기반 DI를 사용하는 경우, 필수 의존성들이 세팅되어있지 않은 상황에선 빈을 생성조차 못하기 때문에 <strong>NPE이 발생하지 않지만</strong>, <strong>나머지 두 방식</strong>은 <em><strong>null 상태가 가능</strong></em>하게 됩니다.</li>
+<li>또한, 생성자 기반 DI 방식을 사용하면 <strong>필드를 final로 선언</strong>할 수 있어 불변 형태의 이점을 활용할 수 있습니다.</li>
+</ul>
+<h5 id="생성자-기반-di-constructor" >생성자 기반 DI (Constructor)
+<span>
+    <a href="#%ec%83%9d%ec%84%b1%ec%9e%90-%ea%b8%b0%eb%b0%98-di-constructor">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>설정하고자 하는 <strong>의존성</strong>들을 <strong>인수로 받는 생성자</strong>를 호출해 의존성을 설정하는 방식입니다.<br>
+IoC 컨테이너는 인수들의 타입, index와 같은 <code>attribute</code>를 토대로 의존성을 주입합니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Component</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Water</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">final</span> TeaBag teaBag<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">Water</span><span style="color:#f92672">(</span>TeaBag chamomile<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">teaBag</span> <span style="color:#f92672">=</span> chamomile<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h5 id="설정자-기반-di-setter" >설정자 기반 DI (Setter)
+<span>
+    <a href="#%ec%84%a4%ec%a0%95%ec%9e%90-%ea%b8%b0%eb%b0%98-di-setter">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>no-args 생성자 또는 no-args 정적 팩토리 메서드를 통해 빈을 인스턴스화 한 후 <strong>설정자를 호출</strong>해 의존성을 설정하는 방식입니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Component</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Milk</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> Cereal cereal<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Autowired</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">setCereal</span><span style="color:#f92672">(</span>Cereal cereal<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">cereal</span> <span style="color:#f92672">=</span> cereal<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h5 id="필드-기반-di-field" >필드 기반 DI (Field)
+<span>
+    <a href="#%ed%95%84%eb%93%9c-%ea%b8%b0%eb%b0%98-di-field">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><code>@Autowired</code> <strong>애너테이션</strong>으로 <strong>필드를 표시</strong>해 의존성을 주입하는 방식입니다.
+객체를 생성하는 동안 빈을 주입할 생성자, 설정자가 없는 경우 IoC 컨테이너는 <strong><code>Reflection</code>을 이용</strong>해 주입하게 됩니다.</p>
+<ul>
+<li>Reflection을 사용하기 때문에 <strong>더 많은 비용</strong>이 들고, 종속성을 추가하기 쉽기 때문에 종속성을 늘릴 수록 <strong>단일 책임 원칙을 위배할 가능성</strong>이 커지므로 다른 방식에 비해 <strong>권장되지 않습니다</strong>.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Component</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Juice</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Autowired</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> Orange orange<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h2 id="특정-기능을-하는-클래스가-하나인-경우-bean-대신-구체-클래스를-사용해도-되지-않나" >특정 기능을 하는 클래스가 하나인 경우 Bean 대신 구체 클래스를 사용해도 되지 않나?
+<span>
+    <a href="#%ed%8a%b9%ec%a0%95-%ea%b8%b0%eb%8a%a5%ec%9d%84-%ed%95%98%eb%8a%94-%ed%81%b4%eb%9e%98%ec%8a%a4%ea%b0%80-%ed%95%98%eb%82%98%ec%9d%b8-%ea%b2%bd%ec%9a%b0-bean-%eb%8c%80%ec%8b%a0-%ea%b5%ac%ec%b2%b4-%ed%81%b4%eb%9e%98%ec%8a%a4%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%b4%eb%8f%84-%eb%90%98%ec%a7%80-%ec%95%8a%eb%82%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>구체 클래스를 직접 사용해도 되지만, 이러한 방식은 <strong><code>코드 자체를 변경하지 않으면 동작 방식을 변경할 수 없다</code></strong> 는 단점이 존재합니다.<br>
+그리고 이러한 단점은 아래와 같은 단점들을 유도합니다.<br>
+만약 Bean을 사용하게 된다면, 프로그램의 결합도를 낮추고 코드 유연성을 높일 수 있으며 테스트가 더욱 용이해집니다.</p>
+<h3 id="결합도-증가" >결합도 증가
+<span>
+    <a href="#%ea%b2%b0%ed%95%a9%eb%8f%84-%ec%a6%9d%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>구체 클래스를 직접 사용하게 되면, 해당 클래스와 이를 사용하는 <strong>클래스 간 결합도</strong>가 높아지게 되고, 이는 코드의 변경을 힘들게 만듭니다.</p>
+<h3 id="유연성-감소" >유연성 감소
+<span>
+    <a href="#%ec%9c%a0%ec%97%b0%ec%84%b1-%ea%b0%90%ec%86%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>특정 구현에 직접적으로 의존하게 되면, 해당 <strong>구현을 변경 및 확장하는데 어려움</strong>을 겪게됩니다.</p>
+<h3 id="테스트의-어려움" >테스트의 어려움
+<span>
+    <a href="#%ed%85%8c%ec%8a%a4%ed%8a%b8%ec%9d%98-%ec%96%b4%eb%a0%a4%ec%9b%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>구체 클래스를 직접 사용하게 되면 이를 <strong>모의 객체로 대체하기 어려워</strong> <strong>테스트가 복잡</strong>해집니다.</p>
+<h2 id="spring의-bean-생성-주기" >Spring의 Bean 생성 주기
+<span>
+    <a href="#spring%ec%9d%98-bean-%ec%83%9d%ec%84%b1-%ec%a3%bc%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="bean의-생성-범위scope-공식-문서httpsdocsspringiospring-frameworkreferencecorebeansfactory-scopeshtml" >Bean의 생성 범위(<code>scope</code>) <a href="https://docs.spring.io/spring-framework/reference/core/beans/factory-scopes.html">공식 문서</a>
+<span>
+    <a href="#bean%ec%9d%98-%ec%83%9d%ec%84%b1-%eb%b2%94%ec%9c%84scope-%ea%b3%b5%ec%8b%9d-%eb%ac%b8%ec%84%9chttpsdocsspringiospring-frameworkreferencecorebeansfactory-scopeshtml">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>빈 정의(bean definition)</code>를 생성할 때 마다, 빈 정의에 정의된 클래스의 인스턴스를 생성하는 레시피를 함께 생성하게 됩니다.</p>
+<ul>
+<li><code>빈 정의(bean definition)</code>: XML과 같은 configuration에 작성하는 bean의 metadata 입니다.<br>
+인스턴스를 만들어 낼 수 있는 레시피로 이를 활용해 하나에서 많게는 여러 개의 인스턴스를 생성할 수 있습니다.<br>
+빈 정의 안에는 생성된 객체에 연결된 다양한 종속성과 설정 값 뿐만 아니라 객체의 범위 역시 제어할 수 있습니다.<br>
+Spring의 경우 6개의 scope를 지원하며, 이 중 4개는 web-aware <code>ApplicationContext</code>를 사용하는 경우에만 사용할 수 있습니다. 또한, 커스텀 scope도 만들 수 있습니다.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://docs.spring.io/spring-framework/reference/core/beans/factory-scopes.html#beans-factory-scopes-singleton">singleton</a></td>
+<td>(Default) 빈 정의의 범위를 각 IoC 컨테이너의 단일 객체 인스턴스로 지정합니다.<br>해당 빈에 대한 모든 요청은 캐시된 동일한 객체를 반환합니다.</td>
+</tr>
+<tr>
+<td><a href="https://docs.spring.io/spring-framework/reference/core/beans/factory-scopes.html#beans-factory-scopes-prototype">prototype</a></td>
+<td>빈 정의의 범위를 원하는 수 만큼의 객체 인스턴스로 지정합니다.<br>즉 컨테이너에서 요청할 때 마다 다른 인스턴스를 반환합니다.</td>
+</tr>
+<tr>
+<td><a href="https://docs.spring.io/spring-framework/reference/core/beans/factory-scopes.html#beans-factory-scopes-request">request</a></td>
+<td>빈 정의의 범위를 단일 HTTP 요청 생명 주기로 지정합니다. 즉 각 HTTP 요청은 객체 인스턴스를 갖고 있습니다.</td>
+</tr>
+<tr>
+<td><a href="https://docs.spring.io/spring-framework/reference/core/beans/factory-scopes.html#beans-factory-scopes-session">session</a></td>
+<td>빈 정의의 범위를 HTTP 세션의 생명 주기로 지정합니다.</td>
+</tr>
+<tr>
+<td><a href="https://docs.spring.io/spring-framework/reference/core/beans/factory-scopes.html#beans-factory-scopes-application">application</a></td>
+<td>빈 정의의 범위를 <code>ServletContext</code> 의 생명 주기로 지정합니다.</td>
+</tr>
+<tr>
+<td><a href="https://docs.spring.io/spring-framework/reference/web/websocket/stomp/scope.html">websocket</a></td>
+<td>빈 정의의 범위를 <code>Websocket</code>의 생명 주기로 지정합니다.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="singleton" ><code>singleton</code>
+<span>
+    <a href="#singleton">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="singleton.png" alt="singleton.png"><br>
+<code>singleton</code>으로 등록된 빈은 컨테이너가 <strong>단일 인스턴스</strong>로 생성해 관리하며, 해당 빈에 대한 모든 요청은 <strong>캐시된 동일한 객체를 반환</strong>합니다.<br>
+해당 객체에 대한 <strong>수정</strong>은 객체에 대한 <strong><code>다른 모든 참조</code>에 영향</strong>을 줍니다.</p>
+<h5 id="xml" >XML
+<span>
+    <a href="#xml">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">&lt;bean</span> <span style="color:#a6e22e">id=</span><span style="color:#e6db74">&#34;personSingleton&#34;</span> <span style="color:#a6e22e">class=</span><span style="color:#e6db74">&#34;org.baeldung.scopes.Person&#34;</span> <span style="color:#a6e22e">scope=</span><span style="color:#e6db74">&#34;singleton&#34;</span><span style="color:#f92672">/&gt;</span>
+</span></span></code></pre></div><h5 id="annotation" >Annotation
+<span>
+    <a href="#annotation">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Scope</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;singleton&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 또는 @Scope(value = ConfigurableBeanFactory.SCOPE_SINGLETON)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">public</span> Person <span style="color:#a6e22e">personSingleton</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> Person<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h4 id="prototype" ><code>prototype</code>
+<span>
+    <a href="#prototype">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="prototype.png" alt="prototype.png"><br>
+<code>prototype</code>으로 등록된 빈은 컨테이너에서 해당 빈에 대한 <strong>요청이 들어올 때 마다</strong> <strong><code>다른</code> 인스턴스</strong>를 반환합니다.<br>
+다른 scope들과 달리, Spring은 <code>prototype</code> 빈의 <strong>전체 생명 주기를 <code>관리하지 않습니다</code></strong>.<br>
+IoC 컨테이너는 prototype 객체를 <em>인스턴스화 하고 의존성 주입한 뒤, 클라이언트에게 넘겨주고</em> <code>더 이상 관리하지 않습니다</code>.<br>
+따라서 초기화 생명 주기 콜백(<code>init()</code>)은 scope에 관련 없이 모두 잘 동작하지만, <strong>파괴 생명 주기 콜백</strong>(<code>destroy()</code>)은 <code>prototype</code> 객체에서 <strong>호출되지 않습니다</strong>.</p>
+<ul>
+<li>따라서 클라이언트 코드는 <code>prototype</code> 객체를 cleanup 하고 객체가 보유한 자원들을 해제하도록 해야 합니다.</li>
+</ul>
+<h5 id="xml-1" >XML
+<span>
+    <a href="#xml-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">&lt;bean</span> <span style="color:#a6e22e">id=</span><span style="color:#e6db74">&#34;personPrototype&#34;</span> <span style="color:#a6e22e">class=</span><span style="color:#e6db74">&#34;org.baeldung.scopes.Person&#34;</span> <span style="color:#a6e22e">scope=</span><span style="color:#e6db74">&#34;prototype&#34;</span><span style="color:#f92672">/&gt;</span>
+</span></span></code></pre></div><h5 id="annotation-1" >Annotation
+<span>
+    <a href="#annotation-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">@Scope</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;prototype&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 또는 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">public</span> Person <span style="color:#a6e22e">personPrototype</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> Person<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h3 id="bean의-lifecycle" >Bean의 Lifecycle
+<span>
+    <a href="#bean%ec%9d%98-lifecycle">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>빈은 Spring IoC 컨테이너에 의해 관리됩니다.<br>
+IoC 컨테이너에 의해 빈이 인스턴스화 되고, 의존성이 주입되고, <em>IoC 컨테이너가 종료된 후</em> <strong>빈은 파괴</strong>됩니다.
+<img src="Bean-life-cycle.png" alt="Bean-life-cycle.png"></p>
+<blockquote>
+<p>출처: <a href="https://www.geeksforgeeks.org/bean-life-cycle-in-java-spring/">https://www.geeksforgeeks.org/bean-life-cycle-in-java-spring/</a></p>
+</blockquote>
+<p>이 과정에서 <code>인스턴스화 이전</code>, <code>파괴 이전</code> <strong>실행하고 싶은 코드</strong>가 있다면 <strong>생명주기 콜백 함수</strong>인 <code>init()</code>, <code>destroy()</code> 메서드 내부에 작성할 수 있습니다.<br>
+<strong>생명주기 콜백 함수</strong>를 작성하는 방법은 크게 3가지 방법이 존재합니다.</p>
+<h4 id="xml-2" >XML
+<span>
+    <a href="#xml-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>XML파일의 <code>빈 정의</code> 내부에 사용할 사용자 정의 <code>init()</code> 및 <code>destroy()</code>를 등록하는 방식입니다.
+이후 해당 XML 설정을 불러오는 IoC 컨테이너를 생성하고, 이를 <code>close()</code> 하게되면  <code>init()</code>/<code>destroy()</code> 함수가 호출되게 됩니다.</p>
+<blockquote>
+<p>[예시]</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;beans&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;bean</span> <span style="color:#a6e22e">id=</span><span style="color:#e6db74">&#34;hw&#34;</span> <span style="color:#a6e22e">class=</span><span style="color:#e6db74">&#34;beans.HelloWorld&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">init-method=</span><span style="color:#e6db74">&#34;init&#34;</span> <span style="color:#a6e22e">destroy-method=</span><span style="color:#e6db74">&#34;destroy&#34;</span><span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">&lt;!-- init-method/destroy-method에 사용자 정의 init()/destroy() 함수의 이름을 등록합니다 --&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/beans&gt;</span>
+</span></span></code></pre></div><h4 id="interface" >Interface
+<span>
+    <a href="#interface">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>빈이 <code>InitializingBean</code>, <code>DisposableBean</code>을 상속하게 한 뒤, <code>afterPropertiesSet()</code>, <code>destroy()</code> 메서드를 재정의하도록 하는 방식입니다.<br>
+이렇게 하면 IoC 컨테이너는 <code>빈의 생성 전</code>, <code>컨테이너가 파괴된 후</code> 해당 함수들을 호출하게 됩니다.<br>
+내부적으로 Spring 프레임워크는 <strong><code>BeanPostProcessor</code></strong> 의 구현체를 사용해 적절한 메서드들을 호출할 수 있는 콜백 인터페이스들을 처리합니다.<br>
+이 방식은 <em>Spring 프레임워크</em>와 <em>코드</em>를 <em><code>불필요하게</code></em> <strong><code>결합</code>시키는 측면</strong>이 있어, Spring에서도 XML을 사용하거나 애너테이션을 사용하는 방식을 권장합니다.</p>
+<blockquote>
+<p>[예시]</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">AnotherExampleBean</span> <span style="color:#66d9ef">implements</span> InitializingBean <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">afterPropertiesSet</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// do some initialization work
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">AnotherExampleBean</span> <span style="color:#66d9ef">implements</span> DisposableBean <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">destroy</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// do some destruction work (like releasing pooled connections)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h3 id="annotation-2" >Annotation
+<span>
+    <a href="#annotation-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>빈으로 등록될 클래스의 메서드에 <code>@PostConstruct</code>, <code>@PreDestroy</code> 애너테이션을 달아주면 해당 빈이 인스턴스화되기 전, 컨테이너가 파괴된 후 해당 메서드들이 실행되게 됩니다.<br>
+이를 사용하기 위해선 <code>CommonAnnotationBeanPostProcessor</code> 빈을 등록하거나, Configuration XML 파일 내에서 <code>&lt;context:annotation-config/&gt;</code> 을 사용해야 합니다.</p>
+<blockquote>
+<p>[예시]</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">import</span> javax.annotation.PostConstruct<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> javax.annotation.PreDestroy<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// HelloWorld class
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">HelloWorld</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 빈이 인스턴스화 되었을 때 자동으로 실행되도록
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 애너테이션을 달아줍니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">@PostConstruct</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">init</span><span style="color:#f92672">()</span> <span style="color:#66d9ef">throws</span> Exception
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;Bean HelloWorld has been &#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;instantiated and I&#39;m the &#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;init() method&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 스프링 컨테이너(=IoC 컨테이너)가 종료되면
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 자동으로 실행되도록 애너테이션을 달아줍니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">@PreDestroy</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">destroy</span><span style="color:#f92672">()</span> <span style="color:#66d9ef">throws</span> Exception
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;Container has been closed &#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;and I&#39;m the destroy() method&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h2 id="참고문서" >참고문서
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0%eb%ac%b8%ec%84%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><a href="https://en.wikipedia.org/wiki/Inversion_of_control">Inversion of control - Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Dependency_injection">Dependency injection - Wikipedia</a></li>
+<li><a href="https://docs.spring.io/spring-framework/reference/core/beans/introduction.html">Introduction to the Spring IoC Container and Beans :: Spring Framework</a></li>
+<li><a href="https://www.baeldung.com/inversion-control-and-dependency-injection-in-spring">Inversion of Control and Dependency Injection with Spring | Baeldung</a></li>
+<li><a href="https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html">Dependency Injection :: Spring Framework</a></li>
+<li><a href="https://docs.spring.io/spring-framework/docs/3.2.x/spring-framework-reference/html/overview.html#background-ioc">1. Introduction to Spring Framework</a></li>
+<li><a href="https://www.geeksforgeeks.org/bean-life-cycle-in-java-spring/">Bean life cycle in Java Spring - GeeksforGeeks</a></li>
+<li><a href="https://docs.spring.io/spring-framework/reference/core/beans/factory-scopes.html#beans-factory-scopes-other-injection">Bean Scopes :: Spring Framework</a></li>
+<li><a href="https://docs.spring.io/spring-framework/reference/core/beans/factory-nature.html#beans-factory-lifecycle">Customizing the Nature of a Bean :: Spring Framework</a></li>
+<li><a href="https://www.baeldung.com/spring-bean-scopes">Quick Guide to Spring Bean Scopes | Baeldung</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/ioc-di/"><time datetime="2024-02-27">2024-02-27 01:55 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/ioc-di/">https://cloudsoswift.github.io/post/develop/java/ioc-di/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/spring/">#Spring</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/design-pattern/">#Design Pattern</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/java/reflection/">[Java] Reflection에 대해 알아보기</a></li>
+                
+                <li><a href="/post/develop/java/architecture-of-jvm/">[Java] JVM의 구조 간략하게 알아보기</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/database/db-locking/">[DB] DB Locking 알아보기</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>
