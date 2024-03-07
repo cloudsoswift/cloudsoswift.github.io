@@ -230,10 +230,10 @@
 
     
         <div class="content post-summary p-summary">
-            synchronized 키워드란?멀티 스레드 환경에서 Java 언어가 공유 자원에 대한 동기화 처리를 위해 사용되는 관용구(idiom)입니다. 이 키워드를 사용해 개발자는 간단하게 경쟁 조건(Race Condition) 을 피할 수 있습니다.
+            서론CS 스터디에서 3월 6일 발표한 synchronized에 대해 정리한 문서를 블로그에 공유하고자 한다.
+synchronized 키워드란?멀티 스레드 환경에서 Java 언어가 공유 자원에 대한 동기화 처리를 위해 사용되는 관용구(idiom)입니다. 이 키워드를 사용해 개발자는 간단하게 경쟁 조건(Race Condition) 을 피할 수 있습니다.
 Synchronized 키워드를 사용하게 되면 Java는 내부적으로 모니터(monitor)(모니터 락(monitor lock) 또는 내재적 락(intrinsic lock)이라고도 불림)을 사용해 동기화를 처리합니다.
 모니터는 동기화에 필요한 &lsquo;객체 상태에 대한 배타적 액세스 강제&rsquo;, &lsquo;가시성(visibility)에 필수적인 발생-전(happen-before) 관계 설정&rsquo; 과 같은 작업을 수행하는 역할을 합니다.
-가시성: 동일한 synchronized 블록에 진입하는 다음 스레드는 이전 스레드가 본 것과 같은 변수 값들을 보게 됩니다.
         </div>
     
     

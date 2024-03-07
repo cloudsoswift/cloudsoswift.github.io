@@ -12,10 +12,10 @@
 
 <title>[Java] synchronized 알아보기 - 오늘도 개발을 한다.</title>
 
-<meta name="description" content="synchronized 키워드란?멀티 스레드 환경에서 Java 언어가 공유 자원에 대한 동기화 처리를 위해 사용되는 관용구(idiom)입니다. 이 키워드를 사용해 개발자는 간단하게 경쟁 조건(Race Condition) 을 피할 수 있습니다.
+<meta name="description" content="서론CS 스터디에서 3월 6일 발표한 synchronized에 대해 정리한 문서를 블로그에 공유하고자 한다.
+synchronized 키워드란?멀티 스레드 환경에서 Java 언어가 공유 자원에 대한 동기화 처리를 위해 사용되는 관용구(idiom)입니다. 이 키워드를 사용해 개발자는 간단하게 경쟁 조건(Race Condition) 을 피할 수 있습니다.
 Synchronized 키워드를 사용하게 되면 Java는 내부적으로 모니터(monitor)(모니터 락(monitor lock) 또는 내재적 락(intrinsic lock)이라고도 불림)을 사용해 동기화를 처리합니다.
-모니터는 동기화에 필요한 &lsquo;객체 상태에 대한 배타적 액세스 강제&rsquo;, &lsquo;가시성(visibility)에 필수적인 발생-전(happen-before) 관계 설정&rsquo; 과 같은 작업을 수행하는 역할을 합니다.
-가시성: 동일한 synchronized 블록에 진입하는 다음 스레드는 이전 스레드가 본 것과 같은 변수 값들을 보게 됩니다.">
+모니터는 동기화에 필요한 &lsquo;객체 상태에 대한 배타적 액세스 강제&rsquo;, &lsquo;가시성(visibility)에 필수적인 발생-전(happen-before) 관계 설정&rsquo; 과 같은 작업을 수행하는 역할을 합니다.">
 
 
 
@@ -95,10 +95,10 @@ Synchronized 키워드를 사용하게 되면 Java는 내부적으로 모니터(
 
 
 <meta property="og:title" content="[Java] synchronized 알아보기" />
-<meta property="og:description" content="synchronized 키워드란?멀티 스레드 환경에서 Java 언어가 공유 자원에 대한 동기화 처리를 위해 사용되는 관용구(idiom)입니다. 이 키워드를 사용해 개발자는 간단하게 경쟁 조건(Race Condition) 을 피할 수 있습니다.
+<meta property="og:description" content="서론CS 스터디에서 3월 6일 발표한 synchronized에 대해 정리한 문서를 블로그에 공유하고자 한다.
+synchronized 키워드란?멀티 스레드 환경에서 Java 언어가 공유 자원에 대한 동기화 처리를 위해 사용되는 관용구(idiom)입니다. 이 키워드를 사용해 개발자는 간단하게 경쟁 조건(Race Condition) 을 피할 수 있습니다.
 Synchronized 키워드를 사용하게 되면 Java는 내부적으로 모니터(monitor)(모니터 락(monitor lock) 또는 내재적 락(intrinsic lock)이라고도 불림)을 사용해 동기화를 처리합니다.
-모니터는 동기화에 필요한 &lsquo;객체 상태에 대한 배타적 액세스 강제&rsquo;, &lsquo;가시성(visibility)에 필수적인 발생-전(happen-before) 관계 설정&rsquo; 과 같은 작업을 수행하는 역할을 합니다.
-가시성: 동일한 synchronized 블록에 진입하는 다음 스레드는 이전 스레드가 본 것과 같은 변수 값들을 보게 됩니다." />
+모니터는 동기화에 필요한 &lsquo;객체 상태에 대한 배타적 액세스 강제&rsquo;, &lsquo;가시성(visibility)에 필수적인 발생-전(happen-before) 관계 설정&rsquo; 과 같은 작업을 수행하는 역할을 합니다." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://cloudsoswift.github.io/post/develop/java/synchronized/" /><meta property="article:section" content="post" />
 <meta property="article:published_time" content="2024-03-04T23:19:16+09:00" />
@@ -106,10 +106,10 @@ Synchronized 키워드를 사용하게 되면 Java는 내부적으로 모니터(
 
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="[Java] synchronized 알아보기"/>
-<meta name="twitter:description" content="synchronized 키워드란?멀티 스레드 환경에서 Java 언어가 공유 자원에 대한 동기화 처리를 위해 사용되는 관용구(idiom)입니다. 이 키워드를 사용해 개발자는 간단하게 경쟁 조건(Race Condition) 을 피할 수 있습니다.
+<meta name="twitter:description" content="서론CS 스터디에서 3월 6일 발표한 synchronized에 대해 정리한 문서를 블로그에 공유하고자 한다.
+synchronized 키워드란?멀티 스레드 환경에서 Java 언어가 공유 자원에 대한 동기화 처리를 위해 사용되는 관용구(idiom)입니다. 이 키워드를 사용해 개발자는 간단하게 경쟁 조건(Race Condition) 을 피할 수 있습니다.
 Synchronized 키워드를 사용하게 되면 Java는 내부적으로 모니터(monitor)(모니터 락(monitor lock) 또는 내재적 락(intrinsic lock)이라고도 불림)을 사용해 동기화를 처리합니다.
-모니터는 동기화에 필요한 &lsquo;객체 상태에 대한 배타적 액세스 강제&rsquo;, &lsquo;가시성(visibility)에 필수적인 발생-전(happen-before) 관계 설정&rsquo; 과 같은 작업을 수행하는 역할을 합니다.
-가시성: 동일한 synchronized 블록에 진입하는 다음 스레드는 이전 스레드가 본 것과 같은 변수 값들을 보게 됩니다."/>
+모니터는 동기화에 필요한 &lsquo;객체 상태에 대한 배타적 액세스 강제&rsquo;, &lsquo;가시성(visibility)에 필수적인 발생-전(happen-before) 관계 설정&rsquo; 과 같은 작업을 수행하는 역할을 합니다."/>
 
 
 
@@ -270,7 +270,14 @@ Synchronized 키워드를 사용하게 되면 Java는 내부적으로 모니터(
 </nav>
 
         <div class="content e-content">
-            <h2 id="synchronized-키워드란" ><code>synchronized</code> 키워드란?
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 3월 6일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/07-JAVA_SPRING/7_Synchronized/Readme.md"><strong>synchronized</strong></a>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h2 id="synchronized-키워드란" ><code>synchronized</code> 키워드란?
 <span>
     <a href="#synchronized-%ed%82%a4%ec%9b%8c%eb%93%9c%eb%9e%80">
         <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
