@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[웹, 네트워크] XSS 알아보기 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 3월 12일 발표한 XSS에 대해 정리한 문서를 블로그에 공유하고자 한다.
+XSS란?신뢰할 수 있는 웹 사이트에 악성코드를 삽입하는 공격을 말합니다.
+공격자가 표적 웹사이트의 콘텐츠에 악성 스크립트를 삽입하고, 피해자의 브라우저에 전달되는 동적 콘텐츠에 이를 포함시키므로써 피해를 입게 됩니다.
+이때, 피해자의 브라우저는 해당 스크립트가 &lsquo;신뢰할 수 없는 스크립트&rsquo;라는 점을 알 수 없어 해당 스크립트를 실행하게 됩니다.
+악성 스크립트는 피해자의 브라우저가 보유한 해당 사이트에서 사용되는 모든 쿠키, 저장소에 저장된 민감 정보에 액세스할 수 있습니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.1d0e4612738c15e8ac0ee3299b5c763dd861a774809b4a89b77d6e461b2249c3.css" integrity="sha256-HQ5GEnOMFeisDuMpm1x2Pdhhp3SAm0qJt31uRhsiScM=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[웹, 네트워크] XSS 알아보기" />
+<meta property="og:description" content="서론CS 스터디에서 3월 12일 발표한 XSS에 대해 정리한 문서를 블로그에 공유하고자 한다.
+XSS란?신뢰할 수 있는 웹 사이트에 악성코드를 삽입하는 공격을 말합니다.
+공격자가 표적 웹사이트의 콘텐츠에 악성 스크립트를 삽입하고, 피해자의 브라우저에 전달되는 동적 콘텐츠에 이를 포함시키므로써 피해를 입게 됩니다.
+이때, 피해자의 브라우저는 해당 스크립트가 &lsquo;신뢰할 수 없는 스크립트&rsquo;라는 점을 알 수 없어 해당 스크립트를 실행하게 됩니다.
+악성 스크립트는 피해자의 브라우저가 보유한 해당 사이트에서 사용되는 모든 쿠키, 저장소에 저장된 민감 정보에 액세스할 수 있습니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/network/xss/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-03-19T19:51:00+09:00" />
+<meta property="article:modified_time" content="2024-03-19T19:51:00+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[웹, 네트워크] XSS 알아보기"/>
+<meta name="twitter:description" content="서론CS 스터디에서 3월 12일 발표한 XSS에 대해 정리한 문서를 블로그에 공유하고자 한다.
+XSS란?신뢰할 수 있는 웹 사이트에 악성코드를 삽입하는 공격을 말합니다.
+공격자가 표적 웹사이트의 콘텐츠에 악성 스크립트를 삽입하고, 피해자의 브라우저에 전달되는 동적 콘텐츠에 이를 포함시키므로써 피해를 입게 됩니다.
+이때, 피해자의 브라우저는 해당 스크립트가 &lsquo;신뢰할 수 없는 스크립트&rsquo;라는 점을 알 수 없어 해당 스크립트를 실행하게 됩니다.
+악성 스크립트는 피해자의 브라우저가 보유한 해당 사이트에서 사용되는 모든 쿠키, 저장소에 저장된 민감 정보에 액세스할 수 있습니다."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[웹, 네트워크] XSS 알아보기</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#xss란">XSS란?</a>
+      <ul>
+        <li><a href="#xss-공격의-종류">XSS 공격의 종류</a></li>
+      </ul>
+    </li>
+    <li><a href="#csrf랑-xss의-차이점">CSRF랑 XSS의 차이점?</a></li>
+    <li><a href="#xss는-프론트엔드에서만-방어할-수-있을까">XSS는 프론트엔드에서만 방어할 수 있을까?</a>
+      <ul>
+        <li><a href="#x-xss-protection"><code>X-XSS-Protection</code></a></li>
+      </ul>
+    </li>
+    <li><a href="#참고-문서">참고 문서</a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 3월 12일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/03-NETWORK/21_XSS/Readme.md"><strong>XSS</strong></a>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h2 id="xss란" >XSS란?
+<span>
+    <a href="#xss%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>신뢰할 수 있는 웹 사이트에 <strong>악성코드를 삽입하는 공격</strong>을 말합니다.<br>
+공격자가 표적 웹사이트의 콘텐츠에 악성 스크립트를 삽입하고, 피해자의 브라우저에 전달되는 동적 콘텐츠에 이를 포함시키므로써 피해를 입게 됩니다.<br>
+이때, 피해자의 브라우저는 해당 스크립트가 <strong>&lsquo;신뢰할 수 없는 스크립트&rsquo;라는 점</strong>을 <em>알 수 없어</em> <strong>해당 스크립트를 실행</strong>하게 됩니다.<br>
+악성 스크립트는 <em>피해자의 브라우저가 보유한</em> 해당 사이트에서 사용되는 <strong>모든 쿠키, 저장소에 저장된 민감 정보에 액세스</strong>할 수 있습니다.<br>
+뿐만 아니라 <strong>멀웨어</strong>를 퍼뜨리거나, 웹사이트의 콘<strong>텐츠를 변조</strong>하거나,<strong>피싱 사이트로 이동</strong>시키거나 하는 등의 공격도 가능합니다.<br>
+다른 웹 공격들과 달리, <em>애플리케이션 자체가 아닌</em> <strong>웹 애플리케이션 사용자를 표적</strong>으로 삼는다는 특징이 있습니다.</p>
+<h3 id="xss-공격의-종류" >XSS 공격의 종류
+<span>
+    <a href="#xss-%ea%b3%b5%ea%b2%a9%ec%9d%98-%ec%a2%85%eb%a5%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="저장형-크로스사이트-스크립팅stored-cross-site-scripting" ><code>저장형 크로스사이트 스크립팅(Stored Cross-site Scripting)</code>
+<span>
+    <a href="#%ec%a0%80%ec%9e%a5%ed%98%95-%ed%81%ac%eb%a1%9c%ec%8a%a4%ec%82%ac%ec%9d%b4%ed%8a%b8-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8c%85stored-cross-site-scripting">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="stored-xss.png" alt="stored-xss.png"></p>
+<p><code>지속적(Persistent) XSS</code>라고도 하는 공격 방식입니다.<br>
+사용자가 입력한 값이 저장(주로 게시판)된 후 이를 웹 페이지에서 출력할때 피해가 발생하는 공격입니다.<br>
+공격자의 악성스크립트가 서버에 저장되어 불특정 다수를 대상으로 공격에 이용될 수 있어 Reflected XSS보다 공격 대상의 범위가 훨씬 크다는 특징이 있습니다.</p>
+<h5 id="공격-방식" >공격 방식
+<span>
+    <a href="#%ea%b3%b5%ea%b2%a9-%eb%b0%a9%ec%8b%9d">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>공격자가 스크립트가 포함된 <strong>콘텐츠</strong>(<strong>게시글, 댓글, 사용자 이름 등</strong>)를 작성한 뒤, 이를 피해자가 요청하게 되면 해당 스크립트가 <strong>피해자 측에서 동작</strong>하게 됩니다.</p>
+<h4 id="반사-크로스사이트-스크립팅reflected-cross-site-scripting" ><code>반사 크로스사이트 스크립팅(Reflected cross-site scripting)</code>
+<span>
+    <a href="#%eb%b0%98%ec%82%ac-%ed%81%ac%eb%a1%9c%ec%8a%a4%ec%82%ac%ec%9d%b4%ed%8a%b8-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8c%85reflected-cross-site-scripting">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="reflected-xss.png" alt="reflected-xss.png"></p>
+<p><code>비지속적(Non-Persistent) XSS</code>라고도 하는 공격 방식입니다.<br>
+이름에 포함된 &lsquo;반사&rsquo; 라는 단어처럼, <strong>사용자가 요청</strong>한 스크립트가 사용자 측에서 반사되어 동작합니다. 즉, 공격자의 스크립트가 별도의 저장소에 저장되지 않고 <strong>사용자 측에서 즉시 동작</strong>합니다.<br>
+<em>지속적 XSS와 달리</em>, <strong>공격자가</strong> 각 피해자들에게 페이로드(악성스크립트)를 <strong>전달</strong>해주어야 합니다. 따라서 악성 링크, 피싱 이메일, SNS 등을 이용해 해당 페이로드가 포함된 URL을 <strong>클릭하도록 유도</strong>해야 합니다.</p>
+<h5 id="공격-방식-1" >공격 방식
+<span>
+    <a href="#%ea%b3%b5%ea%b2%a9-%eb%b0%a9%ec%8b%9d-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>공격자가 <strong>악성스크립트가 웹서버로 전송되는 요청(URL)의 일부</strong>가 되도록 합니다. 요청과 함께 포함되어있던 악성 스크립트가 <strong>사용자의 브라우저에서 동작</strong>하게 됩니다.</p>
+<h4 id="dom-기반-크로스사이트-스크립팅dom-based-cross-site-scripting" ><code>DOM 기반 크로스사이트 스크립팅(DOM-based cross-site scripting)</code>
+<span>
+    <a href="#dom-%ea%b8%b0%eb%b0%98-%ed%81%ac%eb%a1%9c%ec%8a%a4%ec%82%ac%ec%9d%b4%ed%8a%b8-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8c%85dom-based-cross-site-scripting">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="dom-based-xss.png" alt="dom-based-xss.png"></p>
+<p>공격자의 스크립트가 HTML 내부가 아닌, <strong><code>DOM</code>에 나타나는 공격 방식</strong>입니다.<br>
+반사/저장형 XSS에서는 응답 페이지에서 스크립트를 확인할 수 있는것과 다르게 HTML 소스 코드와 응답 페이지의 코드가 동일하기 때문에 페이로드를 찾을 수 없습니다.<br>
+따라서 <strong>런타임일때</strong>, 또는 <strong>페이지의 DOM을 조사</strong>해야만 스크립트를 찾을 수 있습니다.<br>
+DOM 기반 XSS는 주로 <strong>Client-side 공격</strong>으로, 악성 스크립트는 서버로 전송되지 않습니다. 따라서 <strong>서버 로그를 분석해도 공격을 확인할 수 없습니다.</strong></p>
+<h5 id="공격-방식-2" >공격 방식
+<span>
+    <a href="#%ea%b3%b5%ea%b2%a9-%eb%b0%a9%ec%8b%9d-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>공격자가 악성스크립트가 포함된 URL을 요청하면, 해당 <strong>스크립트를 실행해 DOM 영역을 변경</strong>합니다. 브라우저 자체에서 스크립트가 실행되어 DOM 영역을 변화시키므로 서로 패킷을 보내지 않고 공격이 수행됩니다.<br>
+주로 <code>document</code>, <code>location</code>와 같은 <strong>DOM 객체를 조작</strong>해 공격을 수행합니다.</p>
+<h2 id="csrf랑-xss의-차이점" >CSRF랑 XSS의 차이점?
+<span>
+    <a href="#csrf%eb%9e%91-xss%ec%9d%98-%ec%b0%a8%ec%9d%b4%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><code>크로스-사이트 요청 위조(Cross-site Request Forgery)</code>와 <code>크로스-사이트 스크립팅(Cross-site Scripting)</code> 모두 <strong>웹 애플리케이션</strong>에서 발견되는 보안 취약점입니다.<br>
+두 공격 방식의 가장 큰 차이는 <strong><code>인증된 세션(쿠키 등)</code>을 활용하느냐</strong> 여부 입니다.<br>
+<code>CSRF 공격</code>은 사용자의 <strong>인증된 세션을 악용</strong>하는 공격 방식이고, <code>XSS 공격</code>은 사용자가 <strong>특정 사이트를 신뢰한다는 사실을 이용</strong>해 인증된 세션 없이도 공격할 수 있는 공격 방식입니다.</p>
+<table>
+<thead>
+<tr>
+<th>CSRF</th>
+<th>XSS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>사용자가 공격 사실을 모르는채 대상 웹사이트에 <strong>악성 요청</strong>을 보내도록 합니다.</td>
+<td>웹 사이트에 클라이언트 측 <strong>스크립트를 삽입</strong>해 공격합니다.</td>
+</tr>
+<tr>
+<td>공격을 수행하기 위해 Javascript가 필요하지 않습니다.</td>
+<td>공격을 수행하기 위해 <strong>Javascript가 필요</strong>합니다.</td>
+</tr>
+<tr>
+<td>악성 스크립트가 <strong>다른 사이트에 저장</strong>되어 있습니다.</td>
+<td>웹 사이트가 <strong>악성 스크립트를 허용</strong>합니다.</td>
+</tr>
+<tr>
+<td>취약한 <strong>URL에서 수행하는 작업만 수행</strong>할 수 있습니다.</td>
+<td>공격자가 취약점을 이용해 <strong>원하는 모든 행동</strong>을 할 수 있습니다.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="xss는-프론트엔드에서만-방어할-수-있을까" >XSS는 프론트엔드에서만 방어할 수 있을까?
+<span>
+    <a href="#xss%eb%8a%94-%ed%94%84%eb%a1%a0%ed%8a%b8%ec%97%94%eb%93%9c%ec%97%90%ec%84%9c%eb%a7%8c-%eb%b0%a9%ec%96%b4%ed%95%a0-%ec%88%98-%ec%9e%88%ec%9d%84%ea%b9%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>XSS 공격은 <em>프론트엔드 뿐만 아니라</em>, <strong>백엔드단에서도 방어</strong>할 수 있습니다.<br>
+프로그래밍 언어와 웹 프레임워크 별로 방어 할 수 있는 방법들이 다양하지만, 해당 방법들의 <strong>주요 전략</strong>은 <code>'사용자 입력 값을 전처리한다'</code>입니다.<br>
+스크립트에서 자주 사용되는<code> &lt;, &gt;, (, )</code> 와 같은괄호를 HTML로 바꾼다거나, <a href="https://github.com/naver/lucy-xss-filter">Lucy-XSS-Filter</a>, <a href="https://github.com/ESAPI/esapi-java-legacy">OWASP ESAPI</a>와 같은 라이브러리를 사용해 방어할 수 있습니다.<br>
+또한, Spring에서는 <code>Spring Security</code>에서 제공하는 <code>X-XSS-Protection</code> 헤더를 사용할 수도 있습니다.</p>
+<h3 id="x-xss-protection" ><code>X-XSS-Protection</code>
+<span>
+    <a href="#x-xss-protection">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>브라우저에게 <strong>XSS 공격처럼 생긴 스크립트를 차단</strong>하도록 지시합니다.<br>
+해당 기능을 사용하면 브라우저는 XSS 공격을 감지했을때 이를 렌더링하지 않지만, 일부 웹 브라우저는 이에 필요한 <code>XSS 감사기(Auditor)</code>를 구현하지 않아 해당 헤더를 사용할 수 없습니다. 이를 보완하기 위해 <code>콘텐츠 보안 정책(CSP)</code> 기능을 사용할 수도 있습니다.</p>
+<ul>
+<li>다만, 구글에서는 <a href="https://www.chromium.org/developers/design-documents/xss-auditor/">2019년 8월 XSS 감사기를 삭제</a>했습니다.
+<ul>
+<li>지난 수 년 동안 XSS 감사기에 대한 <strong>수많은 우회 방법</strong>들이 제시되었고, 합<strong>법적인 사이트에 대한 액세스를 차단</strong>하는 경우도 존재했기 때문에 구글에서는 이를 삭제했습니다.</li>
+<li>이후 DOM 기반 XSS 공격에 대한 방어책인 <a href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API">Trusted Types API</a> 를 도입했습니다.</li>
+</ul>
+</li>
+</ul>
+<h4 id="콘텐츠-보안-정책csp" ><code>콘텐츠 보안 정책(CSP)</code>
+<span>
+    <a href="#%ec%bd%98%ed%85%90%ec%b8%a0-%eb%b3%b4%ec%95%88-%ec%a0%95%ec%b1%85csp">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>CSP는 XSS와 데이터 인젝션 공격을 완화하는데 도움을 주는 <strong>추가 보안 계층</strong>입니다. 이를 사용하려면 Content-Security-Policy 헤더를 반환하도록 애플리케이션을 구성해야 합니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#a6e22e">@Configuration</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">SecurityConf</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@Bean</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> SecurityFilterChain <span style="color:#a6e22e">filterChain</span><span style="color:#f92672">(</span>HttpSecurity http<span style="color:#f92672">)</span> <span style="color:#66d9ef">throws</span> Exception <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        http<span style="color:#f92672">.</span><span style="color:#a6e22e">headers</span><span style="color:#f92672">(</span>headers <span style="color:#f92672">-&gt;</span>
+</span></span><span style="display:flex;"><span>                headers<span style="color:#f92672">.</span><span style="color:#a6e22e">xssProtection</span><span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span>                        xss <span style="color:#f92672">-&gt;</span> xss<span style="color:#f92672">.</span><span style="color:#a6e22e">headerValue</span><span style="color:#f92672">(</span>XXssProtectionHeaderWriter<span style="color:#f92672">.</span><span style="color:#a6e22e">HeaderValue</span><span style="color:#f92672">.</span><span style="color:#a6e22e">ENABLED_MODE_BLOCK</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">).</span><span style="color:#a6e22e">contentSecurityPolicy</span><span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span>                        cps <span style="color:#f92672">-&gt;</span> cps<span style="color:#f92672">.</span><span style="color:#a6e22e">policyDirectives</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;script-src &#39;self&#39;&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> http<span style="color:#f92672">.</span><span style="color:#a6e22e">build</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h2 id="참고-문서" >참고 문서
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><a href="https://usa.kaspersky.com/resource-center/definitions/what-is-a-cross-site-scripting-attack">What is a Cross-Site Scripting attack? Definition &amp; Examples (kaspersky.com)</a></li>
+<li><a href="https://www.fis.kr/ko/major_biz/cyber_safety_oper/attack_info/security_news?articleSeq=3408">보안뉴스 - 웹 취약점과 해킹 매커니즘#7 XSS(Cross-Site Scripting) 상세화면 | 한국재정정보원 &gt; 주요사업 &gt; 사이버안전센터 운영 &gt; 사이버위협 정보 및 통계 &gt; 보안뉴스 (fis.kr)</a></li>
+<li><a href="https://portswigger.net/web-security/cross-site-scripting/dom-based">What is DOM-based XSS (cross-site scripting)? Tutorial &amp; Examples | Web Security Academy (portswigger.net)</a></li>
+<li><a href="https://www.geeksforgeeks.org/difference-between-xss-and-csrf/">Difference between XSS and CSRF - GeeksforGeeks</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection">X-XSS-Protection - HTTP | MDN (mozilla.org)</a></li>
+<li><a href="https://www.baeldung.com/spring-prevent-xss">Prevent Cross-Site Scripting (XSS) in a Spring Application | Baeldung</a></li>
+<li><a href="https://www.dailysecu.com/news/articleView.html?idxno=55207">구글, 크롬의 XSS 오디터 삭제할 계획 - 데일리시큐 (dailysecu.com)</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API">Trusted Types API - Web APIs | MDN (mozilla.org)</a></li>
+<li><a href="https://docs.spring.io/spring-security/site/docs/5.0.x/reference/html/headers.html#headers-xss-protection">21. Security HTTP Response Headers (spring.io)</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/network/xss/"><time datetime="2024-03-19">2024-03-19 19:51 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/network/xss/">https://cloudsoswift.github.io/post/develop/network/xss/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/network/">#Network</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/web/">#Web</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/xss/">#XSS</a></li>
+                
+                    
+                    <li><a href="">#보안</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/network/sop/">[웹, 네트워크] SOP 알아보기</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/network/sop/">[웹, 네트워크] SOP 알아보기</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>

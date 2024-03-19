@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[웹, 네트워크] SOP 알아보기 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 3월 20일 발표예정인 SOP에 대해 정리한 문서를 블로그에 공유하고자 한다.
+SOP 정책이란?.동일 출처 정책(SOP, Same Origin Policy) 은 한 출처에서 불러온 문서 또는 스크립트가 다른 출처의 자원과 상호 작용하는 방식을 제한하는 보안 메커니즘입니다.
+다른 출처의 자원과의 상호 작용을 제한하므로써, 잠재적으로 악의적인 문서들로 부터 격리시켜 가능한 공격 경로를 줄일 수 있습니다. 이러한 격리를 통해 악성 웹사이트가 사용자가 로그인한 타 서비스의 데이터를 읽고 공격자에게 전달하는 것을 막을 수 있습니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.1d0e4612738c15e8ac0ee3299b5c763dd861a774809b4a89b77d6e461b2249c3.css" integrity="sha256-HQ5GEnOMFeisDuMpm1x2Pdhhp3SAm0qJt31uRhsiScM=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[웹, 네트워크] SOP 알아보기" />
+<meta property="og:description" content="서론CS 스터디에서 3월 20일 발표예정인 SOP에 대해 정리한 문서를 블로그에 공유하고자 한다.
+SOP 정책이란?.동일 출처 정책(SOP, Same Origin Policy) 은 한 출처에서 불러온 문서 또는 스크립트가 다른 출처의 자원과 상호 작용하는 방식을 제한하는 보안 메커니즘입니다.
+다른 출처의 자원과의 상호 작용을 제한하므로써, 잠재적으로 악의적인 문서들로 부터 격리시켜 가능한 공격 경로를 줄일 수 있습니다. 이러한 격리를 통해 악성 웹사이트가 사용자가 로그인한 타 서비스의 데이터를 읽고 공격자에게 전달하는 것을 막을 수 있습니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/network/sop/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-03-19T19:50:47+09:00" />
+<meta property="article:modified_time" content="2024-03-19T19:50:47+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[웹, 네트워크] SOP 알아보기"/>
+<meta name="twitter:description" content="서론CS 스터디에서 3월 20일 발표예정인 SOP에 대해 정리한 문서를 블로그에 공유하고자 한다.
+SOP 정책이란?.동일 출처 정책(SOP, Same Origin Policy) 은 한 출처에서 불러온 문서 또는 스크립트가 다른 출처의 자원과 상호 작용하는 방식을 제한하는 보안 메커니즘입니다.
+다른 출처의 자원과의 상호 작용을 제한하므로써, 잠재적으로 악의적인 문서들로 부터 격리시켜 가능한 공격 경로를 줄일 수 있습니다. 이러한 격리를 통해 악성 웹사이트가 사용자가 로그인한 타 서비스의 데이터를 읽고 공격자에게 전달하는 것을 막을 수 있습니다."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[웹, 네트워크] SOP 알아보기</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#sop-정책이란">SOP 정책이란?.</a>
+      <ul>
+        <li><a href="#출처origin"><code>출처(Origin)</code>?</a></li>
+        <li><a href="#교차출처-접근의-종류">교차출처 접근의 종류</a></li>
+      </ul>
+    </li>
+    <li><a href="#cors-정책이란">CORS 정책이란?</a>
+      <ul>
+        <li><a href="#cors를-사용하는-요청">CORS를 사용하는 요청</a></li>
+        <li><a href="#cors-관련-헤더">CORS 관련 헤더</a></li>
+        <li><a href="#완화-방법">완화 방법</a></li>
+      </ul>
+    </li>
+    <li><a href="#preflight란">Preflight란?</a>
+      <ul>
+        <li><a href="#preflight-관련-헤더">Preflight 관련 헤더</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 3월 20일 발표예정인 <a href="https://github.com/orm712/CS-712/blob/main/03-NETWORK/15_SOP/Readme.md"><strong>SOP</strong></a>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h2 id="sop-정책이란" >SOP 정책이란?.
+<span>
+    <a href="#sop-%ec%a0%95%ec%b1%85%ec%9d%b4%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><strong><code>동일 출처 정책(SOP, Same Origin Policy)</code></strong> 은 <em>한 출처에서 불러온 문서 또는 스크립트</em>가 <strong>다른 출처의 자원</strong>과 <strong>상호 작용하는 방식</strong>을 <u>제한</u>하는 보안 메커니즘입니다.<br>
+다른 출처의 자원과의 상호 작용을 제한하므로써, <b>잠재적으로 악의적인 문서들로 부터 <u>격리</u></b>시켜 가능한 공격 경로를 줄일 수 있습니다. 이러한 격리를 통해 악성 웹사이트가 사용자가 로그인한 타 서비스의 데이터를 읽고 공격자에게 전달하는 것을 막을 수 있습니다.</p>
+<h3 id="출처origin" ><code>출처(Origin)</code>?
+<span>
+    <a href="#%ec%b6%9c%ec%b2%98origin">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>웹에서 같은 <code>출처</code>인지 판단하는 기준은 <strong>URL의 <code>프로토콜</code>, <code>포트</code>(지정된 경우), <code>호스트 이름(hostname)</code>이 모두 동일한 지</strong> 입니다. 이를 <code>튜플</code>이라고 부르기도 합니다.</p>
+<ul>
+<li><code>호스트 이름(hostname)</code> : 네트워크에 연결된 컴퓨터 또는 기타 <strong>장치에 할당되는 이름</strong>으로, <code>로컬 호스트 이름(local hostname)</code>과 <code>도메인 이름(domain name)</code>의 조합으로 구성됩니다.
+<ul>
+<li>예시) <code>en.wikipedia.org</code>
+<ul>
+<li><code>en</code>(로컬 호스트 이름)과 <code>wikipedia.org</code>(도메인 이름)으로 구성되어 있습니다.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="예시" >예시
+<span>
+    <a href="#%ec%98%88%ec%8b%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>http://store.company.com/dir/page.html</code> 라는 URL을 기준으로 예시를 들어보겠습니다.</p>
+<h5 id="동일한-출처" >동일한 출처
+<span>
+    <a href="#%eb%8f%99%ec%9d%bc%ed%95%9c-%ec%b6%9c%ec%b2%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>아래 링크들은 <strong>경로</strong>만 다른 케이스 입니다.</p>
+<ul>
+<li><code>http://store.company.com/dir2/other.html</code></li>
+<li><code>http://store.company.com/dir/inner/another.html</code></li>
+</ul>
+<h5 id="다른-출처" >다른 출처
+<span>
+    <a href="#%eb%8b%a4%eb%a5%b8-%ec%b6%9c%ec%b2%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>프로토콜이 다른 경우</p>
+<ul>
+<li><code>https://store.company.com/page.html</code></li>
+</ul>
+<p>포트가 다른 경우</p>
+<ul>
+<li><code>http://store.company.com:81/dir/page.html</code></li>
+</ul>
+<p>호스트 이름이 다른 경우</p>
+<ul>
+<li><code>http://news.company.com/dir/page.html</code></li>
+</ul>
+<h4 id="출처-변경-공격" >출처 변경 공격
+<span>
+    <a href="#%ec%b6%9c%ec%b2%98-%eb%b3%80%ea%b2%bd-%ea%b3%b5%ea%b2%a9">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>이전에는 DOM 객체인 document의 <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/domain"><code>document.domain</code></a>을 조작해 도메인을 현재 도메인 또는 상위 도메인으로 변경할 수 있었으나, 보안 문제 때문에<code>document.domain</code> 설정자가 사장되어(deprecated) 해당 방식 공격은 불가능하게 되었습니다.</p>
+<h3 id="교차출처-접근의-종류" >교차출처 접근의 종류
+<span>
+    <a href="#%ea%b5%90%ec%b0%a8%ec%b6%9c%ec%b2%98-%ec%a0%91%ea%b7%bc%ec%9d%98-%ec%a2%85%eb%a5%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="교차출처-쓰기" >교차출처 쓰기
+<span>
+    <a href="#%ea%b5%90%ec%b0%a8%ec%b6%9c%ec%b2%98-%ec%93%b0%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>링크</code>, <code>리다이렉션</code>, <code>form 제출</code> 등의 작업으로, <strong>일반적으로 허용</strong>되는 작업입니다. 일부 HTTP 요청은 <code>preflight</code>가 필요합니다.</p>
+<h4 id="교차출처-임베딩" >교차출처 임베딩
+<span>
+    <a href="#%ea%b5%90%ec%b0%a8%ec%b6%9c%ec%b2%98-%ec%9e%84%eb%b2%a0%eb%94%a9">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><strong>일반적으로 허용</strong>됩니다.<br>
+<code>&lt;script&gt;</code>(javascript),  <code>&lt;link&gt;</code>(css), <code>&lt;img&gt;</code>, <code>&lt;video&gt;</code>, <code>&lt;audio&gt;</code>, <code>&lt;object&gt;</code>, <code>&lt;embed&gt;</code>, <code>&lt;iframe&gt;</code>, <code>@font-face</code>(일부 브라우저 한정) 등이 있습니다.</p>
+<h4 id="교차출처-읽기" >교차출처 읽기
+<span>
+    <a href="#%ea%b5%90%ec%b0%a8%ec%b6%9c%ec%b2%98-%ec%9d%bd%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><u>일반적으로 허용되지 않으나</u>, <em><code>임베딩</code>을 통해</em> <strong>읽기 접근이 유출</strong>되는 경우가 있습니다.</p>
+<ul>
+<li>ex) 임베딩된 이미지의 크기, 임베딩된 스크립트의 동작</li>
+</ul>
+<h2 id="cors-정책이란" >CORS 정책이란?
+<span>
+    <a href="#cors-%ec%a0%95%ec%b1%85%ec%9d%b4%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><code>교차 출처 리소스 공유(CORS, Cross-Origin Resource Sharing)</code>는 <strong>다른 출처의 자원을 접근</strong>할 수 있도록 <u>허용</u>하는 정책을 말합니다.<br>
+이는 서버에서 웹 브라우저가 해당 자원을 읽을 수 있는 출처를 설명할 수 있는 <strong>새로운 <code>HTTP 헤더</code></strong> (<code>Access-Control-Allow-Origin</code>)를 추가하는 방식으로 동작합니다.<br>
+클라이언트에서는 교차출처 자원을 호스팅하는 서버에  &lsquo;<em>서버가 실제 요청을 허용할 것인지</em>&lsquo;를 확인하기 위해 브라우저가 <code>preflight</code> 요청을 전송하는 메커니즘을 사용합니다.</p>
+<h3 id="cors를-사용하는-요청" >CORS를 사용하는 요청
+<span>
+    <a href="#cors%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%98%eb%8a%94-%ec%9a%94%ec%b2%ad">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>fetch()</code>, <code>XMLHttpRequest</code> 호출</li>
+<li>웹 폰트(<code>@font-face</code>)</li>
+<li>WebGL 텍스처</li>
+<li>이미지/비디오 프레임
+<ul>
+<li><code>&lt;canvas&gt;</code>상에서 <code>drawImage()</code>를 이용해 그려진</li>
+</ul>
+</li>
+<li>이미지상의 CSS 도형</li>
+</ul>
+<h3 id="cors-관련-헤더" >CORS 관련 헤더
+<span>
+    <a href="#cors-%ea%b4%80%eb%a0%a8-%ed%97%a4%eb%8d%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="access-control-allow-origin" ><code>Access-Control-Allow-Origin</code>
+<span>
+    <a href="#access-control-allow-origin">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>응답 헤더 중 하나로, 서버의 자원 소유자가 특정 도메인에서의 요청만 허용해 자원에 대한 접근을 제어하는데 쓸 수 있는 헤더입니다.</p>
+<pre tabindex="0"><code>// https://foo.example에서의 접근만 허용하는 경우
+Access-Control-Allow-Origin: https://foo.example
+// 모든 도메인으로부터 접근을 허용하는 경우 (자격증명이 필요 없는 요청인 경우)
+Access-Control-Allow-Origin: *
+</code></pre><ul>
+<li><strong>자격 증명</strong>: <em>쿠키, TLS 클라이언트 인증서, 인증 헤더</em>와 같은 <strong>인증 정보를 담은 것</strong>을 말하며, <code>Access-Control-Allow-Credentials</code>(응답 헤더)가 <code>true</code>인 경우 사용자는 교차 출처 요청에 자격 증명을 포함할 수 있습니다.</li>
+</ul>
+<h3 id="완화-방법" >완화 방법
+<span>
+    <a href="#%ec%99%84%ed%99%94-%eb%b0%a9%eb%b2%95">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="access-control-allow-origin응답-헤더-설정" ><code>Access-Control-Allow-Origin</code> 응답 헤더 설정
+<span>
+    <a href="#access-control-allow-origin%ec%9d%91%eb%8b%b5-%ed%97%a4%eb%8d%94-%ec%84%a4%ec%a0%95">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>서버 측에서 요청을 <u>허용할 출처</u>를 <strong>명시적으로 설정</strong>해줍니다.<br>
+만약 자격증명이 필요한 경우, <code>*</code>는 사용할 수 없습니다.</p>
+<pre tabindex="0"><code>Access-Control-Allow-Origin: &lt;origin&gt; | *
+</code></pre><h4 id="프록시-서버-사용하기" >프록시 서버 사용하기
+<span>
+    <a href="#%ed%94%84%eb%a1%9d%ec%8b%9c-%ec%84%9c%eb%b2%84-%ec%82%ac%ec%9a%a9%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="proxy-server.png" alt="proxy-server.png"></p>
+<p>웹 애플리케이션에서 직접 자원에 접근하지 않고, 프록시 서버를 사용해 요청을 전달하는 방식입니다. 이는 SOP 정책이 브라우저-서버 간 통신에서만 구현된다는 점을 이용합니다.<br>
+웹 애플리케이션과 프록시 서버간에는 <code>Access-Control-Allow-Origin: *</code> 응답 헤더를 추가해 자유롭게 요청을 주고 받습니다.<br>
+그리고 서버-서버 간 통신에서는 SOP 정책을 만족할 필요가 없으므로 프록시 서버에서는 자유롭게 교차출처 자원에 접근할 수 있습니다.</p>
+<h2 id="preflight란" >Preflight란?
+<span>
+    <a href="#preflight%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><img src="preflight-timeline.png" alt="preflight-timeline.png"></p>
+<p>다른 출처의 자원에 대해 <code>OPTIONS</code> 메서드 요청을 먼저 전송해, 실제 요청을 전송해도 안전한지 확인하는 방식을 말합니다.<br>
+브라우저에서는 CORS를 사용하는 요청에 대해 <code>OPTIONS</code> 메서드를 자동으로 보내는데, 이때 원본 요청의 메서드, 헤더와 같은 값을 <code>Access-Control-Request-...</code> 과 같은 헤더에 담아서 해당 메서드, 헤더로 요청을 전송할 수 있는지 확인합니다.<br>
+그리고 서버는 이에 대한 응답에 <code>Access-Control-Allow-...</code> 와 같은 헤더를 담아 허용되는 메서드, 헤더 등에 대한 정보를 알려줍니다.</p>
+<h3 id="preflight-관련-헤더" >Preflight 관련 헤더
+<span>
+    <a href="#preflight-%ea%b4%80%eb%a0%a8-%ed%97%a4%eb%8d%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="요청-헤더" >요청 헤더
+<span>
+    <a href="#%ec%9a%94%ec%b2%ad-%ed%97%a4%eb%8d%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h5 id="origin" ><code>Origin</code>
+<span>
+    <a href="#origin">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>요청을 발생시킨 출처(스키마, 호스트 이름, 포트)를 나타냅니다.<br>
+<code>user agent</code>가 <em>페이지에 포함되거나</em>, <em>페이지 내 스크립트가 접근하는 자원에 대해</em> 요청해야 하는 경우 페이지의 출처가 요청에 포함될 수 있습니다.</p>
+<ul>
+<li>일반적으로 <code>user agent</code>는 모든 교차출처 요청, 또는 동일 출처에 대해 <code>GET</code>, <code>HEAD</code>를 제외한 요청에 대해 <code>Origin</code> 헤더를 추가합니다.</li>
+</ul>
+<pre tabindex="0"><code>// 특정 케이스의 경우 Origin은 null일 수 있습니다.
+Origin: null
+// 스키마(사용되는 프로토콜)와 호스트 이름(+ 포트)의 조합으로 Origin이 표시됩니다.
+Origin: &lt;scheme&gt;://&lt;hostname&gt;
+Origin: &lt;scheme&gt;://&lt;hostname&gt;:&lt;port&gt;
+</code></pre><h5 id="access-control-request-method" ><code>Access-Control-Request-Method</code>
+<span>
+    <a href="#access-control-request-method">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>원본 요청의 메서드가 어떤 것인지를 나타냅니다.</p>
+<pre tabindex="0"><code>// ex) post 요청인 경우
+Access-Control-Request-Method: POST
+</code></pre><h5 id="access-control-request-headers" ><code>Access-Control-Request-Headers</code>
+<span>
+    <a href="#access-control-request-headers">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>원본 요청의 헤더로 어떤 것이 있는지를 나타냅니다.</p>
+<pre tabindex="0"><code>// ex) 헤더에 X-PINGOTHER, Content-Type를 담은 경우
+Access-Control-Request-Headers: X-PINGOTHER, Content-Type
+</code></pre><h4 id="응답-헤더" >응답 헤더
+<span>
+    <a href="#%ec%9d%91%eb%8b%b5-%ed%97%a4%eb%8d%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h5 id="access-control-allow-origin-1" ><code>Access-Control-Allow-Origin</code>
+<span>
+    <a href="#access-control-allow-origin-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><h5 id="access-control-allow-methods" ><code>Access-Control-Allow-Methods</code>
+<span>
+    <a href="#access-control-allow-methods">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>요청한 자원에 대해 쿼리할 수 있는 유효한 메서드들을 알려줍니다. (쉼표로 구분)
+모든 메서드를 허용하기 위해 <code>*(와일드카드)</code>를 쓸 수 있지만, 자격 증명이 없는 요청(<em>HTTP 쿠키 또는 authentication이 없는</em>)에 한해서만 사용할 수 있습니다.</p>
+<pre tabindex="0"><code>// ex) POST, GET, OPTIONS 메서드만 허용되는 경우
+Access-Control-Allow-Methods: POST, GET, OPTIONS
+</code></pre><h5 id="access-control-allow-headers" ><code>Access-Control-Allow-Headers</code>
+<span>
+    <a href="#access-control-allow-headers">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>원본 요청의 헤더 중 허용되는 헤더를 알려줍니다. (쉼표로 구분)
+모든 헤더를 허용하기 위해 <code>*</code>를 쓸 수 있지만, 자격 증명이 없는 요청(<em>HTTP 쿠키 또는 authentication이 없는</em>)에 한해서만 사용할 수 있습니다.
+또한, <code>*</code>를 사용해도, <code>Authorization</code> 헤더의 경우 명시적으로 나열해야 합니다.</p>
+<pre tabindex="0"><code>// ex) X-PINGOTHER, Content-Type 헤더가 허용되는 경우
+Access-Control-Allow-Headers: X-PINGOTHER, Content-Type
+// ex) &#39;X-Custom-Header&#39; 라는 사용자 지정 헤더가 허용되는 경우
+Access-Control-Allow-Headers: X-Custom-Header
+</code></pre><h5 id="access-control-max-age" ><code>Access-Control-Max-Age</code>
+<span>
+    <a href="#access-control-max-age">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>preflight의 결과(즉 <code>Access-Control-Allow-Methods</code>, <code>Access-Control-Allow-Headers</code>에 포함된 정보)가 캐시될 수 있는 기간을 알려줍니다.
+결과를 캐시할 수 있는 최대 시간(초)를 나타내며, 브라우저마다 최대치(<code>파이어폭스</code>:24시간, <code>크로미움(v76이전)</code>: 10분, <code>크로미움(v76이후)</code>: 2시간)가 다릅니다.</p>
+<pre tabindex="0"><code>// ex) preflight의 결과가 캐시로 10분동안 저장됩니다.
+Access-Control-Max-Age: 600
+</code></pre><h1 id="참고-문서" >참고 문서
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><hr>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#preflighted_requests">Cross-Origin Resource Sharing (CORS) - HTTP | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy#cross-origin_script_api_access">Same-origin policy - Security on the web | MDN (mozilla.org)</a></li>
+<li><a href="https://velog.io/@minjae-mj/%ED%98%B8%EC%8A%A4%ED%8A%B8-%EB%84%A4%EC%9E%84%EA%B3%BC-%EB%8F%84%EB%A9%94%EC%9D%B8-%EB%84%A4%EC%9E%84">hostname(호스트명), domain name(도메인), same origin VS same site (velog.io)</a></li>
+<li><a href="https://medium.com/@dtkatz/3-ways-to-fix-the-cors-error-and-how-access-control-allow-origin-works-d97d55946d9">3 Ways to Fix the CORS Error — and How the Access-Control-Allow-Origin Header Works | by David Katz | Medium</a></li>
+<li><a href="https://docs.tosspayments.com/resources/glossary/cors#cors-%EC%97%90%EB%9F%AC-%EB%8C%80%EC%9D%91%ED%95%98%EA%B8%B0">CORS(교차 출처 리소스 공유) | 토스페이먼츠 개발자센터 (tosspayments.com)</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/network/sop/"><time datetime="2024-03-19">2024-03-19 19:50 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/network/sop/">https://cloudsoswift.github.io/post/develop/network/sop/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/network/">#Network</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/web/">#Web</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/sop/">#SOP</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/cors/">#CORS</a></li>
+                
+                    
+                    <li><a href="">#보안</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item ">
+            
+                <a href="/post/develop/network/xss/">[웹, 네트워크] XSS 알아보기</a>
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/java/synchronized/">[Java] synchronized 알아보기</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>

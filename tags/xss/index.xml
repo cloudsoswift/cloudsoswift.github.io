@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>XSS on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/xss/</link>
+    <description>오늘도 개발을 한다. (XSS)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Tue, 19 Mar 2024 19:51:00 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/xss/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[웹, 네트워크] XSS 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/network/xss/</link>
+      <pubDate>Tue, 19 Mar 2024 19:51:00 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/network/xss/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 3월 12일 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/03-NETWORK/21_XSS/Readme.md&#34;&gt;&lt;strong&gt;XSS&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;xss란&#34; &gt;XSS란?
+&lt;span&gt;
+    &lt;a href=&#34;#xss%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;신뢰할 수 있는 웹 사이트에 &lt;strong&gt;악성코드를 삽입하는 공격&lt;/strong&gt;을 말합니다.&lt;br&gt;
+공격자가 표적 웹사이트의 콘텐츠에 악성 스크립트를 삽입하고, 피해자의 브라우저에 전달되는 동적 콘텐츠에 이를 포함시키므로써 피해를 입게 됩니다.&lt;br&gt;
+이때, 피해자의 브라우저는 해당 스크립트가 &lt;strong&gt;&amp;lsquo;신뢰할 수 없는 스크립트&amp;rsquo;라는 점&lt;/strong&gt;을 &lt;em&gt;알 수 없어&lt;/em&gt; &lt;strong&gt;해당 스크립트를 실행&lt;/strong&gt;하게 됩니다.&lt;br&gt;
+악성 스크립트는 &lt;em&gt;피해자의 브라우저가 보유한&lt;/em&gt; 해당 사이트에서 사용되는 &lt;strong&gt;모든 쿠키, 저장소에 저장된 민감 정보에 액세스&lt;/strong&gt;할 수 있습니다.&lt;br&gt;
+뿐만 아니라 &lt;strong&gt;멀웨어&lt;/strong&gt;를 퍼뜨리거나, 웹사이트의 콘&lt;strong&gt;텐츠를 변조&lt;/strong&gt;하거나,&lt;strong&gt;피싱 사이트로 이동&lt;/strong&gt;시키거나 하는 등의 공격도 가능합니다.&lt;br&gt;
+다른 웹 공격들과 달리, &lt;em&gt;애플리케이션 자체가 아닌&lt;/em&gt; &lt;strong&gt;웹 애플리케이션 사용자를 표적&lt;/strong&gt;으로 삼는다는 특징이 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;xss-공격의-종류&#34; &gt;XSS 공격의 종류
+&lt;span&gt;
+    &lt;a href=&#34;#xss-%ea%b3%b5%ea%b2%a9%ec%9d%98-%ec%a2%85%eb%a5%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;저장형-크로스사이트-스크립팅stored-cross-site-scripting&#34; &gt;&lt;code&gt;저장형 크로스사이트 스크립팅(Stored Cross-site Scripting)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a0%80%ec%9e%a5%ed%98%95-%ed%81%ac%eb%a1%9c%ec%8a%a4%ec%82%ac%ec%9d%b4%ed%8a%b8-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8c%85stored-cross-site-scripting&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;stored-xss.png&#34; alt=&#34;stored-xss.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;지속적(Persistent) XSS&lt;/code&gt;라고도 하는 공격 방식입니다.&lt;br&gt;
+사용자가 입력한 값이 저장(주로 게시판)된 후 이를 웹 페이지에서 출력할때 피해가 발생하는 공격입니다.&lt;br&gt;
+공격자의 악성스크립트가 서버에 저장되어 불특정 다수를 대상으로 공격에 이용될 수 있어 Reflected XSS보다 공격 대상의 범위가 훨씬 크다는 특징이 있습니다.&lt;/p&gt;
+&lt;h5 id=&#34;공격-방식&#34; &gt;공격 방식
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b2%a9-%eb%b0%a9%ec%8b%9d&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;공격자가 스크립트가 포함된 &lt;strong&gt;콘텐츠&lt;/strong&gt;(&lt;strong&gt;게시글, 댓글, 사용자 이름 등&lt;/strong&gt;)를 작성한 뒤, 이를 피해자가 요청하게 되면 해당 스크립트가 &lt;strong&gt;피해자 측에서 동작&lt;/strong&gt;하게 됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;반사-크로스사이트-스크립팅reflected-cross-site-scripting&#34; &gt;&lt;code&gt;반사 크로스사이트 스크립팅(Reflected cross-site scripting)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%98%ec%82%ac-%ed%81%ac%eb%a1%9c%ec%8a%a4%ec%82%ac%ec%9d%b4%ed%8a%b8-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8c%85reflected-cross-site-scripting&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;reflected-xss.png&#34; alt=&#34;reflected-xss.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;비지속적(Non-Persistent) XSS&lt;/code&gt;라고도 하는 공격 방식입니다.&lt;br&gt;
+이름에 포함된 &amp;lsquo;반사&amp;rsquo; 라는 단어처럼, &lt;strong&gt;사용자가 요청&lt;/strong&gt;한 스크립트가 사용자 측에서 반사되어 동작합니다. 즉, 공격자의 스크립트가 별도의 저장소에 저장되지 않고 &lt;strong&gt;사용자 측에서 즉시 동작&lt;/strong&gt;합니다.&lt;br&gt;
+&lt;em&gt;지속적 XSS와 달리&lt;/em&gt;, &lt;strong&gt;공격자가&lt;/strong&gt; 각 피해자들에게 페이로드(악성스크립트)를 &lt;strong&gt;전달&lt;/strong&gt;해주어야 합니다. 따라서 악성 링크, 피싱 이메일, SNS 등을 이용해 해당 페이로드가 포함된 URL을 &lt;strong&gt;클릭하도록 유도&lt;/strong&gt;해야 합니다.&lt;/p&gt;
+&lt;h5 id=&#34;공격-방식-1&#34; &gt;공격 방식
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b2%a9-%eb%b0%a9%ec%8b%9d-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;공격자가 &lt;strong&gt;악성스크립트가 웹서버로 전송되는 요청(URL)의 일부&lt;/strong&gt;가 되도록 합니다. 요청과 함께 포함되어있던 악성 스크립트가 &lt;strong&gt;사용자의 브라우저에서 동작&lt;/strong&gt;하게 됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;dom-기반-크로스사이트-스크립팅dom-based-cross-site-scripting&#34; &gt;&lt;code&gt;DOM 기반 크로스사이트 스크립팅(DOM-based cross-site scripting)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#dom-%ea%b8%b0%eb%b0%98-%ed%81%ac%eb%a1%9c%ec%8a%a4%ec%82%ac%ec%9d%b4%ed%8a%b8-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8c%85dom-based-cross-site-scripting&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;dom-based-xss.png&#34; alt=&#34;dom-based-xss.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;공격자의 스크립트가 HTML 내부가 아닌, &lt;strong&gt;&lt;code&gt;DOM&lt;/code&gt;에 나타나는 공격 방식&lt;/strong&gt;입니다.&lt;br&gt;
+반사/저장형 XSS에서는 응답 페이지에서 스크립트를 확인할 수 있는것과 다르게 HTML 소스 코드와 응답 페이지의 코드가 동일하기 때문에 페이로드를 찾을 수 없습니다.&lt;br&gt;
+따라서 &lt;strong&gt;런타임일때&lt;/strong&gt;, 또는 &lt;strong&gt;페이지의 DOM을 조사&lt;/strong&gt;해야만 스크립트를 찾을 수 있습니다.&lt;br&gt;
+DOM 기반 XSS는 주로 &lt;strong&gt;Client-side 공격&lt;/strong&gt;으로, 악성 스크립트는 서버로 전송되지 않습니다. 따라서 &lt;strong&gt;서버 로그를 분석해도 공격을 확인할 수 없습니다.&lt;/strong&gt;&lt;/p&gt;
+&lt;h5 id=&#34;공격-방식-2&#34; &gt;공격 방식
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b2%a9-%eb%b0%a9%ec%8b%9d-2&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;공격자가 악성스크립트가 포함된 URL을 요청하면, 해당 &lt;strong&gt;스크립트를 실행해 DOM 영역을 변경&lt;/strong&gt;합니다. 브라우저 자체에서 스크립트가 실행되어 DOM 영역을 변화시키므로 서로 패킷을 보내지 않고 공격이 수행됩니다.&lt;br&gt;
+주로 &lt;code&gt;document&lt;/code&gt;, &lt;code&gt;location&lt;/code&gt;와 같은 &lt;strong&gt;DOM 객체를 조작&lt;/strong&gt;해 공격을 수행합니다.&lt;/p&gt;
+&lt;h2 id=&#34;csrf랑-xss의-차이점&#34; &gt;CSRF랑 XSS의 차이점?
+&lt;span&gt;
+    &lt;a href=&#34;#csrf%eb%9e%91-xss%ec%9d%98-%ec%b0%a8%ec%9d%b4%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;크로스-사이트 요청 위조(Cross-site Request Forgery)&lt;/code&gt;와 &lt;code&gt;크로스-사이트 스크립팅(Cross-site Scripting)&lt;/code&gt; 모두 &lt;strong&gt;웹 애플리케이션&lt;/strong&gt;에서 발견되는 보안 취약점입니다.&lt;br&gt;
+두 공격 방식의 가장 큰 차이는 &lt;strong&gt;&lt;code&gt;인증된 세션(쿠키 등)&lt;/code&gt;을 활용하느냐&lt;/strong&gt; 여부 입니다.&lt;br&gt;
+&lt;code&gt;CSRF 공격&lt;/code&gt;은 사용자의 &lt;strong&gt;인증된 세션을 악용&lt;/strong&gt;하는 공격 방식이고, &lt;code&gt;XSS 공격&lt;/code&gt;은 사용자가 &lt;strong&gt;특정 사이트를 신뢰한다는 사실을 이용&lt;/strong&gt;해 인증된 세션 없이도 공격할 수 있는 공격 방식입니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;CSRF&lt;/th&gt;
+&lt;th&gt;XSS&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;사용자가 공격 사실을 모르는채 대상 웹사이트에 &lt;strong&gt;악성 요청&lt;/strong&gt;을 보내도록 합니다.&lt;/td&gt;
+&lt;td&gt;웹 사이트에 클라이언트 측 &lt;strong&gt;스크립트를 삽입&lt;/strong&gt;해 공격합니다.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;공격을 수행하기 위해 Javascript가 필요하지 않습니다.&lt;/td&gt;
+&lt;td&gt;공격을 수행하기 위해 &lt;strong&gt;Javascript가 필요&lt;/strong&gt;합니다.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;악성 스크립트가 &lt;strong&gt;다른 사이트에 저장&lt;/strong&gt;되어 있습니다.&lt;/td&gt;
+&lt;td&gt;웹 사이트가 &lt;strong&gt;악성 스크립트를 허용&lt;/strong&gt;합니다.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;취약한 &lt;strong&gt;URL에서 수행하는 작업만 수행&lt;/strong&gt;할 수 있습니다.&lt;/td&gt;
+&lt;td&gt;공격자가 취약점을 이용해 &lt;strong&gt;원하는 모든 행동&lt;/strong&gt;을 할 수 있습니다.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;xss는-프론트엔드에서만-방어할-수-있을까&#34; &gt;XSS는 프론트엔드에서만 방어할 수 있을까?
+&lt;span&gt;
+    &lt;a href=&#34;#xss%eb%8a%94-%ed%94%84%eb%a1%a0%ed%8a%b8%ec%97%94%eb%93%9c%ec%97%90%ec%84%9c%eb%a7%8c-%eb%b0%a9%ec%96%b4%ed%95%a0-%ec%88%98-%ec%9e%88%ec%9d%84%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;XSS 공격은 &lt;em&gt;프론트엔드 뿐만 아니라&lt;/em&gt;, &lt;strong&gt;백엔드단에서도 방어&lt;/strong&gt;할 수 있습니다.&lt;br&gt;
+프로그래밍 언어와 웹 프레임워크 별로 방어 할 수 있는 방법들이 다양하지만, 해당 방법들의 &lt;strong&gt;주요 전략&lt;/strong&gt;은 &lt;code&gt;&#39;사용자 입력 값을 전처리한다&#39;&lt;/code&gt;입니다.&lt;br&gt;
+스크립트에서 자주 사용되는&lt;code&gt; &amp;lt;, &amp;gt;, (, )&lt;/code&gt; 와 같은괄호를 HTML로 바꾼다거나, &lt;a href=&#34;https://github.com/naver/lucy-xss-filter&#34;&gt;Lucy-XSS-Filter&lt;/a&gt;, &lt;a href=&#34;https://github.com/ESAPI/esapi-java-legacy&#34;&gt;OWASP ESAPI&lt;/a&gt;와 같은 라이브러리를 사용해 방어할 수 있습니다.&lt;br&gt;
+또한, Spring에서는 &lt;code&gt;Spring Security&lt;/code&gt;에서 제공하는 &lt;code&gt;X-XSS-Protection&lt;/code&gt; 헤더를 사용할 수도 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;x-xss-protection&#34; &gt;&lt;code&gt;X-XSS-Protection&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#x-xss-protection&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;브라우저에게 &lt;strong&gt;XSS 공격처럼 생긴 스크립트를 차단&lt;/strong&gt;하도록 지시합니다.&lt;br&gt;
+해당 기능을 사용하면 브라우저는 XSS 공격을 감지했을때 이를 렌더링하지 않지만, 일부 웹 브라우저는 이에 필요한 &lt;code&gt;XSS 감사기(Auditor)&lt;/code&gt;를 구현하지 않아 해당 헤더를 사용할 수 없습니다. 이를 보완하기 위해 &lt;code&gt;콘텐츠 보안 정책(CSP)&lt;/code&gt; 기능을 사용할 수도 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;다만, 구글에서는 &lt;a href=&#34;https://www.chromium.org/developers/design-documents/xss-auditor/&#34;&gt;2019년 8월 XSS 감사기를 삭제&lt;/a&gt;했습니다.
+&lt;ul&gt;
+&lt;li&gt;지난 수 년 동안 XSS 감사기에 대한 &lt;strong&gt;수많은 우회 방법&lt;/strong&gt;들이 제시되었고, 합&lt;strong&gt;법적인 사이트에 대한 액세스를 차단&lt;/strong&gt;하는 경우도 존재했기 때문에 구글에서는 이를 삭제했습니다.&lt;/li&gt;
+&lt;li&gt;이후 DOM 기반 XSS 공격에 대한 방어책인 &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API&#34;&gt;Trusted Types API&lt;/a&gt; 를 도입했습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;콘텐츠-보안-정책csp&#34; &gt;&lt;code&gt;콘텐츠 보안 정책(CSP)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%bd%98%ed%85%90%ec%b8%a0-%eb%b3%b4%ec%95%88-%ec%a0%95%ec%b1%85csp&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;CSP는 XSS와 데이터 인젝션 공격을 완화하는데 도움을 주는 &lt;strong&gt;추가 보안 계층&lt;/strong&gt;입니다. 이를 사용하려면 Content-Security-Policy 헤더를 반환하도록 애플리케이션을 구성해야 합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Configuration&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;SecurityConf&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Bean&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; SecurityFilterChain &lt;span style=&#34;color:#a6e22e&#34;&gt;filterChain&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;HttpSecurity http&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;throws&lt;/span&gt; Exception &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        http&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;headers&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;headers &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                headers&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;xssProtection&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        xss &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; xss&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;headerValue&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;XXssProtectionHeaderWriter&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;HeaderValue&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ENABLED_MODE_BLOCK&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;).&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;contentSecurityPolicy&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        cps &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; cps&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;policyDirectives&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;script-src &amp;#39;self&amp;#39;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;));&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; http&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;build&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;참고-문서&#34; &gt;참고 문서
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://usa.kaspersky.com/resource-center/definitions/what-is-a-cross-site-scripting-attack&#34;&gt;What is a Cross-Site Scripting attack? Definition &amp;amp; Examples (kaspersky.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.fis.kr/ko/major_biz/cyber_safety_oper/attack_info/security_news?articleSeq=3408&#34;&gt;보안뉴스 - 웹 취약점과 해킹 매커니즘#7 XSS(Cross-Site Scripting) 상세화면 | 한국재정정보원 &amp;gt; 주요사업 &amp;gt; 사이버안전센터 운영 &amp;gt; 사이버위협 정보 및 통계 &amp;gt; 보안뉴스 (fis.kr)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://portswigger.net/web-security/cross-site-scripting/dom-based&#34;&gt;What is DOM-based XSS (cross-site scripting)? Tutorial &amp;amp; Examples | Web Security Academy (portswigger.net)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/difference-between-xss-and-csrf/&#34;&gt;Difference between XSS and CSRF - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection&#34;&gt;X-XSS-Protection - HTTP | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/spring-prevent-xss&#34;&gt;Prevent Cross-Site Scripting (XSS) in a Spring Application | Baeldung&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.dailysecu.com/news/articleView.html?idxno=55207&#34;&gt;구글, 크롬의 XSS 오디터 삭제할 계획 - 데일리시큐 (dailysecu.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API&#34;&gt;Trusted Types API - Web APIs | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.spring.io/spring-security/site/docs/5.0.x/reference/html/headers.html#headers-xss-protection&#34;&gt;21. Security HTTP Response Headers (spring.io)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -6,10 +6,498 @@
     <description>오늘도 개발을 한다.</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Mon, 04 Mar 2024 23:19:16 +0900</lastBuildDate>
+    <lastBuildDate>Tue, 19 Mar 2024 19:51:00 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[웹, 네트워크] XSS 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/network/xss/</link>
+      <pubDate>Tue, 19 Mar 2024 19:51:00 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/network/xss/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 3월 12일 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/03-NETWORK/21_XSS/Readme.md&#34;&gt;&lt;strong&gt;XSS&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;xss란&#34; &gt;XSS란?
+&lt;span&gt;
+    &lt;a href=&#34;#xss%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;신뢰할 수 있는 웹 사이트에 &lt;strong&gt;악성코드를 삽입하는 공격&lt;/strong&gt;을 말합니다.&lt;br&gt;
+공격자가 표적 웹사이트의 콘텐츠에 악성 스크립트를 삽입하고, 피해자의 브라우저에 전달되는 동적 콘텐츠에 이를 포함시키므로써 피해를 입게 됩니다.&lt;br&gt;
+이때, 피해자의 브라우저는 해당 스크립트가 &lt;strong&gt;&amp;lsquo;신뢰할 수 없는 스크립트&amp;rsquo;라는 점&lt;/strong&gt;을 &lt;em&gt;알 수 없어&lt;/em&gt; &lt;strong&gt;해당 스크립트를 실행&lt;/strong&gt;하게 됩니다.&lt;br&gt;
+악성 스크립트는 &lt;em&gt;피해자의 브라우저가 보유한&lt;/em&gt; 해당 사이트에서 사용되는 &lt;strong&gt;모든 쿠키, 저장소에 저장된 민감 정보에 액세스&lt;/strong&gt;할 수 있습니다.&lt;br&gt;
+뿐만 아니라 &lt;strong&gt;멀웨어&lt;/strong&gt;를 퍼뜨리거나, 웹사이트의 콘&lt;strong&gt;텐츠를 변조&lt;/strong&gt;하거나,&lt;strong&gt;피싱 사이트로 이동&lt;/strong&gt;시키거나 하는 등의 공격도 가능합니다.&lt;br&gt;
+다른 웹 공격들과 달리, &lt;em&gt;애플리케이션 자체가 아닌&lt;/em&gt; &lt;strong&gt;웹 애플리케이션 사용자를 표적&lt;/strong&gt;으로 삼는다는 특징이 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;xss-공격의-종류&#34; &gt;XSS 공격의 종류
+&lt;span&gt;
+    &lt;a href=&#34;#xss-%ea%b3%b5%ea%b2%a9%ec%9d%98-%ec%a2%85%eb%a5%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;저장형-크로스사이트-스크립팅stored-cross-site-scripting&#34; &gt;&lt;code&gt;저장형 크로스사이트 스크립팅(Stored Cross-site Scripting)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a0%80%ec%9e%a5%ed%98%95-%ed%81%ac%eb%a1%9c%ec%8a%a4%ec%82%ac%ec%9d%b4%ed%8a%b8-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8c%85stored-cross-site-scripting&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;stored-xss.png&#34; alt=&#34;stored-xss.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;지속적(Persistent) XSS&lt;/code&gt;라고도 하는 공격 방식입니다.&lt;br&gt;
+사용자가 입력한 값이 저장(주로 게시판)된 후 이를 웹 페이지에서 출력할때 피해가 발생하는 공격입니다.&lt;br&gt;
+공격자의 악성스크립트가 서버에 저장되어 불특정 다수를 대상으로 공격에 이용될 수 있어 Reflected XSS보다 공격 대상의 범위가 훨씬 크다는 특징이 있습니다.&lt;/p&gt;
+&lt;h5 id=&#34;공격-방식&#34; &gt;공격 방식
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b2%a9-%eb%b0%a9%ec%8b%9d&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;공격자가 스크립트가 포함된 &lt;strong&gt;콘텐츠&lt;/strong&gt;(&lt;strong&gt;게시글, 댓글, 사용자 이름 등&lt;/strong&gt;)를 작성한 뒤, 이를 피해자가 요청하게 되면 해당 스크립트가 &lt;strong&gt;피해자 측에서 동작&lt;/strong&gt;하게 됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;반사-크로스사이트-스크립팅reflected-cross-site-scripting&#34; &gt;&lt;code&gt;반사 크로스사이트 스크립팅(Reflected cross-site scripting)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%98%ec%82%ac-%ed%81%ac%eb%a1%9c%ec%8a%a4%ec%82%ac%ec%9d%b4%ed%8a%b8-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8c%85reflected-cross-site-scripting&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;reflected-xss.png&#34; alt=&#34;reflected-xss.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;비지속적(Non-Persistent) XSS&lt;/code&gt;라고도 하는 공격 방식입니다.&lt;br&gt;
+이름에 포함된 &amp;lsquo;반사&amp;rsquo; 라는 단어처럼, &lt;strong&gt;사용자가 요청&lt;/strong&gt;한 스크립트가 사용자 측에서 반사되어 동작합니다. 즉, 공격자의 스크립트가 별도의 저장소에 저장되지 않고 &lt;strong&gt;사용자 측에서 즉시 동작&lt;/strong&gt;합니다.&lt;br&gt;
+&lt;em&gt;지속적 XSS와 달리&lt;/em&gt;, &lt;strong&gt;공격자가&lt;/strong&gt; 각 피해자들에게 페이로드(악성스크립트)를 &lt;strong&gt;전달&lt;/strong&gt;해주어야 합니다. 따라서 악성 링크, 피싱 이메일, SNS 등을 이용해 해당 페이로드가 포함된 URL을 &lt;strong&gt;클릭하도록 유도&lt;/strong&gt;해야 합니다.&lt;/p&gt;
+&lt;h5 id=&#34;공격-방식-1&#34; &gt;공격 방식
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b2%a9-%eb%b0%a9%ec%8b%9d-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;공격자가 &lt;strong&gt;악성스크립트가 웹서버로 전송되는 요청(URL)의 일부&lt;/strong&gt;가 되도록 합니다. 요청과 함께 포함되어있던 악성 스크립트가 &lt;strong&gt;사용자의 브라우저에서 동작&lt;/strong&gt;하게 됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;dom-기반-크로스사이트-스크립팅dom-based-cross-site-scripting&#34; &gt;&lt;code&gt;DOM 기반 크로스사이트 스크립팅(DOM-based cross-site scripting)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#dom-%ea%b8%b0%eb%b0%98-%ed%81%ac%eb%a1%9c%ec%8a%a4%ec%82%ac%ec%9d%b4%ed%8a%b8-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8c%85dom-based-cross-site-scripting&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;dom-based-xss.png&#34; alt=&#34;dom-based-xss.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;공격자의 스크립트가 HTML 내부가 아닌, &lt;strong&gt;&lt;code&gt;DOM&lt;/code&gt;에 나타나는 공격 방식&lt;/strong&gt;입니다.&lt;br&gt;
+반사/저장형 XSS에서는 응답 페이지에서 스크립트를 확인할 수 있는것과 다르게 HTML 소스 코드와 응답 페이지의 코드가 동일하기 때문에 페이로드를 찾을 수 없습니다.&lt;br&gt;
+따라서 &lt;strong&gt;런타임일때&lt;/strong&gt;, 또는 &lt;strong&gt;페이지의 DOM을 조사&lt;/strong&gt;해야만 스크립트를 찾을 수 있습니다.&lt;br&gt;
+DOM 기반 XSS는 주로 &lt;strong&gt;Client-side 공격&lt;/strong&gt;으로, 악성 스크립트는 서버로 전송되지 않습니다. 따라서 &lt;strong&gt;서버 로그를 분석해도 공격을 확인할 수 없습니다.&lt;/strong&gt;&lt;/p&gt;
+&lt;h5 id=&#34;공격-방식-2&#34; &gt;공격 방식
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b2%a9-%eb%b0%a9%ec%8b%9d-2&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;공격자가 악성스크립트가 포함된 URL을 요청하면, 해당 &lt;strong&gt;스크립트를 실행해 DOM 영역을 변경&lt;/strong&gt;합니다. 브라우저 자체에서 스크립트가 실행되어 DOM 영역을 변화시키므로 서로 패킷을 보내지 않고 공격이 수행됩니다.&lt;br&gt;
+주로 &lt;code&gt;document&lt;/code&gt;, &lt;code&gt;location&lt;/code&gt;와 같은 &lt;strong&gt;DOM 객체를 조작&lt;/strong&gt;해 공격을 수행합니다.&lt;/p&gt;
+&lt;h2 id=&#34;csrf랑-xss의-차이점&#34; &gt;CSRF랑 XSS의 차이점?
+&lt;span&gt;
+    &lt;a href=&#34;#csrf%eb%9e%91-xss%ec%9d%98-%ec%b0%a8%ec%9d%b4%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;크로스-사이트 요청 위조(Cross-site Request Forgery)&lt;/code&gt;와 &lt;code&gt;크로스-사이트 스크립팅(Cross-site Scripting)&lt;/code&gt; 모두 &lt;strong&gt;웹 애플리케이션&lt;/strong&gt;에서 발견되는 보안 취약점입니다.&lt;br&gt;
+두 공격 방식의 가장 큰 차이는 &lt;strong&gt;&lt;code&gt;인증된 세션(쿠키 등)&lt;/code&gt;을 활용하느냐&lt;/strong&gt; 여부 입니다.&lt;br&gt;
+&lt;code&gt;CSRF 공격&lt;/code&gt;은 사용자의 &lt;strong&gt;인증된 세션을 악용&lt;/strong&gt;하는 공격 방식이고, &lt;code&gt;XSS 공격&lt;/code&gt;은 사용자가 &lt;strong&gt;특정 사이트를 신뢰한다는 사실을 이용&lt;/strong&gt;해 인증된 세션 없이도 공격할 수 있는 공격 방식입니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;CSRF&lt;/th&gt;
+&lt;th&gt;XSS&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;사용자가 공격 사실을 모르는채 대상 웹사이트에 &lt;strong&gt;악성 요청&lt;/strong&gt;을 보내도록 합니다.&lt;/td&gt;
+&lt;td&gt;웹 사이트에 클라이언트 측 &lt;strong&gt;스크립트를 삽입&lt;/strong&gt;해 공격합니다.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;공격을 수행하기 위해 Javascript가 필요하지 않습니다.&lt;/td&gt;
+&lt;td&gt;공격을 수행하기 위해 &lt;strong&gt;Javascript가 필요&lt;/strong&gt;합니다.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;악성 스크립트가 &lt;strong&gt;다른 사이트에 저장&lt;/strong&gt;되어 있습니다.&lt;/td&gt;
+&lt;td&gt;웹 사이트가 &lt;strong&gt;악성 스크립트를 허용&lt;/strong&gt;합니다.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;취약한 &lt;strong&gt;URL에서 수행하는 작업만 수행&lt;/strong&gt;할 수 있습니다.&lt;/td&gt;
+&lt;td&gt;공격자가 취약점을 이용해 &lt;strong&gt;원하는 모든 행동&lt;/strong&gt;을 할 수 있습니다.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 id=&#34;xss는-프론트엔드에서만-방어할-수-있을까&#34; &gt;XSS는 프론트엔드에서만 방어할 수 있을까?
+&lt;span&gt;
+    &lt;a href=&#34;#xss%eb%8a%94-%ed%94%84%eb%a1%a0%ed%8a%b8%ec%97%94%eb%93%9c%ec%97%90%ec%84%9c%eb%a7%8c-%eb%b0%a9%ec%96%b4%ed%95%a0-%ec%88%98-%ec%9e%88%ec%9d%84%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;XSS 공격은 &lt;em&gt;프론트엔드 뿐만 아니라&lt;/em&gt;, &lt;strong&gt;백엔드단에서도 방어&lt;/strong&gt;할 수 있습니다.&lt;br&gt;
+프로그래밍 언어와 웹 프레임워크 별로 방어 할 수 있는 방법들이 다양하지만, 해당 방법들의 &lt;strong&gt;주요 전략&lt;/strong&gt;은 &lt;code&gt;&#39;사용자 입력 값을 전처리한다&#39;&lt;/code&gt;입니다.&lt;br&gt;
+스크립트에서 자주 사용되는&lt;code&gt; &amp;lt;, &amp;gt;, (, )&lt;/code&gt; 와 같은괄호를 HTML로 바꾼다거나, &lt;a href=&#34;https://github.com/naver/lucy-xss-filter&#34;&gt;Lucy-XSS-Filter&lt;/a&gt;, &lt;a href=&#34;https://github.com/ESAPI/esapi-java-legacy&#34;&gt;OWASP ESAPI&lt;/a&gt;와 같은 라이브러리를 사용해 방어할 수 있습니다.&lt;br&gt;
+또한, Spring에서는 &lt;code&gt;Spring Security&lt;/code&gt;에서 제공하는 &lt;code&gt;X-XSS-Protection&lt;/code&gt; 헤더를 사용할 수도 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;x-xss-protection&#34; &gt;&lt;code&gt;X-XSS-Protection&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#x-xss-protection&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;브라우저에게 &lt;strong&gt;XSS 공격처럼 생긴 스크립트를 차단&lt;/strong&gt;하도록 지시합니다.&lt;br&gt;
+해당 기능을 사용하면 브라우저는 XSS 공격을 감지했을때 이를 렌더링하지 않지만, 일부 웹 브라우저는 이에 필요한 &lt;code&gt;XSS 감사기(Auditor)&lt;/code&gt;를 구현하지 않아 해당 헤더를 사용할 수 없습니다. 이를 보완하기 위해 &lt;code&gt;콘텐츠 보안 정책(CSP)&lt;/code&gt; 기능을 사용할 수도 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;다만, 구글에서는 &lt;a href=&#34;https://www.chromium.org/developers/design-documents/xss-auditor/&#34;&gt;2019년 8월 XSS 감사기를 삭제&lt;/a&gt;했습니다.
+&lt;ul&gt;
+&lt;li&gt;지난 수 년 동안 XSS 감사기에 대한 &lt;strong&gt;수많은 우회 방법&lt;/strong&gt;들이 제시되었고, 합&lt;strong&gt;법적인 사이트에 대한 액세스를 차단&lt;/strong&gt;하는 경우도 존재했기 때문에 구글에서는 이를 삭제했습니다.&lt;/li&gt;
+&lt;li&gt;이후 DOM 기반 XSS 공격에 대한 방어책인 &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API&#34;&gt;Trusted Types API&lt;/a&gt; 를 도입했습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;콘텐츠-보안-정책csp&#34; &gt;&lt;code&gt;콘텐츠 보안 정책(CSP)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%bd%98%ed%85%90%ec%b8%a0-%eb%b3%b4%ec%95%88-%ec%a0%95%ec%b1%85csp&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;CSP는 XSS와 데이터 인젝션 공격을 완화하는데 도움을 주는 &lt;strong&gt;추가 보안 계층&lt;/strong&gt;입니다. 이를 사용하려면 Content-Security-Policy 헤더를 반환하도록 애플리케이션을 구성해야 합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Configuration&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;SecurityConf&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Bean&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; SecurityFilterChain &lt;span style=&#34;color:#a6e22e&#34;&gt;filterChain&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;HttpSecurity http&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;throws&lt;/span&gt; Exception &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        http&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;headers&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;headers &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                headers&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;xssProtection&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        xss &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; xss&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;headerValue&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;XXssProtectionHeaderWriter&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;HeaderValue&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;ENABLED_MODE_BLOCK&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;).&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;contentSecurityPolicy&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        cps &lt;span style=&#34;color:#f92672&#34;&gt;-&amp;gt;&lt;/span&gt; cps&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;policyDirectives&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;script-src &amp;#39;self&amp;#39;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;));&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; http&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;build&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;참고-문서&#34; &gt;참고 문서
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://usa.kaspersky.com/resource-center/definitions/what-is-a-cross-site-scripting-attack&#34;&gt;What is a Cross-Site Scripting attack? Definition &amp;amp; Examples (kaspersky.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.fis.kr/ko/major_biz/cyber_safety_oper/attack_info/security_news?articleSeq=3408&#34;&gt;보안뉴스 - 웹 취약점과 해킹 매커니즘#7 XSS(Cross-Site Scripting) 상세화면 | 한국재정정보원 &amp;gt; 주요사업 &amp;gt; 사이버안전센터 운영 &amp;gt; 사이버위협 정보 및 통계 &amp;gt; 보안뉴스 (fis.kr)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://portswigger.net/web-security/cross-site-scripting/dom-based&#34;&gt;What is DOM-based XSS (cross-site scripting)? Tutorial &amp;amp; Examples | Web Security Academy (portswigger.net)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/difference-between-xss-and-csrf/&#34;&gt;Difference between XSS and CSRF - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection&#34;&gt;X-XSS-Protection - HTTP | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/spring-prevent-xss&#34;&gt;Prevent Cross-Site Scripting (XSS) in a Spring Application | Baeldung&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.dailysecu.com/news/articleView.html?idxno=55207&#34;&gt;구글, 크롬의 XSS 오디터 삭제할 계획 - 데일리시큐 (dailysecu.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API&#34;&gt;Trusted Types API - Web APIs | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.spring.io/spring-security/site/docs/5.0.x/reference/html/headers.html#headers-xss-protection&#34;&gt;21. Security HTTP Response Headers (spring.io)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>[웹, 네트워크] SOP 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/network/sop/</link>
+      <pubDate>Tue, 19 Mar 2024 19:50:47 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/network/sop/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 3월 20일 발표예정인 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/03-NETWORK/15_SOP/Readme.md&#34;&gt;&lt;strong&gt;SOP&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;sop-정책이란&#34; &gt;SOP 정책이란?.
+&lt;span&gt;
+    &lt;a href=&#34;#sop-%ec%a0%95%ec%b1%85%ec%9d%b4%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;동일 출처 정책(SOP, Same Origin Policy)&lt;/code&gt;&lt;/strong&gt; 은 &lt;em&gt;한 출처에서 불러온 문서 또는 스크립트&lt;/em&gt;가 &lt;strong&gt;다른 출처의 자원&lt;/strong&gt;과 &lt;strong&gt;상호 작용하는 방식&lt;/strong&gt;을 &lt;u&gt;제한&lt;/u&gt;하는 보안 메커니즘입니다.&lt;br&gt;
+다른 출처의 자원과의 상호 작용을 제한하므로써, &lt;b&gt;잠재적으로 악의적인 문서들로 부터 &lt;u&gt;격리&lt;/u&gt;&lt;/b&gt;시켜 가능한 공격 경로를 줄일 수 있습니다. 이러한 격리를 통해 악성 웹사이트가 사용자가 로그인한 타 서비스의 데이터를 읽고 공격자에게 전달하는 것을 막을 수 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;출처origin&#34; &gt;&lt;code&gt;출처(Origin)&lt;/code&gt;?
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b6%9c%ec%b2%98origin&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;웹에서 같은 &lt;code&gt;출처&lt;/code&gt;인지 판단하는 기준은 &lt;strong&gt;URL의 &lt;code&gt;프로토콜&lt;/code&gt;, &lt;code&gt;포트&lt;/code&gt;(지정된 경우), &lt;code&gt;호스트 이름(hostname)&lt;/code&gt;이 모두 동일한 지&lt;/strong&gt; 입니다. 이를 &lt;code&gt;튜플&lt;/code&gt;이라고 부르기도 합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;호스트 이름(hostname)&lt;/code&gt; : 네트워크에 연결된 컴퓨터 또는 기타 &lt;strong&gt;장치에 할당되는 이름&lt;/strong&gt;으로, &lt;code&gt;로컬 호스트 이름(local hostname)&lt;/code&gt;과 &lt;code&gt;도메인 이름(domain name)&lt;/code&gt;의 조합으로 구성됩니다.
+&lt;ul&gt;
+&lt;li&gt;예시) &lt;code&gt;en.wikipedia.org&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;en&lt;/code&gt;(로컬 호스트 이름)과 &lt;code&gt;wikipedia.org&lt;/code&gt;(도메인 이름)으로 구성되어 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;예시&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;http://store.company.com/dir/page.html&lt;/code&gt; 라는 URL을 기준으로 예시를 들어보겠습니다.&lt;/p&gt;
+&lt;h5 id=&#34;동일한-출처&#34; &gt;동일한 출처
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8f%99%ec%9d%bc%ed%95%9c-%ec%b6%9c%ec%b2%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;아래 링크들은 &lt;strong&gt;경로&lt;/strong&gt;만 다른 케이스 입니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;http://store.company.com/dir2/other.html&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;http://store.company.com/dir/inner/another.html&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;다른-출처&#34; &gt;다른 출처
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8b%a4%eb%a5%b8-%ec%b6%9c%ec%b2%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;프로토콜이 다른 경우&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;https://store.company.com/page.html&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;포트가 다른 경우&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;http://store.company.com:81/dir/page.html&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;호스트 이름이 다른 경우&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;http://news.company.com/dir/page.html&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;출처-변경-공격&#34; &gt;출처 변경 공격
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b6%9c%ec%b2%98-%eb%b3%80%ea%b2%bd-%ea%b3%b5%ea%b2%a9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;이전에는 DOM 객체인 document의 &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/API/Document/domain&#34;&gt;&lt;code&gt;document.domain&lt;/code&gt;&lt;/a&gt;을 조작해 도메인을 현재 도메인 또는 상위 도메인으로 변경할 수 있었으나, 보안 문제 때문에&lt;code&gt;document.domain&lt;/code&gt; 설정자가 사장되어(deprecated) 해당 방식 공격은 불가능하게 되었습니다.&lt;/p&gt;
+&lt;h3 id=&#34;교차출처-접근의-종류&#34; &gt;교차출처 접근의 종류
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b5%90%ec%b0%a8%ec%b6%9c%ec%b2%98-%ec%a0%91%ea%b7%bc%ec%9d%98-%ec%a2%85%eb%a5%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;교차출처-쓰기&#34; &gt;교차출처 쓰기
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b5%90%ec%b0%a8%ec%b6%9c%ec%b2%98-%ec%93%b0%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;링크&lt;/code&gt;, &lt;code&gt;리다이렉션&lt;/code&gt;, &lt;code&gt;form 제출&lt;/code&gt; 등의 작업으로, &lt;strong&gt;일반적으로 허용&lt;/strong&gt;되는 작업입니다. 일부 HTTP 요청은 &lt;code&gt;preflight&lt;/code&gt;가 필요합니다.&lt;/p&gt;
+&lt;h4 id=&#34;교차출처-임베딩&#34; &gt;교차출처 임베딩
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b5%90%ec%b0%a8%ec%b6%9c%ec%b2%98-%ec%9e%84%eb%b2%a0%eb%94%a9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;strong&gt;일반적으로 허용&lt;/strong&gt;됩니다.&lt;br&gt;
+&lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt;(javascript),  &lt;code&gt;&amp;lt;link&amp;gt;&lt;/code&gt;(css), &lt;code&gt;&amp;lt;img&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;video&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;audio&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;object&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;embed&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;iframe&amp;gt;&lt;/code&gt;, &lt;code&gt;@font-face&lt;/code&gt;(일부 브라우저 한정) 등이 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;교차출처-읽기&#34; &gt;교차출처 읽기
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b5%90%ec%b0%a8%ec%b6%9c%ec%b2%98-%ec%9d%bd%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;u&gt;일반적으로 허용되지 않으나&lt;/u&gt;, &lt;em&gt;&lt;code&gt;임베딩&lt;/code&gt;을 통해&lt;/em&gt; &lt;strong&gt;읽기 접근이 유출&lt;/strong&gt;되는 경우가 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;ex) 임베딩된 이미지의 크기, 임베딩된 스크립트의 동작&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;cors-정책이란&#34; &gt;CORS 정책이란?
+&lt;span&gt;
+    &lt;a href=&#34;#cors-%ec%a0%95%ec%b1%85%ec%9d%b4%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;교차 출처 리소스 공유(CORS, Cross-Origin Resource Sharing)&lt;/code&gt;는 &lt;strong&gt;다른 출처의 자원을 접근&lt;/strong&gt;할 수 있도록 &lt;u&gt;허용&lt;/u&gt;하는 정책을 말합니다.&lt;br&gt;
+이는 서버에서 웹 브라우저가 해당 자원을 읽을 수 있는 출처를 설명할 수 있는 &lt;strong&gt;새로운 &lt;code&gt;HTTP 헤더&lt;/code&gt;&lt;/strong&gt; (&lt;code&gt;Access-Control-Allow-Origin&lt;/code&gt;)를 추가하는 방식으로 동작합니다.&lt;br&gt;
+클라이언트에서는 교차출처 자원을 호스팅하는 서버에  &amp;lsquo;&lt;em&gt;서버가 실제 요청을 허용할 것인지&lt;/em&gt;&amp;lsquo;를 확인하기 위해 브라우저가 &lt;code&gt;preflight&lt;/code&gt; 요청을 전송하는 메커니즘을 사용합니다.&lt;/p&gt;
+&lt;h3 id=&#34;cors를-사용하는-요청&#34; &gt;CORS를 사용하는 요청
+&lt;span&gt;
+    &lt;a href=&#34;#cors%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%98%eb%8a%94-%ec%9a%94%ec%b2%ad&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;fetch()&lt;/code&gt;, &lt;code&gt;XMLHttpRequest&lt;/code&gt; 호출&lt;/li&gt;
+&lt;li&gt;웹 폰트(&lt;code&gt;@font-face&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;WebGL 텍스처&lt;/li&gt;
+&lt;li&gt;이미지/비디오 프레임
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;canvas&amp;gt;&lt;/code&gt;상에서 &lt;code&gt;drawImage()&lt;/code&gt;를 이용해 그려진&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이미지상의 CSS 도형&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;cors-관련-헤더&#34; &gt;CORS 관련 헤더
+&lt;span&gt;
+    &lt;a href=&#34;#cors-%ea%b4%80%eb%a0%a8-%ed%97%a4%eb%8d%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;access-control-allow-origin&#34; &gt;&lt;code&gt;Access-Control-Allow-Origin&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#access-control-allow-origin&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;응답 헤더 중 하나로, 서버의 자원 소유자가 특정 도메인에서의 요청만 허용해 자원에 대한 접근을 제어하는데 쓸 수 있는 헤더입니다.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;// https://foo.example에서의 접근만 허용하는 경우
+Access-Control-Allow-Origin: https://foo.example
+// 모든 도메인으로부터 접근을 허용하는 경우 (자격증명이 필요 없는 요청인 경우)
+Access-Control-Allow-Origin: *
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;자격 증명&lt;/strong&gt;: &lt;em&gt;쿠키, TLS 클라이언트 인증서, 인증 헤더&lt;/em&gt;와 같은 &lt;strong&gt;인증 정보를 담은 것&lt;/strong&gt;을 말하며, &lt;code&gt;Access-Control-Allow-Credentials&lt;/code&gt;(응답 헤더)가 &lt;code&gt;true&lt;/code&gt;인 경우 사용자는 교차 출처 요청에 자격 증명을 포함할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;완화-방법&#34; &gt;완화 방법
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%99%84%ed%99%94-%eb%b0%a9%eb%b2%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;access-control-allow-origin응답-헤더-설정&#34; &gt;&lt;code&gt;Access-Control-Allow-Origin&lt;/code&gt; 응답 헤더 설정
+&lt;span&gt;
+    &lt;a href=&#34;#access-control-allow-origin%ec%9d%91%eb%8b%b5-%ed%97%a4%eb%8d%94-%ec%84%a4%ec%a0%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;서버 측에서 요청을 &lt;u&gt;허용할 출처&lt;/u&gt;를 &lt;strong&gt;명시적으로 설정&lt;/strong&gt;해줍니다.&lt;br&gt;
+만약 자격증명이 필요한 경우, &lt;code&gt;*&lt;/code&gt;는 사용할 수 없습니다.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Access-Control-Allow-Origin: &amp;lt;origin&amp;gt; | *
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;프록시-서버-사용하기&#34; &gt;프록시 서버 사용하기
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%94%84%eb%a1%9d%ec%8b%9c-%ec%84%9c%eb%b2%84-%ec%82%ac%ec%9a%a9%ed%95%98%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;proxy-server.png&#34; alt=&#34;proxy-server.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;웹 애플리케이션에서 직접 자원에 접근하지 않고, 프록시 서버를 사용해 요청을 전달하는 방식입니다. 이는 SOP 정책이 브라우저-서버 간 통신에서만 구현된다는 점을 이용합니다.&lt;br&gt;
+웹 애플리케이션과 프록시 서버간에는 &lt;code&gt;Access-Control-Allow-Origin: *&lt;/code&gt; 응답 헤더를 추가해 자유롭게 요청을 주고 받습니다.&lt;br&gt;
+그리고 서버-서버 간 통신에서는 SOP 정책을 만족할 필요가 없으므로 프록시 서버에서는 자유롭게 교차출처 자원에 접근할 수 있습니다.&lt;/p&gt;
+&lt;h2 id=&#34;preflight란&#34; &gt;Preflight란?
+&lt;span&gt;
+    &lt;a href=&#34;#preflight%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;img src=&#34;preflight-timeline.png&#34; alt=&#34;preflight-timeline.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;다른 출처의 자원에 대해 &lt;code&gt;OPTIONS&lt;/code&gt; 메서드 요청을 먼저 전송해, 실제 요청을 전송해도 안전한지 확인하는 방식을 말합니다.&lt;br&gt;
+브라우저에서는 CORS를 사용하는 요청에 대해 &lt;code&gt;OPTIONS&lt;/code&gt; 메서드를 자동으로 보내는데, 이때 원본 요청의 메서드, 헤더와 같은 값을 &lt;code&gt;Access-Control-Request-...&lt;/code&gt; 과 같은 헤더에 담아서 해당 메서드, 헤더로 요청을 전송할 수 있는지 확인합니다.&lt;br&gt;
+그리고 서버는 이에 대한 응답에 &lt;code&gt;Access-Control-Allow-...&lt;/code&gt; 와 같은 헤더를 담아 허용되는 메서드, 헤더 등에 대한 정보를 알려줍니다.&lt;/p&gt;
+&lt;h3 id=&#34;preflight-관련-헤더&#34; &gt;Preflight 관련 헤더
+&lt;span&gt;
+    &lt;a href=&#34;#preflight-%ea%b4%80%eb%a0%a8-%ed%97%a4%eb%8d%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;요청-헤더&#34; &gt;요청 헤더
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9a%94%ec%b2%ad-%ed%97%a4%eb%8d%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;origin&#34; &gt;&lt;code&gt;Origin&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#origin&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;요청을 발생시킨 출처(스키마, 호스트 이름, 포트)를 나타냅니다.&lt;br&gt;
+&lt;code&gt;user agent&lt;/code&gt;가 &lt;em&gt;페이지에 포함되거나&lt;/em&gt;, &lt;em&gt;페이지 내 스크립트가 접근하는 자원에 대해&lt;/em&gt; 요청해야 하는 경우 페이지의 출처가 요청에 포함될 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;일반적으로 &lt;code&gt;user agent&lt;/code&gt;는 모든 교차출처 요청, 또는 동일 출처에 대해 &lt;code&gt;GET&lt;/code&gt;, &lt;code&gt;HEAD&lt;/code&gt;를 제외한 요청에 대해 &lt;code&gt;Origin&lt;/code&gt; 헤더를 추가합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;// 특정 케이스의 경우 Origin은 null일 수 있습니다.
+Origin: null
+// 스키마(사용되는 프로토콜)와 호스트 이름(+ 포트)의 조합으로 Origin이 표시됩니다.
+Origin: &amp;lt;scheme&amp;gt;://&amp;lt;hostname&amp;gt;
+Origin: &amp;lt;scheme&amp;gt;://&amp;lt;hostname&amp;gt;:&amp;lt;port&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h5 id=&#34;access-control-request-method&#34; &gt;&lt;code&gt;Access-Control-Request-Method&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#access-control-request-method&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;원본 요청의 메서드가 어떤 것인지를 나타냅니다.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;// ex) post 요청인 경우
+Access-Control-Request-Method: POST
+&lt;/code&gt;&lt;/pre&gt;&lt;h5 id=&#34;access-control-request-headers&#34; &gt;&lt;code&gt;Access-Control-Request-Headers&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#access-control-request-headers&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;원본 요청의 헤더로 어떤 것이 있는지를 나타냅니다.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;// ex) 헤더에 X-PINGOTHER, Content-Type를 담은 경우
+Access-Control-Request-Headers: X-PINGOTHER, Content-Type
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;응답-헤더&#34; &gt;응답 헤더
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%91%eb%8b%b5-%ed%97%a4%eb%8d%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;access-control-allow-origin-1&#34; &gt;&lt;code&gt;Access-Control-Allow-Origin&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#access-control-allow-origin-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h5 id=&#34;access-control-allow-methods&#34; &gt;&lt;code&gt;Access-Control-Allow-Methods&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#access-control-allow-methods&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;요청한 자원에 대해 쿼리할 수 있는 유효한 메서드들을 알려줍니다. (쉼표로 구분)
+모든 메서드를 허용하기 위해 &lt;code&gt;*(와일드카드)&lt;/code&gt;를 쓸 수 있지만, 자격 증명이 없는 요청(&lt;em&gt;HTTP 쿠키 또는 authentication이 없는&lt;/em&gt;)에 한해서만 사용할 수 있습니다.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;// ex) POST, GET, OPTIONS 메서드만 허용되는 경우
+Access-Control-Allow-Methods: POST, GET, OPTIONS
+&lt;/code&gt;&lt;/pre&gt;&lt;h5 id=&#34;access-control-allow-headers&#34; &gt;&lt;code&gt;Access-Control-Allow-Headers&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#access-control-allow-headers&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;원본 요청의 헤더 중 허용되는 헤더를 알려줍니다. (쉼표로 구분)
+모든 헤더를 허용하기 위해 &lt;code&gt;*&lt;/code&gt;를 쓸 수 있지만, 자격 증명이 없는 요청(&lt;em&gt;HTTP 쿠키 또는 authentication이 없는&lt;/em&gt;)에 한해서만 사용할 수 있습니다.
+또한, &lt;code&gt;*&lt;/code&gt;를 사용해도, &lt;code&gt;Authorization&lt;/code&gt; 헤더의 경우 명시적으로 나열해야 합니다.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;// ex) X-PINGOTHER, Content-Type 헤더가 허용되는 경우
+Access-Control-Allow-Headers: X-PINGOTHER, Content-Type
+// ex) &amp;#39;X-Custom-Header&amp;#39; 라는 사용자 지정 헤더가 허용되는 경우
+Access-Control-Allow-Headers: X-Custom-Header
+&lt;/code&gt;&lt;/pre&gt;&lt;h5 id=&#34;access-control-max-age&#34; &gt;&lt;code&gt;Access-Control-Max-Age&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#access-control-max-age&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;preflight의 결과(즉 &lt;code&gt;Access-Control-Allow-Methods&lt;/code&gt;, &lt;code&gt;Access-Control-Allow-Headers&lt;/code&gt;에 포함된 정보)가 캐시될 수 있는 기간을 알려줍니다.
+결과를 캐시할 수 있는 최대 시간(초)를 나타내며, 브라우저마다 최대치(&lt;code&gt;파이어폭스&lt;/code&gt;:24시간, &lt;code&gt;크로미움(v76이전)&lt;/code&gt;: 10분, &lt;code&gt;크로미움(v76이후)&lt;/code&gt;: 2시간)가 다릅니다.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;// ex) preflight의 결과가 캐시로 10분동안 저장됩니다.
+Access-Control-Max-Age: 600
+&lt;/code&gt;&lt;/pre&gt;&lt;h1 id=&#34;참고-문서&#34; &gt;참고 문서
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;hr&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#preflighted_requests&#34;&gt;Cross-Origin Resource Sharing (CORS) - HTTP | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy#cross-origin_script_api_access&#34;&gt;Same-origin policy - Security on the web | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://velog.io/@minjae-mj/%ED%98%B8%EC%8A%A4%ED%8A%B8-%EB%84%A4%EC%9E%84%EA%B3%BC-%EB%8F%84%EB%A9%94%EC%9D%B8-%EB%84%A4%EC%9E%84&#34;&gt;hostname(호스트명), domain name(도메인), same origin VS same site (velog.io)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://medium.com/@dtkatz/3-ways-to-fix-the-cors-error-and-how-access-control-allow-origin-works-d97d55946d9&#34;&gt;3 Ways to Fix the CORS Error — and How the Access-Control-Allow-Origin Header Works | by David Katz | Medium&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.tosspayments.com/resources/glossary/cors#cors-%EC%97%90%EB%9F%AC-%EB%8C%80%EC%9D%91%ED%95%98%EA%B8%B0&#34;&gt;CORS(교차 출처 리소스 공유) | 토스페이먼츠 개발자센터 (tosspayments.com)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>[Java] synchronized 알아보기</title>
