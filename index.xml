@@ -6,10 +6,302 @@
     <description>오늘도 개발을 한다.</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Sun, 21 Apr 2024 06:13:01 +0900</lastBuildDate>
+    <lastBuildDate>Tue, 04 Jun 2024 20:38:16 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[OS] IPC 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/os/ipc/</link>
+      <pubDate>Tue, 04 Jun 2024 20:38:16 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/os/ipc/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 6월 4일 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/02-OPERATING_SYSTEM/11_IPC/Readme.md&#34;&gt;&lt;strong&gt;IPC&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;ipc란&#34; &gt;IPC란?
+&lt;span&gt;
+    &lt;a href=&#34;#ipc%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;프로세스 간 통신(IPC, Inter-Process Communication)&lt;/code&gt;이란, OS상에서 프로세스간에 정보 공유, 모듈화 등을 이유로 데이터와 정보를 공유하는 행위 또는 방법을 의미합니다.&lt;br&gt;
+기본적으로 프로세스들은 서로 독립적이기 때문에 영향을 주지도, 받지도 않습니다. 하지만 정보 공유, 성능 제고, 모듈화 등의 이유로 프로세스간 협력이 필요한 경우, 그들간의 정보 공유를 위한 IPC 메커니즘이 필요하게 됩니다.&lt;br&gt;
+&lt;code&gt;IPC&lt;/code&gt;는 &lt;code&gt;공유 메모리 모델&lt;/code&gt;, &lt;code&gt;메시지 전송 모델&lt;/code&gt; 두 가지의 &lt;strong&gt;근본적인 모델&lt;/strong&gt;과, &lt;strong&gt;Client-Server 시스템&lt;/strong&gt;에서 주로 사용되는 &lt;code&gt;socket&lt;/code&gt;, &lt;code&gt;RPC(Remote Procedure Call)&lt;/code&gt;, &lt;code&gt;pipe&lt;/code&gt; 등의 모델이 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;공유-메모리-모델shared-memory-model&#34; &gt;&lt;code&gt;공유 메모리 모델(Shared Memory Model)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ec%9c%a0-%eb%a9%94%eb%aa%a8%eb%a6%ac-%eb%aa%a8%eb%8d%b8shared-memory-model&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img src=&#34;shared-memory-model.png&#34; alt=&#34;shared-memory-model.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;공유 메모리 모델(Shared Memory Model)&lt;/code&gt;이란, 한 프로세스의 주소공간에 &lt;code&gt;shared memory&lt;/code&gt;를 설정하고 다른 프로세스가 해당 공간을 함께 사용하는 방식을 말합니다.&lt;br&gt;
+&lt;code&gt;공유 메모리 모델&lt;/code&gt;은 하기한 순서대로 진행되며, 한 번 공유 메모리 구역을 설정하고 나면 그 후 통신은 커널이 관여하지 않는다는 특징이 있습니다. (메모리 설정시에는 커널 관여)&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;한 프로세스가 자신의 주소공간에 Shared Memory 설정(시스템 호출)&lt;/li&gt;
+&lt;li&gt;다른 프로세스는 공유메모리를 자신의 주소공간에 attach(시스템 호출)&lt;/li&gt;
+&lt;li&gt;이후 해당 공간을 읽고 씀&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;메시지-전송-모델message-passing-model&#34; &gt;&lt;code&gt;메시지 전송 모델(Message Passing Model)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a9%94%ec%8b%9c%ec%a7%80-%ec%a0%84%ec%86%a1-%eb%aa%a8%eb%8d%b8message-passing-model&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img src=&#34;message-passing-model.png&#34; alt=&#34;message-passing-model.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;메시지 전송 모델(Message Passing Model)&lt;/code&gt;이란, 커널 내부의 &lt;code&gt;메시지 큐&lt;/code&gt;를 활용해 프로세스간 통신을 수행하는 방식을 말합니다.&lt;br&gt;
+고정길이 또는 가변길이 메시지를 송/수신자 간에 주고받는 방식으로, 프로세스간 메모리 공유 없이 동작하므로 &lt;strong&gt;&lt;code&gt;분산 환경&lt;/code&gt;에 적합&lt;/strong&gt;합니다.&lt;/p&gt;
+&lt;h4 id=&#34;통신-방법에-따른-명명-방식&#34; &gt;통신 방법에 따른 명명 방식
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%86%b5%ec%8b%a0-%eb%b0%a9%eb%b2%95%ec%97%90-%eb%94%b0%eb%a5%b8-%eb%aa%85%eb%aa%85-%eb%b0%a9%ec%8b%9d&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;메시지 전송 모델&lt;/code&gt;의 경우, 메시지를 주고 받을떄 송신자-수신자를 명시하느냐에 따라 &lt;code&gt;직접 통신&lt;/code&gt;또는 &lt;code&gt;간접 통신&lt;/code&gt;으로 나뉘게 됩니다.&lt;/p&gt;
+&lt;h5 id=&#34;직접-통신&#34; &gt;직접 통신
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a7%81%ec%a0%91-%ed%86%b5%ec%8b%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;직접 통신&lt;/code&gt; 방식이란, &lt;code&gt;send(수신자, msg)&lt;/code&gt;와 &lt;code&gt;receive(송신자, &amp;amp;msg)&lt;/code&gt;와 같이 송-수신자를 명시하는 &lt;code&gt;일대일 통신&lt;/code&gt; 방식을 말합니다. 이때 통신을 원하는 프로세스 간에는 자동적으로 전용 link가 생성되고, 이를 통해 통신이 이뤄지게 됩니다.&lt;br&gt;
+추가로 직접 통신 방식 중 &lt;code&gt;receive&lt;/code&gt;시 송신자 이름을 기입해야 하는 경우를 &lt;code&gt;대칭 네이밍(Symmetric Naming)&lt;/code&gt;, 송신자 이름 없이 &lt;code&gt;recieve(&amp;amp;msg)&lt;/code&gt;와 같은 형태로 메시지를 수신하는 경우를 &lt;code&gt;비대칭 네이밍(Asymmetric Naming)&lt;/code&gt;이라고 합니다.&lt;/p&gt;
+&lt;h5 id=&#34;간접-통신&#34; &gt;간접 통신
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%84%ec%a0%91-%ed%86%b5%ec%8b%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;간접 통신&lt;/code&gt; 방식이란, 직접 송-수신자가 통신하지 않고 &lt;code&gt;mailbox&lt;/code&gt; 또는 &lt;code&gt;port&lt;/code&gt;를 공유하는 &lt;code&gt;다대다 통신 방식&lt;/code&gt;을 말합니다. 즉, &lt;code&gt;send(메일박스, msg)&lt;/code&gt;와 &lt;code&gt;recieve(메일박스, &amp;amp;msg)&lt;/code&gt;를 통해 데이터를 송-수신합니다.&lt;br&gt;
+다만 &lt;code&gt;다대다 방식&lt;/code&gt;이기 때문에, 둘 이상의 프로세스가 동시에 &lt;code&gt;recieve&lt;/code&gt;를 요청할 수 있기 떄문에 어떤 수신자가 이를 수신할 지 선택해야 하는데, 이때 사용되는 방법들은 다음과 같습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;연관된 최대 두 프로세스간의 링크를 허용한다.&lt;/li&gt;
+&lt;li&gt;한 순간에 오직 한 프로세스만 &lt;code&gt;receive()&lt;/code&gt; 작업을 실행할 수 있도록 허용한다.&lt;/li&gt;
+&lt;li&gt;시스템이 메시지를 수신할 프로세스를 임의로 선택하도록 합니다. 즉, 둘 이상의 프로세스 중 하나가 메시지를 수신하게 됩니다.
+&lt;ul&gt;
+&lt;li&gt;또한, 시스템은 수신자 선택을 위한 알고리즘(ex. 프로세스가 교대로 메시지를 수신하는 라운드-로빈 방식)을 정의할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;추가로, &lt;code&gt;메일박스&lt;/code&gt;는 프로세스 또는 OS에 의해 소유될 수 있습니다.&lt;br&gt;
+만약 프로세스가 소유하는 경우, 자동적으로 메일박스를 소유한 프로세스가 &lt;code&gt;수신자&lt;/code&gt;, 해당 메일박스에 메시지를 보내는 프로세스들이 송신자가 되며, 메일박스를 소유한 프로세스가 종료될 경우 메일박스 역시 함께 사라지게 됩니다.&lt;br&gt;
+반면에 OS가 메일박스를 소유하는 경우, 이는 어떤 프로세스와도 연결되어 있지 않으며 독립적입니다. 이 경우 OS는 프로세스에게 &lt;code&gt;새 메일박스를 만들고&lt;/code&gt;, &lt;code&gt;메일박스를 통해 메시지를 송-수신하고&lt;/code&gt;, &lt;code&gt;메일박스를 삭제&lt;/code&gt;할 수 있는 메커니즘을 제공해야 합니다.&lt;/p&gt;
+&lt;h4 id=&#34;동기화&#34; &gt;동기화
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8f%99%ea%b8%b0%ed%99%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;프로세스 간 통신에서 &lt;code&gt;send&lt;/code&gt;, &lt;code&gt;receive&lt;/code&gt; 호출의 경우, 여러 설계에 따라 메시지가 동기/비동기적으로 송-수신될 수 있습니다.&lt;br&gt;
+송-수신 방법은 각각 다른 방식으로 조합할 수도 있으며, &lt;strong&gt;송-수신 모두 &lt;code&gt;동기식&lt;/code&gt;&lt;/strong&gt; 일 경우, 송-수신 프로세스간에 &lt;strong&gt;&lt;code&gt;랑데뷰(Rendezvous)&lt;/code&gt;&lt;/strong&gt; 가 발생할 수 있습니다. 다만, &lt;strong&gt;&lt;code&gt;동기식&lt;/code&gt; 송신&lt;/strong&gt;과 &lt;strong&gt;수신&lt;/strong&gt;을 사용하므로써 &lt;code&gt;생산자-소비자 문제&lt;/code&gt;를 약화시킬 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;랑데뷰(Rendezvous)&lt;/code&gt;&lt;/strong&gt; : 특정 소스코드(&lt;code&gt;랑데뷰 포인트&lt;/code&gt;)에 도달한 경우, 다른 모든 프로세스들이 도착할 때 까지 해당 지점에서 중지해 있어야 하고, 모든 프로세스들이 도달하면 진행을 이어가는 동기화 방법을 의미합니다. &lt;a href=&#34;https://en.wikipedia.org/wiki/Barrier_(computer_science)&#34;&gt;&lt;code&gt;배리어(Barrier)&lt;/code&gt;&lt;/a&gt; 라고도 불립니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;송신&#34; &gt;송신
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%86%a1%ec%8b%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;동기적: 송신 프로세스는 메시지가 &lt;code&gt;수신자&lt;/code&gt; 또는 &lt;code&gt;메일박스&lt;/code&gt;에 &lt;strong&gt;도착할 때 까지 block&lt;/strong&gt; 됩니다.&lt;/li&gt;
+&lt;li&gt;비동기적: 송신 프로세스는 메시지를 보낸 뒤 기존의 작업을 계속 진행합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;수신&#34; &gt;수신
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%88%98%ec%8b%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;동기적: 수신 프로세스는 메시지가 &lt;strong&gt;가용할 때 까지 block&lt;/strong&gt; 됩니다.&lt;/li&gt;
+&lt;li&gt;비동기적: 수신 프로세스는 &lt;code&gt;유효한 메시지&lt;/code&gt; 또는 &lt;code&gt;null&lt;/code&gt; 값을 회수합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;버퍼링&#34; &gt;버퍼링
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b2%84%ed%8d%bc%eb%a7%81&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;버퍼링(Buffering)&lt;/code&gt;이란, 직접/간접 통신에서 프로세스간 통신에서 교환된 메시지가 저장되는 임시 큐를 말합니다. 기본적으로, 이러한 큐를 구현하는 방식은 3가지가 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Zero Capacity&lt;/code&gt;: &lt;code&gt;큐의 길이&lt;/code&gt;가 &lt;code&gt;0&lt;/code&gt;, 즉 어떠한 메시지도 대기하고 있을 수 없으며 송신 프로세스는 &lt;strong&gt;&lt;code&gt;수신자가 메시지를 수신할 때 까지 block&lt;/code&gt;&lt;/strong&gt; 됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Bounded Capacity&lt;/code&gt;: &lt;code&gt;큐의 길이&lt;/code&gt;는 &lt;code&gt;유한(n)&lt;/code&gt;해 최대 n개의 메시지가 큐에 상주할 수 있습니다.
+&lt;ul&gt;
+&lt;li&gt;새 메시지가 전송될 때 큐가 꽉 차있지 않다면 메시지는 큐에 배치되고, 송신 프로세스는 기다리지 않고 작업을 이어나갈 수 있습니다.&lt;/li&gt;
+&lt;li&gt;만약 큐가 꽉 차있다면, 송신 프로세스는 &lt;strong&gt;&lt;code&gt;큐에 공간이 생길때 까지 block&lt;/code&gt;&lt;/strong&gt; 됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Unbounded Capacity&lt;/code&gt;: &lt;code&gt;큐의 길이&lt;/code&gt;는 &lt;code&gt;무한&lt;/code&gt;하며, 따라서 몇 개의 메시지든 대기할 수 있습니다. 또한, 송신 프로세스는 &lt;strong&gt;&lt;code&gt;절대 block되지 않습니다&lt;/code&gt;&lt;/strong&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;소켓socket&#34; &gt;&lt;code&gt;소켓(Socket)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%86%8c%ec%bc%93socket&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img src=&#34;socket.png&#34; alt=&#34;socket.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;소켓(Socket)&lt;/code&gt;은 통신 종단점을 의미합니다.&lt;br&gt;
+네트워크 상에서 통신하는 한 쌍의 프로세스는 각 프로세스마다 하나씩 한 쌍의 &lt;code&gt;소켓&lt;/code&gt;을 사용해 통신 링크를 형성합니다. 이때 소켓은 &lt;code&gt;포트 번호&lt;/code&gt;와 &lt;code&gt;연결된 IP 주소&lt;/code&gt;로 &lt;strong&gt;식별&lt;/strong&gt;됩니다.&lt;br&gt;
+&lt;code&gt;포트&lt;/code&gt;는 특정 프로세스 또는 네트워크 서비스 타입을 식별하는 &lt;strong&gt;논리적 장치&lt;/strong&gt;로, 특정 서비스별로 잘 알려진 포트들이 사용됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;예시로, &lt;code&gt;telnet&lt;/code&gt;은 23번 포트, &lt;code&gt;FTP&lt;/code&gt;는 21번 포트, &lt;code&gt;http&lt;/code&gt;는 80번 포트를 사용합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;서버는 특정 포트를 listen하며 클라이언트의 요청이 들어오기를 기다립니다. 요청이 수신된 경우, 서버는 클라이언트 소켓과의 연결을 수락하여 연결을 완료합니다.&lt;br&gt;
+소켓 통신은 C, C++, 특히 Java와 같이 네트워크 관련 라이브러리가 많은 언어에서 구현 가능합니다.&lt;br&gt;
+&lt;code&gt;Java&lt;/code&gt;에서는 3가지 타입의 &lt;code&gt;socket 구현체&lt;/code&gt;를 제공하는데, TCP 소켓 통신에 사용되는 &lt;code&gt;Socket&lt;/code&gt; 클래스, UDP 소켓 통신에 사용되는 &lt;code&gt;DatagramSocket&lt;/code&gt;, 여러 명의 수신자와 통신할 수 있는 &lt;code&gt;MulticastSocket&lt;/code&gt;으로 나눠집니다.&lt;br&gt;
+소켓 통신은 흔하고 효율적이긴 하지만, 통신하는 스레드간에 구조화 되지 않은 바이트 스트림만 교환할 수 있기 때문에, 로우-레벨 형태의 분산 프로세스 통신 방법으로 여겨집니다. 따라서, 데이터를 구조화 하는것은 온전히 클라이언트 또는 서버 애플리케이션의 몫입니다.&lt;/p&gt;
+&lt;h3 id=&#34;원격-프로시저-호출rpc-remote-procedure-call&#34; &gt;&lt;code&gt;원격 프로시저 호출(RPC, Remote Procedure Call)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9b%90%ea%b2%a9-%ed%94%84%eb%a1%9c%ec%8b%9c%ec%a0%80-%ed%98%b8%ec%b6%9crpc-remote-procedure-call&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;원격 프로시저 호출&lt;/code&gt;, 줄여서 &lt;code&gt;RPC&lt;/code&gt;는 &lt;strong&gt;네트워크로 연결된 시스템 상&lt;/strong&gt;의 프로세스 간에 &lt;code&gt;추상 프로시저&lt;/code&gt;를 호출해 통신하는 방식을 말합니다. 별도의 시스템에 존재하는 프로세스와 통신해야 하기 때문에, &lt;code&gt;메시지 기반 통신 방식&lt;/code&gt;을 사용합니다.&lt;br&gt;
+RPC 통신상에서 교환되는 메시지는 구조화되어 있으며, 각 메세지들은 원격 시스템의 포트를 listen하고 있는 RPC 데몬에게 전달됩니다. 이때 각각의 메시지는 &lt;code&gt;실행할 함수의 식별자&lt;/code&gt;, &lt;code&gt;함수에 전달할 파라미터&lt;/code&gt;를 포함합니다.&lt;/p&gt;
+&lt;h4 id=&#34;구조&#34; &gt;구조
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b5%ac%ec%a1%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;rpc-stub-skeleton.png&#34; alt=&#34;rpc-stub-skeleton.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;RPC&lt;/code&gt; 통신은 클라이언트단의 프록시인 &lt;code&gt;Stub&lt;/code&gt;와 서버 단의 프록시인 &lt;code&gt;Skeleton&lt;/code&gt;이 통신하는 형태로 이뤄지게 됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;진행-순서&#34; &gt;진행 순서
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a7%84%ed%96%89-%ec%88%9c%ec%84%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ol&gt;
+&lt;li&gt;클라이언트가 원격 프로시저를 호출한다. &lt;code&gt;RPC 시스템&lt;/code&gt;은 적절한 스터브를 호출해, 원격 프로시저에 제공된 매개변수들을 전달한다.
+&lt;ul&gt;
+&lt;li&gt;일반적으로 각각의 원격 프로시저 별로 별개의 스터브가 존재한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;스터브는 서버의 포트를 위치시키고(locate), 매개변수들을 &lt;code&gt;마셜&lt;/code&gt;해 &lt;code&gt;네트워크를 통해 전송할 수 있는 형태&lt;/code&gt;로 &lt;strong&gt;패키징&lt;/strong&gt;한다.
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;마셜(마셜링)&lt;/code&gt;: 모으다, 결집시키다라는 뜻을 가지는 단어로, Java에서는 주로 객체를 바이트 스트림나 파일로 변환하는 것을 의미한다. 반대로 바이트 스트림을 객체로 복원하는 &lt;code&gt;언마셜링&lt;/code&gt; 이라는 개념도 존재한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;스터브는 &lt;code&gt;메시지 전송(Message Passing)&lt;/code&gt;을 통해 서버에 메시지를 전송한다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;스켈레톤(서버측의 스터브)&lt;/code&gt;이 이를 수신하고, 매개변수들을 &lt;code&gt;언마셜&lt;/code&gt;한 뒤, 서버의 프로시저를 호출한다.&lt;/li&gt;
+&lt;li&gt;(필요한 경우) 프로시저 결과 값을 &lt;code&gt;마셜&lt;/code&gt;한 뒤, 클라이언트에게 전송한다.&lt;/li&gt;
+&lt;li&gt;(필요한 경우) 스터브는 수신한 값을 &lt;code&gt;언마셜&lt;/code&gt;한 뒤, 클라이언트에게 전달한다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h4 id=&#34;문제점&#34; &gt;문제점
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%ac%b8%ec%a0%9c%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;클라이언트---서버-간-데이터-표현의-차이&#34; &gt;클라이언트 - 서버 간 데이터 표현의 차이
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%81%b4%eb%9d%bc%ec%9d%b4%ec%96%b8%ed%8a%b8---%ec%84%9c%eb%b2%84-%ea%b0%84-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ed%91%9c%ed%98%84%ec%9d%98-%ec%b0%a8%ec%9d%b4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;시스템 별로 값을 저장할 때 어떤 바이트를 우선하느냐 등의 차이가 존재할 수 있어 아키텍처 별로 데이터를 다른 형태로 저장할 수 있습니다.&lt;br&gt;
+이러한 문제를 해결하고자 RPC 시스템들은 데이터의 기계-독립적인 표현을 정의해 사용합니다.&lt;br&gt;
+이러한 표현을 &lt;code&gt;외부 데이터 표현(XDR, External Data Representation)&lt;/code&gt;이라고 하며, 클라이언트와 서버는 기계-의존적인 표현들을 XDR로 변환하는 &lt;code&gt;마셜링/언마셜링&lt;/code&gt; 과정을 거칩니다.&lt;/p&gt;
+&lt;h5 id=&#34;호출의-의미론sementic-of-call&#34; &gt;호출의 의미론(Sementic of call)
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%98%b8%ec%b6%9c%ec%9d%98-%ec%9d%98%eb%af%b8%eb%a1%a0sementic-of-call&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;로컬 프로시저 호출, 즉 시스템 내부에서의 프로시저 호출은 극단적인 상황에서만 발생하는 반면 RPC의 경우 일반적인 네트워크 에러로 인해 프로시처 호출이 실패하거나 중복되어 두 번 이상 실행될 수 있습니다.&lt;br&gt;
+이를 해결하기 위해서는 OS가 메시지가 정확히 한 번 동작하도록 보장해야 하는데, 이러한 구현은 난이도가 높습니다.&lt;br&gt;
+따라서 RPC에는 오류 조건 처리를 위해  &lt;code&gt;최대 한 번(at-most once)&lt;/code&gt;, &lt;code&gt;최소 한 번(at-least once)&lt;/code&gt;, &lt;code&gt;정확히 한 번(exactly once)&lt;/code&gt; 세 가지의 시멘틱이 사용됩니다.
+&lt;img src=&#34;semantic-of-call.png&#34; alt=&#34;semantic-of-call.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;이미지 출처: &lt;a href=&#34;https://blog.bytebytego.com/p/at-most-once-at-least-once-exactly&#34;&gt;At most once, at least once, exactly once - by Alex Xu (bytebytego.com)&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt;최대 한 번(at-most once)&lt;/code&gt;의 경우, 메시지가 한 번만 전달되는 방식으로, 메시지가 손실될 수 있지만 재전송되진 않습니다.&lt;br&gt;
+이는 각 메시지에 타임스탬프를 붙여 구현할 수 있습니다. 서버는 히스토리를 두고, 이미 히스토리에 존재하는 타임스탬프를 갖는 메시지를 수신할 경우 이를 무시하도록 합니다. 이러한 방식으로 클라이언트는 한 번 이상 메시지를 전송할 수 있고 한 번만 실행됨을 보장받을 수 있습니다.&lt;br&gt;
+&lt;code&gt;최소 한 번(at-least once)&lt;/code&gt;의 경우, 메시지가 두 번 이상 전달될 수 있는 방식으로, 메시지가 손실되어서는 안됩니다.&lt;br&gt;
+&lt;code&gt;정확히 한 번(exactly once)&lt;/code&gt;의 경우, 가장 구현하기 힘든 방식으로 메시지가 한 번만, 그것도 손실 없이 전달되어야 하는 방식입니다.&lt;br&gt;
+이를 달성하기 위해서는 서버가 요청을 수신할 수 없는 위험을 제거해야 합니다. 따라서 클라이언트에게 RPC 호출이 수신되었고 실행되었음을 알려줄 수 있어야 합니다. 이는 ACK 메시지를 통해 실현될 수 있으며 클라이언트는 RPC 호출에 대한 ACK를 수신할 때 까지 주기적으로 RPC 호출을 재전송해야 합니다.&lt;/p&gt;
+&lt;h3 id=&#34;파이프pipe&#34; &gt;파이프(Pipe)
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%8c%8c%ec%9d%b4%ed%94%84pipe&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;파이프(Pipe)&lt;/code&gt;란 한 프로세스가 다른 프로세스로 데이터를 전달하는 통신 기법을 말합니다.&lt;br&gt;
+설계에 따라 다양한 형태로 구현할 수 있는데, 고려할 점은 다음과 같습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;통신 방식
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;단방향(unidirectional)&lt;/code&gt;: &lt;code&gt;생산자-소비자&lt;/code&gt; 형태로 통신하며, 생산자는 pipe의 &lt;code&gt;write-end에서 쓰기&lt;/code&gt;만, 소비자는 pipe의 &lt;code&gt;read-end에서 읽기&lt;/code&gt;만 가능합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;양방향(bidirectional)&lt;/code&gt;: 서로 송-수신이 가능하며, &lt;code&gt;반이중(half duplex)&lt;/code&gt; 형태의 경우 동시 송-수신이 불가능, 즉 데이터가 한쪽 방향으로만 이동하며 &lt;code&gt;전이중(full duplex)&lt;/code&gt; 형태의 경우 동시 송-수신이 가능합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;프로세스 관계
+&lt;ul&gt;
+&lt;li&gt;부모-자식 간 통신&lt;/li&gt;
+&lt;li&gt;임의의 프로세스 간 통신&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;네트워크
+&lt;ul&gt;
+&lt;li&gt;로컬에 존재하는 프로세스 간 통신&lt;/li&gt;
+&lt;li&gt;원격 통신 가능&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;또한, 파이프는 &lt;code&gt;Ordinary Pipe&lt;/code&gt;와 &lt;code&gt;Named Pipe&lt;/code&gt; 두 종류로 나뉩니다.&lt;/p&gt;
+&lt;h4 id=&#34;일반-파이프ordinary-pipe&#34; &gt;&lt;code&gt;일반 파이프(Ordinary Pipe)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%bc%eb%b0%98-%ed%8c%8c%ec%9d%b4%ed%94%84ordinary-pipe&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;오직 단방향이며, 부모-자식간의 통신만 가능한 파이프를 말합니다.&lt;br&gt;
+부모가 생성하고 자식이 상속하는 형태로 연결되며, 파일처럼 취급(Unix의 경우 file read/write 시스템호출을 사용해 통신)합니다.&lt;/p&gt;
+&lt;h4 id=&#34;명명된-파이프named-pipe&#34; &gt;&lt;code&gt;명명된 파이프(Named Pipe)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%aa%85%eb%aa%85%eb%90%9c-%ed%8c%8c%ec%9d%b4%ed%94%84named-pipe&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;양방향 통신이 가능하며, 임의의 프로세스들 간 통신을 지원하는 파이프를 말합니다.&lt;br&gt;
+시스템이 가동되는 동안 지속될 수 있으며, 일반 파이프와 마찬가지로 파일처럼 취급됩니다.&lt;br&gt;
+운영체제 종류(Unix 또는 Windows)에 따라 동작 방식이 다릅니다.&lt;/p&gt;
+&lt;h5 id=&#34;unix의-경우&#34; &gt;Unix의 경우
+&lt;span&gt;
+    &lt;a href=&#34;#unix%ec%9d%98-%ea%b2%bd%ec%9a%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;Byte 단위로 데이터를 전송하며, &lt;code&gt;반이중 통신&lt;/code&gt; 형태로만 통신할 수 있고, 로컬 내 프로세스 간에서의 통신만 가능합니다.&lt;/p&gt;
+&lt;h5 id=&#34;windws의-경우&#34; &gt;Windws의 경우
+&lt;span&gt;
+    &lt;a href=&#34;#windws%ec%9d%98-%ea%b2%bd%ec%9a%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;Byte 및 메시지 단위로 데이터를 전송하며, &lt;code&gt;전이중 통신&lt;/code&gt; 형태로 통신할 수 있으며, 원격 간 통신도 가능합니다.&lt;/p&gt;
+&lt;h1 id=&#34;참조&#34; &gt;참조
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ec%a1%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;Operating System Concepts - 9th Edition&lt;/li&gt;
+&lt;li&gt;전공과목(운영체제) 강의 자료&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cs.lmu.edu/~ray/notes/messagepassing/&#34;&gt;Message Passing (lmu.edu)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://os.korea.ac.kr/wp-content/uploads/2021/04/2021-OS_06-IPC.pdf&#34;&gt;2021-OS_06-IPC.pdf (korea.ac.kr)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.bytebytego.com/p/at-most-once-at-least-once-exactly&#34;&gt;At most once, at least once, exactly once - by Alex Xu (bytebytego.com)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>[Javascript] Map과 Object, 뭘 써야 할까?</title>
