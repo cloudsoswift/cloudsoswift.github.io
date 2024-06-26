@@ -223,6 +223,138 @@
         <article class="post-list h-feed">
     <div class="post-header">
         <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/java/builder-pattern/">빌더 패턴</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            디자인 패턴에서의 빌더 패턴과, Java에서의 빌더 패턴에 대해 알아보고자 한다.
+디자인 패턴에서의 빌더 패턴빌더 패턴은 복잡한 객체의 &lsquo;구성&rsquo;과 &lsquo;표현&rsquo;을 분리하여, 동일한 생성 절차가 다른 표현을 생성할 수 있도록 하는 패턴이다.
+한 마디로, 복잡한 객체의 생성을 단계적이고, 관리 가능하며, 상호 교환 가능한 작업들로 분해하는 것이다.
+구성 요소디렉터(Director)빌더 인터페이스를 사용해 객체의 생성을 조절하는 요소. 객체 생성의 순서를 명시함.
+빌더 인터페이스(Builder Interface)생성 단계에 대해 개략적으로 설명하는 요소.
+콘크리트 빌더(Concrete Builder)빌더 인터페이스를 구현하여, 각 생성 단계별 세부 사항을 제공하며 조합을 관리함.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/builder-pattern/"><time datetime="2023-10-26">2023-10-26 02:22 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/builder-pattern/">https://cloudsoswift.github.io/post/develop/java/builder-pattern/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/effective-java/">#Effective Java</a></li>
+                
+                    
+                    <li><a href="">#빌더</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+    
+        <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/java/static-factory-method/">정적 팩토리 메서드(Static Factory Method)</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            정적 팩토리 메서드란 무엇인지, 그리고 어떤 장점과 단점이 있는지를 정리해보고자 한다.
+정적 팩토리 메서드(Static Factory Method)클래스 인스턴스를 반환하는 단순한 정적 메서드이다.
+public 생성자를 사용하는 방법과 함께 클래스의 인스턴스를 생성하는 대표적인 방법 중 하나이다.
+예시 - Boolean클래스의 valueOfpublic static Boolean valueOf(boolean b) { // 인자로 받은 boolean 값에 따라 Boolean 클래스 인스턴스를 반환한다. return b ? Boolean.True : Boolean.FALSE; } Effective Java의 Item.2.에 따르면 생성자 대신 정적 팩터리 메서드를 고려하라 라는데, 이를 통해 얻는 이점과 실은 무엇일까?
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/static-factory-method/"><time datetime="2023-10-25">2023-10-25 00:55 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/static-factory-method/">https://cloudsoswift.github.io/post/develop/java/static-factory-method/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/effective-java/">#Effective Java</a></li>
+                
+                    
+                    <li><a href="">#생성자</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+    
+        <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
             <h1 class="p-name post-title"><a class="u-url" href="/post/develop/nodejs/about-thread-of-node-js/">Node.js 스터디 1주차 - Node.js의 Thread에 대하여</a></h1>
         </header>
         
@@ -282,66 +414,6 @@
 
 </article>
     
-        <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/230219/circular_import/">[Javascript] 순환 참조 (Circular Import)</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            오늘은 Javascript, Python같은 언어에서 import시 발생할 수 있는 순환 참조 에러에 대한 포스트를 작성하고자 한다.
-순환 참조메모리 관점에서의 순환 참조 ( In Javascript )간단히 요약하자면, 서로 다른 두 객체가 서로를 참조하여, 가비지 컬렉션 알고리즘의 대상에 포함되지 않아 해당 객체들이 불필요해져도 메모리 회수되지 않고 존속하게되는 문제이다. Mozilla Developer Network의 문서의 예시를 드는게 이해하기 쉽다. import b from &#34;b&#34;; function f() { var x = {}; var y = {}; x.
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/230219/circular_import/"><time datetime="2023-02-19">2023-02-19 11:22 KST</time></a>
-            [Last modified: <time datetime="2023-02-21">2023-02-21 22:28 KST</time>]
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/230219/circular_import/">https://cloudsoswift.github.io/post/develop/230219/circular_import/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
-                
-            </ul>
-        
-        
-            <ul class="post-tags">
-                
-                    
-                    <li><a href="">#개발</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
-                
-            </ul>
-        
-        
-    </div>
-</div>
-
-</article>
-    
     
     
     
@@ -351,7 +423,9 @@
                 <a href="/categories/develop/page/4/">to new posts</a>
             
         </div>
-        <div class="right pagination-item disabled">
+        <div class="right pagination-item ">
+            
+                <a href="/categories/develop/page/6/">to old posts</a>
             
         </div>
     </div>

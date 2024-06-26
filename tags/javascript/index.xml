@@ -6,10 +6,198 @@
     <description>오늘도 개발을 한다. (Javascript)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Sun, 21 Apr 2024 06:13:01 +0900</lastBuildDate>
+    <lastBuildDate>Wed, 26 Jun 2024 17:00:00 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/tags/javascript/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[Javascript] 이벤트 전파 단계(버블링과 캡처링) 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/javascript/javascript/event-bubbling-capturing/</link>
+      <pubDate>Wed, 26 Jun 2024 17:00:00 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/javascript/javascript/event-bubbling-capturing/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 6월 25일 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/3_Event-Bubbling-Capturing/Readme.md&#34;&gt;&lt;strong&gt;이벤트 캡처링과 버블링&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;이벤트-버블링과-캡처링&#34; &gt;이벤트 버블링과 캡처링
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b4%eb%b2%a4%ed%8a%b8-%eb%b2%84%eb%b8%94%eb%a7%81%ea%b3%bc-%ec%ba%a1%ec%b2%98%eb%a7%81&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;HTML 태그에서 발생할 수 있는 이벤트는 &lt;a href=&#34;https://www.w3.org/TR/uievents/&#34;&gt;표준&lt;/a&gt;에 따르면 다음과 같은 순서로 전파됩니다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;캡처링 단계(&lt;a href=&#34;https://dom.spec.whatwg.org/#dom-event-capturing_phase&#34;&gt;&lt;code&gt;CAPTURING_PHASE&lt;/code&gt;&lt;/a&gt;) : 이벤트가 DOM 트리 상의 하위 요소로 전파되는 단계&lt;/li&gt;
+&lt;li&gt;타깃 단계(&lt;a href=&#34;https://dom.spec.whatwg.org/#dom-event-at_target&#34;&gt;&lt;code&gt;AT_TARGET&lt;/code&gt;&lt;/a&gt;) : 이벤트가 실제 대상 요소에 전달되는 단계&lt;/li&gt;
+&lt;li&gt;버블링 단계(&lt;a href=&#34;https://dom.spec.whatwg.org/#dom-event-bubbling_phase&#34;&gt;&lt;code&gt;BUBBLING_PHASE&lt;/code&gt;&lt;/a&gt;) : 이벤트가 DOM 트리 상의 상위 요소로 전파되는 단계&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;event-flow-dom-tree.png&#34; alt=&#34;event-flow-dom-tree.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;즉, 위와 같은 형태로 DOM 트리가 구성되어 있다면, &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;을 클릭하면 이벤트가 최상위 조상부터 시작해 아래로 전파되고, 타겟 요소에 도착해 이벤트가 실행된 후, 다시 위로 전파됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;참고로 이벤트 흐름 순서는 &lt;a href=&#34;https://developer.mozilla.org/ko/docs/Web/API/Event/eventPhase&#34;&gt;&lt;code&gt;Event.eventPhase&lt;/code&gt;&lt;/a&gt; 프로퍼티를 통해 알 수 있습니다.
+&lt;ul&gt;
+&lt;li&gt;이 값이 &lt;code&gt;1&lt;/code&gt;일 경우 &lt;code&gt;캡처링 단계&lt;/code&gt;, &lt;code&gt;2&lt;/code&gt;일 경우 &lt;code&gt;타깃 단계&lt;/code&gt;, &lt;code&gt;3&lt;/code&gt;일 경우 &lt;code&gt;버블링 단계&lt;/code&gt;, &lt;code&gt;0&lt;/code&gt;일 경우 현재 이 이벤트가 처리중이지 않음을 의미합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;또한, 이벤트 캡처링 방식과 버블링 방식 모두 존재하는 이유는, 기존에 분리되어 있던 이벤트 전파 방식들을 W3C에서 표준화 하며 둘을 모두 포함하는 시스템을 만들었기 때문입니다.
+&lt;ul&gt;
+&lt;li&gt;정확히는 &lt;code&gt;Netscape&lt;/code&gt;에서는 이벤트 캡처링만, &lt;code&gt;IE&lt;/code&gt;에서는 이벤트 버블링만 사용했기 때문에 상호 호환성을 위해 이들을 모두 포함하는 시스템이 표준으로 자리잡게 된 것입니다.
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.quirksmode.org/js/events_order.html&#34;&gt;Javascript - Event order (quirksmode.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.quirksmode.org/js/events_access.html&#34;&gt;Javascript - Event accessing (quirksmode.org)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;이벤트&#34; &gt;이벤트?
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b4%eb%b2%a4%ed%8a%b8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;Web API에서의 &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/Events&#34;&gt;&lt;code&gt;이벤트&lt;/code&gt;&lt;/a&gt;란, 마우스 클릭, 키보드 입력 등 DOM 상의 요소에서 발생할 수 있는 이벤트를 말합니다.&lt;br&gt;
+&lt;code&gt;이벤트&lt;/code&gt;는 &lt;em&gt;사용자의 행동 뿐만 아니라&lt;/em&gt;, &lt;code&gt;HTMLElement.click()&lt;/code&gt;과 같은 메서드를 직접 호출하거나, &lt;code&gt;EventTarget.dispatchEvent()&lt;/code&gt;와 같은 메서드를 통해 타겟 객체로 이벤트를 보내는 등 프로그래밍적으로도 발생시킬 수 있습니다.&lt;br&gt;
+이렇게 발생한 이벤트에 대응하고 싶다면, &lt;code&gt;&amp;lt;button&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;div&amp;gt;&lt;/code&gt;와 같은 DOM 요소에 &lt;a href=&#34;https://developer.mozilla.org/ko/docs/Web/API/EventTarget/addEventListener&#34;&gt;&lt;code&gt;EventTarget.addEventListener()&lt;/code&gt;&lt;/a&gt;를 통해 이벤트 처리기를 연결할 수 있습니다.&lt;br&gt;
+하나의 &lt;code&gt;요소(Element)&lt;/code&gt;는 하나 이상의 이벤트 처리기를 가질 수 있으며, 동일한 이벤트에 대해 여러 이벤트 처리기를 연결할 수도 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;같은 요소 / 같은 이벤트 / 같은 단계로 설정한 이벤트 처리기들은 설정한 순서대로 동작합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;element&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;click&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt; =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)); &lt;span style=&#34;color:#75715e&#34;&gt;// 먼저 트리거
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;element&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;click&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt; =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;));
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;발생한 이벤트는 상기한대로 캡처링 -&amp;gt; 타깃 -&amp;gt; 버블링의 흐름을 순서대로 거치게 됩니다.&lt;/p&gt;
+&lt;h3 id=&#34;캡처링-단계&#34; &gt;캡처링 단계
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%ba%a1%ec%b2%98%eb%a7%81-%eb%8b%a8%ea%b3%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;캡처링 단계&lt;/code&gt;란, 이벤트가 하위 요소로 전파되는 이벤트 전파 단계를 말합니다.&lt;br&gt;
+&lt;code&gt;on&amp;lt;event&amp;gt;&lt;/code&gt; 프로퍼티, HTML 속성, &lt;code&gt;addEventListener(event, handler)&lt;/code&gt;를 이용해 이벤트 처리기를 연결한 경우, 이들은 캡처링에 대해 알 수 없습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;즉, &lt;code&gt;타깃&lt;/code&gt;, &lt;code&gt;버블링&lt;/code&gt; 단계에서만 동작합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;따라서 이들을 &lt;code&gt;캡처링 단계&lt;/code&gt;에서 &lt;strong&gt;이벤트를 인식&lt;/strong&gt;하게 하려면, &lt;code&gt;addEventListener()&lt;/code&gt;의 &lt;code&gt;capture&lt;/code&gt; 옵션을 &lt;code&gt;true&lt;/code&gt;로 설정해주어야 합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;element&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(..., { &lt;span style=&#34;color:#a6e22e&#34;&gt;capture&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt; });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 또는
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;element&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(..., &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이렇게 &lt;code&gt;capture&lt;/code&gt; 옵션을 &lt;code&gt;true&lt;/code&gt;로 할당해주면 특정 요소에서 이벤트가 발생했을 때, 최상위 조상부터 차례대로 이벤트가 전파될 것입니다.&lt;br&gt;
+&lt;code&gt;이벤트&lt;/code&gt;는 &lt;code&gt;document&lt;/code&gt;부터 DOM 트리를 따라 타깃(&lt;code&gt;event.target&lt;/code&gt;)까지 전파되며, &lt;em&gt;해당 이벤트 유형을 처리하는&lt;/em&gt; &lt;code&gt;addEventListener(... , { capture: true })&lt;/code&gt;로 할당된 핸들러들을 동작시킵니다.&lt;/p&gt;
+&lt;p&gt;이어서 나올 버블링과 달리 캡처링은 실제 코드에서 사용될 일이 흔치 않습니다.&lt;br&gt;
+논리적으로 생각해보면, &lt;em&gt;더 세부적이고 특정적인 요소에 핸들러가 할당될수록&lt;/em&gt; 그 요소에 대한 &lt;strong&gt;세부 사항과 어떤 동작을 요하는지 더 잘 알 것&lt;/strong&gt;입니다.&lt;br&gt;
+따라서 &lt;em&gt;이벤트가 발생한 타깃 위치부터 전파되는&lt;/em&gt; &lt;code&gt;버블링 단계&lt;/code&gt;에서 &lt;strong&gt;이벤트를 처리하는 것이 더 적합&lt;/strong&gt;할 것입니다.&lt;/p&gt;
+&lt;h3 id=&#34;타깃-단계&#34; &gt;타깃 단계
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%83%80%ea%b9%83-%eb%8b%a8%ea%b3%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;타깃 단계&lt;/code&gt;란, 이벤트가 실제 타깃 요소에 전달되는 이벤트 전파 단계를 말합니다.&lt;br&gt;
+엄밀히 말하면, &lt;em&gt;&lt;strong&gt;타깃 단계는 별도로 처리되지 않으며&lt;/strong&gt;&lt;/em&gt; (즉, 이벤트를 더 전파시키지 않음) 캡처링 및 버블링 단계의 &lt;strong&gt;핸들러&lt;/strong&gt;가 &lt;code&gt;타깃 단계에 트리거&lt;/code&gt; 됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;eventtarget&#34; &gt;&lt;code&gt;Event.target&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#eventtarget&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;이벤트가 발생한 요소는 이벤트 핸들러 내부에서 &lt;code&gt;Event.target&lt;/code&gt;을 통해 접근할 수 있습니다.
+이와 관련해 주의해야 할 사항으로, &lt;code&gt;Event.target&lt;/code&gt;를 &lt;code&gt;Event.currentTarget&lt;/code&gt;과 헷갈리지 않아야 한다는 것입니다.&lt;br&gt;
+&lt;code&gt;Event.target&lt;/code&gt;은 실제로 이벤트가 시작된, 타깃 요소를 의미하며, 이는 이벤트가 버블링되어 전파되어도 변하지 않습니다.&lt;br&gt;
+반면, &lt;code&gt;Event.currentTarget&lt;/code&gt;(또는 핸들러 내부에서 호출한 &lt;code&gt;this&lt;/code&gt;)은 현재 실행중인 이벤트 핸들러가 &lt;strong&gt;할당된 요소&lt;/strong&gt;를 의미합니다.&lt;br&gt;
+예를 들어, &lt;code&gt;div &amp;gt; p&lt;/code&gt; 형태로 DOM 트리가 구성되었고 &lt;code&gt;p&lt;/code&gt;에서 발생한 이벤트를 &lt;code&gt;div&lt;/code&gt;의 이벤트 핸들러가 처리하는 상황이라 가정합시다.&lt;br&gt;
+이때, &lt;code&gt;div&lt;/code&gt;의 이벤트 핸들러에서 &lt;code&gt;event.target&lt;/code&gt;을 호출한다면 이는 &lt;code&gt;p&lt;/code&gt;를 가리키고, &lt;code&gt;event.currentTarget&lt;/code&gt;을 호출한다면 이는 &lt;code&gt;div&lt;/code&gt;를 가리킨다는 것입니다.&lt;/p&gt;
+&lt;h3 id=&#34;버블링-단계&#34; &gt;버블링 단계
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b2%84%eb%b8%94%eb%a7%81-%eb%8b%a8%ea%b3%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;버블링 단계&lt;/code&gt;란, 이벤트가 타깃 요소부터 최상위 요소까지 전파되는 이벤트 전파 단계를 말합니다.&lt;br&gt;
+이벤트는 상위 요소로 계속해서 전파되며, 해당 이벤트를 처리하는 핸들러를 동작시킵니다.&lt;br&gt;
+다만 &lt;code&gt;focus&lt;/code&gt;, &lt;code&gt;blur&lt;/code&gt;, &lt;code&gt;load&lt;/code&gt;/&lt;code&gt;unload&lt;/code&gt; 등과 같이 버블링되지 않는 몇몇 이벤트들도 존재합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;이벤트가 버블링 되는지 여부는 &lt;code&gt;Event&lt;/code&gt;의 &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/API/Event/bubbles&#34;&gt;&lt;code&gt;bubbles&lt;/code&gt;&lt;/a&gt;프로퍼티를 통해 알 수 있습니다. 이 값이 &lt;code&gt;true&lt;/code&gt;라면 해당 이벤트는 버블링되어 위로 전파됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;버블링-중단stoppropagation&#34; &gt;버블링 중단(&lt;code&gt;stopPropagation&lt;/code&gt;)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b2%84%eb%b8%94%eb%a7%81-%ec%a4%91%eb%8b%a8stoppropagation&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;버블링을 통해 이벤트가 전파되는 것이 유용할 수 있지만, 그렇지 않은 경우도 있을 수 있습니다.&lt;br&gt;
+예를 들어, 이벤트가 계속 전파되어 원하지 않았던 &lt;strong&gt;상위 요소의 이벤트 핸들러까지 동작&lt;/strong&gt;시켜 오동작을 일으킬 수도 있습니다.&lt;br&gt;
+이럴 때, 이벤트 핸들러 내부에서 &lt;strong&gt;&lt;code&gt;Event.stopPropagation()&lt;/code&gt;&lt;/strong&gt; 메서드를 호출해 이벤트가 더 버블링 되는 것을 막을 수 있습니다.&lt;br&gt;
+다만, &lt;strong&gt;한 요소&lt;/strong&gt;에 특정 이벤트를 처리하는 &lt;em&gt;&lt;strong&gt;핸들러가 여러 개일 경우&lt;/strong&gt;&lt;/em&gt;, 위로 이벤트가 버블링 되는 것은 막을 수 있지만 &lt;strong&gt;다른 핸들러가 동작 하는 것은 막을 수 없습니다&lt;/strong&gt;.&lt;br&gt;
+따라서 &lt;em&gt;버블링을 막고&lt;/em&gt; &lt;strong&gt;다른 핸들러의 동작까지 막으려면&lt;/strong&gt; &lt;strong&gt;&lt;code&gt;Event.stopImmediatePropagation()&lt;/code&gt;&lt;/strong&gt; 을 사용해야 합니다.&lt;br&gt;
+이렇게 버블링을 막을 수 있긴 하지만, &lt;strong&gt;대부분의 경우(특히 분석, 로깅등을 수행할 때) 버블링이 유용&lt;/strong&gt;하기 때문에 꼭 멈춰야 하는 상황이 아니라면 &lt;strong&gt;막지 않는 것이 좋습니다&lt;/strong&gt;.&lt;/p&gt;
+&lt;h3 id=&#34;이벤트-위임event-delegation&#34; &gt;이벤트 위임(Event Delegation)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b4%eb%b2%a4%ed%8a%b8-%ec%9c%84%ec%9e%84event-delegation&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;버블링을 통해 이벤트가 위로 전파된다는 점을 활용해서, 모든 하위 요소에 이벤트 핸들러를 설정하는 대신 상위 요소에서 하위 요소에서 발생하는 이벤트들을 처리하는 핸들러를 설정하는 형태로 구현할 수도 있습니다.&lt;br&gt;
+만약 하위 요소에서 이벤트가 발생할 때 비슷한 또는 똑같은 작업을 수행하는 경우, 번거롭게 이들에 모두 이벤트 핸들러를 설정하는 것 보다 위임하는 형태로 작성하면 &lt;strong&gt;코드가 더욱 간결&lt;/strong&gt;해질 수 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;예시---16개의-타일-색-바꾸기&#34; &gt;예시 - 16개의 타일 색 바꾸기
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c---16%ea%b0%9c%ec%9d%98-%ed%83%80%ec%9d%bc-%ec%83%89-%eb%b0%94%ea%be%b8%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;예시로 16개의 div 타일이 있고, 각 타일을 클릭하면 랜덤으로 타일의 색깔을 바꾼다고 합시다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;container&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;만약 전자처럼 모든 하위요소(&lt;code&gt;tile&lt;/code&gt;)에 이벤트 핸들러를 단다면 코드는 다음과 같을 것입니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;randomColor&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;   &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;`rgb(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;Math.&lt;span style=&#34;color:#a6e22e&#34;&gt;floor&lt;/span&gt;(Math.&lt;span style=&#34;color:#a6e22e&#34;&gt;random&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;)&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;Math.&lt;span style=&#34;color:#a6e22e&#34;&gt;floor&lt;/span&gt;(Math.&lt;span style=&#34;color:#a6e22e&#34;&gt;random&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;)&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;Math.&lt;span style=&#34;color:#a6e22e&#34;&gt;floor&lt;/span&gt;(Math.&lt;span style=&#34;color:#a6e22e&#34;&gt;random&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;)&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;)`&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;children&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; document.&lt;span style=&#34;color:#a6e22e&#34;&gt;getElementById&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;container&amp;#34;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;children&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;of&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;children&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;click&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt; =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;target&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;style&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;backgroundColor&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;randomColor&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;반면, 이벤트를 상위 요소(&lt;code&gt;container&lt;/code&gt;)로 위임하게 된다면 코드를 다음과 같이 바꿀 수 있습니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;container&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; document.&lt;span style=&#34;color:#a6e22e&#34;&gt;querySelector&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;#container&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;container&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;click&amp;#34;&lt;/span&gt;, (&lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt;) =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;target&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;style&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;backgroundColor&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;randomColor&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events&#34;&gt;Introduction to events - Learn web development | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/Events&#34;&gt;Event reference | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dom.spec.whatwg.org/&#34;&gt;DOM Standard (whatwg.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://ko.javascript.info/bubbling-and-capturing&#34;&gt;버블링과 캡처링 (javascript.info)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://joshua1988.github.io/web-development/javascript/event-propagation-delegation/&#34;&gt;이벤트 버블링, 이벤트 캡처 그리고 이벤트 위임까지 • 캡틴판교 블로그 (joshua1988.github.io)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.quirksmode.org/js/events_order.html&#34;&gt;Javascript - Event order (quirksmode.org)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>[Javascript] Map과 Object, 뭘 써야 할까?</title>

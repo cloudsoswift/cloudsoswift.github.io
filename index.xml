@@ -6,10 +6,663 @@
     <description>오늘도 개발을 한다.</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Tue, 04 Jun 2024 20:38:16 +0900</lastBuildDate>
+    <lastBuildDate>Wed, 26 Jun 2024 17:00:00 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[Javascript] 이벤트 전파 단계(버블링과 캡처링) 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/javascript/javascript/event-bubbling-capturing/</link>
+      <pubDate>Wed, 26 Jun 2024 17:00:00 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/javascript/javascript/event-bubbling-capturing/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 6월 25일 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/3_Event-Bubbling-Capturing/Readme.md&#34;&gt;&lt;strong&gt;이벤트 캡처링과 버블링&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;이벤트-버블링과-캡처링&#34; &gt;이벤트 버블링과 캡처링
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b4%eb%b2%a4%ed%8a%b8-%eb%b2%84%eb%b8%94%eb%a7%81%ea%b3%bc-%ec%ba%a1%ec%b2%98%eb%a7%81&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;HTML 태그에서 발생할 수 있는 이벤트는 &lt;a href=&#34;https://www.w3.org/TR/uievents/&#34;&gt;표준&lt;/a&gt;에 따르면 다음과 같은 순서로 전파됩니다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;캡처링 단계(&lt;a href=&#34;https://dom.spec.whatwg.org/#dom-event-capturing_phase&#34;&gt;&lt;code&gt;CAPTURING_PHASE&lt;/code&gt;&lt;/a&gt;) : 이벤트가 DOM 트리 상의 하위 요소로 전파되는 단계&lt;/li&gt;
+&lt;li&gt;타깃 단계(&lt;a href=&#34;https://dom.spec.whatwg.org/#dom-event-at_target&#34;&gt;&lt;code&gt;AT_TARGET&lt;/code&gt;&lt;/a&gt;) : 이벤트가 실제 대상 요소에 전달되는 단계&lt;/li&gt;
+&lt;li&gt;버블링 단계(&lt;a href=&#34;https://dom.spec.whatwg.org/#dom-event-bubbling_phase&#34;&gt;&lt;code&gt;BUBBLING_PHASE&lt;/code&gt;&lt;/a&gt;) : 이벤트가 DOM 트리 상의 상위 요소로 전파되는 단계&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;img src=&#34;event-flow-dom-tree.png&#34; alt=&#34;event-flow-dom-tree.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;즉, 위와 같은 형태로 DOM 트리가 구성되어 있다면, &lt;code&gt;&amp;lt;span&amp;gt;&lt;/code&gt;을 클릭하면 이벤트가 최상위 조상부터 시작해 아래로 전파되고, 타겟 요소에 도착해 이벤트가 실행된 후, 다시 위로 전파됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;참고로 이벤트 흐름 순서는 &lt;a href=&#34;https://developer.mozilla.org/ko/docs/Web/API/Event/eventPhase&#34;&gt;&lt;code&gt;Event.eventPhase&lt;/code&gt;&lt;/a&gt; 프로퍼티를 통해 알 수 있습니다.
+&lt;ul&gt;
+&lt;li&gt;이 값이 &lt;code&gt;1&lt;/code&gt;일 경우 &lt;code&gt;캡처링 단계&lt;/code&gt;, &lt;code&gt;2&lt;/code&gt;일 경우 &lt;code&gt;타깃 단계&lt;/code&gt;, &lt;code&gt;3&lt;/code&gt;일 경우 &lt;code&gt;버블링 단계&lt;/code&gt;, &lt;code&gt;0&lt;/code&gt;일 경우 현재 이 이벤트가 처리중이지 않음을 의미합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;또한, 이벤트 캡처링 방식과 버블링 방식 모두 존재하는 이유는, 기존에 분리되어 있던 이벤트 전파 방식들을 W3C에서 표준화 하며 둘을 모두 포함하는 시스템을 만들었기 때문입니다.
+&lt;ul&gt;
+&lt;li&gt;정확히는 &lt;code&gt;Netscape&lt;/code&gt;에서는 이벤트 캡처링만, &lt;code&gt;IE&lt;/code&gt;에서는 이벤트 버블링만 사용했기 때문에 상호 호환성을 위해 이들을 모두 포함하는 시스템이 표준으로 자리잡게 된 것입니다.
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.quirksmode.org/js/events_order.html&#34;&gt;Javascript - Event order (quirksmode.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.quirksmode.org/js/events_access.html&#34;&gt;Javascript - Event accessing (quirksmode.org)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;이벤트&#34; &gt;이벤트?
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b4%eb%b2%a4%ed%8a%b8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;Web API에서의 &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/Events&#34;&gt;&lt;code&gt;이벤트&lt;/code&gt;&lt;/a&gt;란, 마우스 클릭, 키보드 입력 등 DOM 상의 요소에서 발생할 수 있는 이벤트를 말합니다.&lt;br&gt;
+&lt;code&gt;이벤트&lt;/code&gt;는 &lt;em&gt;사용자의 행동 뿐만 아니라&lt;/em&gt;, &lt;code&gt;HTMLElement.click()&lt;/code&gt;과 같은 메서드를 직접 호출하거나, &lt;code&gt;EventTarget.dispatchEvent()&lt;/code&gt;와 같은 메서드를 통해 타겟 객체로 이벤트를 보내는 등 프로그래밍적으로도 발생시킬 수 있습니다.&lt;br&gt;
+이렇게 발생한 이벤트에 대응하고 싶다면, &lt;code&gt;&amp;lt;button&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;div&amp;gt;&lt;/code&gt;와 같은 DOM 요소에 &lt;a href=&#34;https://developer.mozilla.org/ko/docs/Web/API/EventTarget/addEventListener&#34;&gt;&lt;code&gt;EventTarget.addEventListener()&lt;/code&gt;&lt;/a&gt;를 통해 이벤트 처리기를 연결할 수 있습니다.&lt;br&gt;
+하나의 &lt;code&gt;요소(Element)&lt;/code&gt;는 하나 이상의 이벤트 처리기를 가질 수 있으며, 동일한 이벤트에 대해 여러 이벤트 처리기를 연결할 수도 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;같은 요소 / 같은 이벤트 / 같은 단계로 설정한 이벤트 처리기들은 설정한 순서대로 동작합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;element&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;click&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt; =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)); &lt;span style=&#34;color:#75715e&#34;&gt;// 먼저 트리거
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;element&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;click&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt; =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;));
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;발생한 이벤트는 상기한대로 캡처링 -&amp;gt; 타깃 -&amp;gt; 버블링의 흐름을 순서대로 거치게 됩니다.&lt;/p&gt;
+&lt;h3 id=&#34;캡처링-단계&#34; &gt;캡처링 단계
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%ba%a1%ec%b2%98%eb%a7%81-%eb%8b%a8%ea%b3%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;캡처링 단계&lt;/code&gt;란, 이벤트가 하위 요소로 전파되는 이벤트 전파 단계를 말합니다.&lt;br&gt;
+&lt;code&gt;on&amp;lt;event&amp;gt;&lt;/code&gt; 프로퍼티, HTML 속성, &lt;code&gt;addEventListener(event, handler)&lt;/code&gt;를 이용해 이벤트 처리기를 연결한 경우, 이들은 캡처링에 대해 알 수 없습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;즉, &lt;code&gt;타깃&lt;/code&gt;, &lt;code&gt;버블링&lt;/code&gt; 단계에서만 동작합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;따라서 이들을 &lt;code&gt;캡처링 단계&lt;/code&gt;에서 &lt;strong&gt;이벤트를 인식&lt;/strong&gt;하게 하려면, &lt;code&gt;addEventListener()&lt;/code&gt;의 &lt;code&gt;capture&lt;/code&gt; 옵션을 &lt;code&gt;true&lt;/code&gt;로 설정해주어야 합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;element&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(..., { &lt;span style=&#34;color:#a6e22e&#34;&gt;capture&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt; });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 또는
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;element&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(..., &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이렇게 &lt;code&gt;capture&lt;/code&gt; 옵션을 &lt;code&gt;true&lt;/code&gt;로 할당해주면 특정 요소에서 이벤트가 발생했을 때, 최상위 조상부터 차례대로 이벤트가 전파될 것입니다.&lt;br&gt;
+&lt;code&gt;이벤트&lt;/code&gt;는 &lt;code&gt;document&lt;/code&gt;부터 DOM 트리를 따라 타깃(&lt;code&gt;event.target&lt;/code&gt;)까지 전파되며, &lt;em&gt;해당 이벤트 유형을 처리하는&lt;/em&gt; &lt;code&gt;addEventListener(... , { capture: true })&lt;/code&gt;로 할당된 핸들러들을 동작시킵니다.&lt;/p&gt;
+&lt;p&gt;이어서 나올 버블링과 달리 캡처링은 실제 코드에서 사용될 일이 흔치 않습니다.&lt;br&gt;
+논리적으로 생각해보면, &lt;em&gt;더 세부적이고 특정적인 요소에 핸들러가 할당될수록&lt;/em&gt; 그 요소에 대한 &lt;strong&gt;세부 사항과 어떤 동작을 요하는지 더 잘 알 것&lt;/strong&gt;입니다.&lt;br&gt;
+따라서 &lt;em&gt;이벤트가 발생한 타깃 위치부터 전파되는&lt;/em&gt; &lt;code&gt;버블링 단계&lt;/code&gt;에서 &lt;strong&gt;이벤트를 처리하는 것이 더 적합&lt;/strong&gt;할 것입니다.&lt;/p&gt;
+&lt;h3 id=&#34;타깃-단계&#34; &gt;타깃 단계
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%83%80%ea%b9%83-%eb%8b%a8%ea%b3%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;타깃 단계&lt;/code&gt;란, 이벤트가 실제 타깃 요소에 전달되는 이벤트 전파 단계를 말합니다.&lt;br&gt;
+엄밀히 말하면, &lt;em&gt;&lt;strong&gt;타깃 단계는 별도로 처리되지 않으며&lt;/strong&gt;&lt;/em&gt; (즉, 이벤트를 더 전파시키지 않음) 캡처링 및 버블링 단계의 &lt;strong&gt;핸들러&lt;/strong&gt;가 &lt;code&gt;타깃 단계에 트리거&lt;/code&gt; 됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;eventtarget&#34; &gt;&lt;code&gt;Event.target&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#eventtarget&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;이벤트가 발생한 요소는 이벤트 핸들러 내부에서 &lt;code&gt;Event.target&lt;/code&gt;을 통해 접근할 수 있습니다.
+이와 관련해 주의해야 할 사항으로, &lt;code&gt;Event.target&lt;/code&gt;를 &lt;code&gt;Event.currentTarget&lt;/code&gt;과 헷갈리지 않아야 한다는 것입니다.&lt;br&gt;
+&lt;code&gt;Event.target&lt;/code&gt;은 실제로 이벤트가 시작된, 타깃 요소를 의미하며, 이는 이벤트가 버블링되어 전파되어도 변하지 않습니다.&lt;br&gt;
+반면, &lt;code&gt;Event.currentTarget&lt;/code&gt;(또는 핸들러 내부에서 호출한 &lt;code&gt;this&lt;/code&gt;)은 현재 실행중인 이벤트 핸들러가 &lt;strong&gt;할당된 요소&lt;/strong&gt;를 의미합니다.&lt;br&gt;
+예를 들어, &lt;code&gt;div &amp;gt; p&lt;/code&gt; 형태로 DOM 트리가 구성되었고 &lt;code&gt;p&lt;/code&gt;에서 발생한 이벤트를 &lt;code&gt;div&lt;/code&gt;의 이벤트 핸들러가 처리하는 상황이라 가정합시다.&lt;br&gt;
+이때, &lt;code&gt;div&lt;/code&gt;의 이벤트 핸들러에서 &lt;code&gt;event.target&lt;/code&gt;을 호출한다면 이는 &lt;code&gt;p&lt;/code&gt;를 가리키고, &lt;code&gt;event.currentTarget&lt;/code&gt;을 호출한다면 이는 &lt;code&gt;div&lt;/code&gt;를 가리킨다는 것입니다.&lt;/p&gt;
+&lt;h3 id=&#34;버블링-단계&#34; &gt;버블링 단계
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b2%84%eb%b8%94%eb%a7%81-%eb%8b%a8%ea%b3%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;버블링 단계&lt;/code&gt;란, 이벤트가 타깃 요소부터 최상위 요소까지 전파되는 이벤트 전파 단계를 말합니다.&lt;br&gt;
+이벤트는 상위 요소로 계속해서 전파되며, 해당 이벤트를 처리하는 핸들러를 동작시킵니다.&lt;br&gt;
+다만 &lt;code&gt;focus&lt;/code&gt;, &lt;code&gt;blur&lt;/code&gt;, &lt;code&gt;load&lt;/code&gt;/&lt;code&gt;unload&lt;/code&gt; 등과 같이 버블링되지 않는 몇몇 이벤트들도 존재합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;이벤트가 버블링 되는지 여부는 &lt;code&gt;Event&lt;/code&gt;의 &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/API/Event/bubbles&#34;&gt;&lt;code&gt;bubbles&lt;/code&gt;&lt;/a&gt;프로퍼티를 통해 알 수 있습니다. 이 값이 &lt;code&gt;true&lt;/code&gt;라면 해당 이벤트는 버블링되어 위로 전파됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;버블링-중단stoppropagation&#34; &gt;버블링 중단(&lt;code&gt;stopPropagation&lt;/code&gt;)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b2%84%eb%b8%94%eb%a7%81-%ec%a4%91%eb%8b%a8stoppropagation&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;버블링을 통해 이벤트가 전파되는 것이 유용할 수 있지만, 그렇지 않은 경우도 있을 수 있습니다.&lt;br&gt;
+예를 들어, 이벤트가 계속 전파되어 원하지 않았던 &lt;strong&gt;상위 요소의 이벤트 핸들러까지 동작&lt;/strong&gt;시켜 오동작을 일으킬 수도 있습니다.&lt;br&gt;
+이럴 때, 이벤트 핸들러 내부에서 &lt;strong&gt;&lt;code&gt;Event.stopPropagation()&lt;/code&gt;&lt;/strong&gt; 메서드를 호출해 이벤트가 더 버블링 되는 것을 막을 수 있습니다.&lt;br&gt;
+다만, &lt;strong&gt;한 요소&lt;/strong&gt;에 특정 이벤트를 처리하는 &lt;em&gt;&lt;strong&gt;핸들러가 여러 개일 경우&lt;/strong&gt;&lt;/em&gt;, 위로 이벤트가 버블링 되는 것은 막을 수 있지만 &lt;strong&gt;다른 핸들러가 동작 하는 것은 막을 수 없습니다&lt;/strong&gt;.&lt;br&gt;
+따라서 &lt;em&gt;버블링을 막고&lt;/em&gt; &lt;strong&gt;다른 핸들러의 동작까지 막으려면&lt;/strong&gt; &lt;strong&gt;&lt;code&gt;Event.stopImmediatePropagation()&lt;/code&gt;&lt;/strong&gt; 을 사용해야 합니다.&lt;br&gt;
+이렇게 버블링을 막을 수 있긴 하지만, &lt;strong&gt;대부분의 경우(특히 분석, 로깅등을 수행할 때) 버블링이 유용&lt;/strong&gt;하기 때문에 꼭 멈춰야 하는 상황이 아니라면 &lt;strong&gt;막지 않는 것이 좋습니다&lt;/strong&gt;.&lt;/p&gt;
+&lt;h3 id=&#34;이벤트-위임event-delegation&#34; &gt;이벤트 위임(Event Delegation)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b4%eb%b2%a4%ed%8a%b8-%ec%9c%84%ec%9e%84event-delegation&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;버블링을 통해 이벤트가 위로 전파된다는 점을 활용해서, 모든 하위 요소에 이벤트 핸들러를 설정하는 대신 상위 요소에서 하위 요소에서 발생하는 이벤트들을 처리하는 핸들러를 설정하는 형태로 구현할 수도 있습니다.&lt;br&gt;
+만약 하위 요소에서 이벤트가 발생할 때 비슷한 또는 똑같은 작업을 수행하는 경우, 번거롭게 이들에 모두 이벤트 핸들러를 설정하는 것 보다 위임하는 형태로 작성하면 &lt;strong&gt;코드가 더욱 간결&lt;/strong&gt;해질 수 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;예시---16개의-타일-색-바꾸기&#34; &gt;예시 - 16개의 타일 색 바꾸기
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c---16%ea%b0%9c%ec%9d%98-%ed%83%80%ec%9d%bc-%ec%83%89-%eb%b0%94%ea%be%b8%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;예시로 16개의 div 타일이 있고, 각 타일을 클릭하면 랜덤으로 타일의 색깔을 바꾼다고 합시다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;container&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;tile&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;만약 전자처럼 모든 하위요소(&lt;code&gt;tile&lt;/code&gt;)에 이벤트 핸들러를 단다면 코드는 다음과 같을 것입니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;randomColor&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;   &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;`rgb(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;Math.&lt;span style=&#34;color:#a6e22e&#34;&gt;floor&lt;/span&gt;(Math.&lt;span style=&#34;color:#a6e22e&#34;&gt;random&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;)&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;Math.&lt;span style=&#34;color:#a6e22e&#34;&gt;floor&lt;/span&gt;(Math.&lt;span style=&#34;color:#a6e22e&#34;&gt;random&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;)&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;Math.&lt;span style=&#34;color:#a6e22e&#34;&gt;floor&lt;/span&gt;(Math.&lt;span style=&#34;color:#a6e22e&#34;&gt;random&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;255&lt;/span&gt;)&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;)`&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;children&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; document.&lt;span style=&#34;color:#a6e22e&#34;&gt;getElementById&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;container&amp;#34;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;children&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;of&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;children&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;click&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt; =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;target&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;style&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;backgroundColor&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;randomColor&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;반면, 이벤트를 상위 요소(&lt;code&gt;container&lt;/code&gt;)로 위임하게 된다면 코드를 다음과 같이 바꿀 수 있습니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;container&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; document.&lt;span style=&#34;color:#a6e22e&#34;&gt;querySelector&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;#container&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;container&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;addEventListener&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;click&amp;#34;&lt;/span&gt;, (&lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt;) =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;target&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;style&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;backgroundColor&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;randomColor&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Building_blocks/Events&#34;&gt;Introduction to events - Learn web development | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/Events&#34;&gt;Event reference | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dom.spec.whatwg.org/&#34;&gt;DOM Standard (whatwg.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://ko.javascript.info/bubbling-and-capturing&#34;&gt;버블링과 캡처링 (javascript.info)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://joshua1988.github.io/web-development/javascript/event-propagation-delegation/&#34;&gt;이벤트 버블링, 이벤트 캡처 그리고 이벤트 위임까지 • 캡틴판교 블로그 (joshua1988.github.io)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.quirksmode.org/js/events_order.html&#34;&gt;Javascript - Event order (quirksmode.org)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>[Java] Exception 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/java/exception/</link>
+      <pubDate>Wed, 26 Jun 2024 16:54:30 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/java/exception/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 6월 19일 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/07-JAVA_SPRING/6_Exception/Readme.md&#34;&gt;&lt;strong&gt;Exception&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;java에서-exception이란&#34; &gt;Java에서, Exception이란?
+&lt;span&gt;
+    &lt;a href=&#34;#java%ec%97%90%ec%84%9c-exception%ec%9d%b4%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;Exception&lt;/code&gt;&lt;/strong&gt; 이란, Java 프로그램 실행 도중 발생하는 &lt;strong&gt;&lt;code&gt;이벤트&lt;/code&gt;&lt;/strong&gt; 로, &lt;strong&gt;정상적인 명령 흐름을 방해&lt;/strong&gt;합니다.&lt;/p&gt;
+&lt;h3 id=&#34;예외-처리-흐름&#34; &gt;예외 처리 흐름
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%99%b8-%ec%b2%98%eb%a6%ac-%ed%9d%90%eb%a6%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;어떠한 &lt;code&gt;메서드&lt;/code&gt; 내에서 오류가 발생하면, 메서드는 &lt;code&gt;예외 객체(Exception Object)&lt;/code&gt;를 생성해 런타임 시스템에게 넘깁니다.&lt;br&gt;
+이때, 이처럼 &lt;code&gt;예외 객체&lt;/code&gt;를 생성해 &lt;code&gt;런타임 시스템&lt;/code&gt;에 전달하는 것을 &lt;code&gt;예외를 던진다(Throwing an Exception)&lt;/code&gt;라고 합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;예외 객체(Exception Object)&lt;/code&gt; : 발생한 오류의 유형, 발생 당시 프로그램의 상태와 같은 &lt;code&gt;오류에 대한 정보&lt;/code&gt;를 포함하는 객체입니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;메서드가 예외를 던지게 되면, 런타임 시스템은 이를 처리해줄 수 있는 무언가를 찾으려 합니다. 여기서 말하는 &amp;lsquo;무언가&amp;rsquo;는, &lt;em&gt;오류가 발생한 메서드에 도달하기 위해&lt;/em&gt; 호출된 메서드들이 정렬된 리스트를 이루고 있는데 이를 &lt;code&gt;호출 스택(Call Stack)&lt;/code&gt;이라고 합니다.&lt;br&gt;
+&lt;img src=&#34;call-stack.png&#34; alt=&#34;call-stack.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;런타임 시스템은 &lt;code&gt;호출 스택&lt;/code&gt;에서 &lt;code&gt;현재 발생한 예외를 처리할 수 있는 코드 블록&lt;/code&gt;이 포함되어있는 메서드를 찾습니다. 이러한 &lt;code&gt;코드 블록&lt;/code&gt;을 &lt;code&gt;예외 처리기(Exception Handler)&lt;/code&gt;라고 합니다.&lt;br&gt;
+이러한 탐색은 오류가 발생한 메서드부터 &lt;em&gt;&lt;strong&gt;메서드가 호출된 역순&lt;/strong&gt;&lt;/em&gt;으로 &lt;code&gt;호출 스택&lt;/code&gt;을 훑으며 진행됩니다.&lt;br&gt;
+이때 &lt;strong&gt;&lt;code&gt;적절한 처리기&lt;/code&gt;&lt;/strong&gt; 를 찾게되면 런타임 시스템은 &lt;strong&gt;예외를 처리기에 전달&lt;/strong&gt;하게 되고, &lt;code&gt;예외 처리기&lt;/code&gt;는 &lt;code&gt;예외 객체의 유형&lt;/code&gt;이 &lt;code&gt;처리기가 처리할 수 있는 유형&lt;/code&gt;과 일치하는 경우 &lt;strong&gt;&lt;code&gt;적절한 처리기&lt;/code&gt;&lt;/strong&gt; 로 간주됩니다.&lt;br&gt;
+만약 런타임 시스템이 &lt;code&gt;적절한 예외 처리기&lt;/code&gt;를 찾지 못한채, 호출 스택의 모든 메서드들을 탐색했다면 &lt;code&gt;런타임 시스템(과 프로그램)&lt;/code&gt;이 종료되게 됩니다.&lt;br&gt;
+&lt;img src=&#34;searching-exception-handler.png&#34; alt=&#34;searching-exception-handler.png&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;exception의-종류&#34; &gt;Exception의 종류
+&lt;span&gt;
+    &lt;a href=&#34;#exception%ec%9d%98-%ec%a2%85%eb%a5%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;Exception은 크게 &lt;code&gt;Checked Exception&lt;/code&gt;, &lt;code&gt;Unchecked Exception&lt;/code&gt;, &lt;code&gt;Error&lt;/code&gt; 세가지로 구분됩니다.&lt;br&gt;
+&lt;code&gt;Error&lt;/code&gt;, &lt;code&gt;Runtime Exception&lt;/code&gt; 및 이들의 하위 클래스들을 제외한 모든 &lt;code&gt;Exception&lt;/code&gt;은 &lt;code&gt;Checked Exception&lt;/code&gt; 입니다.&lt;/p&gt;
+&lt;h4 id=&#34;checked-exception&#34; &gt;Checked Exception
+&lt;span&gt;
+    &lt;a href=&#34;#checked-exception&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;Checked Exception&lt;/code&gt;이란, 잘 작성된 Java 애플리케이션이라면 예상할 수 있어야 하고 복구해야 하는 예외를 말합니다.&lt;br&gt;
+예를 들어, 사용자에게 파일 이름을 입력 받고 이를 &lt;code&gt;java.io.FileReader&lt;/code&gt;를 통해서 여는 애플리케이션이 있다고 가정합시다. 이때, 사용자가 존재하는 파일의 이름을 입력할 수도 있지만, 존재하지 않는 파일의 이름을 입력할 수도 있습니다. 이럴 경우 &lt;code&gt;java.io.FileNotFoundException&lt;/code&gt;이 발생하게 됩니다.&lt;br&gt;
+이때 잘 작성된 애플리케이션이라면, 위 처럼 충분히 예상 가능한 &lt;strong&gt;예외 케이스에 대해 포착&lt;/strong&gt;하고, 사용자의 실수를 알린 뒤 파일 이름을 다시 입력해달라는 메시지를 표시할 것입니다.&lt;br&gt;
+&lt;code&gt;Checked Exception&lt;/code&gt;의 경우 &lt;code&gt;try-catch&lt;/code&gt; 절을 이용해 &lt;strong&gt;&lt;code&gt;예외를 처리&lt;/code&gt;&lt;/strong&gt; 하거나, &lt;code&gt;throws&lt;/code&gt; 절을 이용해 &lt;strong&gt;&lt;code&gt;예외를 던져야&lt;/code&gt;&lt;/strong&gt; 합니다. 그렇지 않을 경우 &lt;strong&gt;&lt;code&gt;코드가 컴파일되지 않습니다&lt;/code&gt;&lt;/strong&gt;.&lt;/p&gt;
+&lt;h4 id=&#34;unchecked-exception&#34; &gt;Unchecked Exception
+&lt;span&gt;
+    &lt;a href=&#34;#unchecked-exception&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;runtime-exception&#34; &gt;Runtime Exception
+&lt;span&gt;
+    &lt;a href=&#34;#runtime-exception&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;Runtime Exception&lt;/code&gt;이란, 애플리케이션 내부에 존재하지만 일반적으로 예상하거나 복구할 수 없는 예외를 말합니다.&lt;br&gt;
+일반적으로 논리 오류나 부적절한 API 사용과 같은 프로그래밍 버그를 말합니다.&lt;br&gt;
+&lt;code&gt;Runtime Exception&lt;/code&gt;의 경우 &lt;code&gt;Checked Exception&lt;/code&gt;과 달리, &lt;code&gt;catch&lt;/code&gt; 또는 &lt;code&gt;throws&lt;/code&gt;절에 의해 처리되거나 던져져지지 않아도 코드가 정상적으로 컴파일 됩니다.&lt;/p&gt;
+&lt;h5 id=&#34;error&#34; &gt;Error
+&lt;span&gt;
+    &lt;a href=&#34;#error&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;Error&lt;/code&gt;란, &lt;code&gt;애플리케이션 외부에서 발생&lt;/code&gt;하는 예외를 말하며, 애플리케이션이 일반적으로 예상하거나 복구할 수 없습니다.&lt;br&gt;
+예를 들어, 사용자가 입력한 파일을 정상적으로 열었지만, &lt;code&gt;하드웨어&lt;/code&gt; 또는 &lt;code&gt;OS&lt;/code&gt;가 &lt;strong&gt;오작동&lt;/strong&gt;해 파일을 읽을 수 없는 경우 &lt;code&gt;java.io.IOError&lt;/code&gt;가 발생하게 됩니다.&lt;br&gt;
+이때 애플리케이션은 이를 포착하고 사용자에게 이를 알릴 수도 있지만, &lt;code&gt;stack trace&lt;/code&gt;를 출력하고 프로그램을 종료하는 것 역시 합리적일 수 있습니다.&lt;br&gt;
+&lt;code&gt;Error&lt;/code&gt; 역시 &lt;code&gt;Checked Exception&lt;/code&gt;과 달리, &lt;code&gt;catch&lt;/code&gt; 또는 &lt;code&gt;throws&lt;/code&gt;절에 의해 처리되거나 던져져지지 않아도 코드가 정상적으로 컴파일 됩니다.&lt;/p&gt;
+&lt;h3 id=&#34;exception-방식의-장점&#34; &gt;Exception 방식의 장점
+&lt;span&gt;
+    &lt;a href=&#34;#exception-%eb%b0%a9%ec%8b%9d%ec%9d%98-%ec%9e%a5%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;오류-처리-코드와-메인-로직-코드의-분리&#34; &gt;오류 처리 코드와 메인 로직 코드의 분리
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%a4%eb%a5%98-%ec%b2%98%eb%a6%ac-%ec%bd%94%eb%93%9c%ec%99%80-%eb%a9%94%ec%9d%b8-%eb%a1%9c%ec%a7%81-%ec%bd%94%eb%93%9c%ec%9d%98-%eb%b6%84%eb%a6%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;기존의 프로그래밍 방식에서는 메인 로직 코드와 오류 감지 및 처리 코드가 혼재해있어 코드의 가독성과 유지보수성이 떨어집니다.&lt;br&gt;
+반면 &lt;code&gt;Exception&lt;/code&gt; 방식을 채용할 경우, 오류 처리와 관련된 세부 사항을 메인 로직 코드와 분리할 수 있습니다.&lt;/p&gt;
+&lt;h5 id=&#34;예시&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;기존의 방식이라면, 아래 코드처럼 메인 로직 중간중간에 오류를 감지하고 처리하는 코드가 존재하게 됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;errorCodeType readFile &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    initialize errorCode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    open the file&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;theFileIsOpen&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        determine the length of the file&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;gotTheFileLength&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            allocate that much memory&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;gotEnoughMemory&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                read the file into memory&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;readFailed&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    errorCode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                errorCode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            errorCode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        close the file&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;theFileDidntClose &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; errorCode &lt;span style=&#34;color:#f92672&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            errorCode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            errorCode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; errorCode and &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        errorCode &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; errorCode&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;반면 &lt;code&gt;Exception&lt;/code&gt; 방식을 채용할 경우, 아래처럼 &lt;strong&gt;오류 감지 및 처리 코드가 정리&lt;/strong&gt;되어 &lt;strong&gt;가독성이 높고 유지보수성이 높은 코드&lt;/strong&gt;를 작성할 수 있게 됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;readFile &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        open the file&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        determine its size&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        allocate that much memory&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        read the file into memory&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        close the file&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;fileOpenFailed&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;       doSomething&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;sizeDeterminationFailed&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        doSomething&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;memoryAllocationFailed&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        doSomething&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;readFailed&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        doSomething&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;fileCloseFailed&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        doSomething&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;오류를-호출-스택으로-전파할-수-있음&#34; &gt;오류를 호출 스택으로 전파할 수 있음
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%a4%eb%a5%98%eb%a5%bc-%ed%98%b8%ec%b6%9c-%ec%8a%a4%ed%83%9d%ec%9c%bc%eb%a1%9c-%ec%a0%84%ed%8c%8c%ed%95%a0-%ec%88%98-%ec%9e%88%ec%9d%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;오류를 호출 스택에 있는 다른 메서드로 전파할 수 있어, &lt;strong&gt;오류에 대해 관심이 있는 메서드만&lt;/strong&gt; 오류 감지에 대해 신경쓰도록 코드를 작성할 수 있습니다.&lt;br&gt;
+따라서, 오류 처리에 관심이 없는 메서드는 그저 호출 스택 위로 예외를 던지기만하면 됩니다.&lt;/p&gt;
+&lt;h5 id=&#34;예시-1&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;예시로, &lt;code&gt;method1&lt;/code&gt; -&amp;gt; &lt;code&gt;method2&lt;/code&gt; -&amp;gt; &lt;code&gt;method3&lt;/code&gt; -&amp;gt; &lt;code&gt;readFile&lt;/code&gt; 순서대로 함수를 호출한다고 가정하겠습니다. 의사 코드로 이를 표현하면 다음과 같습니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;method1 &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    call method2&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;method2 &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    call method3&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;method3 &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    call readFile&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;또한, 오류 처리에 대해서는 오직 &lt;code&gt;method1&lt;/code&gt;만 관심이 있다고 가정하겠습니다.&lt;br&gt;
+기존의 &lt;code&gt;오류 알림 기법&lt;/code&gt;이었다면 다음 의사코드처럼 &lt;code&gt;return&lt;/code&gt; 문을 통해 발생한 오류를 전파했을 것입니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;method1 &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    errorCodeType error&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    error &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; call method2&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;error&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        doErrorProcessing&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        proceed&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;errorCodeType method2 &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    errorCodeType error&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    error &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; call method3&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;error&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// 에러가 발생한 경우, 호출 스택 상위의 메서드(method1)로 error 반환
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; error&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        proceed&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;errorCodeType method3 &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    errorCodeType error&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    error &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; call readFile&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;error&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// 에러가 발생한 경우, 호출 스택 상위의 메서드(method2)로 error 반환
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; error&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        proceed&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;하지만 &lt;code&gt;Exception&lt;/code&gt; 방식의 경우 method2, 3에서 발생한 예외를 단순히 던져주기만 하면 됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;method1 &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        call method2&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;exception e&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        doErrorProcessing&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;method2 &lt;span style=&#34;color:#66d9ef&#34;&gt;throws&lt;/span&gt; exception &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    call method3&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;method3 &lt;span style=&#34;color:#66d9ef&#34;&gt;throws&lt;/span&gt; exception &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    call readFile&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;오류-타입의-그룹화-및-구분&#34; &gt;오류 타입의 그룹화 및 구분
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%a4%eb%a5%98-%ed%83%80%ec%9e%85%ec%9d%98-%ea%b7%b8%eb%a3%b9%ed%99%94-%eb%b0%8f-%ea%b5%ac%eb%b6%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;Java 프로그램에서 던져지는 모든 예외는 객체이기 때문에, 클래스 계층 구조상 예외를 그룹화하거나 분류할 수 있게 됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;다만, 대부분의 상황에서는 &lt;code&gt;예외 처리기&lt;/code&gt;가 가능한 구체적인 예외를 처리하는 것이 좋습니다.
+&lt;ul&gt;
+&lt;li&gt;최선의 복구 전략을 결정하는데 있어 어떤 유형의 예외가 발생했는지 파악하는 것이 중요하기 때문입니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;예시-2&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-2&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;예시로 Java의 I/O 작업 관련 예외의 부모인 &lt;code&gt;IOException&lt;/code&gt;과 그 하위 클래스인 &lt;code&gt;FileNotFoundException&lt;/code&gt;을 들어보겠습니다.&lt;br&gt;
+만약 파일을 찾을 수 없다는 예외만 처리하고 싶다면 &lt;code&gt;catch&lt;/code&gt;문에서 &lt;code&gt;FileNotFoundException&lt;/code&gt;만 명시하면 됩니다. (&lt;code&gt;FileNotFoundException&lt;/code&gt;은 하위 클래스가 없습니다.)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;FileNotFoundException e&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;반면, I/O 작업과 관련된 예외 전체를 묶어 처리하고 싶다면 &lt;code&gt;catch&lt;/code&gt;문에서 &lt;code&gt;IOException&lt;/code&gt;을 명시하면 됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;IOException e&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;예외처리를-하는-세-방법에-대해-설명해-주세요&#34; &gt;예외처리를 하는 세 방법에 대해 설명해 주세요.
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%99%b8%ec%b2%98%eb%a6%ac%eb%a5%bc-%ed%95%98%eb%8a%94-%ec%84%b8-%eb%b0%a9%eb%b2%95%ec%97%90-%eb%8c%80%ed%95%b4-%ec%84%a4%eb%aa%85%ed%95%b4-%ec%a3%bc%ec%84%b8%ec%9a%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;흔히 Java에서 예외를 처리하는 방법은 &lt;code&gt;try-catch&lt;/code&gt;문을 이용한 &lt;strong&gt;&lt;code&gt;예외복구&lt;/code&gt;&lt;/strong&gt;,  &lt;code&gt;throws&lt;/code&gt;절을 이용한 &lt;strong&gt;&lt;code&gt;예외회피&lt;/code&gt;&lt;/strong&gt;, &lt;code&gt;throw&lt;/code&gt;문을 이용한 &lt;strong&gt;&lt;code&gt;예외전환&lt;/code&gt;&lt;/strong&gt; 세가지 방법이 있다고 알려져 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;try-catch&#34; &gt;try-catch
+&lt;span&gt;
+    &lt;a href=&#34;#try-catch&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ExceptionType name&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ExceptionType2 name&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;try-catch&lt;/code&gt;, 추가로 &lt;code&gt;finally&lt;/code&gt; 문을 사용해 현재 메서드 내에서 예외를 처리하는 방법입니다.&lt;/p&gt;
+&lt;h4 id=&#34;try&#34; &gt;try
+&lt;span&gt;
+    &lt;a href=&#34;#try&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;먼저 예외가 발생할 수 있는 코드를 &lt;code&gt;try&lt;/code&gt; 블록으로 묶고, &lt;code&gt;try&lt;/code&gt; 블록 내부에서 발생 가능한 예외를 처리하는 &lt;code&gt;예외 처리기&lt;/code&gt;가 존재하는 &lt;code&gt;catch&lt;/code&gt; 블록을 연결하는 형태로 구현합니다.&lt;br&gt;
+이때, 예외가 발생할 수 있는 각 코드를 각각의 &lt;code&gt;try-catch&lt;/code&gt; 문으로 묶을 수도 있고, 모든 코드를 하나의 &lt;code&gt;try-catch&lt;/code&gt; 블록으로 묶어 처리할 수도 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;catch&#34; &gt;catch
+&lt;span&gt;
+    &lt;a href=&#34;#catch&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;각 &lt;code&gt;catch&lt;/code&gt; 블록은 &lt;strong&gt;인자로 받는&lt;/strong&gt; &lt;code&gt;예외 타입&lt;/code&gt;을 처리하는 &lt;code&gt;예외 처리기&lt;/code&gt;로, 이때 &lt;code&gt;예외 타입&lt;/code&gt;은 &lt;code&gt;Throwable&lt;/code&gt;클래스의 하위 클래스여야 합니다.&lt;br&gt;
+런타임 시스템은 &lt;code&gt;예외 처리기&lt;/code&gt;가 &lt;code&gt;호출 스택&lt;/code&gt;에서 던져진 &lt;code&gt;예외 타입&lt;/code&gt;과 일치하는 첫 번째 핸들러일 때, &lt;code&gt;예외 처리기&lt;/code&gt;를 호출합니다.&lt;br&gt;
+이때 &lt;code&gt;예외 처리기&lt;/code&gt; 내부에서는 단순히 오류 메시지를 출력하거나 프로그램을 중지하는 것 외에도 다양한 작업을 수행할 수 있습니다.&lt;br&gt;
+오류를 복구하거나, 사용자에게 결정을 내리도록 메시지를 표시하거나, &lt;em&gt;상위 수준&lt;/em&gt;의 &lt;code&gt;예외 처리기&lt;/code&gt;로 오류를 전파할 수도 있습니다.&lt;/p&gt;
+&lt;h5 id=&#34;union-catch-절&#34; &gt;Union catch 절
+&lt;span&gt;
+    &lt;a href=&#34;#union-catch-%ec%a0%88&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;추가로, Java 7 이상에서는 &lt;code&gt;|&lt;/code&gt; 키워드를 통해 하나의 &lt;code&gt;catch&lt;/code&gt; 블록이 &lt;strong&gt;둘 이상&lt;/strong&gt;의 예외 타입을 처리할 수 있습니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt; IOException &lt;span style=&#34;color:#f92672&#34;&gt;|&lt;/span&gt; SQLException ex&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    logger&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;ex&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;throw&lt;/span&gt; ex&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;참고로 &lt;code&gt;catch&lt;/code&gt; 블록이 둘 이상의 예외 타입을 처리하는 경우, 해당 &lt;code&gt;catch&lt;/code&gt;절의 매개변수는 암시적으로 &lt;code&gt;final&lt;/code&gt;로 여겨집니다. 즉, &lt;code&gt;catch&lt;/code&gt; 블록 내에서 해당 매개변수에 어떠한 값도 할당할 수 없습니다.&lt;/p&gt;
+&lt;h4 id=&#34;finally&#34; &gt;finally
+&lt;span&gt;
+    &lt;a href=&#34;#finally&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;finally&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;out &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Closing PrintWriter&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        out&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;close&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;PrintWriter not open&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;f &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	    System&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Closing FileWriter&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	    f&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;close&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;	
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;finally&lt;/code&gt;블록은 &lt;code&gt;try&lt;/code&gt; 블록을 탈출할 때, 항상 실행되는 블록입니다.&lt;br&gt;
+따라서 예상치 못한 예외가 발생해도, 항상 실행됩니다. 이러한 특징 때문에 프로그래머가 실수로 &lt;code&gt;return&lt;/code&gt;, &lt;code&gt;continue&lt;/code&gt;,&lt;code&gt;break&lt;/code&gt; 블록을 통해 &lt;code&gt;클린업 코드&lt;/code&gt;가 무시되는 것을 방지할 때도 유용합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;클린업 코드&lt;/code&gt;: 사용한 자원 등을 정리하는 코드&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;try-with-resources&#34; &gt;try-with-resources
+&lt;span&gt;
+    &lt;a href=&#34;#try-with-resources&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;FileReader fr &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; FileReader&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;path&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	 BufferedReader br &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; BufferedReader&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;fr&lt;span style=&#34;color:#f92672&#34;&gt;))&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; br&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;readLine&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;try-with-resources&lt;/code&gt; 문이란, 하나 이상의 자원을 선언하는 &lt;code&gt;try&lt;/code&gt; 문을 말합니다.&lt;br&gt;
+이때 자원은, &lt;em&gt;프로그램이 완료된 후&lt;/em&gt; &lt;code&gt;닫아야(close)&lt;/code&gt;하는 객체를 말합니다.&lt;br&gt;
+&lt;code&gt;try-with-resources&lt;/code&gt; 문에는 &lt;code&gt;java.lang.AutoCloseable&lt;/code&gt;을 구현하는 모든 객체(&lt;code&gt;java.io.Closeable&lt;/code&gt;을 구현하는 객체 포함)를 자원으로 사용할 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;참고로 &lt;code&gt;Closeable&lt;/code&gt; 인터페이스는 &lt;code&gt;AutoCloseable&lt;/code&gt; 인터페이스를 상속합니다.&lt;/li&gt;
+&lt;li&gt;추가로, &lt;code&gt;AutoCloseable&lt;/code&gt;의 &lt;code&gt;close()&lt;/code&gt;는 &lt;code&gt;Exception&lt;/code&gt; 타입의 예외를 던지지만, &lt;code&gt;Closeable&lt;/code&gt; 인터페이스는 &lt;code&gt;IOException&lt;/code&gt; 타입의 예외를 던집니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;선언된 자원들은 &lt;code&gt;try&lt;/code&gt;문이 정상적으로 완료 되었는지 또는 예외가 발생했는지에 관계 없이 항상 닫히게 됩니다.&lt;br&gt;
+&lt;code&gt;try-with-resources&lt;/code&gt;문은 &lt;code&gt;finally&lt;/code&gt; 블록을 통해서 여러 자원을 닫을 때 예외가 발생할 경우, 아직 닫지 못한 자원이 메모리 누수를 발생시킬 수 있는 것과 달리, 항상 자원을 닫음을 보장하기 때문에 &lt;code&gt;try-with-resources&lt;/code&gt;문을 사용하는 것이 권장됩니다.&lt;br&gt;
+추가로, &lt;code&gt;try&lt;/code&gt; 블록과 &lt;code&gt;try-with-resources&lt;/code&gt; 문 &lt;strong&gt;&lt;code&gt;모두&lt;/code&gt;에서 예외가 발생&lt;/strong&gt;할 경우, &lt;code&gt;try&lt;/code&gt; 블록에서 &lt;strong&gt;발생한 예외만 던지고&lt;/strong&gt;, &lt;em&gt;&lt;code&gt;try-with-resources&lt;/code&gt; 문에서 발생한 예외는 억제&lt;/em&gt;됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;이렇게 &lt;code&gt;억제된 예외&lt;/code&gt;는 &lt;code&gt;try&lt;/code&gt; 블록에서 발생한 예외의 &lt;code&gt;Throwable.getSuppressed()&lt;/code&gt; 메서드를 통해 찾을 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;또한 자원의 &lt;code&gt;close&lt;/code&gt; 메서드는 &lt;strong&gt;생성 순서의 &lt;code&gt;반대 순서&lt;/code&gt;&lt;/strong&gt; 로 호출됩니다.&lt;br&gt;
+그리고 &lt;code&gt;try-with-resources&lt;/code&gt;문 역시 &lt;code&gt;catch&lt;/code&gt; 블록과 &lt;code&gt;finally&lt;/code&gt; 블록을 연결할 수 있는데, 이들은 모두 &lt;code&gt;try&lt;/code&gt;문에서 선언된 자원이 닫힌 후 실행되게 됩니다.&lt;/p&gt;
+&lt;h3 id=&#34;throws&#34; &gt;throws
+&lt;span&gt;
+    &lt;a href=&#34;#throws&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;writeList&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;throws&lt;/span&gt; IOException&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; IndexOutOfBoundsException &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;위처럼 코드 내에서 발생할 수 있는 예외를 해당 코드에서 직접 처리하도록 하는게 적절할 수도 있지만, 호출 스택의 상위 메서드가 예외를 처리하도록 하는 것이 더 좋을 수도 있습니다.&lt;br&gt;
+이때 &lt;code&gt;throws&lt;/code&gt;절을 사용해 예외를 회피할 수 있습니다.&lt;br&gt;
+&lt;code&gt;throws&lt;/code&gt;절에는 해당 메서드 내에서 발생할 수 있는 예외를 하나 이상 기입할 수 있습니다. 이때, 둘 이상의 예외는 &lt;code&gt;쉼표&lt;/code&gt;를 통해 구분해 기입합니다.&lt;br&gt;
+참고로 &lt;code&gt;Unchecked Exception&lt;/code&gt;의 경우 &lt;code&gt;Checked Exception&lt;/code&gt;과 달리 &lt;code&gt;throws&lt;/code&gt;절에 꼭 포함시키지 않아도 됩니다.&lt;/p&gt;
+&lt;h3 id=&#34;throw&#34; &gt;throw
+&lt;span&gt;
+    &lt;a href=&#34;#throw&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;IOException e&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;throw&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; SampleException&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Other IOException&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; e&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;어느 곳에서 하나의 예외가 발생한 경우, 애플리케이션에서 종종 다른 예외를 던저 이에 응답하는 경우가 있습니다.&lt;br&gt;
+즉 하나의 예외가 다른 예외를 유발하는 것인데, 이를 &lt;code&gt;연쇄 예외(Chained Exception)&lt;/code&gt;라고 합니다.
+이는 주로 &lt;code&gt;Throwable&lt;/code&gt;의 생성자인 &lt;code&gt;Throwable(String, Throwable)&lt;/code&gt;, &lt;code&gt;Throwable(Throwable)&lt;/code&gt;를 활용해 이뤄집니다.&lt;br&gt;
+또한 &lt;code&gt;Throwable&lt;/code&gt;의 &lt;code&gt;getCause()&lt;/code&gt; 메서드를 통해 현재 예외를 발생시킨 예외를 얻거나, &lt;code&gt;initCause(Throwable)&lt;/code&gt; 메서드를 통해 현재 예외의 원인을 설정할 수도 있습니다.&lt;/p&gt;
+&lt;h2 id=&#34;예외처리가-성능에-끼치는-영향은-어느정도일까&#34; &gt;예외처리가 성능에 끼치는 영향은 어느정도일까?
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%99%b8%ec%b2%98%eb%a6%ac%ea%b0%80-%ec%84%b1%eb%8a%a5%ec%97%90-%eb%81%bc%ec%b9%98%eb%8a%94-%ec%98%81%ed%96%a5%ec%9d%80-%ec%96%b4%eb%8a%90%ec%a0%95%eb%8f%84%ec%9d%bc%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Benchmark&lt;/th&gt;
+&lt;th&gt;Mode&lt;/th&gt;
+&lt;th&gt;Cnt&lt;/th&gt;
+&lt;th&gt;Score&lt;/th&gt;
+&lt;th&gt;Error&lt;/th&gt;
+&lt;th&gt;Units&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;ExceptionBenchmark.createExceptionWithoutThrowingIt&lt;/td&gt;
+&lt;td&gt;avgt&lt;/td&gt;
+&lt;td&gt;10&lt;/td&gt;
+&lt;td&gt;16.605&lt;/td&gt;
+&lt;td&gt;± 0.988&lt;/td&gt;
+&lt;td&gt;ms/op&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;ExceptionBenchmark.doNotThrowException&lt;/td&gt;
+&lt;td&gt;avgt&lt;/td&gt;
+&lt;td&gt;10&lt;/td&gt;
+&lt;td&gt;0.047&lt;/td&gt;
+&lt;td&gt;± 0.006&lt;/td&gt;
+&lt;td&gt;ms/op&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;ExceptionBenchmark.throwAndCatchException&lt;/td&gt;
+&lt;td&gt;avgt&lt;/td&gt;
+&lt;td&gt;10&lt;/td&gt;
+&lt;td&gt;16.449&lt;/td&gt;
+&lt;td&gt;± 0.304&lt;/td&gt;
+&lt;td&gt;ms/op&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;ExceptionBenchmark.throwExceptionWithoutAddingStackTrace&lt;/td&gt;
+&lt;td&gt;avgt&lt;/td&gt;
+&lt;td&gt;10&lt;/td&gt;
+&lt;td&gt;1.185&lt;/td&gt;
+&lt;td&gt;± 4.991&lt;/td&gt;
+&lt;td&gt;ms/op&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;ExceptionBenchmark.throwExceptionAndUnwindStackTrace&lt;/td&gt;
+&lt;td&gt;avgt&lt;/td&gt;
+&lt;td&gt;10&lt;/td&gt;
+&lt;td&gt;326.560&lt;/td&gt;
+&lt;td&gt;± 0.015&lt;/td&gt;
+&lt;td&gt;ms/op&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.baeldung.com/java-exceptions-performance&#34;&gt;Performance Effects of Exceptions in Java | Baeldung&lt;/a&gt;의 벤치마크 결과를 보면, 예외를 발생시키고 이를 &lt;code&gt;try-catch&lt;/code&gt; 블록으로 처리하는 메서드는 예외가 발생하지 않는 메서드에 비해 수백 배 느리게 실행됩니다. 심지어 단지 예외를 생성하기만 하는 메서드 역시 수 백배 느립니다.&lt;br&gt;
+하지만 예외를 발생시키고, 이를 &lt;code&gt;try-catch&lt;/code&gt; 블록으로 처리하는 메서드에서 &lt;code&gt;Stack Trace&lt;/code&gt;에 해당 예외를 추가하지 않도록 했더니 시간을 수 백배 단축할 수 있었습니다.&lt;br&gt;
+게다가 발생한 예외의 &lt;code&gt;getStackTrace()&lt;/code&gt; 메서드를 호출해 &lt;code&gt;StackTrace&lt;/code&gt;를 &lt;code&gt;Unwinding&lt;/code&gt;, 즉 현재 메서드 부터 &lt;code&gt;호출 스택&lt;/code&gt;의 메인 메서드 까지 되감아 올라갈 경우 실행 시간이 &lt;strong&gt;스무 배&lt;/strong&gt; 증가했습니다.&lt;br&gt;
+이를 종합해 보면, &lt;code&gt;Stack Trace&lt;/code&gt;에 예외를 추가하는데 상당한 성능 저하가 발생함을 알 수 있습니다.
+특히, &lt;code&gt;Stack Trace&lt;/code&gt;를 &lt;code&gt;Unwinding&lt;/code&gt;하는 경우 성능 저하는 더욱 심해집니다.&lt;br&gt;
+따라서 예외 처리에 따른 성능 저하를 방지하기 위해서는, 최대한 적재적소에만 예외 처리문을 사용하는 것이 좋습니다. 즉, &lt;strong&gt;예외 처리문을 가능한 적게 사용&lt;/strong&gt;하는 것이 좋습니다.&lt;/p&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase/tutorial/essential/exceptions/definition.html&#34;&gt;What Is an Exception? (The Java™ Tutorials &amp;gt; Essential Java Classes &amp;gt; Exceptions) (oracle.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase/tutorial/essential/exceptions/try.html&#34;&gt;The try Block (The Java™ Tutorials &amp;gt; Essential Java Classes &amp;gt; Exceptions) (oracle.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase/tutorial/essential/exceptions/catch.html&#34;&gt;The catch Blocks (The Java™ Tutorials &amp;gt; Essential Java Classes &amp;gt; Exceptions) (oracle.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase/tutorial/essential/exceptions/finally.html&#34;&gt;The finally Block (The Java™ Tutorials &amp;gt; Essential Java Classes &amp;gt; Exceptions) (oracle.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase/tutorial/essential/exceptions/catchOrDeclare.html&#34;&gt;The Catch or Specify Requirement (The Java™ Tutorials &amp;gt; Essential Java Classes &amp;gt; Exceptions) (oracle.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase/tutorial/essential/exceptions/chained.html&#34;&gt;Chained Exceptions (The Java™ Tutorials &amp;gt; Essential Java Classes &amp;gt; Exceptions) (oracle.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase/tutorial/essential/exceptions/advantages.html&#34;&gt;Advantages of Exceptions (The Java™ Tutorials &amp;gt; Essential Java Classes &amp;gt; Exceptions) (oracle.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase%2F8%2Fdocs%2Fapi%2F%2F/java/lang/Exception.html&#34;&gt;Exception (Java Platform SE 8 ) (oracle.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase%2F8%2Fdocs%2Fapi%2F%2F/java/lang/Throwable.html&#34;&gt;Throwable (Java Platform SE 8 ) (oracle.com)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>[OS] IPC 알아보기</title>

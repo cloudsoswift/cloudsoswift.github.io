@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Java] Exception 알아보기 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 6월 19일 발표한 Exception에 대해 정리한 문서를 블로그에 공유하고자 한다.
+Java에서, Exception이란?Exception 이란, Java 프로그램 실행 도중 발생하는 이벤트 로, 정상적인 명령 흐름을 방해합니다.
+예외 처리 흐름어떠한 메서드 내에서 오류가 발생하면, 메서드는 예외 객체(Exception Object)를 생성해 런타임 시스템에게 넘깁니다.
+이때, 이처럼 예외 객체를 생성해 런타임 시스템에 전달하는 것을 예외를 던진다(Throwing an Exception)라고 합니다.
+예외 객체(Exception Object) : 발생한 오류의 유형, 발생 당시 프로그램의 상태와 같은 오류에 대한 정보를 포함하는 객체입니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.76f1c618e88054cdb3aa0c9cae7c10aa575065964d3224a6eaf21dd1fb9ebaee.css" integrity="sha256-dvHGGOiAVM2zqgycrnwQqldQZZZNMiSm6vId0fueuu4=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Java] Exception 알아보기" />
+<meta property="og:description" content="서론CS 스터디에서 6월 19일 발표한 Exception에 대해 정리한 문서를 블로그에 공유하고자 한다.
+Java에서, Exception이란?Exception 이란, Java 프로그램 실행 도중 발생하는 이벤트 로, 정상적인 명령 흐름을 방해합니다.
+예외 처리 흐름어떠한 메서드 내에서 오류가 발생하면, 메서드는 예외 객체(Exception Object)를 생성해 런타임 시스템에게 넘깁니다.
+이때, 이처럼 예외 객체를 생성해 런타임 시스템에 전달하는 것을 예외를 던진다(Throwing an Exception)라고 합니다.
+예외 객체(Exception Object) : 발생한 오류의 유형, 발생 당시 프로그램의 상태와 같은 오류에 대한 정보를 포함하는 객체입니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/java/exception/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-06-26T16:54:30+09:00" />
+<meta property="article:modified_time" content="2024-06-26T16:54:30+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Java] Exception 알아보기"/>
+<meta name="twitter:description" content="서론CS 스터디에서 6월 19일 발표한 Exception에 대해 정리한 문서를 블로그에 공유하고자 한다.
+Java에서, Exception이란?Exception 이란, Java 프로그램 실행 도중 발생하는 이벤트 로, 정상적인 명령 흐름을 방해합니다.
+예외 처리 흐름어떠한 메서드 내에서 오류가 발생하면, 메서드는 예외 객체(Exception Object)를 생성해 런타임 시스템에게 넘깁니다.
+이때, 이처럼 예외 객체를 생성해 런타임 시스템에 전달하는 것을 예외를 던진다(Throwing an Exception)라고 합니다.
+예외 객체(Exception Object) : 발생한 오류의 유형, 발생 당시 프로그램의 상태와 같은 오류에 대한 정보를 포함하는 객체입니다."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Java] Exception 알아보기</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#java에서-exception이란">Java에서, Exception이란?</a>
+      <ul>
+        <li><a href="#예외-처리-흐름">예외 처리 흐름</a></li>
+        <li><a href="#exception의-종류">Exception의 종류</a></li>
+        <li><a href="#exception-방식의-장점">Exception 방식의 장점</a></li>
+      </ul>
+    </li>
+    <li><a href="#예외처리를-하는-세-방법에-대해-설명해-주세요">예외처리를 하는 세 방법에 대해 설명해 주세요.</a>
+      <ul>
+        <li><a href="#try-catch">try-catch</a></li>
+        <li><a href="#throws">throws</a></li>
+        <li><a href="#throw">throw</a></li>
+      </ul>
+    </li>
+    <li><a href="#예외처리가-성능에-끼치는-영향은-어느정도일까">예외처리가 성능에 끼치는 영향은 어느정도일까?</a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 6월 19일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/07-JAVA_SPRING/6_Exception/Readme.md"><strong>Exception</strong></a>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h2 id="java에서-exception이란" >Java에서, Exception이란?
+<span>
+    <a href="#java%ec%97%90%ec%84%9c-exception%ec%9d%b4%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><strong><code>Exception</code></strong> 이란, Java 프로그램 실행 도중 발생하는 <strong><code>이벤트</code></strong> 로, <strong>정상적인 명령 흐름을 방해</strong>합니다.</p>
+<h3 id="예외-처리-흐름" >예외 처리 흐름
+<span>
+    <a href="#%ec%98%88%ec%99%b8-%ec%b2%98%eb%a6%ac-%ed%9d%90%eb%a6%84">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>어떠한 <code>메서드</code> 내에서 오류가 발생하면, 메서드는 <code>예외 객체(Exception Object)</code>를 생성해 런타임 시스템에게 넘깁니다.<br>
+이때, 이처럼 <code>예외 객체</code>를 생성해 <code>런타임 시스템</code>에 전달하는 것을 <code>예외를 던진다(Throwing an Exception)</code>라고 합니다.</p>
+<ul>
+<li><code>예외 객체(Exception Object)</code> : 발생한 오류의 유형, 발생 당시 프로그램의 상태와 같은 <code>오류에 대한 정보</code>를 포함하는 객체입니다.</li>
+</ul>
+<p>메서드가 예외를 던지게 되면, 런타임 시스템은 이를 처리해줄 수 있는 무언가를 찾으려 합니다. 여기서 말하는 &lsquo;무언가&rsquo;는, <em>오류가 발생한 메서드에 도달하기 위해</em> 호출된 메서드들이 정렬된 리스트를 이루고 있는데 이를 <code>호출 스택(Call Stack)</code>이라고 합니다.<br>
+<img src="call-stack.png" alt="call-stack.png"></p>
+<p>런타임 시스템은 <code>호출 스택</code>에서 <code>현재 발생한 예외를 처리할 수 있는 코드 블록</code>이 포함되어있는 메서드를 찾습니다. 이러한 <code>코드 블록</code>을 <code>예외 처리기(Exception Handler)</code>라고 합니다.<br>
+이러한 탐색은 오류가 발생한 메서드부터 <em><strong>메서드가 호출된 역순</strong></em>으로 <code>호출 스택</code>을 훑으며 진행됩니다.<br>
+이때 <strong><code>적절한 처리기</code></strong> 를 찾게되면 런타임 시스템은 <strong>예외를 처리기에 전달</strong>하게 되고, <code>예외 처리기</code>는 <code>예외 객체의 유형</code>이 <code>처리기가 처리할 수 있는 유형</code>과 일치하는 경우 <strong><code>적절한 처리기</code></strong> 로 간주됩니다.<br>
+만약 런타임 시스템이 <code>적절한 예외 처리기</code>를 찾지 못한채, 호출 스택의 모든 메서드들을 탐색했다면 <code>런타임 시스템(과 프로그램)</code>이 종료되게 됩니다.<br>
+<img src="searching-exception-handler.png" alt="searching-exception-handler.png"></p>
+<h3 id="exception의-종류" >Exception의 종류
+<span>
+    <a href="#exception%ec%9d%98-%ec%a2%85%eb%a5%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>Exception은 크게 <code>Checked Exception</code>, <code>Unchecked Exception</code>, <code>Error</code> 세가지로 구분됩니다.<br>
+<code>Error</code>, <code>Runtime Exception</code> 및 이들의 하위 클래스들을 제외한 모든 <code>Exception</code>은 <code>Checked Exception</code> 입니다.</p>
+<h4 id="checked-exception" >Checked Exception
+<span>
+    <a href="#checked-exception">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>Checked Exception</code>이란, 잘 작성된 Java 애플리케이션이라면 예상할 수 있어야 하고 복구해야 하는 예외를 말합니다.<br>
+예를 들어, 사용자에게 파일 이름을 입력 받고 이를 <code>java.io.FileReader</code>를 통해서 여는 애플리케이션이 있다고 가정합시다. 이때, 사용자가 존재하는 파일의 이름을 입력할 수도 있지만, 존재하지 않는 파일의 이름을 입력할 수도 있습니다. 이럴 경우 <code>java.io.FileNotFoundException</code>이 발생하게 됩니다.<br>
+이때 잘 작성된 애플리케이션이라면, 위 처럼 충분히 예상 가능한 <strong>예외 케이스에 대해 포착</strong>하고, 사용자의 실수를 알린 뒤 파일 이름을 다시 입력해달라는 메시지를 표시할 것입니다.<br>
+<code>Checked Exception</code>의 경우 <code>try-catch</code> 절을 이용해 <strong><code>예외를 처리</code></strong> 하거나, <code>throws</code> 절을 이용해 <strong><code>예외를 던져야</code></strong> 합니다. 그렇지 않을 경우 <strong><code>코드가 컴파일되지 않습니다</code></strong>.</p>
+<h4 id="unchecked-exception" >Unchecked Exception
+<span>
+    <a href="#unchecked-exception">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h5 id="runtime-exception" >Runtime Exception
+<span>
+    <a href="#runtime-exception">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><code>Runtime Exception</code>이란, 애플리케이션 내부에 존재하지만 일반적으로 예상하거나 복구할 수 없는 예외를 말합니다.<br>
+일반적으로 논리 오류나 부적절한 API 사용과 같은 프로그래밍 버그를 말합니다.<br>
+<code>Runtime Exception</code>의 경우 <code>Checked Exception</code>과 달리, <code>catch</code> 또는 <code>throws</code>절에 의해 처리되거나 던져져지지 않아도 코드가 정상적으로 컴파일 됩니다.</p>
+<h5 id="error" >Error
+<span>
+    <a href="#error">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><code>Error</code>란, <code>애플리케이션 외부에서 발생</code>하는 예외를 말하며, 애플리케이션이 일반적으로 예상하거나 복구할 수 없습니다.<br>
+예를 들어, 사용자가 입력한 파일을 정상적으로 열었지만, <code>하드웨어</code> 또는 <code>OS</code>가 <strong>오작동</strong>해 파일을 읽을 수 없는 경우 <code>java.io.IOError</code>가 발생하게 됩니다.<br>
+이때 애플리케이션은 이를 포착하고 사용자에게 이를 알릴 수도 있지만, <code>stack trace</code>를 출력하고 프로그램을 종료하는 것 역시 합리적일 수 있습니다.<br>
+<code>Error</code> 역시 <code>Checked Exception</code>과 달리, <code>catch</code> 또는 <code>throws</code>절에 의해 처리되거나 던져져지지 않아도 코드가 정상적으로 컴파일 됩니다.</p>
+<h3 id="exception-방식의-장점" >Exception 방식의 장점
+<span>
+    <a href="#exception-%eb%b0%a9%ec%8b%9d%ec%9d%98-%ec%9e%a5%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="오류-처리-코드와-메인-로직-코드의-분리" >오류 처리 코드와 메인 로직 코드의 분리
+<span>
+    <a href="#%ec%98%a4%eb%a5%98-%ec%b2%98%eb%a6%ac-%ec%bd%94%eb%93%9c%ec%99%80-%eb%a9%94%ec%9d%b8-%eb%a1%9c%ec%a7%81-%ec%bd%94%eb%93%9c%ec%9d%98-%eb%b6%84%eb%a6%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>기존의 프로그래밍 방식에서는 메인 로직 코드와 오류 감지 및 처리 코드가 혼재해있어 코드의 가독성과 유지보수성이 떨어집니다.<br>
+반면 <code>Exception</code> 방식을 채용할 경우, 오류 처리와 관련된 세부 사항을 메인 로직 코드와 분리할 수 있습니다.</p>
+<h5 id="예시" >예시
+<span>
+    <a href="#%ec%98%88%ec%8b%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>기존의 방식이라면, 아래 코드처럼 메인 로직 중간중간에 오류를 감지하고 처리하는 코드가 존재하게 됩니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>errorCodeType readFile <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    initialize errorCode <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    open the file<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>theFileIsOpen<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        determine the length of the file<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>gotTheFileLength<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            allocate that much memory<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>gotEnoughMemory<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                read the file into memory<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>readFailed<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                    errorCode <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                errorCode <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">2</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            errorCode <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">3</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        close the file<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>theFileDidntClose <span style="color:#f92672">&amp;&amp;</span> errorCode <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            errorCode <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">4</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            errorCode <span style="color:#f92672">=</span> errorCode and <span style="color:#f92672">-</span><span style="color:#ae81ff">4</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        errorCode <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">5</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> errorCode<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>반면 <code>Exception</code> 방식을 채용할 경우, 아래처럼 <strong>오류 감지 및 처리 코드가 정리</strong>되어 <strong>가독성이 높고 유지보수성이 높은 코드</strong>를 작성할 수 있게 됩니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>readFile <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        open the file<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        determine its size<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        allocate that much memory<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        read the file into memory<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        close the file<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>fileOpenFailed<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>       doSomething<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>sizeDeterminationFailed<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        doSomething<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>memoryAllocationFailed<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        doSomething<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>readFailed<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        doSomething<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>fileCloseFailed<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        doSomething<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h4 id="오류를-호출-스택으로-전파할-수-있음" >오류를 호출 스택으로 전파할 수 있음
+<span>
+    <a href="#%ec%98%a4%eb%a5%98%eb%a5%bc-%ed%98%b8%ec%b6%9c-%ec%8a%a4%ed%83%9d%ec%9c%bc%eb%a1%9c-%ec%a0%84%ed%8c%8c%ed%95%a0-%ec%88%98-%ec%9e%88%ec%9d%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>오류를 호출 스택에 있는 다른 메서드로 전파할 수 있어, <strong>오류에 대해 관심이 있는 메서드만</strong> 오류 감지에 대해 신경쓰도록 코드를 작성할 수 있습니다.<br>
+따라서, 오류 처리에 관심이 없는 메서드는 그저 호출 스택 위로 예외를 던지기만하면 됩니다.</p>
+<h5 id="예시-1" >예시
+<span>
+    <a href="#%ec%98%88%ec%8b%9c-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>예시로, <code>method1</code> -&gt; <code>method2</code> -&gt; <code>method3</code> -&gt; <code>readFile</code> 순서대로 함수를 호출한다고 가정하겠습니다. 의사 코드로 이를 표현하면 다음과 같습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>method1 <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    call method2<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>method2 <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    call method3<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>method3 <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    call readFile<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>또한, 오류 처리에 대해서는 오직 <code>method1</code>만 관심이 있다고 가정하겠습니다.<br>
+기존의 <code>오류 알림 기법</code>이었다면 다음 의사코드처럼 <code>return</code> 문을 통해 발생한 오류를 전파했을 것입니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>method1 <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    errorCodeType error<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    error <span style="color:#f92672">=</span> call method2<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        doErrorProcessing<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        proceed<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>errorCodeType method2 <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    errorCodeType error<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    error <span style="color:#f92672">=</span> call method3<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 에러가 발생한 경우, 호출 스택 상위의 메서드(method1)로 error 반환
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> error<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        proceed<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>errorCodeType method3 <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    errorCodeType error<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    error <span style="color:#f92672">=</span> call readFile<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>error<span style="color:#f92672">)</span> 
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 에러가 발생한 경우, 호출 스택 상위의 메서드(method2)로 error 반환
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> error<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        proceed<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>하지만 <code>Exception</code> 방식의 경우 method2, 3에서 발생한 예외를 단순히 던져주기만 하면 됩니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>method1 <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        call method2<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>exception e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        doErrorProcessing<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>method2 <span style="color:#66d9ef">throws</span> exception <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    call method3<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>method3 <span style="color:#66d9ef">throws</span> exception <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    call readFile<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h4 id="오류-타입의-그룹화-및-구분" >오류 타입의 그룹화 및 구분
+<span>
+    <a href="#%ec%98%a4%eb%a5%98-%ed%83%80%ec%9e%85%ec%9d%98-%ea%b7%b8%eb%a3%b9%ed%99%94-%eb%b0%8f-%ea%b5%ac%eb%b6%84">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>Java 프로그램에서 던져지는 모든 예외는 객체이기 때문에, 클래스 계층 구조상 예외를 그룹화하거나 분류할 수 있게 됩니다.</p>
+<ul>
+<li>다만, 대부분의 상황에서는 <code>예외 처리기</code>가 가능한 구체적인 예외를 처리하는 것이 좋습니다.
+<ul>
+<li>최선의 복구 전략을 결정하는데 있어 어떤 유형의 예외가 발생했는지 파악하는 것이 중요하기 때문입니다.</li>
+</ul>
+</li>
+</ul>
+<h5 id="예시-2" >예시
+<span>
+    <a href="#%ec%98%88%ec%8b%9c-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>예시로 Java의 I/O 작업 관련 예외의 부모인 <code>IOException</code>과 그 하위 클래스인 <code>FileNotFoundException</code>을 들어보겠습니다.<br>
+만약 파일을 찾을 수 없다는 예외만 처리하고 싶다면 <code>catch</code>문에서 <code>FileNotFoundException</code>만 명시하면 됩니다. (<code>FileNotFoundException</code>은 하위 클래스가 없습니다.)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>FileNotFoundException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>반면, I/O 작업과 관련된 예외 전체를 묶어 처리하고 싶다면 <code>catch</code>문에서 <code>IOException</code>을 명시하면 됩니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h2 id="예외처리를-하는-세-방법에-대해-설명해-주세요" >예외처리를 하는 세 방법에 대해 설명해 주세요.
+<span>
+    <a href="#%ec%98%88%ec%99%b8%ec%b2%98%eb%a6%ac%eb%a5%bc-%ed%95%98%eb%8a%94-%ec%84%b8-%eb%b0%a9%eb%b2%95%ec%97%90-%eb%8c%80%ed%95%b4-%ec%84%a4%eb%aa%85%ed%95%b4-%ec%a3%bc%ec%84%b8%ec%9a%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>흔히 Java에서 예외를 처리하는 방법은 <code>try-catch</code>문을 이용한 <strong><code>예외복구</code></strong>,  <code>throws</code>절을 이용한 <strong><code>예외회피</code></strong>, <code>throw</code>문을 이용한 <strong><code>예외전환</code></strong> 세가지 방법이 있다고 알려져 있습니다.</p>
+<h3 id="try-catch" >try-catch
+<span>
+    <a href="#try-catch">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>ExceptionType name<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>ExceptionType2 name<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p><code>try-catch</code>, 추가로 <code>finally</code> 문을 사용해 현재 메서드 내에서 예외를 처리하는 방법입니다.</p>
+<h4 id="try" >try
+<span>
+    <a href="#try">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>먼저 예외가 발생할 수 있는 코드를 <code>try</code> 블록으로 묶고, <code>try</code> 블록 내부에서 발생 가능한 예외를 처리하는 <code>예외 처리기</code>가 존재하는 <code>catch</code> 블록을 연결하는 형태로 구현합니다.<br>
+이때, 예외가 발생할 수 있는 각 코드를 각각의 <code>try-catch</code> 문으로 묶을 수도 있고, 모든 코드를 하나의 <code>try-catch</code> 블록으로 묶어 처리할 수도 있습니다.</p>
+<h4 id="catch" >catch
+<span>
+    <a href="#catch">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>각 <code>catch</code> 블록은 <strong>인자로 받는</strong> <code>예외 타입</code>을 처리하는 <code>예외 처리기</code>로, 이때 <code>예외 타입</code>은 <code>Throwable</code>클래스의 하위 클래스여야 합니다.<br>
+런타임 시스템은 <code>예외 처리기</code>가 <code>호출 스택</code>에서 던져진 <code>예외 타입</code>과 일치하는 첫 번째 핸들러일 때, <code>예외 처리기</code>를 호출합니다.<br>
+이때 <code>예외 처리기</code> 내부에서는 단순히 오류 메시지를 출력하거나 프로그램을 중지하는 것 외에도 다양한 작업을 수행할 수 있습니다.<br>
+오류를 복구하거나, 사용자에게 결정을 내리도록 메시지를 표시하거나, <em>상위 수준</em>의 <code>예외 처리기</code>로 오류를 전파할 수도 있습니다.</p>
+<h5 id="union-catch-절" >Union catch 절
+<span>
+    <a href="#union-catch-%ec%a0%88">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>추가로, Java 7 이상에서는 <code>|</code> 키워드를 통해 하나의 <code>catch</code> 블록이 <strong>둘 이상</strong>의 예외 타입을 처리할 수 있습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span> IOException <span style="color:#f92672">|</span> SQLException ex<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    logger<span style="color:#f92672">.</span><span style="color:#a6e22e">log</span><span style="color:#f92672">(</span>ex<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">throw</span> ex<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>참고로 <code>catch</code> 블록이 둘 이상의 예외 타입을 처리하는 경우, 해당 <code>catch</code>절의 매개변수는 암시적으로 <code>final</code>로 여겨집니다. 즉, <code>catch</code> 블록 내에서 해당 매개변수에 어떠한 값도 할당할 수 없습니다.</p>
+<h4 id="finally" >finally
+<span>
+    <a href="#finally">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">finally</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>out <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span> 
+</span></span><span style="display:flex;"><span>        System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Closing PrintWriter&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        out<span style="color:#f92672">.</span><span style="color:#a6e22e">close</span><span style="color:#f92672">();</span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span> 
+</span></span><span style="display:flex;"><span>        System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;PrintWriter not open&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span> 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>f <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	    System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Closing FileWriter&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	    f<span style="color:#f92672">.</span><span style="color:#a6e22e">close</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">}</span>	
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span> 
+</span></span></code></pre></div><p><code>finally</code>블록은 <code>try</code> 블록을 탈출할 때, 항상 실행되는 블록입니다.<br>
+따라서 예상치 못한 예외가 발생해도, 항상 실행됩니다. 이러한 특징 때문에 프로그래머가 실수로 <code>return</code>, <code>continue</code>,<code>break</code> 블록을 통해 <code>클린업 코드</code>가 무시되는 것을 방지할 때도 유용합니다.</p>
+<ul>
+<li><code>클린업 코드</code>: 사용한 자원 등을 정리하는 코드</li>
+</ul>
+<h4 id="try-with-resources" >try-with-resources
+<span>
+    <a href="#try-with-resources">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">try</span> <span style="color:#f92672">(</span>FileReader fr <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> FileReader<span style="color:#f92672">(</span>path<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	 BufferedReader br <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> BufferedReader<span style="color:#f92672">(</span>fr<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> br<span style="color:#f92672">.</span><span style="color:#a6e22e">readLine</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p><code>try-with-resources</code> 문이란, 하나 이상의 자원을 선언하는 <code>try</code> 문을 말합니다.<br>
+이때 자원은, <em>프로그램이 완료된 후</em> <code>닫아야(close)</code>하는 객체를 말합니다.<br>
+<code>try-with-resources</code> 문에는 <code>java.lang.AutoCloseable</code>을 구현하는 모든 객체(<code>java.io.Closeable</code>을 구현하는 객체 포함)를 자원으로 사용할 수 있습니다.</p>
+<ul>
+<li>참고로 <code>Closeable</code> 인터페이스는 <code>AutoCloseable</code> 인터페이스를 상속합니다.</li>
+<li>추가로, <code>AutoCloseable</code>의 <code>close()</code>는 <code>Exception</code> 타입의 예외를 던지지만, <code>Closeable</code> 인터페이스는 <code>IOException</code> 타입의 예외를 던집니다.</li>
+</ul>
+<p>선언된 자원들은 <code>try</code>문이 정상적으로 완료 되었는지 또는 예외가 발생했는지에 관계 없이 항상 닫히게 됩니다.<br>
+<code>try-with-resources</code>문은 <code>finally</code> 블록을 통해서 여러 자원을 닫을 때 예외가 발생할 경우, 아직 닫지 못한 자원이 메모리 누수를 발생시킬 수 있는 것과 달리, 항상 자원을 닫음을 보장하기 때문에 <code>try-with-resources</code>문을 사용하는 것이 권장됩니다.<br>
+추가로, <code>try</code> 블록과 <code>try-with-resources</code> 문 <strong><code>모두</code>에서 예외가 발생</strong>할 경우, <code>try</code> 블록에서 <strong>발생한 예외만 던지고</strong>, <em><code>try-with-resources</code> 문에서 발생한 예외는 억제</em>됩니다.</p>
+<ul>
+<li>이렇게 <code>억제된 예외</code>는 <code>try</code> 블록에서 발생한 예외의 <code>Throwable.getSuppressed()</code> 메서드를 통해 찾을 수 있습니다.</li>
+</ul>
+<p>또한 자원의 <code>close</code> 메서드는 <strong>생성 순서의 <code>반대 순서</code></strong> 로 호출됩니다.<br>
+그리고 <code>try-with-resources</code>문 역시 <code>catch</code> 블록과 <code>finally</code> 블록을 연결할 수 있는데, 이들은 모두 <code>try</code>문에서 선언된 자원이 닫힌 후 실행되게 됩니다.</p>
+<h3 id="throws" >throws
+<span>
+    <a href="#throws">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">writeList</span><span style="color:#f92672">()</span> <span style="color:#66d9ef">throws</span> IOException<span style="color:#f92672">,</span> IndexOutOfBoundsException <span style="color:#f92672">{</span> <span style="color:#f92672">...</span> <span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>위처럼 코드 내에서 발생할 수 있는 예외를 해당 코드에서 직접 처리하도록 하는게 적절할 수도 있지만, 호출 스택의 상위 메서드가 예외를 처리하도록 하는 것이 더 좋을 수도 있습니다.<br>
+이때 <code>throws</code>절을 사용해 예외를 회피할 수 있습니다.<br>
+<code>throws</code>절에는 해당 메서드 내에서 발생할 수 있는 예외를 하나 이상 기입할 수 있습니다. 이때, 둘 이상의 예외는 <code>쉼표</code>를 통해 구분해 기입합니다.<br>
+참고로 <code>Unchecked Exception</code>의 경우 <code>Checked Exception</code>과 달리 <code>throws</code>절에 꼭 포함시키지 않아도 됩니다.</p>
+<h3 id="throw" >throw
+<span>
+    <a href="#throw">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> SampleException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Other IOException&#34;</span><span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>어느 곳에서 하나의 예외가 발생한 경우, 애플리케이션에서 종종 다른 예외를 던저 이에 응답하는 경우가 있습니다.<br>
+즉 하나의 예외가 다른 예외를 유발하는 것인데, 이를 <code>연쇄 예외(Chained Exception)</code>라고 합니다.
+이는 주로 <code>Throwable</code>의 생성자인 <code>Throwable(String, Throwable)</code>, <code>Throwable(Throwable)</code>를 활용해 이뤄집니다.<br>
+또한 <code>Throwable</code>의 <code>getCause()</code> 메서드를 통해 현재 예외를 발생시킨 예외를 얻거나, <code>initCause(Throwable)</code> 메서드를 통해 현재 예외의 원인을 설정할 수도 있습니다.</p>
+<h2 id="예외처리가-성능에-끼치는-영향은-어느정도일까" >예외처리가 성능에 끼치는 영향은 어느정도일까?
+<span>
+    <a href="#%ec%98%88%ec%99%b8%ec%b2%98%eb%a6%ac%ea%b0%80-%ec%84%b1%eb%8a%a5%ec%97%90-%eb%81%bc%ec%b9%98%eb%8a%94-%ec%98%81%ed%96%a5%ec%9d%80-%ec%96%b4%eb%8a%90%ec%a0%95%eb%8f%84%ec%9d%bc%ea%b9%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><table>
+<thead>
+<tr>
+<th>Benchmark</th>
+<th>Mode</th>
+<th>Cnt</th>
+<th>Score</th>
+<th>Error</th>
+<th>Units</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ExceptionBenchmark.createExceptionWithoutThrowingIt</td>
+<td>avgt</td>
+<td>10</td>
+<td>16.605</td>
+<td>± 0.988</td>
+<td>ms/op</td>
+</tr>
+<tr>
+<td>ExceptionBenchmark.doNotThrowException</td>
+<td>avgt</td>
+<td>10</td>
+<td>0.047</td>
+<td>± 0.006</td>
+<td>ms/op</td>
+</tr>
+<tr>
+<td>ExceptionBenchmark.throwAndCatchException</td>
+<td>avgt</td>
+<td>10</td>
+<td>16.449</td>
+<td>± 0.304</td>
+<td>ms/op</td>
+</tr>
+<tr>
+<td>ExceptionBenchmark.throwExceptionWithoutAddingStackTrace</td>
+<td>avgt</td>
+<td>10</td>
+<td>1.185</td>
+<td>± 4.991</td>
+<td>ms/op</td>
+</tr>
+<tr>
+<td>ExceptionBenchmark.throwExceptionAndUnwindStackTrace</td>
+<td>avgt</td>
+<td>10</td>
+<td>326.560</td>
+<td>± 0.015</td>
+<td>ms/op</td>
+</tr>
+</tbody>
+</table>
+<p><a href="https://www.baeldung.com/java-exceptions-performance">Performance Effects of Exceptions in Java | Baeldung</a>의 벤치마크 결과를 보면, 예외를 발생시키고 이를 <code>try-catch</code> 블록으로 처리하는 메서드는 예외가 발생하지 않는 메서드에 비해 수백 배 느리게 실행됩니다. 심지어 단지 예외를 생성하기만 하는 메서드 역시 수 백배 느립니다.<br>
+하지만 예외를 발생시키고, 이를 <code>try-catch</code> 블록으로 처리하는 메서드에서 <code>Stack Trace</code>에 해당 예외를 추가하지 않도록 했더니 시간을 수 백배 단축할 수 있었습니다.<br>
+게다가 발생한 예외의 <code>getStackTrace()</code> 메서드를 호출해 <code>StackTrace</code>를 <code>Unwinding</code>, 즉 현재 메서드 부터 <code>호출 스택</code>의 메인 메서드 까지 되감아 올라갈 경우 실행 시간이 <strong>스무 배</strong> 증가했습니다.<br>
+이를 종합해 보면, <code>Stack Trace</code>에 예외를 추가하는데 상당한 성능 저하가 발생함을 알 수 있습니다.
+특히, <code>Stack Trace</code>를 <code>Unwinding</code>하는 경우 성능 저하는 더욱 심해집니다.<br>
+따라서 예외 처리에 따른 성능 저하를 방지하기 위해서는, 최대한 적재적소에만 예외 처리문을 사용하는 것이 좋습니다. 즉, <strong>예외 처리문을 가능한 적게 사용</strong>하는 것이 좋습니다.</p>
+<h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/definition.html">What Is an Exception? (The Java™ Tutorials &gt; Essential Java Classes &gt; Exceptions) (oracle.com)</a></li>
+<li><a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/try.html">The try Block (The Java™ Tutorials &gt; Essential Java Classes &gt; Exceptions) (oracle.com)</a></li>
+<li><a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/catch.html">The catch Blocks (The Java™ Tutorials &gt; Essential Java Classes &gt; Exceptions) (oracle.com)</a></li>
+<li><a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/finally.html">The finally Block (The Java™ Tutorials &gt; Essential Java Classes &gt; Exceptions) (oracle.com)</a></li>
+<li><a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/catchOrDeclare.html">The Catch or Specify Requirement (The Java™ Tutorials &gt; Essential Java Classes &gt; Exceptions) (oracle.com)</a></li>
+<li><a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/chained.html">Chained Exceptions (The Java™ Tutorials &gt; Essential Java Classes &gt; Exceptions) (oracle.com)</a></li>
+<li><a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/advantages.html">Advantages of Exceptions (The Java™ Tutorials &gt; Essential Java Classes &gt; Exceptions) (oracle.com)</a></li>
+<li><a href="https://docs.oracle.com/javase%2F8%2Fdocs%2Fapi%2F%2F/java/lang/Exception.html">Exception (Java Platform SE 8 ) (oracle.com)</a></li>
+<li><a href="https://docs.oracle.com/javase%2F8%2Fdocs%2Fapi%2F%2F/java/lang/Throwable.html">Throwable (Java Platform SE 8 ) (oracle.com)</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/exception/"><time datetime="2024-06-26">2024-06-26 16:54 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/exception/">https://cloudsoswift.github.io/post/develop/java/exception/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/exception/">#Exception</a></li>
+                
+                    
+                    <li><a href="">#예외 처리</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/java/synchronized/">[Java] synchronized 알아보기</a></li>
+                
+                <li><a href="/post/develop/java/ioc-di/">[Spring] IoC와 DI 알아보기</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item ">
+            
+                <a href="/post/develop/javascript/javascript/event-bubbling-capturing/">[Javascript] 이벤트 전파 단계(버블링과 캡처링) 알아보기</a>
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/os/ipc/">[OS] IPC 알아보기</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>

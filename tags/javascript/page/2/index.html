@@ -3,7 +3,6 @@
 
 <html lang="ko-kr" data-theme="">
 <head>
-	<meta name="generator" content="Hugo 0.110.0">
     
         
 <meta charset="utf-8">
@@ -11,7 +10,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="referrer" content="no-referrer-when-downgrade">
 
-<title>오늘도 개발을 한다.</title>
+<title>Javascript - 오늘도 개발을 한다.</title>
 
 <meta name="description" content="Anubis is a simple minimalist theme for Hugo blog engine.">
 
@@ -19,7 +18,7 @@
 
 
 
-<link rel="alternate" type="application/rss+xml" href="https://cloudsoswift.github.io/index.xml" title="오늘도 개발을 한다." />
+<link rel="alternate" type="application/rss+xml" href="https://cloudsoswift.github.io/tags/javascript/index.xml" title="오늘도 개발을 한다." />
 <link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
 <link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
 
@@ -93,13 +92,13 @@
 
 
 
-<meta property="og:title" content="오늘도 개발을 한다." />
+<meta property="og:title" content="Javascript" />
 <meta property="og:description" content="Anubis is a simple minimalist theme for Hugo blog engine." />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://cloudsoswift.github.io/" />
+<meta property="og:url" content="https://cloudsoswift.github.io/tags/javascript/" />
 
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="오늘도 개발을 한다."/>
+<meta name="twitter:title" content="Javascript"/>
 <meta name="twitter:description" content="Anubis is a simple minimalist theme for Hugo blog engine."/>
 
 
@@ -215,27 +214,24 @@
         </header>
         <main id="main" tabindex="-1"> 
             
-    <div class="homepage-content">
-        
+    <h1>Tag: Javascript</h1>
+    <div class="post-info">
+        <a href="/tags/">To all tags</a>
     </div>
-
-    <div class="articles h-feed">
-        
-        
-            <article class="post-list h-feed">
+    
+    
+        <article class="post-list h-feed">
     <div class="post-header">
         <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/javascript/map-vs-object/">[Javascript] Map과 Object, 뭘 써야 할까?</a></h1>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/230219/circular_import/">[Javascript] 순환 참조 (Circular Import)</a></h1>
         </header>
         
     </div>
 
     
         <div class="content post-summary p-summary">
-            서론최근 한 기업의 코딩 테스트를 푸는데, 중첩된 구조의 객체를 필요로 하는 문제를 맞닥들이게 되었다.
-나는 &lsquo;Object가 Map보다 있는 기능이 별로 없으니까, 혹시 몰라서 메모리 터질 수 있는 Map 보단 Object가 낫지 않을까?&rsquo; 라는 생각으로 Object를 활용해 해당 문제를 풀었다.
-그리고 그 이후 내 생각이 맞을까? 라는 생각을 갖게 되었고 이를 직접 테스트 한 뒤 내용을 정리해보고 싶어졌다.
-따라서 여러 글을 찾아 보았고, 직접 문제와 유사한 상황을 가정하고 코드를 작성해 시간과 메모리 사용량을 측정해보았다.
+            오늘은 Javascript, Python같은 언어에서 import시 발생할 수 있는 순환 참조 에러에 대한 포스트를 작성하고자 한다.
+순환 참조메모리 관점에서의 순환 참조 ( In Javascript )간단히 요약하자면, 서로 다른 두 객체가 서로를 참조하여, 가비지 컬렉션 알고리즘의 대상에 포함되지 않아 해당 객체들이 불필요해져도 메모리 회수되지 않고 존속하게되는 문제이다. Mozilla Developer Network의 문서의 예시를 드는게 이해하기 쉽다. import b from &#34;b&#34;; function f() { var x = {}; var y = {}; x.
         </div>
     
     
@@ -249,12 +245,12 @@
 <div class="post-info">
     
         <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/javascript/map-vs-object/"><time datetime="2024-04-21">2024-04-21 06:13 KST</time></a>
-            
+            <a class="u-url" href="/post/develop/230219/circular_import/"><time datetime="2023-02-19">2023-02-19 11:22 KST</time></a>
+            [Last modified: <time datetime="2023-02-21">2023-02-21 22:28 KST</time>]
         </div>
     
 
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/map-vs-object/">https://cloudsoswift.github.io/post/develop/javascript/map-vs-object/</a>
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/230219/circular_import/">https://cloudsoswift.github.io/post/develop/230219/circular_import/</a>
     <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
 
 
@@ -269,19 +265,13 @@
         
         
             <ul class="post-tags">
+                
+                    
+                    <li><a href="">#개발</a></li>
                 
                     
                     <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
                 
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/object/">#Object</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/map/">#Map</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/hashtable/">#HashTable</a></li>
-                
             </ul>
         
         
@@ -289,164 +279,22 @@
 </div>
 
 </article>
-        
-            <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/network/xss/">[웹, 네트워크] XSS 알아보기</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 3월 12일 발표한 XSS에 대해 정리한 문서를 블로그에 공유하고자 한다.
-XSS란?신뢰할 수 있는 웹 사이트에 악성코드를 삽입하는 공격을 말합니다.
-공격자가 표적 웹사이트의 콘텐츠에 악성 스크립트를 삽입하고, 피해자의 브라우저에 전달되는 동적 콘텐츠에 이를 포함시키므로써 피해를 입게 됩니다.
-이때, 피해자의 브라우저는 해당 스크립트가 &lsquo;신뢰할 수 없는 스크립트&rsquo;라는 점을 알 수 없어 해당 스크립트를 실행하게 됩니다.
-악성 스크립트는 피해자의 브라우저가 보유한 해당 사이트에서 사용되는 모든 쿠키, 저장소에 저장된 민감 정보에 액세스할 수 있습니다.
-        </div>
     
     
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/network/xss/"><time datetime="2024-03-19">2024-03-19 19:51 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/network/xss/">https://cloudsoswift.github.io/post/develop/network/xss/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
-                
-            </ul>
-        
-        
-            <ul class="post-tags">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/network/">#Network</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/web/">#Web</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/xss/">#XSS</a></li>
-                
-                    
-                    <li><a href="">#보안</a></li>
-                
-            </ul>
-        
-        
-    </div>
-</div>
-
-</article>
-        
-            <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/network/sop/">[웹, 네트워크] SOP 알아보기</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 3월 20일 발표예정인 SOP에 대해 정리한 문서를 블로그에 공유하고자 한다.
-SOP 정책이란?.동일 출처 정책(SOP, Same Origin Policy) 은 한 출처에서 불러온 문서 또는 스크립트가 다른 출처의 자원과 상호 작용하는 방식을 제한하는 보안 메커니즘입니다.
-다른 출처의 자원과의 상호 작용을 제한하므로써, 잠재적으로 악의적인 문서들로 부터 격리시켜 가능한 공격 경로를 줄일 수 있습니다. 이러한 격리를 통해 악성 웹사이트가 사용자가 로그인한 타 서비스의 데이터를 읽고 공격자에게 전달하는 것을 막을 수 있습니다.
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/network/sop/"><time datetime="2024-03-19">2024-03-19 19:50 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/network/sop/">https://cloudsoswift.github.io/post/develop/network/sop/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
-                
-            </ul>
-        
-        
-            <ul class="post-tags">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/network/">#Network</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/web/">#Web</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/sop/">#SOP</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/cors/">#CORS</a></li>
-                
-                    
-                    <li><a href="">#보안</a></li>
-                
-            </ul>
-        
-        
-    </div>
-</div>
-
-</article>
-        
-        
     
     
     <div class="pagination">
         <div class="left pagination-item ">
             
-                <a href="/">to new posts</a>
+                <a href="/tags/javascript/">to new posts</a>
             
         </div>
-        <div class="right pagination-item ">
-            
-                <a href="/page/3/">to old posts</a>
+        <div class="right pagination-item disabled">
             
         </div>
     </div>
 
 
-    </div>
 
 
         </main>

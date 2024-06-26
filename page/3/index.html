@@ -225,6 +225,140 @@
             <article class="post-list h-feed">
     <div class="post-header">
         <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/java/synchronized/">[Java] synchronized 알아보기</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            서론CS 스터디에서 3월 6일 발표한 synchronized에 대해 정리한 문서를 블로그에 공유하고자 한다.
+synchronized 키워드란?멀티 스레드 환경에서 Java 언어가 공유 자원에 대한 동기화 처리를 위해 사용되는 관용구(idiom)입니다. 이 키워드를 사용해 개발자는 간단하게 경쟁 조건(Race Condition) 을 피할 수 있습니다.
+Synchronized 키워드를 사용하게 되면 Java는 내부적으로 모니터(monitor)(모니터 락(monitor lock) 또는 내재적 락(intrinsic lock)이라고도 불림)을 사용해 동기화를 처리합니다.
+모니터는 동기화에 필요한 &lsquo;객체 상태에 대한 배타적 액세스 강제&rsquo;, &lsquo;가시성(visibility)에 필수적인 발생-전(happen-before) 관계 설정&rsquo; 과 같은 작업을 수행하는 역할을 합니다.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/synchronized/"><time datetime="2024-03-04">2024-03-04 23:19 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/synchronized/">https://cloudsoswift.github.io/post/develop/java/synchronized/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/jvm/">#JVM</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/locking/">#Locking</a></li>
+                
+                    
+                    <li><a href="">#동시성</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/java/ioc-di/">[Spring] IoC와 DI 알아보기</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            서론CS 스터디에서 2월 27일에 발표 예정인 IoC와 DI에 대해 정리한 문서를 블로그에 공유하고자 한다.
+IoC와 DI란?IoC (Inversion of Control, 제어의 역전)제어의 역전 은 사용자가 작성한 코드가 제네릭 프레임워크로부터 제어의 흐름을 전달받는 디자인 패턴을 말합니다.
+절차적 프로그래밍에선 사용자의 코드가 일반적인 작업을 위해 라이브러리를 호출하지만, 제어의 역전에선 프레임워크가 사용자의 코드를 호출하게 됩니다.
+제어의 역전은 재사용 가능한 코드와 특정 문제를 위한 코드가 애플리케이션에서 함께 동작해도, 독립적으로 개발된다는 의미를 지닙니다.
+예시
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/ioc-di/"><time datetime="2024-02-27">2024-02-27 01:55 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/ioc-di/">https://cloudsoswift.github.io/post/develop/java/ioc-di/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/spring/">#Spring</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/design-pattern/">#Design Pattern</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
             <h1 class="p-name post-title"><a class="u-url" href="/post/develop/database/db-locking/">[DB] DB Locking 알아보기</a></h1>
         </header>
         
@@ -279,135 +413,6 @@ DB Locking이란?병행 트랜잭션이 가능한 환경에서, 변경중인 re
                 
                     
                     <li><a href="">#동시성</a></li>
-                
-            </ul>
-        
-        
-    </div>
-</div>
-
-</article>
-        
-            <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/database/b-tree-b&#43;tree/">[자료구조] B Tree와 B+tree 알아보기</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) B 트리와 B+ 트리에 대해 정리한 문서를 블로그에 공유하고자 한다.
-B-Tree와 B+Tree는 무엇일까B 트리 (B-Tree)이진 트리를 확장해 한 노드가 가질 수 있는 자식 노드의 갯수가 2개 이상인 자가 균형 이진 검색 트리(Self Balancing Binary Search Tree)의 일종이며, 각 노드가 갖고있는 키 들은 정렬되어 있습니다.
-다른 자체 균형 이진 검색 트리와 달리, B 트리는 DB, File System과 같이 큰 데이터 블록을 읽고 써야하는 스토리지 시스템에 적합합니다.
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/database/b-tree-b&#43;tree/"><time datetime="2024-02-18">2024-02-18 09:58 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/database/b-tree-b&#43;tree/">https://cloudsoswift.github.io/post/develop/database/b-tree-b&#43;tree/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
-                
-            </ul>
-        
-        
-            <ul class="post-tags">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/db/">#DB</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/b-tree/">#B-Tree</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/b&#43;tree/">#B&#43;Tree</a></li>
-                
-                    
-                    <li><a href="">#자료구조</a></li>
-                
-            </ul>
-        
-        
-    </div>
-</div>
-
-</article>
-        
-            <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/java/reflection/">[Java] Reflection에 대해 알아보기</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 2월 6일에 발표한 Java의 Reflection에 대해 정리한 문서를 블로그에 공유하고자 한다.
-Reflection이란? #Oracle 공식 문서Reflection은 Java의 기능 중 하나로, 실행중인 Java 프로그램이 스스로를 검사하거나, 프로그램 내부 속성(클래스, 인터페이스, 필드 값 및 메서드)을 조작할 수 있게 해줍니다.
-이는 컴파일 시간에 이름을 모르는 속성을 사용해야 할 때 특히 유용합니다.
-또한, Reflection을 통해 새로운 객체를 인스턴스화 하거나, 메서드를 호출(invoke) 하고 필드 값을 얻거나 설정할 수 있습니다. 이러한 기능은 Java만의 특징 으로 Reflection이 처음 나온 1997년 당시에는 Pascal, C, C++와 같은 언어로 작성된 프로그램은 프로그램 내에서 정의된 함수에 대한 정보를 얻을 수 있는 방법이 없습니다.
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/java/reflection/"><time datetime="2024-02-18">2024-02-18 09:55 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/reflection/">https://cloudsoswift.github.io/post/develop/java/reflection/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
-                
-            </ul>
-        
-        
-            <ul class="post-tags">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/reflection/">#Reflection</a></li>
                 
             </ul>
         
