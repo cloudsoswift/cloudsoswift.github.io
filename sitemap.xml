@@ -2,28 +2,46 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://cloudsoswift.github.io/post/develop/javascript/module-system/</loc>
+    <lastmod>2024-07-03T14:24:26+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/amd/</loc>
+    <lastmod>2024-07-03T14:24:26+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/categories/</loc>
+    <lastmod>2024-07-03T14:24:26+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/commonjs/</loc>
+    <lastmod>2024-07-03T14:24:26+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/categories/develop/</loc>
+    <lastmod>2024-07-03T14:24:26+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/esmodule/</loc>
+    <lastmod>2024-07-03T14:24:26+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/javascript/</loc>
+    <lastmod>2024-07-03T14:24:26+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/module/</loc>
+    <lastmod>2024-07-03T14:24:26+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/post/</loc>
+    <lastmod>2024-07-03T14:24:26+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/</loc>
+    <lastmod>2024-07-03T14:24:26+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/umd/</loc>
+    <lastmod>2024-07-03T14:24:26+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/</loc>
+    <lastmod>2024-07-03T14:24:26+09:00</lastmod>
+  </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/javascript/javascript/event-bubbling-capturing/</loc>
     <lastmod>2024-06-26T17:00:00+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/categories/</loc>
-    <lastmod>2024-06-26T17:00:00+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/categories/develop/</loc>
-    <lastmod>2024-06-26T17:00:00+09:00</lastmod>
-  </url><url>
     <loc>https://cloudsoswift.github.io/tags/event/</loc>
-    <lastmod>2024-06-26T17:00:00+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/javascript/</loc>
-    <lastmod>2024-06-26T17:00:00+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/post/</loc>
-    <lastmod>2024-06-26T17:00:00+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/</loc>
-    <lastmod>2024-06-26T17:00:00+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/</loc>
     <lastmod>2024-06-26T17:00:00+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/java/exception/</loc>

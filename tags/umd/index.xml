@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>UMD on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/umd/</link>
+    <description>오늘도 개발을 한다. (UMD)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Wed, 03 Jul 2024 14:24:26 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/umd/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[Javascript] 모듈 시스템들 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/javascript/module-system/</link>
+      <pubDate>Wed, 03 Jul 2024 14:24:26 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/javascript/module-system/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 7월 2일 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/4_Module-System/Readme.md&#34;&gt;&lt;strong&gt;모듈 시스템&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;module-in-javascript&#34; &gt;Module in Javascript
+&lt;span&gt;
+    &lt;a href=&#34;#module-in-javascript&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;Javascript에서 &lt;code&gt;모듈&lt;/code&gt;이란, &lt;em&gt;다른 프로그래밍 언어의 모듈처럼&lt;/em&gt;, 커진 자바스크립트 코드들을 여러 파일로 분리하는 것을 말합니다.&lt;br&gt;
+초기에는 자바스크립트 코드들이 &lt;em&gt;크기도 작고 단순한 작업을 수행&lt;/em&gt;했기 때문에 &lt;strong&gt;코드의 분리를 필요로 하지 않았지만&lt;/strong&gt;, 자바스크립트가 &lt;strong&gt;완전한 애플리케이션을 실행&lt;/strong&gt;할 수 있게 되고, 이에 따라 코드의 크기도 커지고 복잡해졌습니다.&lt;br&gt;
+특히 기존의 경우, &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt; 태그를 통해 여러 자바스크립트 파일을 불러올 수 밖에 없었는데, 이들은 전역 네임스페이스를 공유하기 때문에 이전 스크립트의 변수를 뒤집어쓰는 등 혼동을 초래하기 쉬웠습니다.&lt;br&gt;
+따라서 이들을 보완하고자, 자바스크립트를 모듈화 하는 방법에 대해 여러 매커니즘이 등장하게 되었습니다.&lt;br&gt;
+이러한 모듈 시스템으로는 주로 &lt;code&gt;AMD&lt;/code&gt;, &lt;code&gt;CommonJS&lt;/code&gt;, &lt;code&gt;UMD&lt;/code&gt;, &lt;code&gt;ESM&lt;/code&gt; 4개의 시스템이 주로 사용됩니다.&lt;br&gt;
+상세하게는, &lt;code&gt;AMD&lt;/code&gt;, &lt;code&gt;CommonJS&lt;/code&gt;, &lt;code&gt;UMD&lt;/code&gt;와 같은 비표준 시스템이 등장해 사용되다가, &lt;code&gt;ES2015(ES6)&lt;/code&gt;에 &lt;code&gt;ESM(ES Modules)&lt;/code&gt;가 등장하므로써 모듈 시스템이 표준으로 자리잡게 되었습니다.&lt;br&gt;
+2018년 Firefox 60이 등장한 이후, &lt;strong&gt;모든 주요 브라우저&lt;/strong&gt;들은 &lt;strong&gt;&lt;code&gt;ES Module&lt;/code&gt;을 지원&lt;/strong&gt;하게 되었으며 &lt;code&gt;CommonJS&lt;/code&gt;를 기본적으로 지원하는 &lt;code&gt;Node.js&lt;/code&gt; 역시 &lt;strong&gt;12버전&lt;/strong&gt; 부터 &lt;code&gt;ESM&lt;/code&gt;를 지원하기 시작했으며, 현재 &lt;code&gt;완전한 지원(fully-support)&lt;/code&gt;을 제공하고 있습니다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Node.js fully supports ECMAScript modules as they are currently specified and provides interoperability between them and its original module format, &lt;a href=&#34;https://nodejs.org/api/modules.html&#34;&gt;CommonJS&lt;/a&gt;.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://nodejs.org/api/esm.html&#34;&gt;Modules: ECMAScript modules | Node.js v22.3.0 Documentation (nodejs.org)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;amd&#34; &gt;&lt;code&gt;AMD&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#amd&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;Asynchronous module definition(비동기 모듈 정의)&lt;/code&gt;, 줄여서 &lt;code&gt;AMD&lt;/code&gt;란 &lt;code&gt;비동기&lt;/code&gt;적으로 모듈과 그 종속성을 불러올 수 있도록 모듈을 정의하는 메커니즘을 말합니다.&lt;br&gt;
+&lt;img src=&#34;AMD-Loading.png&#34; alt=&#34;AMD-Loading.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;위 그림처럼, AMD 방식은 불러올 파일들 간에 종속성이 존재하더라도 이들을 순서대로 로딩하지 않고 모두 개별적으로 로딩할 수 있습니다.&lt;br&gt;
+&lt;code&gt;AMD&lt;/code&gt;는 전역 변수(또는 &lt;code&gt;자유 변수&lt;/code&gt;)로 사용할 수 있는 함수인 &lt;code&gt;define()&lt;/code&gt;과, &lt;code&gt;CommonJS&lt;/code&gt;와의 상호운용성을 제공하기 위해 유사한 형태의 &lt;code&gt;exports&lt;/code&gt;와 &lt;code&gt;require()&lt;/code&gt; 인터페이스를 제공합니다. (다만, 보통 &lt;code&gt;define()&lt;/code&gt;을 사용하는 것이 더 선호됩니다.)&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;자유 변수&lt;/code&gt;: 함수에 사용되는 변수 중 &lt;strong&gt;지역 변수&lt;/strong&gt; 또는 &lt;strong&gt;해당 함수의 매개 변수&lt;/strong&gt;가 &lt;strong&gt;아닌&lt;/strong&gt; 변수를 의미합니다.&lt;br&gt;
+알려진 &lt;code&gt;AMD&lt;/code&gt; 구현체로는 &lt;a href=&#34;https://dojotoolkit.org/&#34;&gt;Dojo Toolkit&lt;/a&gt;, &lt;a href=&#34;https://requirejs.org/&#34;&gt;RequireJS&lt;/a&gt; 등이 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;api-사양-httpsgithubcomamdjsamdjs-apiwikiamd&#34; &gt;API 사양 &lt;a href=&#34;https://github.com/amdjs/amdjs-api/wiki/AMD&#34;&gt;#&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#api-%ec%82%ac%ec%96%91-httpsgithubcomamdjsamdjs-apiwikiamd&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;define-함수&#34; &gt;&lt;code&gt;define()&lt;/code&gt; 함수
+&lt;span&gt;
+    &lt;a href=&#34;#define-%ed%95%a8%ec%88%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;전역변수로 사용할 수 있는 이 함수는 일종의 &lt;strong&gt;네임스페이스 역할&lt;/strong&gt;을 해, 모듈에서 사용하는 변수와 전역 변수를 분리하는 역할을 해주는 함수입니다. 이를 통해 브라우저 환경의 Javascript에는 존재하지 않는 &lt;strong&gt;&lt;code&gt;파일 스코프&lt;/code&gt;를 대신&lt;/strong&gt;할 수 있습니다.&lt;br&gt;
+&lt;code&gt;define()&lt;/code&gt; 함수는 다음과 같은 함수 시그니처를 가지며, 각 인수들은 다음을 뜻합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;define&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;id&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;dependencies&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;factory&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;id&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;모듈을 식별&lt;/code&gt;하는데 사용되는 인수로, &lt;code&gt;문자열 리터럴&lt;/code&gt;입니다.&lt;/li&gt;
+&lt;li&gt;선택 사항이며, 이 값이 주어지지 않으면 로더가 요청하는 &amp;lt;script&amp;gt; 태그의 src 값(id)를 기본 id로 설정합니다.
+&lt;ul&gt;
+&lt;li&gt;만약 명시할 경우, 모듈 id는 반드시 &lt;code&gt;최상위&lt;/code&gt; 또는 &lt;code&gt;절대 id(절대 경로)&lt;/code&gt; 여야 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;모듈 id&lt;/code&gt;는 정의중인 모듈을 식별하는데 사용할 수 있고, 종속성 배열 인수에도 사용됩니다. &lt;code&gt;AMD&lt;/code&gt;의 &lt;code&gt;모듈 id&lt;/code&gt;는 &lt;a href=&#34;https://wiki.commonjs.org/wiki/Modules/1.1.1#Module_Identifiers&#34;&gt;CommonJS 모듈 식별자에서 허용되는 것&lt;/a&gt;의 상위 집합입니다.
+&lt;ul&gt;
+&lt;li&gt;모듈 식별자는 &lt;code&gt;/(슬래쉬)&lt;/code&gt;로 구분되는 &lt;code&gt;용어들(terms)&lt;/code&gt;의 문자열입니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;용어&lt;/code&gt;는 카멜 케이스 식별자, &lt;code&gt;.&lt;/code&gt; 또는 &lt;code&gt;..&lt;/code&gt; 여야 합니다.&lt;/li&gt;
+&lt;li&gt;모듈 식별자는 &lt;code&gt;&amp;quot;.js&amp;quot;&lt;/code&gt;와 같은 파일이름 확장자를 가질 수 없습니다.&lt;/li&gt;
+&lt;li&gt;모듈 식별자는 &lt;code&gt;상대적&lt;/code&gt;이거나, &lt;code&gt;최상위&lt;/code&gt; 일 수 있습니다. 만약 첫 번째 용어가 &lt;code&gt;.&lt;/code&gt; 또는 &lt;code&gt;..&lt;/code&gt; 인 경우 &lt;code&gt;상대적&lt;/code&gt;입니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;최상위&lt;/code&gt; 식별자는 개념적 모듈 네임스페이스루트에서 확인됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;상대적&lt;/code&gt; 식별자는 &lt;code&gt;require&lt;/code&gt; 코드가 작성 및 호출되는 모듈의 식별자를 기준으로 합니다.
+&lt;ul&gt;
+&lt;li&gt;만약 &lt;code&gt;a/b/c&lt;/code&gt; 모듈이 &lt;code&gt;../d&lt;/code&gt; 모듈을 요청하면, 이는 &lt;code&gt;a/d&lt;/code&gt;로 요청됩니다.&lt;/li&gt;
+&lt;li&gt;만약 &lt;code&gt;a/b/c&lt;/code&gt; 모듈이 &lt;code&gt;./e&lt;/code&gt; 모듈을 요청하면, 이는 &lt;code&gt;a/b/e&lt;/code&gt;로 요청됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;dependencies&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;현재 정의 중인 모듈에 필요한 의존성&lt;/em&gt;인 &lt;code&gt;모듈 id&lt;/code&gt;의 배열 리터럴입니다.&lt;/li&gt;
+&lt;li&gt;이는 모듈 팩토리 함수가 실행되기 전 요청되어야 하며, 요청된 값은 &lt;code&gt;의존성 배열에서의 인덱스&lt;/code&gt;와 &lt;strong&gt;동일한 순서&lt;/strong&gt;로 &lt;code&gt;팩토리 함수의 인자&lt;/code&gt;로 &lt;strong&gt;전달&lt;/strong&gt;되어야 합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;종속성 모듈 id&lt;/code&gt;는 &lt;code&gt;상대적 id&lt;/code&gt;일 수 있으며, 정의되는 모듈을 기준으로 요청됩니다.&lt;/li&gt;
+&lt;li&gt;만약 종속성 목록에 &lt;code&gt;require&lt;/code&gt;, &lt;code&gt;exports&lt;/code&gt;, &lt;code&gt;module&lt;/code&gt; 이라는 값이 등장한다면 이는 &lt;code&gt;CommonJS&lt;/code&gt; 모듈 사양에 정의된 해당 자유 변수로 해석되어야 합니다.&lt;/li&gt;
+&lt;li&gt;만약 이를 생략하면, 기본 값은 &lt;code&gt;[&amp;quot;require&amp;quot;, &amp;quot;exports&amp;quot;, &amp;quot;module&amp;quot;]&lt;/code&gt;이 됩니다.
+- 그러나 팩토리 함수의 &lt;code&gt;항수(매개변수의 개수)&lt;/code&gt;가 3보다 작은 경우, 로더는 함수의 &lt;code&gt;항수(또는 길이)&lt;/code&gt;에 해당하는 수의 인수만 사용해 팩토리 함수를 호출하도록 선택할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;factory&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;모듈 또는 객체를 인스턴스화하기위해 실행해야 하는 함수입니다.&lt;/li&gt;
+&lt;li&gt;만약 &lt;code&gt;factory&lt;/code&gt;가 함수라면 &lt;code&gt;싱글톤&lt;/code&gt;으로 한 번만 실행되며, 객체인 경우 해당 객체를 모듈의 &lt;code&gt;exports&lt;/code&gt; 객체의 속성값으로 할당합니다.
+&lt;ul&gt;
+&lt;li&gt;만약 &lt;code&gt;factory&lt;/code&gt; 함수가 값(&lt;code&gt;객체&lt;/code&gt;, &lt;code&gt;함수&lt;/code&gt;, 또는 &lt;code&gt;true로 인식되는 모든 값&lt;/code&gt;)을 반환할 경우, 이 역시 해당 값을 &lt;code&gt;exports&lt;/code&gt; 객체의 속성값으로 할당합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;defineamd-프로퍼티&#34; &gt;&lt;code&gt;define.amd&lt;/code&gt; 프로퍼티
+&lt;span&gt;
+    &lt;a href=&#34;#defineamd-%ed%94%84%eb%a1%9c%ed%8d%bc%ed%8b%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;&amp;lt;script&amp;gt; src&lt;/code&gt; 브라우저 로딩에 필요한 전역 &lt;code&gt;define&lt;/code&gt; 함수가 &lt;code&gt;AMD&lt;/code&gt; API를 준수한다는 표시를 하기 위해, 모든 전역 &lt;code&gt;define&lt;/code&gt; 함수는 값이 객체인 &lt;strong&gt;&lt;code&gt;amd&lt;/code&gt; 라는 프로퍼티&lt;/strong&gt;를 갖고 있어야 합니다.&lt;br&gt;
+이는 &lt;code&gt;AMD&lt;/code&gt; API를 준수하지 않는 &lt;code&gt;define&lt;/code&gt; 함수를 정의하는 다른 코드와의 충돌을 막을 수 있습니다.&lt;br&gt;
+&lt;code&gt;define.amd&lt;/code&gt;객체 내부의 속성은 지정되어 있지 않기 때문에, &lt;code&gt;AMD&lt;/code&gt; 로더 구현체에 따라 해당 객체 내부의 프로퍼티를 활용해 여러 기능들을 추가할 수 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;예시-코드&#34; &gt;예시 코드
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-%ec%bd%94%eb%93%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;define&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;alpha&amp;#34;&lt;/span&gt;, [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;require&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;exports&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;beta&amp;#34;&lt;/span&gt;], &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;require&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;exports&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;beta&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// 외부에 verb 라는 프로퍼티를 내보냄
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;exports&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;verb&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// 의존성으로 설정된 다른 모듈을 사용하려면
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// 넘겨받는 인수를 사용하거나,
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;beta&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;verb&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// 또는 require()를 이용해
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// 얻어 온 모듈을 사용해도 된다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;require&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;beta&amp;#34;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;verb&lt;/span&gt;();  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;장점&#34; &gt;장점
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%a5%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;전역변수-문제가-없음&#34; &gt;전역변수 문제가 없음
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a0%84%ec%97%ad%eb%b3%80%ec%88%98-%eb%ac%b8%ec%a0%9c%ea%b0%80-%ec%97%86%ec%9d%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;define()&lt;/code&gt; 함수를 이용해 모듈을 구현하므로, 즉, 클로저를 사용해 모듈 정의를 캡슐화 하므로 전역 네임스페이스 오염을 방지할 수 있습니다.&lt;/p&gt;
+&lt;h5 id=&#34;commonjs와의-상호운용성을-제공함&#34; &gt;&lt;code&gt;CommonJS&lt;/code&gt;와의 상호운용성을 제공함
+&lt;span&gt;
+    &lt;a href=&#34;#commonjs%ec%99%80%ec%9d%98-%ec%83%81%ed%98%b8%ec%9a%b4%ec%9a%a9%ec%84%b1%ec%9d%84-%ec%a0%9c%ea%b3%b5%ed%95%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h3 id=&#34;commonjs&#34; &gt;&lt;code&gt;CommonJS&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#commonjs&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;CommonJS&lt;/code&gt;란 &lt;a href=&#34;https://www.blueskyonmars.com/2009/01/29/what-server-side-javascript-needs/&#34;&gt;모질라의 Kevin Dangoor에 의해 2009년 시작된&lt;/a&gt;(당시 이름은 &lt;code&gt;ServerJS&lt;/code&gt;), &amp;ldquo;웹 브라우저 외부(특히 웹 서버 등 서버사이드)에서의 Javascript용 모듈 생태계를 표준화하기 위한 명세&amp;quot;를 포함한 프로젝트를 말합니다.&lt;br&gt;
+&lt;code&gt;웹 브라우저 외부(특히 서버사이드)&lt;/code&gt;에서의 &lt;strong&gt;사용을 목표&lt;/strong&gt;로 했기 때문에, &lt;code&gt;Node.js&lt;/code&gt;와 같은 런타임에서 &lt;a href=&#34;https://nodejs.org/api/modules.html&#34;&gt;채택해 사용 중&lt;/a&gt;입니다.&lt;/p&gt;
+&lt;h4 id=&#34;특징&#34; &gt;특징
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%8a%b9%ec%a7%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;CommonJS&lt;/code&gt;는 &lt;code&gt;동기식&lt;/code&gt; &lt;strong&gt;모듈 시스템&lt;/strong&gt;이기 때문에, 특정 모듈을 &lt;code&gt;import&lt;/code&gt;한 경우 &lt;em&gt;해당 모듈이 로드될 때 까지&lt;/em&gt; &lt;strong&gt;코드 실행이 중단&lt;/strong&gt;됩니다.&lt;/li&gt;
+&lt;li&gt;모듈을 가져오기 위해 &lt;code&gt;require&lt;/code&gt; 함수를, 모듈을 내보내기 위해 &lt;code&gt;module.exports&lt;/code&gt; 객체를 사용합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;api-명세-httpswikicommonjsorgwikimodules111&#34; &gt;API 명세 &lt;a href=&#34;https://wiki.commonjs.org/wiki/Modules/1.1.1&#34;&gt;#&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#api-%eb%aa%85%ec%84%b8-httpswikicommonjsorgwikimodules111&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;앞서 설명한 것 처럼, CommonJS에서 모듈을 불러오고, 내보내기 위해 &lt;code&gt;require()&lt;/code&gt;  함수와 &lt;code&gt;module.exports&lt;/code&gt; 객체를 사용합니다.&lt;br&gt;
+&lt;a href=&#34;https://wiki.commonjs.org/wiki/Modules/1.1.1&#34;&gt;API 명세&lt;/a&gt;에는 이들에 대해 다음과 같은 계약이 명시되어 있으며, &lt;code&gt;CommonJS&lt;/code&gt; 구현체들은 이를 지켜야 합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;require&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;require()&lt;/code&gt; 함수는 &lt;code&gt;모듈 식별자(id)&lt;/code&gt;를 인자로 받으며, 해당 모듈이 &lt;code&gt;내보낸 API&lt;/code&gt;를 반환합니다.&lt;/li&gt;
+&lt;li&gt;만약 &lt;code&gt;의존성 사이클&lt;/code&gt;이 존재할 경우, 외부 모듈이 &lt;code&gt;전이적 의존성&lt;/code&gt; 중 하나에 의해 &lt;code&gt;require&lt;/code&gt; 될 때 실행이 완료되지 않았을 수 있습니다.
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;전이적 의존성&lt;/code&gt;: A가 B를 의존하고, B가 C를 의존할 경우 C는 A의 전이적 의존성이다.&lt;/li&gt;
+&lt;li&gt;이 경우, &lt;code&gt;require&lt;/code&gt;가 반환하는 객체에는 현재 모듈의 실행을 유도한 &lt;code&gt;require&lt;/code&gt;의 실행 이전에 준비된 하나 이상의 &lt;code&gt;exports&lt;/code&gt;를 포함해야 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;요청된 모듈이 반환될 수 없으면, &lt;code&gt;require&lt;/code&gt;는 에러를 던져야 합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;require&lt;/code&gt; 함수는 &lt;code&gt;main&lt;/code&gt; 프로퍼티를 가질 수 있으며, 이는 &lt;code&gt;undefined&lt;/code&gt; 이거나 로드된 모듈의 &lt;code&gt;module&lt;/code&gt; 객체와 동일해야 합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;require&lt;/code&gt; 함수는 &lt;code&gt;paths&lt;/code&gt; 속성을 가질 수 있으며, 이는 최상위 모듈 디렉토리 까지의 경로를 우선순위대로 배열한 문자열 배열입니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;module&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;module&lt;/code&gt; 컨텍스트 안에는 위 정의를 따르는 자유 변수인 &lt;code&gt;require&lt;/code&gt;가 있습니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;module&lt;/code&gt; 컨텍스트 안에는 모듈이 실행될 때 API를 추가할 수 있는 객체인 자유 변수 &lt;code&gt;exports&lt;/code&gt;가 있습니다.
+&lt;ul&gt;
+&lt;li&gt;모듈은 &lt;code&gt;exports&lt;/code&gt;를 &lt;strong&gt;유일한 내보내기 수단&lt;/strong&gt;으로 사용해야 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;module&lt;/code&gt; 안에는 &lt;code&gt;module&lt;/code&gt;이라는 객체인 자유 변수가 존재해야 합니다.
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;module&lt;/code&gt; 객체는 모듈의 최상위 식별자인 &lt;code&gt;id&lt;/code&gt; 프로퍼티를 갖고 있어야 합니다.
+&lt;ul&gt;
+&lt;li&gt;또한 이 &lt;code&gt;id&lt;/code&gt; 프로퍼티를 사용해 &lt;code&gt;require(module.id)&lt;/code&gt;를 호출한 경우, &lt;code&gt;module.id&lt;/code&gt;의 출처가 된 &lt;code&gt;exports&lt;/code&gt; 객체를 반환해야 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;module&lt;/code&gt; 객체는 &lt;em&gt;모듈이 생성된 리소스에 대한 정규화된 URI&lt;/em&gt;인 &lt;code&gt;uri&lt;/code&gt; 문자열이 있을 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;예시-코드-1&#34; &gt;예시 코드
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-%ec%bd%94%eb%93%9c-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// customers.js
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;var&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;customers&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Rachel&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Galen&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Charles&amp;#34;&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 해당 모듈에서 내보내고자 하는 것들을 `exports`에 담아줍니다. 
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// exports에 포함되지 않은 지역 변수는 외부에서 접근할 수 없습니다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;module&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;exports&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;getCustomers&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; () {     
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;users&lt;/span&gt;   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  },   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;sortCustomers&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; () {     
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;users&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;sort&lt;/span&gt;()   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  },   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;firstCustomer&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; () {     
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;users&lt;/span&gt;[&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;]   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  } 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// acounting.js  
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;customers&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;require&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;./customers&amp;#39;&lt;/span&gt;)  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;customers&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;getCustomers&lt;/span&gt;() &lt;span style=&#34;color:#75715e&#34;&gt;// [&amp;#34;Rachel&amp;#34;, &amp;#34;Galen&amp;#34;, &amp;#34;Charles&amp;#34;]  
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;customers&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;sortCustomers&lt;/span&gt;() &lt;span style=&#34;color:#75715e&#34;&gt;// [&amp;#34;Charles&amp;#34;, &amp;#34;Galen&amp;#34;, &amp;#34;Rachel&amp;#34;]  
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;customers&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;firsCustomer&lt;/span&gt;() &lt;span style=&#34;color:#75715e&#34;&gt;// [&amp;#34;Charles&amp;#34;]
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;장점-1&#34; &gt;장점
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%a5%ec%a0%90-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;배우고-사용하기-쉬움&#34; &gt;배우고 사용하기 쉬움
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%b0%ec%9a%b0%ea%b3%a0-%ec%82%ac%ec%9a%a9%ed%95%98%ea%b8%b0-%ec%89%ac%ec%9b%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h5 id=&#34;nodejs에서-널리-사용됨&#34; &gt;&lt;code&gt;Node.js&lt;/code&gt;에서 널리 사용됨
+&lt;span&gt;
+    &lt;a href=&#34;#nodejs%ec%97%90%ec%84%9c-%eb%84%90%eb%a6%ac-%ec%82%ac%ec%9a%a9%eb%90%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h5 id=&#34;동기식이기-때문에-모듈-실행-전-모든-종속성이-로드됨을-보장함&#34; &gt;동기식이기 때문에, 모듈 실행 전 모든 종속성이 로드됨을 보장함
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8f%99%ea%b8%b0%ec%8b%9d%ec%9d%b4%ea%b8%b0-%eb%95%8c%eb%ac%b8%ec%97%90-%eb%aa%a8%eb%93%88-%ec%8b%a4%ed%96%89-%ec%a0%84-%eb%aa%a8%eb%93%a0-%ec%a2%85%ec%86%8d%ec%84%b1%ec%9d%b4-%eb%a1%9c%eb%93%9c%eb%90%a8%ec%9d%84-%eb%b3%b4%ec%9e%a5%ed%95%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h4 id=&#34;단점&#34; &gt;단점
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8b%a8%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;동기식이기-때문에-대규모-앱에서-성능-문제를-야기할-수-있음&#34; &gt;동기식이기 때문에, 대규모 앱에서 성능 문제를 야기할 수 있음
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8f%99%ea%b8%b0%ec%8b%9d%ec%9d%b4%ea%b8%b0-%eb%95%8c%eb%ac%b8%ec%97%90-%eb%8c%80%ea%b7%9c%eb%aa%a8-%ec%95%b1%ec%97%90%ec%84%9c-%ec%84%b1%eb%8a%a5-%eb%ac%b8%ec%a0%9c%eb%a5%bc-%ec%95%bc%ea%b8%b0%ed%95%a0-%ec%88%98-%ec%9e%88%ec%9d%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;모든 파일이 로컬 디스크에 있어 필요할 때 바로 불러올 수 있는 상황을 전제, 즉 &lt;em&gt;동기적으로 동작 가능한 Server-side JS 환경&lt;/em&gt;을 전제로 하기 때문입니다.&lt;/p&gt;
+&lt;h5 id=&#34;tree-shaking이-없기-때문에-번들-크기가-커질-수-있음&#34; &gt;tree-shaking이 없기 때문에 번들 크기가 커질 수 있음
+&lt;span&gt;
+    &lt;a href=&#34;#tree-shaking%ec%9d%b4-%ec%97%86%ea%b8%b0-%eb%95%8c%eb%ac%b8%ec%97%90-%eb%b2%88%eb%93%a4-%ed%81%ac%ea%b8%b0%ea%b0%80-%ec%bb%a4%ec%a7%88-%ec%88%98-%ec%9e%88%ec%9d%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h5 id=&#34;브라우저에서-지원하지-않기-때문에-클라이언트-측-개발에-적합하지-않음&#34; &gt;브라우저에서 지원하지 않기 때문에, 클라이언트 측 개발에 적합하지 않음
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b8%8c%eb%9d%bc%ec%9a%b0%ec%a0%80%ec%97%90%ec%84%9c-%ec%a7%80%ec%9b%90%ed%95%98%ec%a7%80-%ec%95%8a%ea%b8%b0-%eb%95%8c%eb%ac%b8%ec%97%90-%ed%81%b4%eb%9d%bc%ec%9d%b4%ec%96%b8%ed%8a%b8-%ec%b8%a1-%ea%b0%9c%eb%b0%9c%ec%97%90-%ec%a0%81%ed%95%a9%ed%95%98%ec%a7%80-%ec%95%8a%ec%9d%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;만약 브라우저측에서 사용하고 싶다면 트랜스컴파일이 필요합니다.&lt;/p&gt;
+&lt;h3 id=&#34;umd&#34; &gt;&lt;code&gt;UMD&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#umd&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;Universal Module Definition(범용 모듈 정의)&lt;/code&gt;, 줄여서 &lt;code&gt;UMD&lt;/code&gt;란 모듈 작성 방식이 &lt;strong&gt;CommonJS&lt;/strong&gt;와 &lt;strong&gt;AMD&lt;/strong&gt; 두 방식으로 나누어져서 호환 문제가 발생하자, 이를 해결하기 위해 나온 디자인 패턴입니다.&lt;br&gt;
+&lt;code&gt;CommonJS&lt;/code&gt; 방식과 &lt;code&gt;AMD&lt;/code&gt; 방식 모두 사용할 수 있다는 장점이 있기 때문에 여러 모듈 로더에서 사용할 수 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;예시-코드-httpsgithubcomumdjsumdblobmastertemplatescommonjsstrictjsl9&#34; &gt;예시 코드 &lt;a href=&#34;https://github.com/umdjs/umd/blob/master/templates/commonjsStrict.js#L9&#34;&gt;#&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-%ec%bd%94%eb%93%9c-httpsgithubcomumdjsumdblobmastertemplatescommonjsstrictjsl9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 모듈을 생성하기 위해 CommonJS, AMD, 또는 이외의 브라우저 global을 사용합니다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 해당 예시는 `b` 라는 모듈을 의존하는 모듈을 불러옵니다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 만약 브라우저 전역 경로(global path)를 사용하고 싶지 않다면, 인수로 root 대신 `this`를 넘겨주어야 합니다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 모듈 로더를 확인하는 IIFE(즉시 실행 함수)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;root&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;factory&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;typeof&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;define&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;===&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;function&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;define&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;amd&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// AMD 방식. 익명 모듈로 등록합니다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;define&lt;/span&gt;([&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;exports&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;b&amp;#39;&lt;/span&gt;], &lt;span style=&#34;color:#a6e22e&#34;&gt;factory&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;typeof&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;exports&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;===&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;object&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;typeof&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;exports&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;nodeName&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;string&amp;#39;&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// CommonJS
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;factory&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;exports&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;require&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;b&amp;#39;&lt;/span&gt;));
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#75715e&#34;&gt;// Browser globals
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;factory&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;root&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;commonJsStrict&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; {}), &lt;span style=&#34;color:#a6e22e&#34;&gt;root&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;b&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}(&lt;span style=&#34;color:#66d9ef&#34;&gt;typeof&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;self&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!==&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;undefined&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;self&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;exports&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;b&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// Use b in some fashion.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// `exports` 객체에 프로퍼티를 추가해 모듈로 내보낼 프로퍼티들을 정의합니다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;exports&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;action&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; () {};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}));
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;esm&#34; &gt;&lt;code&gt;ESM&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#esm&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;ECMAScript Module&lt;/code&gt;, 줄여서 &lt;code&gt;ESM&lt;/code&gt;(또는 &lt;code&gt;ES Module&lt;/code&gt;)이란 &lt;code&gt;ECMAScript2015(ES6)&lt;/code&gt;에 도입된 네이티브 모듈 시스템을 말합니다. 즉 Javascript 언어의 일부로 모듈 시스템이 자리잡은 것으로, 웹 브라우저는 물론 Node.js와 같은 런타임에서도 광범위하게 지원되고 있습니다.&lt;br&gt;
+&lt;code&gt;ES Module&lt;/code&gt;을 사용하기 위해서는 &lt;code&gt;&amp;lt;script type=&amp;quot;module&amp;quot;&amp;gt;&lt;/code&gt; 로 스크립트를 불러오거나, &lt;em&gt;&lt;code&gt;Node.js&lt;/code&gt;의 경우&lt;/em&gt; &lt;code&gt;package.json&lt;/code&gt; 파일에 &lt;code&gt;&amp;quot;type&amp;quot;: &amp;quot;module&amp;quot;&lt;/code&gt; 속성을 추가하거나 파일 확장자를 &lt;code&gt;.mjs&lt;/code&gt;로 설정해야 합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;추가로, 만약 파일 확장자가 &lt;code&gt;.cjs&lt;/code&gt;라면 항상 &lt;code&gt;package&lt;/code&gt; 설정에 상관 없이 &lt;code&gt;CommonJS&lt;/code&gt; 모듈로 취급됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;로드-과정&#34; &gt;로드 과정
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a1%9c%eb%93%9c-%ea%b3%bc%ec%a0%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;ES Module&lt;/code&gt;은 &lt;code&gt;비동기적&lt;/code&gt;으로 모듈을 불러온다고 알려져 있는데, 이는 &lt;code&gt;ES Module&lt;/code&gt; 을 불러오는 3단계 과정이 개별적으로 될 수 있기 때문입니다.&lt;br&gt;
+&lt;a href=&#34;https://tc39.es/ecma262/#table-abstract-methods-of-module-records&#34;&gt;&lt;code&gt;ECMAScript&lt;/code&gt; 명세&lt;/a&gt;에 따르면, 3단계 과정은 다음과 같습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;LoadRequestedModules()&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;모든 종속성들을 재귀적으로 로드해 모듈을 &lt;code&gt;연결(Link)&lt;/code&gt;할 준비를 하고, &lt;code&gt;Promise&lt;/code&gt;를 반환합니다.
+&lt;ul&gt;
+&lt;li&gt;모듈들을 비동기적으로 불러와, &lt;code&gt;모듈 레코드&lt;/code&gt;로 저장합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Link()&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;모듈의 모든 종속성들을 전이적으로 불러오고, &lt;code&gt;모듈 환경 레코드(Module Environment Record)&lt;/code&gt;를 생성해 모듈을 평가할 수 있도록 준비합니다.
+&lt;ul&gt;
+&lt;li&gt;모듈의 &lt;code&gt;exports&lt;/code&gt;와 메모리 상의 &lt;code&gt;imports&lt;/code&gt;를 연결합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Evaluate()&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;모듈과 종속성의 평가에 대한 &lt;code&gt;Promise&lt;/code&gt;를 반환합니다. 평가가 성공적으로 이뤄진 경우 &lt;code&gt;resolve&lt;/code&gt;, 에러가 발생한 경우 &lt;code&gt;reject&lt;/code&gt; 합니다. host는 &lt;code&gt;Promise&lt;/code&gt;가 &lt;code&gt;reject&lt;/code&gt;된 경우 평가 에러를 던져야 합니다.
+&lt;ul&gt;
+&lt;li&gt;코드를 실행해 변수의 실제 값(모듈 레코드)으로 채웁니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;명세-httpsdevelopermozillaorgkodocswebjavascriptguidemodulesimporting_features_into_your_script&#34; &gt;명세 &lt;a href=&#34;https://developer.mozilla.org/ko/docs/Web/JavaScript/Guide/Modules#importing_features_into_your_script&#34;&gt;#&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%aa%85%ec%84%b8-httpsdevelopermozillaorgkodocswebjavascriptguidemodulesimporting_features_into_your_script&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;ES Module&lt;/code&gt;은 &lt;code&gt;export&lt;/code&gt; 문을 통해 내보내고, &lt;code&gt;import&lt;/code&gt; 문을 통해 다른 모듈을 불러옵니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;export&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;내보내고 싶은 항목 앞에 export를 배치하거나, 중괄호로 묶어 내보낼 수 있습니다.&lt;/li&gt;
+&lt;li&gt;또는 &lt;code&gt;default&lt;/code&gt;로 &lt;code&gt;export&lt;/code&gt;할 수 있는데, 이는 &lt;code&gt;CommonJS&lt;/code&gt;와 &lt;code&gt;AMD&lt;/code&gt; 모듈 시스템과 함께 상호운용하는데 도움이 됩니다.&lt;/li&gt;
+&lt;li&gt;또한, &lt;code&gt;as&lt;/code&gt; 키워드를 활용해 새로운 이름으로 내보낼 수도 있습니다.&lt;/li&gt;
+&lt;li&gt;추가로, 다른 모듈의 요소들을 불러와 함께 &lt;code&gt;export&lt;/code&gt; 할 수도 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 1. 내보내고 싶은 항목 앞에 export 배치
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;square&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 2. 내보내고 싶은 항목들을 중괄호로 묶기
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;export&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;draw&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;reportArea&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;reportPerimeter&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 3. 내보내고 싶은 항목을 default로 내보내기
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;default&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;randomSquare&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 4. as를 사용해 새로운 이름으로 내보내기
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;export&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;function1&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;newFunctionName&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;function2&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;anotherNewFunctionName&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 5. 다른 모듈의 요소들 함께 export 하기
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 현재 모듈과 다른 모듈의 요소들을 함께 내보내고 싶다면 다음과 같이 할 수 있습니다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;export&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt; } &lt;span style=&#34;color:#a6e22e&#34;&gt;from&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;x.js&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;import&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;불러오고 싶은 모듈의 항목들을 쉼표로 구분해 나열한 뒤 중괄호로 묶어 불러올 수 있습니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;from&lt;/code&gt;을 통해 모듈 파일 경로를 작성해야 하는데, 전체 절대 경로를 작성하거나, 상대 경로를 사용할 수 있습니다.&lt;/li&gt;
+&lt;li&gt;이 역시 &lt;code&gt;export&lt;/code&gt;와 마찬가지로, &lt;code&gt;as&lt;/code&gt; 키워드를 활용해 새로운 이름으로 불러올 수 있습니다.&lt;/li&gt;
+&lt;li&gt;추가로, &lt;code&gt;import()&lt;/code&gt; 함수를 통해 모듈을 동적으로 불러올 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 1. 불러오고 싶은 항목들을 지정해 묶어 불러오기
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;import&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;draw&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;reportArea&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;reportPerimeter&lt;/span&gt; } &lt;span style=&#34;color:#a6e22e&#34;&gt;from&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./modules/square.js&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 2. 모듈 객체로 묶어 불러오기
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Module&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;from&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./modules/module.js&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 3. default로 내보낸 모듈 불러오기
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;randomSquare&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;from&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./modules/square.js&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 위는 아래 코드를 단축한 형태와 같습니다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;import&lt;/span&gt; { &lt;span style=&#34;color:#66d9ef&#34;&gt;default&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;randomSquare&lt;/span&gt; } &lt;span style=&#34;color:#a6e22e&#34;&gt;from&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./modules/square.js&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 4. as를 사용해 새로운 이름으로 불러오기
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;import&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;function1&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;newFunctionName&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;function2&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;as&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;anotherNewFunctionName&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;} &lt;span style=&#34;color:#a6e22e&#34;&gt;from&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;./modules/module.js&amp;#34;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 5. 동적으로 모듈 불러오기
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;import&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/modules/myModule.js&amp;#34;&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;then&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;module&lt;/span&gt;) =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// Do something with the module.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;장점-2&#34; &gt;장점
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%a5%ec%a0%90-2&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;자바스크립트-언어에-내장된-표준화된-모듈-시스템임&#34; &gt;자바스크립트 언어에 내장된 표준화된 모듈 시스템임
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%eb%b0%94%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8-%ec%96%b8%ec%96%b4%ec%97%90-%eb%82%b4%ec%9e%a5%eb%90%9c-%ed%91%9c%ec%a4%80%ed%99%94%eb%90%9c-%eb%aa%a8%eb%93%88-%ec%8b%9c%ec%8a%a4%ed%85%9c%ec%9e%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h5 id=&#34;비동기-방식으로-모듈을-로딩해-성능-향상&#34; &gt;비동기 방식으로 모듈을 로딩해 성능 향상
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b9%84%eb%8f%99%ea%b8%b0-%eb%b0%a9%ec%8b%9d%ec%9c%bc%eb%a1%9c-%eb%aa%a8%eb%93%88%ec%9d%84-%eb%a1%9c%eb%94%a9%ed%95%b4-%ec%84%b1%eb%8a%a5-%ed%96%a5%ec%83%81&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h5 id=&#34;tree-shaking을-통해-번들-크기-줄일-수-있음&#34; &gt;Tree-shaking을 통해 번들 크기 줄일 수 있음
+&lt;span&gt;
+    &lt;a href=&#34;#tree-shaking%ec%9d%84-%ed%86%b5%ed%95%b4-%eb%b2%88%eb%93%a4-%ed%81%ac%ea%b8%b0-%ec%a4%84%ec%9d%bc-%ec%88%98-%ec%9e%88%ec%9d%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h4 id=&#34;단점-1&#34; &gt;단점
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8b%a8%ec%a0%90-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;비교적-최근에-등장했기-때문에-구형-브라우저에서는-완전히-지원되지-않음&#34; &gt;비교적 최근에 등장했기 때문에, 구형 브라우저에서는 완전히 지원되지 않음
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b9%84%ea%b5%90%ec%a0%81-%ec%b5%9c%ea%b7%bc%ec%97%90-%eb%93%b1%ec%9e%a5%ed%96%88%ea%b8%b0-%eb%95%8c%eb%ac%b8%ec%97%90-%ea%b5%ac%ed%98%95-%eb%b8%8c%eb%9d%bc%ec%9a%b0%ec%a0%80%ec%97%90%ec%84%9c%eb%8a%94-%ec%99%84%ec%a0%84%ed%9e%88-%ec%a7%80%ec%9b%90%eb%90%98%ec%a7%80-%ec%95%8a%ec%9d%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h5 id=&#34;모듈을-import-하고-export-하는-구문이-복잡할-수-있음&#34; &gt;모듈을 import 하고 export 하는 구문이 복잡할 수 있음
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%aa%a8%eb%93%88%ec%9d%84-import-%ed%95%98%ea%b3%a0-export-%ed%95%98%eb%8a%94-%ea%b5%ac%eb%ac%b8%ec%9d%b4-%eb%b3%b5%ec%9e%a1%ed%95%a0-%ec%88%98-%ec%9e%88%ec%9d%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;h5 id=&#34;모듈을-캐시하지-않아-추가적인-네트워크-요청-발생-가능&#34; &gt;모듈을 캐시하지 않아 추가적인 네트워크 요청 발생 가능
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%aa%a8%eb%93%88%ec%9d%84-%ec%ba%90%ec%8b%9c%ed%95%98%ec%a7%80-%ec%95%8a%ec%95%84-%ec%b6%94%ea%b0%80%ec%a0%81%ec%9d%b8-%eb%84%a4%ed%8a%b8%ec%9b%8c%ed%81%ac-%ec%9a%94%ec%b2%ad-%eb%b0%9c%ec%83%9d-%ea%b0%80%eb%8a%a5&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;모듈이 로드되면 메모리에 캐시하는 &lt;code&gt;CommonJS&lt;/code&gt;와 달리, 기본적으로 모듈을 캐시하지 않습니다.&lt;/p&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/amdjs/amdjs-api/wiki/AMD&#34;&gt;AMD · amdjs/amdjs-api Wiki (github.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Asynchronous_module_definition&#34;&gt;Asynchronous module definition - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://requirejs.org/docs/whyamd.html&#34;&gt;Why AMD? (requirejs.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://d2.naver.com/helloworld/12864&#34;&gt;JavaScript 표준을 위한 움직임: CommonJS와 AMD (naver.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://wiki.commonjs.org/wiki/Modules/1.1.1&#34;&gt;Modules/1.1.1 - CommonJS Spec Wiki&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/umdjs/umd?tab=readme-ov-file&#34;&gt;umdjs/umd: UMD (Universal Module Definition) patterns for JavaScript modules that work everywhere. (github.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://medium.com/@lisa.berteau.smith/commonjs-and-the-history-of-javascript-modularity-63d8518f103e&#34;&gt;CommonJS and the History of Javascript Modularity | by Lisa Berteau Smith | Medium&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.syncfusion.com/blogs/post/js-commonjs-vs-es-modules&#34;&gt;Understanding CommonJS vs. ES Modules in JavaScript (syncfusion.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://hacks.mozilla.org/2018/03/es-modules-a-cartoon-deep-dive/&#34;&gt;ES modules: A cartoon deep-dive - Mozilla Hacks - the Web developer blog&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://tc39.es/ecma262/#table-abstract-methods-of-module-records&#34;&gt;ECMAScript® 2025 Language Specification (tc39.es)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.freecodecamp.org/news/modules-in-javascript/#commonjsmodules&#34;&gt;Modules in JavaScript – CommonJS and ESmodules Explained (freecodecamp.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.freecodecamp.org/news/javascript-modules-beginners-guide/&#34;&gt;JavaScript Modules – A Beginner&amp;rsquo;s Guide (freecodecamp.org)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
