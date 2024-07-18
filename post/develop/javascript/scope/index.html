@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Javascript] Scope 알아보기 (w. 일반 프로그래밍에서의 Scope) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 7월 16일 발표한 자바스크립트의 Scope에 대해 정리한 문서를 블로그에 공유하고자 한다.
+스코프?프로그래밍에서 스코프란, 프로그램의 요소들(변수 및 상수, 함수 등)이 유효한 영역을 말합니다. 또한, 스코프는 프로그램의 부분 또는 특정 지점에서 유효한 모든 이름 바인딩 집합을 가리키는 데에도 사용되며, 이때 컨텍스트 또는 환경(Environment) 라고도 일컬어집니다.
+스코프 개념에 따라 프로그램에서 영역을 벗어난 변수는 가리킬 수 없고, 영역 내부의 요소들은 바인딩 된 이름(identifier)을 통해 가리킬 수 있게 됩니다.
+이는 스코프가 프로그램의 다른 부분에 존재하는 변수를 서로 구분하기 위해 등장했기 때문입니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Javascript] Scope 알아보기 (w. 일반 프로그래밍에서의 Scope)" />
+<meta property="og:description" content="서론CS 스터디에서 7월 16일 발표한 자바스크립트의 Scope에 대해 정리한 문서를 블로그에 공유하고자 한다.
+스코프?프로그래밍에서 스코프란, 프로그램의 요소들(변수 및 상수, 함수 등)이 유효한 영역을 말합니다. 또한, 스코프는 프로그램의 부분 또는 특정 지점에서 유효한 모든 이름 바인딩 집합을 가리키는 데에도 사용되며, 이때 컨텍스트 또는 환경(Environment) 라고도 일컬어집니다.
+스코프 개념에 따라 프로그램에서 영역을 벗어난 변수는 가리킬 수 없고, 영역 내부의 요소들은 바인딩 된 이름(identifier)을 통해 가리킬 수 있게 됩니다.
+이는 스코프가 프로그램의 다른 부분에 존재하는 변수를 서로 구분하기 위해 등장했기 때문입니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/javascript/scope/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-07-18T12:10:45+09:00" />
+<meta property="article:modified_time" content="2024-07-18T12:10:45+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Javascript] Scope 알아보기 (w. 일반 프로그래밍에서의 Scope)"/>
+<meta name="twitter:description" content="서론CS 스터디에서 7월 16일 발표한 자바스크립트의 Scope에 대해 정리한 문서를 블로그에 공유하고자 한다.
+스코프?프로그래밍에서 스코프란, 프로그램의 요소들(변수 및 상수, 함수 등)이 유효한 영역을 말합니다. 또한, 스코프는 프로그램의 부분 또는 특정 지점에서 유효한 모든 이름 바인딩 집합을 가리키는 데에도 사용되며, 이때 컨텍스트 또는 환경(Environment) 라고도 일컬어집니다.
+스코프 개념에 따라 프로그램에서 영역을 벗어난 변수는 가리킬 수 없고, 영역 내부의 요소들은 바인딩 된 이름(identifier)을 통해 가리킬 수 있게 됩니다.
+이는 스코프가 프로그램의 다른 부분에 존재하는 변수를 서로 구분하기 위해 등장했기 때문입니다."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Javascript] Scope 알아보기 (w. 일반 프로그래밍에서의 Scope)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#스코프">스코프?</a>
+      <ul>
+        <li><a href="#스코프의-종류">스코프의 종류</a></li>
+        <li><a href="#javascript에서의-scope">Javascript에서의 Scope</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 7월 16일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/6_Scope/Readme.md"><strong>자바스크립트의 Scope</strong></a>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h2 id="스코프" >스코프?
+<span>
+    <a href="#%ec%8a%a4%ec%bd%94%ed%94%84">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>프로그래밍에서 <code>스코프</code>란, 프로그램의 요소들(변수 및 상수, 함수 등)이 유효한 영역을 말합니다. 또한, <code>스코프</code>는 프로그램의 부분 또는 특정 지점에서 유효한 모든 <code>이름 바인딩</code> 집합을 가리키는 데에도 사용되며, 이때 <code>컨텍스트</code> 또는 <code>환경(Environment)</code> 라고도 일컬어집니다.<br>
+스코프 개념에 따라 프로그램에서 영역을 벗어난 변수는 가리킬 수 없고, 영역 내부의 요소들은 바인딩 된 <code>이름(identifier)</code>을 통해 가리킬 수 있게 됩니다.<br>
+이는 스코프가 <em>프로그램의 다른 부분에 존재하는 변수</em>를 <strong>서로 구분</strong>하기 위해 등장했기 때문입니다.<br>
+스코프 개념은 1960년 등장한 <a href="https://www.algol60.org/">알골 60(ALGOL 60)</a>에서 처음 등장했으며, <code>블록</code>이라는 영역 단위를 통해 변수의 스코프를 지정했습니다.</p>
+<h3 id="스코프의-종류" >스코프의 종류
+<span>
+    <a href="#%ec%8a%a4%ec%bd%94%ed%94%84%ec%9d%98-%ec%a2%85%eb%a5%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>스코프는 <em>어디에서 변수를 참조하느냐</em>에 따라 <code>정적 범위(Static Scope)</code>와 <code>동적 범위(Dynamic Scope)</code> 두 가지로 나뉩니다.<br>
+C, C++, Java와 같은 대부분의 현대 언어들은 <code>정적 범위</code> 방식을 채택하고 있으며, <code>LISP</code>, <code>TeX</code>등의 스크립팅 언어에서는 <code>동적 범위</code> 방식을 채택하기도 합니다.</p>
+<h4 id="정적-범위static-scope" ><code>정적 범위(Static Scope)</code>
+<span>
+    <a href="#%ec%a0%95%ec%a0%81-%eb%b2%94%ec%9c%84static-scope">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>정적 범위</code>, 또는 <code>렉시컬 스코프(Lexical Scope)</code>라고도 부르는 이 방식에서는 소스코드의 위치와, 변수 또는 함수가 정의된(선언된) 위치에 의해 정의된 <code>렉시컬 컨텍스트(또는 정적 컨텍스트)</code>에 따라 참조가 정해집니다.<br>
+이름을 탐색할 때, 먼저 로컬 <code>렉시컬 컨텍스트</code>를 검색하고, 실패하면 외부 <code>렉시컬 컨텍스트</code>로 점차 검색해나가는 식으로 탐색을 진행합니다.<br>
+주로 <code>블록</code> 단위로 묶어 스코프를 정의합니다. 따라서 <em>블록 내부에서 선언한 변수</em>는 <strong>외부에서 보이지 않으며</strong>, <em>블록 외부의 변수</em>는 (<em>블록 내부에서 재정의하지 않는 한</em>)<strong>블록 내부에서 볼 수 있습니다</strong>.</p>
+<h5 id="예시" >예시
+<span>
+    <a href="#%ec%98%88%ec%8b%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span><span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> x <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// g()에 의해 호출 됨
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">f</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">return</span> x;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// g()는 스스로 x라는 내부 변수를 갖고 있으며,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// f()를 호출함
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">g</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">int</span> x <span style="color:#f92672">=</span> <span style="color:#ae81ff">20</span>;
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%d&#34;</span>, <span style="color:#a6e22e">g</span>()); <span style="color:#75715e">// &#34;10&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>정적 범위</code>에서는 컴파일러가 먼저 선언된 현재의 블록을 탐색하고, 이후 이를 감싸는 더 넓은 범위로 계속해서 탐색해 변수를 검색합니다.<br>
+따라서 위 코드에서는 <code>g()</code>가 호출한 <code>f()</code>는 내부 -&gt; 외부(전역)에서 x 값을 탐색하게 되고, <code>10</code>을 출력하게 됩니다.</p>
+<h4 id="동적-범위dynamic-scope" ><code>동적 범위(Dynamic Scope)</code>
+<span>
+    <a href="#%eb%8f%99%ec%a0%81-%eb%b2%94%ec%9c%84dynamic-scope">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>동적 범위</code> 방식에서는 실행 컨텍스트, 즉 함수 호출 순서에 따른 컨텍스트에 의해 참조가 정해지게 됩니다.<br>
+이름을 탐색할 때, 먼저 <code>로컬 컨텍스트</code>에서 검색하고, 찾지 못하면 호출 스택에서 변수 정의를 검색해나가는 식으로 탐색을 진행합니다.<br>
+<strong>구현이 쉽지만</strong>, <em>런타임에 어떤 변수에 접근할 수 있을지 알게되므로</em> <strong>컴파일러가 최적화할 수 없어</strong> <code>변수 조회 비용</code>이 <strong>더 비싸고</strong>, <strong>함수 호출 순서에 따라 다르게 동작</strong>할 수 있다는 단점(때로는 장점)이 있습니다.</p>
+<h5 id="예시-1" >예시
+<span>
+    <a href="#%ec%98%88%ec%8b%9c-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> x <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>;
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// g()에 의해 호출 됨
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">f</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">return</span> x;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// g()는 스스로 x라는 내부 변수를 갖고 있으며,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// f()를 호출함
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">g</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">int</span> x <span style="color:#f92672">=</span> <span style="color:#ae81ff">20</span>;
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">f</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">main</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#a6e22e">g</span>()); <span style="color:#75715e">// &#34;20&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p><code>동적 범위</code>에서는 먼저 현재 블록에서 변수를 검색한 뒤, 호출 스택의 함수들을 연속적으로 검색합니다.<br>
+따라서 위 코드에서 <code>g()</code>가 호출한 <code>f()</code>는 내부(<code>f()</code>) -&gt; 이전 호출 함수(<code>g()</code>) 에서 x 값을 탐색하게 되고, <code>g()</code>에서 선언된 <code>20</code>이란 값을 출력하게 됩니다.</p>
+<h3 id="javascript에서의-scope" >Javascript에서의 Scope
+<span>
+    <a href="#javascript%ec%97%90%ec%84%9c%ec%9d%98-scope">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>자바스크립트</code>에서는 <code>전역 스코프</code>, <code>모듈 스코프</code>, <code>함수 스코프</code>, 그리고 추가로 <code>블록 스코프</code>까지 총 3가지의 스코 프가 존재합니다.</p>
+<h4 id="전역-스코프global-scope" ><code>전역 스코프(Global Scope)</code>
+<span>
+    <a href="#%ec%a0%84%ec%97%ad-%ec%8a%a4%ec%bd%94%ed%94%84global-scope">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>스크립트 모드</code>에서 실행되는 모든 코드들의 기본 범위.<br>
+자바스크립트에서 <em>함수 영역 내부가 아닌</em> <strong>전역에 선언</strong>된 요소들은 모두 전역 스코프를 갖는 전역 변수로 취급됩니다. 또한 <strong><code>var</code> 키워드로 선언된 전역 변수</strong>는 <code>전역 객체</code>인 <code>window</code>의 프로퍼티로 등록됩니다.<br>
+그리고 <em>선언하지 않은 변수</em>에 <strong>값을 할당</strong>하려고 하면, 이는 자동적으로 <code>전역 변수</code>가 됩니다. 이를 <code>암묵적 전역(implicit global)</code>이라고 합니다. 참고로 <code>암묵적 전역</code>은 <code>&quot;strict mode&quot;</code> 에서 동작하지 않습니다.<br>
+자바스크립트 프로그램 <strong>어디에서나 접근할 수 있다</strong>는 장점이 존재하지만, 남발할 경우 <code>변수 이름이 중복</code>될 수 있고, <code>재할당</code>되거나 내부 스코프에 의해 외부 스코프 변수가 가려지는 <code>변수 섀도잉(Variable Shadowing)</code>이 발생할 수 있다는 단점이 있습니다.</p>
+<h5 id="예시-2" >예시
+<span>
+    <a href="#%ec%98%88%ec%8b%9c-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">global_let</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">20</span>; <span style="color:#75715e">// 전역에 선언한 let 변수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">global_var</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">30</span>; <span style="color:#75715e">// 전역에 선언한 var 변수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">inner_var</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">40</span>; <span style="color:#75715e">// 블록에 선언한 var 변수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">func</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">global_let</span>); <span style="color:#75715e">// &#34;20&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">global_var</span>); <span style="color:#75715e">// &#34;30&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">func</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">inner_var</span>); <span style="color:#75715e">// &#34;40&#34; 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// var 키워드로 선언한 변수는 블록 스코프에 포함되지 않는다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">myFunction</span>();  
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">carName</span>); <span style="color:#75715e">// &#34;Volvo&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span><span style="color:#960050;background-color:#1e0010"> </span><span style="color:#a6e22e">myFunction</span>() {  
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"> </span> <span style="color:#a6e22e">carName</span> <span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010"> </span><span style="color:#e6db74">&#34;Volvo&#34;</span>; <span style="color:#75715e">// 선언하지 않은 변수에 값을 할당할 경우 자동적으로 전역 변수가 된다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><h4 id="모듈-스코프module-scope" ><code>모듈 스코프(Module Scope)</code>
+<span>
+    <a href="#%eb%aa%a8%eb%93%88-%ec%8a%a4%ec%bd%94%ed%94%84module-scope">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>모듈 모드</code>에서 실행되는 코드들의 범위.<br>
+<code>전역 스코프</code>와 달리, 모듈에서 <em>함수 영역 외부에 선언된</em> <code>요소(변수, 함수 및 기타 코드)</code>는 <strong><code>명시적으로 내보내지(export)</code> 않는 한</strong>, <strong>숨겨져있으며</strong> 다른 모듈에서 사용할 수 없습니다.<br>
+그리고 모듈을 가져오게(<code>import()</code>, <code>require()</code> 등) 되면, <code>가져온 모듈</code>은 이를 <strong><code>가져온 코드의 스코프</code> 내부에서만 사용</strong>할 수 있습니다. 즉, 만약 함수 내부에서 모듈을 가져올 경우, 가져온 모듈은 해당 함수 내에서만 접근할 수 있고 함수 외부에서는 접근할 수 없습니다.</p>
+<h5 id="예시-3" >예시
+<span>
+    <a href="#%ec%98%88%ec%8b%9c-3">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// in abc.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">var1</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">func</span>() {
+</span></span><span style="display:flex;"><span>	...
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> { <span style="color:#a6e22e">func</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// in main.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">func</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#34;./abc&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">func</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">var1</span>); <span style="color:#75715e">// ReferenceError: var1 is not defined
+</span></span></span></code></pre></div><h4 id="함수-스코프function-scope" ><code>함수 스코프(Function Scope)</code>
+<span>
+    <a href="#%ed%95%a8%ec%88%98-%ec%8a%a4%ec%bd%94%ed%94%84function-scope">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>함수로 생성된 범위.<br>
+각각의 함수는 새로운 스코프를 생성하며, <code>함수의 매개변수</code> 및 <code>함수 내부에서 정의된 변수</code>는 <strong><code>함수 외부</code>에서 접근할 수 없습니다</strong>. 이는 <code>var</code>, <code>let</code>, <code>const</code> 어떤 키워드로 선언했든 동일하게 적용됩니다.<br>
+또한 <code>함수 내부에서 정의된 변수</code>와 <code>외부의 변수</code>의 이름이 동일해도 정상적으로 동작하며, 이때 해당 이름으로 접근하게 될 경우 <code>함수 내부에서 정의된 변수</code>를 우선적으로 접근합니다.</p>
+<h5 id="예시-4" >예시
+<span>
+    <a href="#%ec%98%88%ec%8b%9c-4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">global_let</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">20</span>; <span style="color:#75715e">// 전역에 선언한 let 변수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">global_var</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">30</span>; <span style="color:#75715e">// 전역에 선언한 var 변수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">func</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">func_var</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">30</span>; <span style="color:#75715e">// 함수에 선언한 let 변수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">global_var</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">40</span>; <span style="color:#75715e">// 함수에 선언한 var 변수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">global_let</span>); <span style="color:#75715e">// &#34;20&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">global_var</span>); <span style="color:#75715e">// &#34;40&#34; &lt;&lt; 함수 내부에서 선언한 값을 우선
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">func</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">func_let</span>); <span style="color:#75715e">// ReferenceError: func_var is not defined
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">global_var</span>); <span style="color:#75715e">// &#34;30&#34;
+</span></span></span></code></pre></div><h4 id="블록-스코프block-scope" ><code>블록 스코프(Block Scope)</code>
+<span>
+    <a href="#%eb%b8%94%eb%a1%9d-%ec%8a%a4%ec%bd%94%ed%94%84block-scope">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>중괄호 쌍(블록)으로 만들어진 범위.<br>
+아무것도 없는 중괄호 쌍으로 만들어진 블록 또는 <code>if</code>, <code>for</code>, <code>switch</code> 등의 블록 내부에서 선언된 변수를 해당 스코프에서만 사용 가능한 것을 말합니다.<br>
+<code>ES6</code>에서 등장했으며, 마찬가지로 <code>ES6</code>에서 등장한 <code>let</code>, <code>const</code> 키워드로 선언된 변수들만 <code>블록 스코프</code>를 적용 받습니다.</p>
+<h5 id="예시-5" >예시
+<span>
+    <a href="#%ec%98%88%ec%8b%9c-5">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">abc</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">x</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">20</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">abc</span>); <span style="color:#75715e">// ReferenceError: abc is not defined
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">x</span>); <span style="color:#75715e">// 20
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">func</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">abc</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">20</span>; <span style="color:#75715e">// 함수 스코프에 선언된 변수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">abc</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">20</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">abc</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">30</span>; <span style="color:#75715e">// 블록 스코프에 선언된 변수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">abc</span>); <span style="color:#75715e">// 30
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">abc</span>); <span style="color:#75715e">// 20
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">func</span>();
+</span></span></code></pre></div><h4 id="변수-섀도잉variable-shadowing" ><code>변수 섀도잉(Variable Shadowing)</code>
+<span>
+    <a href="#%eb%b3%80%ec%88%98-%ec%84%80%eb%8f%84%ec%9e%89variable-shadowing">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>블록 스코프</code>, 또는 <code>함수 스코프</code>에서 발생가능한 현상으로, 동일한 이름을 갖는 내부 스코프의 변수와 외부 스코프의 변수를 접근할 경우 <code>내부 스코프</code>의 값이 우선되는 것을 말합니다.<br>
+참고로 <code>변수 섀도잉</code>을 사용할 때, 외부-내부 변수들을 같은 유형으로 선언하는 것이 좋습니다. 특정 경우 충돌이 발생할 수 있기 때문입니다.<br>
+아래 코드처럼, <code>var</code>로 선언한 외부 변수를 <code>let</code>으로 선언한 내부 변수로 가리는 것은 정상적 동작하지만, <code>let</code>으로 선언한 외부 변수를 <code>var</code>로 선언한 내부 변수로 가리려 하는 경우 &ldquo;이미 정의된 변수&quot;라는 오류가 발생하게 됩니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">x</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;X&#39;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">y</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Y&#39;</span>;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">true</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">x</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;X&#39;</span>; <span style="color:#75715e">// 정상 동작
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">y</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Y&#39;</span>; <span style="color:#75715e">// SyntaxError: Identifier &#39;y&#39; has already been declared
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">x</span>); <span style="color:#75715e">// &#34;X&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">y</span>); <span style="color:#75715e">// 에러 출력
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span></code></pre></div><h4 id="호이스팅hoisting" ><code>호이스팅(Hoisting)</code>
+<span>
+    <a href="#%ed%98%b8%ec%9d%b4%ec%8a%a4%ed%8c%85hoisting">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// var 변수 호이스팅
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">x</span>); <span style="color:#75715e">// undefined
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">x</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">20</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">x</span>); <span style="color:#75715e">// 20
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">x</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 함수 호이스팅
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 함수를 이후에 선언해도, 앞에서 호출할 수 있다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">func</span>(); <span style="color:#75715e">// &#34;TEST&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">func</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;TEST&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 다만, 함수를 변수에 할당한 경우, 선언-초기화가 분리되므로 함수 호출시 에러가 발생한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">func</span>(); <span style="color:#75715e">// ReferenceError: func is not defined
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">func</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;TEST&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>자바스크립트의 <code>호이스팅</code>이란, 인터프리터가 코드를 실행하기 전, <code>함수</code>/<code>변수</code>/<code>클래스</code>/<code>import</code> <strong>선언</strong>을 <code>현재 스코프 맨 위</code>로 이동시키는 과정을 말합니다.<br>
+<strong><code>선언</code></strong> 만 끌어올린다는 것을 유의해야 하는데, <code>초기화(값 할당)</code>은 위로 끌어올려지지 않기 때문입니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">x</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Test&#34;</span>; <span style="color:#75715e">// ReferenceError: Cannot access &#39;x&#39; before initialization
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">x</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 정상 케이스
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">x</span>;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">x</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Test&#34;</span>;
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// const는 애초에 선언시 함께 초기화가 이뤄져야 하므로 에러 발생
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">x</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Test&#34;</span>; <span style="color:#75715e">// SyntaxError: Missing initializer in const declaration
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">x</span>;
+</span></span></code></pre></div><p>또한, <code>let</code>과 <code>const</code>로 선언한 요소 및 <code>클래스</code>의 경우 <code>호이스팅</code>되긴 하지만, 선언 이전에 이 값들을 초기화할 수 없습니다.<br>
+블록의 시작부터 이들이 선언 및 초기화가 된 위치에 도달하기 전까지의 구간을 <strong><code>일시적 데드 존(Temporal dead zone, TDZ)</code></strong> 이라고 하며, 해당 구간에서 변수에 접근하는 것을 엄격히 금하고 있습니다.</p>
+<h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://en.wikipedia.org/wiki/Scope_(computer_science)#Expression_scope">Scope (computer science) - Wikipedia</a></li>
+<li><a href="https://courses.cs.washington.edu/courses/cse341/03wi/imperative/scoping.html">CSE 341 Lecture Notes &ndash; Static and Dynamic Scoping</a></li>
+<li><a href="https://www.cs.cornell.edu/courses/cs6110/2017sp/lectures/lec12.pdf">CS 6110 S17 Lecture 12 Static vs Dynamic Scope - lec12.pdf</a></li>
+<li><a href="https://www.geeksforgeeks.org/static-and-dynamic-scoping/">Static and Dynamic Scoping - GeeksforGeeks</a></li>
+<li><a href="https://www.showwcase.com/article/27294/module-scope">Module Scope | Showwcase</a></li>
+<li><a href="https://www.freecodecamp.org/news/an-introduction-to-scope-in-javascript-cbd957022652/">An introduction to scope in JavaScript</a></li>
+<li><a href="https://www.geeksforgeeks.org/variable-shadowing-in-javascript/">Variable Shadowing in JavaScript - GeeksforGeeks</a></li>
+<li><a href="https://www.showwcase.com/article/27294/module-scope">Module Scope | Showwcase</a></li>
+<li><a href="https://www.freecodecamp.org/news/an-introduction-to-scope-in-javascript-cbd957022652/">An introduction to scope in JavaScript</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/javascript/scope/"><time datetime="2024-07-18">2024-07-18 12:10 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/scope/">https://cloudsoswift.github.io/post/develop/javascript/scope/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/javascript/prototype/">[Javascript] Prototype 알아보기 (w. 왜 JS는 Prototype을 채택했나?)</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>

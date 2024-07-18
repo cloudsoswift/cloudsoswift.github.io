@@ -13,10 +13,10 @@
     
     <item>
       <title>[Javascript] 이벤트 전파 단계(버블링과 캡처링) 알아보기</title>
-      <link>https://cloudsoswift.github.io/post/develop/javascript/javascript/event-bubbling-capturing/</link>
+      <link>https://cloudsoswift.github.io/post/develop/javascript/event-bubbling-capturing/</link>
       <pubDate>Wed, 26 Jun 2024 17:00:00 +0900</pubDate>
       
-      <guid>https://cloudsoswift.github.io/post/develop/javascript/javascript/event-bubbling-capturing/</guid>
+      <guid>https://cloudsoswift.github.io/post/develop/javascript/event-bubbling-capturing/</guid>
       <description>&lt;h1 id=&#34;서론&#34; &gt;서론
 &lt;span&gt;
     &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
