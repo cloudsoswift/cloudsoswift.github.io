@@ -12,10 +12,10 @@
 
 <title>[Javascript] 추상 구문 트리(AST) 알아보기(w. 파스 트리, CFG, BNF) - 오늘도 개발을 한다.</title>
 
-<meta name="description" content="AST?추상 구문 트리(Abstract Syntax Tree, AST)란, 프로그램 또는 코드 조각의 구조를 표현하기 위해 사용되는 자료구조를 말합니다. 이때 트리를 이루는 각 노드들은 코드에서 발생되는 구문을 나타냅니다.
+<meta name="description" content="서론CS 스터디에서 7월 30일 발표한 추상 구문 트리에 대해 정리한 문서를 블로그에 공유하고자 한다.
+AST?추상 구문 트리(Abstract Syntax Tree, AST)란, 프로그램 또는 코드 조각의 구조를 표현하기 위해 사용되는 자료구조를 말합니다. 이때 트리를 이루는 각 노드들은 코드에서 발생되는 구문을 나타냅니다.
 구문이 추상적이다(Abstract) 라는 말의 뜻은, 이 트리가 실제 구문의 모든 세부 사항들을 나타내지는 않고 구조나 내용과 관련된 세부 사항들만 나타낸다는 뜻입니다.
-이러한 특징은 구문 트리(또는 파스 트리)라고 불리는 개념과 추상 구문 트리를 구분되게 합니다.
-구문 트리(파스 트리)구문 트리(파스 트리)란, 문맥 자유 문법(Context-Free Grammar, CFG)을 따르는 문자열의 구문 구조를 나타내는 트리로, 유도과정 또는 구문 구조를 보여줍니다.">
+이러한 특징은 구문 트리(또는 파스 트리)라고 불리는 개념과 추상 구문 트리를 구분되게 합니다.">
 
 
 
@@ -95,10 +95,10 @@
 
 
 <meta property="og:title" content="[Javascript] 추상 구문 트리(AST) 알아보기(w. 파스 트리, CFG, BNF)" />
-<meta property="og:description" content="AST?추상 구문 트리(Abstract Syntax Tree, AST)란, 프로그램 또는 코드 조각의 구조를 표현하기 위해 사용되는 자료구조를 말합니다. 이때 트리를 이루는 각 노드들은 코드에서 발생되는 구문을 나타냅니다.
+<meta property="og:description" content="서론CS 스터디에서 7월 30일 발표한 추상 구문 트리에 대해 정리한 문서를 블로그에 공유하고자 한다.
+AST?추상 구문 트리(Abstract Syntax Tree, AST)란, 프로그램 또는 코드 조각의 구조를 표현하기 위해 사용되는 자료구조를 말합니다. 이때 트리를 이루는 각 노드들은 코드에서 발생되는 구문을 나타냅니다.
 구문이 추상적이다(Abstract) 라는 말의 뜻은, 이 트리가 실제 구문의 모든 세부 사항들을 나타내지는 않고 구조나 내용과 관련된 세부 사항들만 나타낸다는 뜻입니다.
-이러한 특징은 구문 트리(또는 파스 트리)라고 불리는 개념과 추상 구문 트리를 구분되게 합니다.
-구문 트리(파스 트리)구문 트리(파스 트리)란, 문맥 자유 문법(Context-Free Grammar, CFG)을 따르는 문자열의 구문 구조를 나타내는 트리로, 유도과정 또는 구문 구조를 보여줍니다." />
+이러한 특징은 구문 트리(또는 파스 트리)라고 불리는 개념과 추상 구문 트리를 구분되게 합니다." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://cloudsoswift.github.io/post/develop/javascript/ast/" /><meta property="article:section" content="post" />
 <meta property="article:published_time" content="2024-08-01T10:05:48+09:00" />
@@ -106,10 +106,10 @@
 
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="[Javascript] 추상 구문 트리(AST) 알아보기(w. 파스 트리, CFG, BNF)"/>
-<meta name="twitter:description" content="AST?추상 구문 트리(Abstract Syntax Tree, AST)란, 프로그램 또는 코드 조각의 구조를 표현하기 위해 사용되는 자료구조를 말합니다. 이때 트리를 이루는 각 노드들은 코드에서 발생되는 구문을 나타냅니다.
+<meta name="twitter:description" content="서론CS 스터디에서 7월 30일 발표한 추상 구문 트리에 대해 정리한 문서를 블로그에 공유하고자 한다.
+AST?추상 구문 트리(Abstract Syntax Tree, AST)란, 프로그램 또는 코드 조각의 구조를 표현하기 위해 사용되는 자료구조를 말합니다. 이때 트리를 이루는 각 노드들은 코드에서 발생되는 구문을 나타냅니다.
 구문이 추상적이다(Abstract) 라는 말의 뜻은, 이 트리가 실제 구문의 모든 세부 사항들을 나타내지는 않고 구조나 내용과 관련된 세부 사항들만 나타낸다는 뜻입니다.
-이러한 특징은 구문 트리(또는 파스 트리)라고 불리는 개념과 추상 구문 트리를 구분되게 합니다.
-구문 트리(파스 트리)구문 트리(파스 트리)란, 문맥 자유 문법(Context-Free Grammar, CFG)을 따르는 문자열의 구문 구조를 나타내는 트리로, 유도과정 또는 구문 구조를 보여줍니다."/>
+이러한 특징은 구문 트리(또는 파스 트리)라고 불리는 개념과 추상 구문 트리를 구분되게 합니다."/>
 
 
 
@@ -252,7 +252,14 @@
 </nav>
 
         <div class="content e-content">
-            <h2 id="ast" >AST?
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 7월 30일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/8_AST/Readme.md"><strong>추상 구문 트리</strong></a>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h2 id="ast" >AST?
 <span>
     <a href="#ast">
         <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
