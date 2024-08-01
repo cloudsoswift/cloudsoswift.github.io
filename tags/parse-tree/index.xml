@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Parse Tree on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/parse-tree/</link>
+    <description>오늘도 개발을 한다. (Parse Tree)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Thu, 01 Aug 2024 10:05:48 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/parse-tree/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[Javascript] 추상 구문 트리(AST) 알아보기(w. 파스 트리, CFG, BNF)</title>
+      <link>https://cloudsoswift.github.io/post/develop/javascript/ast/</link>
+      <pubDate>Thu, 01 Aug 2024 10:05:48 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/javascript/ast/</guid>
+      <description>&lt;h2 id=&#34;ast&#34; &gt;AST?
+&lt;span&gt;
+    &lt;a href=&#34;#ast&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;추상 구문 트리(Abstract Syntax Tree, AST)&lt;/code&gt;란, 프로그램 또는 코드 조각의 구조를 표현하기 위해 사용되는 &lt;code&gt;자료구조&lt;/code&gt;를 말합니다. 이때 트리를 이루는 각 노드들은 코드에서 발생되는 구문을 나타냅니다.&lt;br&gt;
+구문이 &lt;code&gt;추상적이다(Abstract)&lt;/code&gt; 라는 말의 뜻은, 이 트리가 실제 구문의 모든 세부 사항들을 나타내지는 않고 구조나 내용과 관련된 세부 사항들만 나타낸다는 뜻입니다.&lt;br&gt;
+이러한 특징은 &lt;code&gt;구문 트리(또는 파스 트리)&lt;/code&gt;라고 불리는 개념과 &lt;code&gt;추상 구문 트리&lt;/code&gt;를 구분되게 합니다.&lt;/p&gt;
+&lt;h3 id=&#34;구문-트리파스-트리&#34; &gt;구문 트리(파스 트리)
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b5%ac%eb%ac%b8-%ed%8a%b8%eb%a6%ac%ed%8c%8c%ec%8a%a4-%ed%8a%b8%eb%a6%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;구문 트리(파스 트리)&lt;/code&gt;란, &lt;code&gt;문맥 자유 문법(Context-Free Grammar, CFG)&lt;/code&gt;을 따르는 문자열의 구문 구조를 나타내는 트리로, 유도과정 또는 구문 구조를 보여줍니다.&lt;br&gt;
+만약 주어진 표현을 &lt;code&gt;구문 트리&lt;/code&gt;로 나타낼 수 있을 경우, 해당 표현은 주어진 &lt;code&gt;BNF&lt;/code&gt;에 의해 작성되었다고 할 수 있습니다.&lt;br&gt;
+파스 트리는 아래 설명할 &lt;code&gt;추상 구문 트리&lt;/code&gt;처럼 &lt;code&gt;어휘 분석&lt;/code&gt;과 &lt;code&gt;구문 분석&lt;/code&gt; 과정을 통해 생성되며, 이는 &lt;code&gt;생성 규칙&lt;/code&gt;을 바탕으로 시작 기호부터 점점 반복적으로 &lt;code&gt;비-터미널 기호&lt;/code&gt;들을 치환해나가 궁극적으로 문자열을 유도하는 &lt;code&gt;유도 과정&lt;/code&gt;을 그래픽으로 표현한 것으로도 볼 수 있습니다. (그래서 &lt;code&gt;구문 트리&lt;/code&gt;를 &lt;code&gt;유도&lt;/code&gt;의 &lt;code&gt;역&lt;/code&gt;이라고 일컫기도 합니다.)&lt;/p&gt;
+&lt;h4 id=&#34;파스-트리-규칙&#34; &gt;파스 트리 규칙
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%8c%8c%ec%8a%a4-%ed%8a%b8%eb%a6%ac-%ea%b7%9c%ec%b9%99&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ol&gt;
+&lt;li&gt;모든 리프 노드는 &lt;code&gt;터미널&lt;/code&gt;이어야 한다.&lt;/li&gt;
+&lt;li&gt;모든 내부 노드는 &lt;code&gt;터미널이 아니어야(Non-Terminal)&lt;/code&gt; 한다.&lt;/li&gt;
+&lt;li&gt;트리를 &lt;code&gt;중위순회&lt;/code&gt; 할 경우, 주어진 문자열을 완성해야 한다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;여기서 &lt;code&gt;터미널&lt;/code&gt;이란, &lt;code&gt;터미널 기호(Terminal Symbol)&lt;/code&gt;를 뜻하며 &lt;code&gt;형식 문법(Formal Grammar)&lt;/code&gt; 의 일부로 정의된 언어의 &lt;code&gt;기본 기호&lt;/code&gt;를 말합니다.&lt;br&gt;
+&lt;code&gt;비-터미널 기호(Non-terminal Symbol)&lt;/code&gt;의 경우, &lt;code&gt;생성 규칙(Production Rule)&lt;/code&gt;에 따라 &lt;code&gt;터미널 기호&lt;/code&gt;로 대체되는 기호들을 말합니다.&lt;/p&gt;
+&lt;h4 id=&#34;예시&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;다음과 같은 &lt;code&gt;생성 규칙&lt;/code&gt;을 갖는 문법이 있다고 가정하겠습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;생성 규칙&lt;/code&gt;: 규칙의 왼쪽에 정의될 대상이, 오른쪽에 그 대상에 대한 정의가 나타나는 구문 규율&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;S -&amp;gt; AB
+A -&amp;gt; c/aA
+B -&amp;gt; d/bB
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;이때 주어진 입력 문자열이 &amp;ldquo;acbd&amp;quot;라고 할 경우, 파스 트리는 다음과 같습니다.
+&lt;img src=&#34;parse-tree-example.jpg&#34; alt=&#34;parse-tree-example.jpg&#34;&gt;&lt;/p&gt;
+&lt;h4 id=&#34;문맥-자유-문법context-free-grammar-cfg&#34; &gt;문맥 자유 문법(Context-Free Grammar, CFG)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%ac%b8%eb%a7%a5-%ec%9e%90%ec%9c%a0-%eb%ac%b8%eb%b2%95context-free-grammar-cfg&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;문맥 자유 문법(CFG)&lt;/code&gt;이란, 문맥과 관계 없이 &lt;code&gt;비-터미널 기호&lt;/code&gt;에 &lt;code&gt;생성 규칙&lt;/code&gt;을 적용할 수 있는 형식 문법을 말합니다.&lt;br&gt;
+다르게 말하면, 문법 $G$가 다음과 같다고 할 때,
+$$G = (V, T, S, P)$$&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;V: 변수라고 부르는 객체들의 유한 집합&lt;br&gt;
+T : 터미널 기호라 불리는 객체들의 유한 집합&lt;br&gt;
+S : 시작 변수(V 중 시작할 때 사용하는 것)&lt;br&gt;
+P : 생성 규칙들의 유한집합&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;모든 생성 규칙이 다음을 만족할 경우 G를 &lt;code&gt;문맥 자유 문법&lt;/code&gt; 이라고 합니다.&lt;br&gt;
+$$ A \rightarrow x $$&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;$A$는 &lt;code&gt;비-터미널 기호&lt;/code&gt;, $x$는 &lt;code&gt;터미널&lt;/code&gt; 및(또는) &lt;code&gt;비-터미널&lt;/code&gt; 문자열(또는 비어있을 수 있음)입니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;배커스-나우르-표기법backus-naur-form-bnf&#34; &gt;배커스-나우르 표기법(Backus-Naur Form, BNF)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%b0%ec%bb%a4%ec%8a%a4-%eb%82%98%ec%9a%b0%eb%a5%b4-%ed%91%9c%ea%b8%b0%eb%b2%95backus-naur-form-bnf&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;lt;기호&amp;gt; ::= &amp;lt;표현식&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;배커스-나우르 표기법(BNF)&lt;/code&gt;이란, &lt;code&gt;문맥 자유 문법&lt;/code&gt;을 나타내기 위해 만들어진 표기법(메타 언어)을 말합니다. 다르게 말하면 한 언어의 구문에 대한 &lt;code&gt;생성 규칙들의 집합&lt;/code&gt;이라고 할 수 있습니다.&lt;br&gt;
+&lt;code&gt;BNF&lt;/code&gt;는 위와 같은 문법을 사용하는데, 여기서 &lt;code&gt;&amp;lt;기호&amp;gt;&lt;/code&gt;는 &lt;code&gt;터미널 기호&lt;/code&gt;가 될 수 없고 꺾쇠쌍으로 감싸져있으며, &lt;code&gt;표현식&lt;/code&gt;은 &lt;code&gt;터미널&lt;/code&gt; 또는 &lt;code&gt;비-터미널 기호&lt;/code&gt;로 이뤄진 하나 이상의 시퀀스들로 구성되고 각 시퀀스들은 &lt;code&gt;|&lt;/code&gt;로 구분됩니다.&lt;br&gt;
+구문적으로 올바른 시퀀스들은 &lt;code&gt;시작 심볼&lt;/code&gt;이 하나만 포함되도록 시퀀스를 초기화하고, 이 &lt;code&gt;시작 심볼&lt;/code&gt;과 이어지는 심볼 시퀀스들에 파생 규칙들을 적용해야 합니다.&lt;/p&gt;
+&lt;h5 id=&#34;예시-1&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;img src=&#34;bnf-example.png&#34; alt=&#34;bnf-example.png&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;추상-구문-트리&#34; &gt;추상 구문 트리
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b6%94%ec%83%81-%ea%b5%ac%eb%ac%b8-%ed%8a%b8%eb%a6%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img src=&#34;process-of-compiler.png&#34; alt=&#34;process-of-compiler.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처: &lt;a href=&#34;https://courses.cs.washington.edu/courses/cse401/06sp/syn.pdf&#34;&gt;CSE401: Introduction to Compiler Construction - Syntactic Analysis&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt;추상 구문 트리&lt;/code&gt;는 &lt;code&gt;컴파일러&lt;/code&gt;를 구성하는 &lt;code&gt;프론트엔드(소스 코드를 스캔하고 파싱함)&lt;/code&gt; 및 &lt;code&gt;백엔드(아웃풋을 생성함)&lt;/code&gt; 중 프론트엔드의 결과물로 만들어지게 됩니다.&lt;br&gt;
+또한 앞서 말했듯, &lt;code&gt;추상 구문 트리&lt;/code&gt;는 실제 구문의 모든 세부 사항을 나타내지는 않습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;예시로 그룹화 괄호는 &amp;ldquo;&lt;code&gt;트리 구조&lt;/code&gt;&amp;ldquo;라는 &lt;em&gt;형태로 이미 내포&lt;/em&gt;되어 있으므로 &lt;strong&gt;별도의 노드로 나타내지 않습니다&lt;/strong&gt;.
+&lt;ul&gt;
+&lt;li&gt;마찬가지로, &lt;code&gt;if-condition-then&lt;/code&gt; 문과 같은 구문 구조는 3개의 가지를 갖는 단일 노드로 표현됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;그리고 AST는 포함된 요소들의 속성, 애너테이션과 같은 정보를 사용해 소스 코드의 변경 없이 수정 및 개선이 가능하고, 소스 코드의 불필요한 기호(중괄호, 세미콜론 등)들이 포함되지 않는 등의 특징을 지닙니다.&lt;br&gt;
+이 때문에 주로 컴파일러가 &lt;code&gt;의미 분석(Semantic Analysis, 선언과 구문이 의미론적으로 정확한지 확인하는 작업으로 각 연산자가 일치하는 피연산자를 갖고 있는지 확인하는 &amp;quot;타입 검사&amp;quot;와 같은 작업을 포함함)&lt;/code&gt;을 수행할 때 유용하게 사용됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;생성-과정&#34; &gt;생성 과정
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%83%9d%ec%84%b1-%ea%b3%bc%ec%a0%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;process-of-generate-ast.png&#34; alt=&#34;process-of-generate-ast.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처: &lt;a href=&#34;https://dev.to/balapriya/abstract-syntax-tree-ast-explained-in-plain-english-1h38&#34;&gt;Abstract Syntax Tree (AST) - Explained in Plain English - DEV Community&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;소스 코드로부터 &lt;code&gt;추상 구문 트리&lt;/code&gt;를 생성해내기 위해서는 위 그림과 같이 &lt;code&gt;어휘 분석(Lexical Analysis, 또는 스캐너)&lt;/code&gt;과 &lt;code&gt;구문 분석(Syntactic Analysis)&lt;/code&gt; 과정을 거쳐야합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;그리고 컴파일러에서 이들을 수행하는 부분을 &lt;code&gt;Parser&lt;/code&gt;라고 일컫습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;어휘-분석lexical-analysis&#34; &gt;어휘 분석(Lexical Analysis)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%96%b4%ed%9c%98-%eb%b6%84%ec%84%9dlexical-analysis&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;어휘 분석기(Lexer 또는 Scanner)&lt;/code&gt;가 소스 코드를 한 글자씩 읽으며 문자열을 (의미론 또는 구문론적으로)의미있는 &lt;code&gt;어휘 토큰(코드의 가장 작은 단위)&lt;/code&gt;으로 그룹화하게 됩니다.&lt;br&gt;
+이러한 토큰은 상수, 연산자, 구두점(중괄호, 세미콜론 등), 키워드(if, while 등)와 같은 범주 중 하나에 속하게 됩니다.&lt;br&gt;
+대부분의 어휘 분석은 다음과 같은 단계를 따릅니다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;토큰 식별하기(토큰화)&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;입력 텍스트들을 일련의 토큰으로 분할해, 입력 기호들의 고정된 집합을 결정합니다. 이는 &lt;code&gt;문자(letter)&lt;/code&gt;, &lt;code&gt;숫자(digit)&lt;/code&gt;, &lt;code&gt;연산자(operator)&lt;/code&gt; 등을 포함합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;문자열을 토큰에 할당하기&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;어휘 분석기(Lexer)&lt;/code&gt;에 설정된 분류 체계대로 입력 문자들을 인식하고 분류합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;토큰의 어휘 반환하기&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;어휘&lt;/strong&gt;는 기본적으로 토큰을 구성하는 하위 문자열 집합에서 가장 작은 단위를 말합니다. &lt;code&gt;어휘 분석기&lt;/code&gt;는 이 어휘를 반환하게 됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h6 id=&#34;예시-2&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-2&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;x = a + b * 2;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;만약 다음과 같은 표현식을 &lt;code&gt;어휘 분석&lt;/code&gt;할 경우, 다음과 같은 &lt;code&gt;토큰 시퀀스&lt;/code&gt;를 얻을 수 있습니다.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;[(identifier, x), (operator, =), (identifier, a), (operator, +), (identifier, b), (operator, *), (literal, 2), (separator, ;)]
+&lt;/code&gt;&lt;/pre&gt;&lt;h5 id=&#34;구문-분석syntactic-analysis&#34; &gt;구문 분석(Syntactic Analysis)
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b5%ac%eb%ac%b8-%eb%b6%84%ec%84%9dsyntactic-analysis&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;파싱(Parsing)&lt;/code&gt;이라고도 불리는 이 작업은, &lt;code&gt;어휘 분석기&lt;/code&gt;로부터 전달받은 &lt;code&gt;토큰 스트림&lt;/code&gt;을 이것의 문법적 구조를 나타내는 &lt;code&gt;트리 형태의 표현&lt;/code&gt;을 생성하게 됩니다.&lt;br&gt;
+그리고 위 과정에서 주어진 프로그램이 구문론적으로 정확한지 판단하며, 만약 에러를 찾은 경우 &lt;code&gt;구문 분석기&lt;/code&gt;는 진단 메세지를 생성하고 오류를 복구해야 합니다.&lt;br&gt;
+&lt;code&gt;구문 분석기&lt;/code&gt;, 즉 &lt;code&gt;파서(Parser)&lt;/code&gt;는 &lt;code&gt;파스 트리&lt;/code&gt;를 구축하는 방향에 따라 크게 &lt;code&gt;탑-다운 파서&lt;/code&gt;와 &lt;code&gt;바텀-업 파서&lt;/code&gt;로 나뉩니다.&lt;/p&gt;
+&lt;h6 id=&#34;예시-3&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-3&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;p&gt;어휘 분석 예시에서 나왔던 표현식을 &lt;code&gt;구문 분석&lt;/code&gt;할 경우, 다음과 같은 &lt;code&gt;추상 구문 트리&lt;/code&gt;를 얻을 수 있습니다.&lt;br&gt;
+&lt;img src=&#34;syntactic-analysis-example.jpg&#34; alt=&#34;syntactic-analysis-example.jpg&#34;&gt;&lt;/p&gt;
+&lt;h4 id=&#34;종합-예시&#34; &gt;종합 예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a2%85%ed%95%a9-%ec%98%88%ec%8b%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;while (x &amp;lt; 30) {
+	x = x + y * 2;
+}
+return x;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;위와 같은 코드가 있다고 할 때, 이를 기반으로 &lt;code&gt;추상 구문 트리&lt;/code&gt;를 만들어보겠습니다.&lt;br&gt;
+먼저, &lt;code&gt;어휘 분석&lt;/code&gt;을 통해 소스 코드를 &lt;code&gt;어휘 토큰&lt;/code&gt;들로 변환합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;어휘소(Lexeme)&lt;/th&gt;
+&lt;th&gt;토큰 구분&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;while&lt;/td&gt;
+&lt;td&gt;WHILE&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;x&lt;/td&gt;
+&lt;td&gt;variable Identifier&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&amp;lt;&lt;/td&gt;
+&lt;td&gt;comparison Operator&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;30&lt;/td&gt;
+&lt;td&gt;integer Literal&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;x&lt;/td&gt;
+&lt;td&gt;variable Identifier&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;=&lt;/td&gt;
+&lt;td&gt;assignment Operator&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;x&lt;/td&gt;
+&lt;td&gt;variable Identifier&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;+&lt;/td&gt;
+&lt;td&gt;addition Operator&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;y&lt;/td&gt;
+&lt;td&gt;variable Identifier&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;*&lt;/td&gt;
+&lt;td&gt;multiplication Operator&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2&lt;/td&gt;
+&lt;td&gt;integer Literal&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;;&lt;/td&gt;
+&lt;td&gt;Semicolon&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;return&lt;/td&gt;
+&lt;td&gt;RETURN&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;x&lt;/td&gt;
+&lt;td&gt;variable Identifier&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;;&lt;/td&gt;
+&lt;td&gt;Semicolon&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;이후, 이들을 기반으로 &lt;code&gt;추상 구문 트리&lt;/code&gt;를 만들면, 다음과 같습니다.&lt;br&gt;
+&lt;img src=&#34;ast-example.png&#34; alt=&#34;ast-example.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;트리의 간략화를 위해 토큰 구분은 생략했습니다.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;이를 자바스크립트 코드로 생성한 &lt;code&gt;AST&lt;/code&gt;(&lt;em&gt;편의를 위해 JSON 형태로 변환함&lt;/em&gt;)로 표현한다면 다음과 같습니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Program&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;71&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;body&amp;#34;&lt;/span&gt;: [
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;FunctionDeclaration&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;70&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;id&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Identifier&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;9&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;13&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;func&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;expression&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;generator&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;async&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;params&amp;#34;&lt;/span&gt;: [],
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;body&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;BlockStatement&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;70&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;body&amp;#34;&lt;/span&gt;: [
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;WhileStatement&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;21&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;57&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;test&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;BinaryExpression&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;34&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;left&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Identifier&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;29&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;x&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;operator&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;lt;&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;right&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Literal&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;34&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;value&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;30&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;raw&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;30&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;body&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;BlockStatement&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;36&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;57&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;body&amp;#34;&lt;/span&gt;: [
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ExpressionStatement&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;40&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;54&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;expression&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;AssignmentExpression&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;40&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;53&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;operator&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;=&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;left&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Identifier&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;40&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;41&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;x&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;right&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;BinaryExpression&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;44&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;53&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;left&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Identifier&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;44&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;45&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;x&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                      },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;operator&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;+&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;right&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;BinaryExpression&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;48&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;53&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;left&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Identifier&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;48&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;49&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;y&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;operator&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;*&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;right&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Literal&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;52&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;53&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;value&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                          &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;raw&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;2&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                      }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                  }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              ]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ReturnStatement&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;59&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;68&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;argument&amp;#34;&lt;/span&gt;: {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;type&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Identifier&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;start&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;66&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;end&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;67&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;              &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;name&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;x&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        ]
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  ],
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;sourceType&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;module&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;ast의-활용-예시&#34; &gt;AST의 활용 예시
+&lt;span&gt;
+    &lt;a href=&#34;#ast%ec%9d%98-%ed%99%9c%ec%9a%a9-%ec%98%88%ec%8b%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;AST는 &lt;a href=&#34;https://www.eclipse.org/articles/Article-JavaCodeManipulation_AST/index.html&#34;&gt;Java 소스 코드를 분석해 Eclipse IDE의 도구들을 사용하거나&lt;/a&gt;, &lt;code&gt;Annotation Processor&lt;/code&gt;가 AST를 조작해 애너테이션의 동작을 수행하거나, &lt;a href=&#34;https://www-old.cs.utah.edu/flux/flick/current/doc/guts/gutsch6.html&#34;&gt;C/C++ 소스 코드의 내부 표현을 제공하거나(CAST)&lt;/a&gt;, &lt;a href=&#34;https://docs.python.org/3/library/ast.html&#34;&gt;Python 코드를 정적 분석하는&lt;/a&gt; 등 언어를 가리지 않고 다양한 곳에서 사용되고 있습니다.&lt;br&gt;
+특히, Javascript에서는 다음과 같은 도구들에서 AST를 사용하고 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://babeljs.io/&#34;&gt;Babel&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;최신 자바스크립트 문법을 이전 자바스크립트 버전과 호환시키는 작업인 &lt;code&gt;트랜스파일링&lt;/code&gt;을 수행하는데 &lt;a href=&#34;https://babeljs.io/docs/babel-parser&#34;&gt;&lt;code&gt;AST 파서(구 Babylon 현 @babel/parser)&lt;/code&gt;&lt;/a&gt; 및 &lt;a href=&#34;https://babeljs.io/docs/babel-generator&#34;&gt;&lt;code&gt;생성기(@babel/generator)&lt;/code&gt;&lt;/a&gt;를 사용합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.typescriptlang.org/&#34;&gt;Typescript&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;타입스크립트에서 &lt;code&gt;타입을 체크&lt;/code&gt;하고, &lt;code&gt;에러를 검출&lt;/code&gt;한 뒤 자바스크립트 코드로 변환하는데 있어 AST 표현을 사용합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://eslint.org/&#34;&gt;ESLint&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;정적 분석 도구&lt;/code&gt;인 &lt;code&gt;ESLint&lt;/code&gt;는 &lt;code&gt;AST&lt;/code&gt;(&lt;a href=&#34;https://github.com/estree/estree&#34;&gt;ESTree&lt;/a&gt; 포맷을 따르는)를 사용해 코드를 검사하며, 코딩 표준을 지키지 않았거나 에러가 발생할 수 있는 곳을 발견합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://jestjs.io/&#34;&gt;Jest&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;자바스크립트 코드의 단위 테스트, 통합 테스트 등을 수행하는데 사용되는 테스트 프레임워크인 &lt;code&gt;Jest&lt;/code&gt;에서 역시 &lt;code&gt;AST&lt;/code&gt;를 사용해 &lt;code&gt;코드를 표현&lt;/code&gt;하고 &lt;code&gt;테스트를 수행&lt;/code&gt;합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Context-free_grammar&#34;&gt;Context-free grammar - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Abstract_syntax_tree&#34;&gt;Abstract syntax tree - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols&#34;&gt;Terminal and nonterminal symbols - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;구문 트리
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Parsing&#34;&gt;Parsing - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/parse-tree-in-compiler-design/&#34;&gt;Parse Tree in Compiler Design - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://web.mit.edu/6.005/www/fa15/classes/18-parser-generators/&#34;&gt;Reading 18: Parser Generators (mit.edu)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://web.mit.edu/6.031/www/sp17/classes/18-parsers/#handling_errors&#34;&gt;Reading 18: Parsers (mit.edu)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.naver.com/kelly9509/222330672820&#34;&gt;프로그래밍 언어의 구문 BNF, EBNF, 파.. : 네이버블로그 (naver.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.naver.com/bestowing/221769416451&#34;&gt;오토마타 이론 공부 (11) - 파스 트리(P.. : 네이버블로그 (naver.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.aistudy.com/linguistics/BNF.htm&#34;&gt;BNF : Backus Naur Form (aistudy.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.aistudy.com/linguistics/context_free_grammar.htm&#34;&gt;문맥 자유 문법 : Context Free Grammar (aistudy.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://web.donga.ac.kr/jwjo/Lectures/PL/chap4.pdf&#34;&gt;컴파일러 - 제4장 구문 (donga.ac.kr)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://contents.kocw.or.kr/KOCW/document/2014/deagucatholic/kimhangkon/3.pdf&#34;&gt;PowerPoint Template (kocw.or.kr)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://contents2.kocw.or.kr/KOCW/document/2016/keimyung/jangduksung/4.pdf&#34;&gt;1장 기본적인 사항 (kocw.or.kr)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;어휘 분석 및 구문 분석
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://tinman.cs.gsu.edu/~raj/4330/slides/c04.pdf&#34;&gt;Programming Language Concepts - 4. LEXICAL AND SYNTAX ANALYSIS (gsu.edu)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://web.cs.ucdavis.edu/~pandey/Teaching/ECS142/Lects/syntax.pdf&#34;&gt;ECS 142: Compilers - Syntactic Analysis (ucdavis.edu)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cs.mtsu.edu/~zdong/3210/OldSlides/SyntaxAnalyzerIntroduction.pdf&#34;&gt;Introduction to Syntax Analysis - CSCI4160: Compiler Design and Software Development (mtsu.edu)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://courses.cs.washington.edu/courses/cse401/06sp/syn.pdf&#34;&gt;CSE401: Introduction to Compiler Construction - Syntactic Analysis (washington.edu)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.tutorialspoint.com/compiler_design/compiler_design_syntax_analysis.htm&#34;&gt;Compiler Design - Syntax Analysis (tutorialspoint.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.coursera.org/articles/lexical-analysis&#34;&gt;What Is Lexical Analysis? | Coursera&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Lexical_analysis&#34;&gt;Lexical analysis - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/introduction-of-lexical-analysis/&#34;&gt;Introduction of Lexical Analysis - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;추상 구문 트리(AST)
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.to/shreyvijayvargiya/what-is-an-abstract-syntax-tree-in-programming-1nae&#34;&gt;What is an Abstract Syntax Tree in Programming? - DEV Community&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.to/balapriya/abstract-syntax-tree-ast-explained-in-plain-english-1h38&#34;&gt;Abstract Syntax Tree (AST) - Explained in Plain English - DEV Community&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://itnext.io/ast-for-javascript-developers-3e79aeb08343&#34;&gt;AST for JavaScript developers. TL;DR This article is my talk for… | by Bohdan Liashenko | ITNEXT&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://astexplorer.net/&#34;&gt;AST explorer&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;AST를 이해하는데 유용한 영상
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.youtube.com/watch?v=wINY109MG10&#34;&gt;What Is An Abstract Syntax Tree, With WealthFront Engineer Spencer Miskoviak (youtube.com)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

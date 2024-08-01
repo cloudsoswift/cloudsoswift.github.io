@@ -223,6 +223,148 @@
         <article class="post-list h-feed">
     <div class="post-header">
         <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/javascript/ast/">[Javascript] 추상 구문 트리(AST) 알아보기(w. 파스 트리, CFG, BNF)</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            AST?추상 구문 트리(Abstract Syntax Tree, AST)란, 프로그램 또는 코드 조각의 구조를 표현하기 위해 사용되는 자료구조를 말합니다. 이때 트리를 이루는 각 노드들은 코드에서 발생되는 구문을 나타냅니다.
+구문이 추상적이다(Abstract) 라는 말의 뜻은, 이 트리가 실제 구문의 모든 세부 사항들을 나타내지는 않고 구조나 내용과 관련된 세부 사항들만 나타낸다는 뜻입니다.
+이러한 특징은 구문 트리(또는 파스 트리)라고 불리는 개념과 추상 구문 트리를 구분되게 합니다.
+구문 트리(파스 트리)구문 트리(파스 트리)란, 문맥 자유 문법(Context-Free Grammar, CFG)을 따르는 문자열의 구문 구조를 나타내는 트리로, 유도과정 또는 구문 구조를 보여줍니다.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/javascript/ast/"><time datetime="2024-08-01">2024-08-01 10:05 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/ast/">https://cloudsoswift.github.io/post/develop/javascript/ast/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/cs/">#CS</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/ast/">#AST</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/parse-tree/">#Parse Tree</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/bnf/">#BNF</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/compiler/">#Compiler</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+    
+        <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/javascript/scope/">[Javascript] Scope 알아보기 (w. 일반 프로그래밍에서의 Scope)</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            서론CS 스터디에서 7월 16일 발표한 자바스크립트의 Scope에 대해 정리한 문서를 블로그에 공유하고자 한다.
+스코프?프로그래밍에서 스코프란, 프로그램의 요소들(변수 및 상수, 함수 등)이 유효한 영역을 말합니다. 또한, 스코프는 프로그램의 부분 또는 특정 지점에서 유효한 모든 이름 바인딩 집합을 가리키는 데에도 사용되며, 이때 컨텍스트 또는 환경(Environment) 라고도 일컬어집니다.
+스코프 개념에 따라 프로그램에서 영역을 벗어난 변수는 가리킬 수 없고, 영역 내부의 요소들은 바인딩 된 이름(identifier)을 통해 가리킬 수 있게 됩니다.
+이는 스코프가 프로그램의 다른 부분에 존재하는 변수를 서로 구분하기 위해 등장했기 때문입니다.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/javascript/scope/"><time datetime="2024-07-18">2024-07-18 12:10 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/scope/">https://cloudsoswift.github.io/post/develop/javascript/scope/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/scope/">#Scope</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/function/">#Function</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/hoisting/">#Hoisting</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+    
+        <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
             <h1 class="p-name post-title"><a class="u-url" href="/post/develop/javascript/prototype/">[Javascript] Prototype 알아보기 (w. 왜 JS는 Prototype을 채택했나?)</a></h1>
         </header>
         
@@ -280,141 +422,6 @@ prototype in Javascript객체지향 프로그래밍 언어들에서 기존 코�
                 
                     
                     <li><a href="https://cloudsoswift.github.io/tags/constructor-function/">#Constructor Function</a></li>
-                
-            </ul>
-        
-        
-    </div>
-</div>
-
-</article>
-    
-        <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/javascript/module-system/">[Javascript] 모듈 시스템들 알아보기</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 7월 2일 발표한 모듈 시스템에 대해 정리한 문서를 블로그에 공유하고자 한다.
-Module in JavascriptJavascript에서 모듈이란, 다른 프로그래밍 언어의 모듈처럼, 커진 자바스크립트 코드들을 여러 파일로 분리하는 것을 말합니다.
-초기에는 자바스크립트 코드들이 크기도 작고 단순한 작업을 수행했기 때문에 코드의 분리를 필요로 하지 않았지만, 자바스크립트가 완전한 애플리케이션을 실행할 수 있게 되고, 이에 따라 코드의 크기도 커지고 복잡해졌습니다.
-특히 기존의 경우, &lt;script&gt; 태그를 통해 여러 자바스크립트 파일을 불러올 수 밖에 없었는데, 이들은 전역 네임스페이스를 공유하기 때문에 이전 스크립트의 변수를 뒤집어쓰는 등 혼동을 초래하기 쉬웠습니다.
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/javascript/module-system/"><time datetime="2024-07-03">2024-07-03 14:24 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/module-system/">https://cloudsoswift.github.io/post/develop/javascript/module-system/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
-                
-            </ul>
-        
-        
-            <ul class="post-tags">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/module/">#Module</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/amd/">#AMD</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/commonjs/">#CommonJS</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/umd/">#UMD</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/esmodule/">#ESModule</a></li>
-                
-            </ul>
-        
-        
-    </div>
-</div>
-
-</article>
-    
-        <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/javascript/event-bubbling-capturing/">[Javascript] 이벤트 전파 단계(버블링과 캡처링) 알아보기</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 6월 25일 발표한 이벤트 캡처링과 버블링에 대해 정리한 문서를 블로그에 공유하고자 한다.
-이벤트 버블링과 캡처링HTML 태그에서 발생할 수 있는 이벤트는 표준에 따르면 다음과 같은 순서로 전파됩니다.
-캡처링 단계(CAPTURING_PHASE) : 이벤트가 DOM 트리 상의 하위 요소로 전파되는 단계 타깃 단계(AT_TARGET) : 이벤트가 실제 대상 요소에 전달되는 단계 버블링 단계(BUBBLING_PHASE) : 이벤트가 DOM 트리 상의 상위 요소로 전파되는 단계 즉, 위와 같은 형태로 DOM 트리가 구성되어 있다면, &lt;span&gt;을 클릭하면 이벤트가 최상위 조상부터 시작해 아래로 전파되고, 타겟 요소에 도착해 이벤트가 실행된 후, 다시 위로 전파됩니다.
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/javascript/event-bubbling-capturing/"><time datetime="2024-06-26">2024-06-26 17:00 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/event-bubbling-capturing/">https://cloudsoswift.github.io/post/develop/javascript/event-bubbling-capturing/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
-                
-            </ul>
-        
-        
-            <ul class="post-tags">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/event/">#Event</a></li>
                 
             </ul>
         
