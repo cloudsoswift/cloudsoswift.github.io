@@ -225,17 +225,17 @@
             <article class="post-list h-feed">
     <div class="post-header">
         <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/javascript/module-system/">[Javascript] 모듈 시스템들 알아보기</a></h1>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/java/synchronized/">[Java] synchronized 알아보기</a></h1>
         </header>
         
     </div>
 
     
         <div class="content post-summary p-summary">
-            서론CS 스터디에서 7월 2일 발표한 모듈 시스템에 대해 정리한 문서를 블로그에 공유하고자 한다.
-Module in JavascriptJavascript에서 모듈이란, 다른 프로그래밍 언어의 모듈처럼, 커진 자바스크립트 코드들을 여러 파일로 분리하는 것을 말합니다.
-초기에는 자바스크립트 코드들이 크기도 작고 단순한 작업을 수행했기 때문에 코드의 분리를 필요로 하지 않았지만, 자바스크립트가 완전한 애플리케이션을 실행할 수 있게 되고, 이에 따라 코드의 크기도 커지고 복잡해졌습니다.
-특히 기존의 경우, &lt;script&gt; 태그를 통해 여러 자바스크립트 파일을 불러올 수 밖에 없었는데, 이들은 전역 네임스페이스를 공유하기 때문에 이전 스크립트의 변수를 뒤집어쓰는 등 혼동을 초래하기 쉬웠습니다.
+            서론CS 스터디에서 3월 6일 발표한 synchronized에 대해 정리한 문서를 블로그에 공유하고자 한다.
+synchronized 키워드란?멀티 스레드 환경에서 Java 언어가 공유 자원에 대한 동기화 처리를 위해 사용되는 관용구(idiom)입니다. 이 키워드를 사용해 개발자는 간단하게 경쟁 조건(Race Condition) 을 피할 수 있습니다.
+Synchronized 키워드를 사용하게 되면 Java는 내부적으로 모니터(monitor)(모니터 락(monitor lock) 또는 내재적 락(intrinsic lock)이라고도 불림)을 사용해 동기화를 처리합니다.
+모니터는 동기화에 필요한 &lsquo;객체 상태에 대한 배타적 액세스 강제&rsquo;, &lsquo;가시성(visibility)에 필수적인 발생-전(happen-before) 관계 설정&rsquo; 과 같은 작업을 수행하는 역할을 합니다.
         </div>
     
     
@@ -249,148 +249,12 @@ Module in JavascriptJavascript에서 모듈이란, 다른 프로그래밍 언�
 <div class="post-info">
     
         <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/javascript/module-system/"><time datetime="2024-07-03">2024-07-03 14:24 KST</time></a>
+            <a class="u-url" href="/post/develop/java/synchronized/"><time datetime="2024-03-04">2024-03-04 23:19 KST</time></a>
             
         </div>
     
 
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/module-system/">https://cloudsoswift.github.io/post/develop/javascript/module-system/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
-                
-            </ul>
-        
-        
-            <ul class="post-tags">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/module/">#Module</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/amd/">#AMD</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/commonjs/">#CommonJS</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/umd/">#UMD</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/esmodule/">#ESModule</a></li>
-                
-            </ul>
-        
-        
-    </div>
-</div>
-
-</article>
-        
-            <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/javascript/event-bubbling-capturing/">[Javascript] 이벤트 전파 단계(버블링과 캡처링) 알아보기</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 6월 25일 발표한 이벤트 캡처링과 버블링에 대해 정리한 문서를 블로그에 공유하고자 한다.
-이벤트 버블링과 캡처링HTML 태그에서 발생할 수 있는 이벤트는 표준에 따르면 다음과 같은 순서로 전파됩니다.
-캡처링 단계(CAPTURING_PHASE) : 이벤트가 DOM 트리 상의 하위 요소로 전파되는 단계 타깃 단계(AT_TARGET) : 이벤트가 실제 대상 요소에 전달되는 단계 버블링 단계(BUBBLING_PHASE) : 이벤트가 DOM 트리 상의 상위 요소로 전파되는 단계 즉, 위와 같은 형태로 DOM 트리가 구성되어 있다면, &lt;span&gt;을 클릭하면 이벤트가 최상위 조상부터 시작해 아래로 전파되고, 타겟 요소에 도착해 이벤트가 실행된 후, 다시 위로 전파됩니다.
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/javascript/event-bubbling-capturing/"><time datetime="2024-06-26">2024-06-26 17:00 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/event-bubbling-capturing/">https://cloudsoswift.github.io/post/develop/javascript/event-bubbling-capturing/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
-                
-            </ul>
-        
-        
-            <ul class="post-tags">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/event/">#Event</a></li>
-                
-            </ul>
-        
-        
-    </div>
-</div>
-
-</article>
-        
-            <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/java/exception/">[Java] Exception 알아보기</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 6월 19일 발표한 Exception에 대해 정리한 문서를 블로그에 공유하고자 한다.
-Java에서, Exception이란?Exception 이란, Java 프로그램 실행 도중 발생하는 이벤트 로, 정상적인 명령 흐름을 방해합니다.
-예외 처리 흐름어떠한 메서드 내에서 오류가 발생하면, 메서드는 예외 객체(Exception Object)를 생성해 런타임 시스템에게 넘깁니다.
-이때, 이처럼 예외 객체를 생성해 런타임 시스템에 전달하는 것을 예외를 던진다(Throwing an Exception)라고 합니다.
-예외 객체(Exception Object) : 발생한 오류의 유형, 발생 당시 프로그램의 상태와 같은 오류에 대한 정보를 포함하는 객체입니다.
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/java/exception/"><time datetime="2024-06-26">2024-06-26 16:54 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/exception/">https://cloudsoswift.github.io/post/develop/java/exception/</a>
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/synchronized/">https://cloudsoswift.github.io/post/develop/java/synchronized/</a>
     <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
 
 
@@ -410,12 +274,542 @@ Java에서, Exception이란?Exception 이란, Java 프로그램 실행 도중 �
                     <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
                 
                     
-                    <li><a href="https://cloudsoswift.github.io/tags/exception/">#Exception</a></li>
+                    <li><a href="https://cloudsoswift.github.io/tags/jvm/">#JVM</a></li>
                 
                     
-                    <li><a href="">#예외 처리</a></li>
+                    <li><a href="https://cloudsoswift.github.io/tags/locking/">#Locking</a></li>
+                
+                    
+                    <li><a href="">#동시성</a></li>
                 
             </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/java/ioc-di/">[Spring] IoC와 DI 알아보기</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            서론CS 스터디에서 2월 27일에 발표 예정인 IoC와 DI에 대해 정리한 문서를 블로그에 공유하고자 한다.
+IoC와 DI란?IoC (Inversion of Control, 제어의 역전)제어의 역전 은 사용자가 작성한 코드가 제네릭 프레임워크로부터 제어의 흐름을 전달받는 디자인 패턴을 말합니다.
+절차적 프로그래밍에선 사용자의 코드가 일반적인 작업을 위해 라이브러리를 호출하지만, 제어의 역전에선 프레임워크가 사용자의 코드를 호출하게 됩니다.
+제어의 역전은 재사용 가능한 코드와 특정 문제를 위한 코드가 애플리케이션에서 함께 동작해도, 독립적으로 개발된다는 의미를 지닙니다.
+예시
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/ioc-di/"><time datetime="2024-02-27">2024-02-27 01:55 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/ioc-di/">https://cloudsoswift.github.io/post/develop/java/ioc-di/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/spring/">#Spring</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/design-pattern/">#Design Pattern</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/database/db-locking/">[DB] DB Locking 알아보기</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            서론CS 스터디에서 2월 20일에 발표한 DB Locking에 대해 정리한 문서를 블로그에 공유하고자 한다.
+DB Locking이란?병행 트랜잭션이 가능한 환경에서, 변경중인 record를 다른 transaction들이 접근하지 못하도록 막음으로써, 병행 수행 문제를 해결하려는 접근 방법입니다.
+이러한 Locking을 위한 규약(Protocol)으로는 Shared Locking Protocol, 2PLP(2-Phase Locking Protocol), Multiple Granularity Locking Protocol 이 있습니다.
+병행 트랜잭션(Concurrent Transaction) 이란?동시에 실행되고 있는 둘 이상의 트랜잭션을 의미합니다.
+병행 트랜잭션의 장점DB의 공용도(Sharability) 제고응답시간(Response Time) 단축시스템 활용도(System Utilization) 증대병행 트랜잭션의 동시성 문제병행 트랜잭션의 병행 수행률이 상승할수록, 아래와 같은 병행 문제들의 발생률도 상승합니다.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/database/db-locking/"><time datetime="2024-02-26">2024-02-26 01:13 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/database/db-locking/">https://cloudsoswift.github.io/post/develop/database/db-locking/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/db/">#DB</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/locking/">#Locking</a></li>
+                
+                    
+                    <li><a href="">#동시성</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/database/b-tree-b&#43;tree/">[자료구조] B Tree와 B+tree 알아보기</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            서론CS 스터디에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) B 트리와 B+ 트리에 대해 정리한 문서를 블로그에 공유하고자 한다.
+B-Tree와 B+Tree는 무엇일까B 트리 (B-Tree)이진 트리를 확장해 한 노드가 가질 수 있는 자식 노드의 갯수가 2개 이상인 자가 균형 이진 검색 트리(Self Balancing Binary Search Tree)의 일종이며, 각 노드가 갖고있는 키 들은 정렬되어 있습니다.
+다른 자체 균형 이진 검색 트리와 달리, B 트리는 DB, File System과 같이 큰 데이터 블록을 읽고 써야하는 스토리지 시스템에 적합합니다.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/database/b-tree-b&#43;tree/"><time datetime="2024-02-18">2024-02-18 09:58 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/database/b-tree-b&#43;tree/">https://cloudsoswift.github.io/post/develop/database/b-tree-b&#43;tree/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/db/">#DB</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/b-tree/">#B-Tree</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/b&#43;tree/">#B&#43;Tree</a></li>
+                
+                    
+                    <li><a href="">#자료구조</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/java/reflection/">[Java] Reflection에 대해 알아보기</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            서론CS 스터디에서 2월 6일에 발표한 Java의 Reflection에 대해 정리한 문서를 블로그에 공유하고자 한다.
+Reflection이란? #Oracle 공식 문서Reflection은 Java의 기능 중 하나로, 실행중인 Java 프로그램이 스스로를 검사하거나, 프로그램 내부 속성(클래스, 인터페이스, 필드 값 및 메서드)을 조작할 수 있게 해줍니다.
+이는 컴파일 시간에 이름을 모르는 속성을 사용해야 할 때 특히 유용합니다.
+또한, Reflection을 통해 새로운 객체를 인스턴스화 하거나, 메서드를 호출(invoke) 하고 필드 값을 얻거나 설정할 수 있습니다. 이러한 기능은 Java만의 특징 으로 Reflection이 처음 나온 1997년 당시에는 Pascal, C, C++와 같은 언어로 작성된 프로그램은 프로그램 내에서 정의된 함수에 대한 정보를 얻을 수 있는 방법이 없습니다.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/reflection/"><time datetime="2024-02-18">2024-02-18 09:55 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/reflection/">https://cloudsoswift.github.io/post/develop/java/reflection/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/reflection/">#Reflection</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/java/architecture-of-jvm/">[Java] JVM의 구조 간략하게 알아보기</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            서론최근에 시작한 CS 스터디에서 첫 주제가 &lsquo;JVM&rsquo;에 관해 조사하는것으로 정해져 이를 문서로 정리 후 발표를 진행했었다.
+이를 블로그에도 일부분 정리를 해서 포스팅하고자 한다.
+여담으로 해당 문서를 작성하면서 최대한 Oracle과 같은 회사에서 올린 공식적인 문서를 참고하고자 노력했는데, JVM 구현을 위한 스펙 문서는 발견할 수 있었으나 총체적인 구조에 대한 정보는 없는 것 같아 GeeksforGeeks, Freecodecamp와 같은 학습 사이트도 참고하여 작성하였다.
+JVMJVM이란?JVM(Java Virtual Machine, 자바 가상 머신) 은 Java Application을 실행하는 런타임 엔진 역할을 하는 컴포넌트로, JRE(Java Runtime Environment)의 일부입니다.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/architecture-of-jvm/"><time datetime="2024-02-02">2024-02-02 13:19 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/architecture-of-jvm/">https://cloudsoswift.github.io/post/develop/java/architecture-of-jvm/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/jvm/">#JVM</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/algorithm/2023_december_second_week/">[알고리즘 주간 기록] 2023/12/2주 차</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            2023년 11월 다섯째 주 ~ 12월 첫째 주 풀었던 알고리즘 문제들을 기록한다.
+회고가 필요하다고 생각하는 문제(시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제)만 별도로 문서를 작성해 정리한다.
+일자 푼 문제 / 못 푼 사유 코드 비고 12월 4일 5719. 거의 최단 경로 코드 답 보고 푼 문제 12월 5일 12월 6일 1707. 이분 그래프 코드 답 보고 푼 문제 12월 7일 1911. 흙길 보수하기 코드 12월 8일 17822. 원판 돌리기 코드 12월 9일 10868.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/algorithm/2023_december_second_week/"><time datetime="2023-12-31">2023-12-31 00:51 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/algorithm/2023_december_second_week/">https://cloudsoswift.github.io/post/algorithm/2023_december_second_week/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/algorithm/">algorithm</a></li>
+                
+            </ul>
+        
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/algorithm/2023_november_fifth_week/">[알고리즘 주간 기록] 2023/11/5주차 ~ 2023/12/1주차</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            2023년 11월 다섯째 주 ~ 12월 첫째 주 풀었던 알고리즘 문제들을 기록합니다.
+회고가 필요하다고 생각하는 문제(시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제)만 별도로 문서를 작성해 정리합니다.
+일자 푼 문제 / 못 푼 사유 코드 비고 11월 27일 2493. 탑 코드 11월 28일 11월 29일 1707. 이분 그래프 코드 답 보고 푼 문제 11월 30일 5972. 택배 배송 코드 12월 1일 5719. 거의 최단 경로 풀다가 실패 12월 2일 거의 최단 경로 또 풀려고 했지만 실패 12월 3일 거의 최단 경로 풀려고 했지만 또 실패 최근 게을러져 이달 초 일기를 지금 올리게되었다.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/algorithm/2023_november_fifth_week/"><time datetime="2023-12-31">2023-12-31 00:16 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/algorithm/2023_november_fifth_week/">https://cloudsoswift.github.io/post/algorithm/2023_november_fifth_week/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/algorithm/">algorithm</a></li>
+                
+            </ul>
+        
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/algorithm/2023_november_fourth_week/">[알고리즘 주간 기록] 2023/11/4주차</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            2023년 11월 넷째 주 풀었던 알고리즘 문제들을 기록합니다.
+회고가 필요하다고 생각하는 문제(시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제)만 별도로 문서를 작성해 정리합니다.
+일자 푼 문제 / 못 푼 사유 코드 비고 11월 20일 13334. 철로 코드 답 보고 푼 문제 11월 21일 2357. 최솟값과 최댓값 코드 문제 유형 보고 푼 문제 11월 22일 2533. 사회망 서비스(SNS) 코드 문제 유형 보고 푼 문제 11월 23일 16946. 벽 부수고 이동하기 4 코드 11월 24일 5719.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/algorithm/2023_november_fourth_week/"><time datetime="2023-11-27">2023-11-27 17:57 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/algorithm/2023_november_fourth_week/">https://cloudsoswift.github.io/post/algorithm/2023_november_fourth_week/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/algorithm/">algorithm</a></li>
+                
+            </ul>
+        
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/algorithm/2023_november_third_week/">[알고리즘 주간 기록] 2023/11/3주차</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            2023년 11월 셋째 주 풀었던 알고리즘 문제들을 기록합니다.
+회고가 필요하다고 생각하는 문제(시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제)만 별도로 문서를 작성해 정리합니다.
+일자 푼 문제 / 못 푼 사유 코드 비고 11월 13일 11505. 구간 곱 구하기 코드 11월 14일 17387. 선분 교차 코드 답 보고 푼 문제 11월 15일 2573. 빙산 코드 11월 16일 2230. 수 고르기 코드 11월 17일 우리카드 1차 면접 11월 18일 5427. 불 코드 11월 19일 27172.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/algorithm/2023_november_third_week/"><time datetime="2023-11-21">2023-11-21 00:48 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/algorithm/2023_november_third_week/">https://cloudsoswift.github.io/post/algorithm/2023_november_third_week/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/algorithm/">algorithm</a></li>
+                
+            </ul>
+        
         
         
     </div>
