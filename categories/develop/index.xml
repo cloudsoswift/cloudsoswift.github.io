@@ -6,10 +6,341 @@
     <description>오늘도 개발을 한다. (develop)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Thu, 01 Aug 2024 10:05:48 +0900</lastBuildDate>
+    <lastBuildDate>Thu, 15 Aug 2024 19:45:01 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/categories/develop/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[CS] 가상화 알아보기 (w. Hypervisor, Docker)</title>
+      <link>https://cloudsoswift.github.io/post/develop/cs/virtualization/</link>
+      <pubDate>Thu, 15 Aug 2024 19:45:01 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/cs/virtualization/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 8월 13일 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/05-ETC/1_Virtualization/Readme.md&#34;&gt;&lt;strong&gt;가상화&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;가상화에-대하여&#34; &gt;가상화에 대하여
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%80%ec%83%81%ed%99%94%ec%97%90-%eb%8c%80%ed%95%98%ec%97%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;h3 id=&#34;가상화란&#34; &gt;&lt;code&gt;가상화&lt;/code&gt;란?
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%80%ec%83%81%ed%99%94%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;가상화(Virtualization)&lt;/code&gt;란 하나의 &lt;code&gt;물리적인 하드웨어 시스템&lt;/code&gt;(컴퓨터) 위에 &lt;code&gt;추상화 계층&lt;/code&gt;을 생성해, 여러 개의 시뮬레이션 환경 또는 전용 리소스로 분할할 수 있게 해주는 기술을 말합니다. 즉, 하드웨어에 묶여있던 &lt;code&gt;자원들&lt;/code&gt;을 &lt;code&gt;추상화&lt;/code&gt;를 통해 &lt;code&gt;분산하여 사용&lt;/code&gt;할 수 있게 해주는 기술인 것입니다.&lt;br&gt;
+이러한 분리는 &lt;code&gt;하이퍼바이저(Hypervisor)&lt;/code&gt;라고 부르는 소프트웨어를 통해 이뤄지며, 가상화를 통해 생성된 가상 표현을 &lt;code&gt;VM(Virtual Machine, 가상 머신)&lt;/code&gt;이라고 합니다.&lt;/p&gt;
+&lt;h4 id=&#34;가상화의-역사&#34; &gt;가상화의 역사
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%80%ec%83%81%ed%99%94%ec%9d%98-%ec%97%ad%ec%82%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;가상화&lt;/code&gt;는 1960년대 대형 메인프레임 컴퓨터를 사용하던 시절, 각 메인프레임들이 &lt;code&gt;한 번에 한 프로세스만 수행&lt;/code&gt;하던 것을 &lt;strong&gt;개선&lt;/strong&gt;하고자 등장하게 되었습니다.&lt;br&gt;
+당시 고객의 요구로 한 메인프레임이 동시에 둘 이상의 사용자, 또는 둘 이상의 프로세스를 지원할 수 있어야 했고, 이를 위해 IBM에서는 &lt;code&gt;가상 메모리&lt;/code&gt;를 도입한 &lt;code&gt;하이퍼바이저&lt;/code&gt;인 &lt;a href=&#34;https://en.wikipedia.org/wiki/IBM_CP-40&#34;&gt;IBM CP-40&lt;/a&gt;, &lt;a href=&#34;https://en.wikipedia.org/wiki/CP-67&#34;&gt;CP-67&lt;/a&gt; OS를 출시하며 가상화 SW가 시장에 등장하게 되었습니다.&lt;br&gt;
+이후 단일 공급자 IT 스택, 레거시 애플리케이션의 리소스 사용 방식으로는 변화에 유연하게 대응하기 어렵다는 점이 대두되고 인터넷이 성장하자 가상화 사용이 점점 증가하게 되었습니다.&lt;/p&gt;
+&lt;h4 id=&#34;가상화의-종류&#34; &gt;가상화의 종류
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%80%ec%83%81%ed%99%94%ec%9d%98-%ec%a2%85%eb%a5%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;도커&lt;/code&gt;의 등장으로 가장 잘 알려진 가상화인 &lt;code&gt;운영체제 가상화(OS-Level Virtualization)&lt;/code&gt;(또는 &lt;code&gt;컨테이너화(Containerization)&lt;/code&gt;)이외에도 여러 유형의 가상화들이 존재합니다.&lt;/p&gt;
+&lt;h5 id=&#34;운영체제-가상화os-level-virtualization&#34; &gt;운영체제 가상화(OS-Level Virtualization)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9a%b4%ec%98%81%ec%b2%b4%ec%a0%9c-%ea%b0%80%ec%83%81%ed%99%94os-level-virtualization&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;컨테이너화(Containerization)&lt;/code&gt;라고도 불리는 이 방법은, OS의 중앙 자원 및 작업 관리자인 커널이 여러 &lt;code&gt;사용자 공간(커널 외부에서 실행되는 모든 코드)&lt;/code&gt; 인스턴스를 허용하는 가상화를 말합니다.&lt;br&gt;
+&lt;code&gt;사용자 공간 인스턴스(user space instance)&lt;/code&gt;로는 &lt;code&gt;컨테이너(LXC, Solaris Container, Docker)&lt;/code&gt;, &lt;code&gt;존(Solaris Container)&lt;/code&gt;, &lt;code&gt;가상 커널(DragonFly BSD)&lt;/code&gt;등이 있습니다.&lt;br&gt;
+각 &lt;code&gt;컨테이너&lt;/code&gt;들은 컴퓨터 전체에 가용한 자원 중 일부만 할당되며, 컨테이너상에서 실행되는 프로그램들은 컨테이너에 할당된 리소스들을 현재 컴퓨터(컨테이너)의 가용한 전체 리소스로 인식합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/OS-level_virtualization&#34;&gt;OS-level virtualization - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;데스크톱-가상화desktop-virtualization&#34; &gt;데스크톱 가상화(Desktop Virtualization)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8d%b0%ec%8a%a4%ed%81%ac%ed%86%b1-%ea%b0%80%ec%83%81%ed%99%94desktop-virtualization&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;img src=&#34;vdi-architecture.png&#34; alt=&#34;vdi-architecture.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처: &lt;a href=&#34;https://library.gabia.com/contents/infrahosting/13429/&#34;&gt;VDI(가상 데스크톱 인프라)란? (feat. VDI vs. DaaS 비교 분석) | 가비아 라이브러리 (gabia.com)&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;중앙 서버에서 &lt;code&gt;가상 머신&lt;/code&gt;들을 생성해 여러 데스크톱 환경을 실행하고 이를 클라이언트 기기에서 로그인한 사용자에게 스트리밍하므로써, 물리적 클라이언트 장치와 데스크톱 환경을 분리하는 것을 말합니다.&lt;br&gt;
+이를 &lt;code&gt;가상 데스크톱 인프라(Virtual Desktop Infrastructure, VDI)&lt;/code&gt;라고도 합니다.&lt;br&gt;
+또한 &lt;code&gt;VDI&lt;/code&gt;를 클라우드 환경을 통해 제공하는 것을 &lt;code&gt;서비스형 데스크톱(Desktop-as-a-Service, DaaS)&lt;/code&gt;라고 합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.ibm.com/blog/what-is-virtual-desktop-infrastructure/&#34;&gt;What is virtual desktop infrastructure (VDI)? - IBM Blog&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.ibm.com/kr-ko/topics/desktop-as-a-service&#34;&gt;DaaS(Desktop-as-a-Service)란 무엇인가요? | IBM&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;서버-가상화server-virtualization&#34; &gt;서버 가상화(Server Virtualization)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%b2%84-%ea%b0%80%ec%83%81%ed%99%94server-virtualization&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;하나의 서버 컴퓨터에서 여러 개의 가상 머신을 구동해 컴퓨팅 자원을 최대한 활용하고 여러 어플리케이션을 구동할 수 있는 가상화입니다. &lt;a href=&#34;https://computer.howstuffworks.com/server-virtualization.htm&#34;&gt;#&lt;/a&gt;&lt;/p&gt;
+&lt;h5 id=&#34;네트워크-기능-가상화network-function-virtualization&#34; &gt;네트워크 기능 가상화(Network Function Virtualization)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%84%a4%ed%8a%b8%ec%9b%8c%ed%81%ac-%ea%b8%b0%eb%8a%a5-%ea%b0%80%ec%83%81%ed%99%94network-function-virtualization&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;img src=&#34;nfv-architecture.png&#34; alt=&#34;nfv-architecture.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;NFV의 아키텍처&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;네트워크 하드웨어로부터 &lt;code&gt;라우터&lt;/code&gt;, &lt;code&gt;방화벽&lt;/code&gt;, &lt;code&gt;로드 밸런서&lt;/code&gt;등의 물리적인 네트워크 &lt;code&gt;기능을 추상화&lt;/code&gt;하여, 하이퍼바이저위에서 실행중인 소프트웨어로 추상화하는 가상화를 말합니다.&lt;br&gt;
+따라서 네트워크 관리자는 하드웨어들을 건드리지 않고도 네트워크를 관리할 수 있고, 서비스 제공업체에 새로운 기능을 요청하면 제공업체는 새 VM을 가동해 해당 요청을 처리할 수 있게 됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.redhat.com/ko/topics/virtualization/what-is-nfv&#34;&gt;NFV란? (redhat.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.ciena.kr/insights/what-is/What-is-Network-Functions-Virtualization_ko_KR.html&#34;&gt;NFV란? - Ciena KR&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/network-functions-virtualization/&#34;&gt;Network Functions Virtualization - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;장점&#34; &gt;장점
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%a5%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;자원의-효율화&#34; &gt;자원의 효율화
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%ec%9b%90%ec%9d%98-%ed%9a%a8%ec%9c%a8%ed%99%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;가상화 이전에는 &lt;code&gt;하나의 애플리케이션&lt;/code&gt;에 &lt;code&gt;하나의 서버(물리적인 CPU를 포함한)&lt;/code&gt;가 필요했습니다.
+이러한 형태는 한 서버에서 &lt;code&gt;가용한 자원&lt;/code&gt;을 &lt;code&gt;최대로 활용할 수 없으며&lt;/code&gt; 사용중이지 않은 &lt;code&gt;자원은 낭비&lt;/code&gt; 되어왔습니다.&lt;br&gt;
+이와 다르게, &lt;code&gt;서버 가상화&lt;/code&gt;를 통해 단일 컴퓨터에 &lt;code&gt;자체 OS를 포함한 VM들&lt;/code&gt;을 실행해 &lt;code&gt;다수의 애플리케이션을 실행&lt;/code&gt;하므로써 하드웨어의 &lt;code&gt;컴퓨팅 자원을 효율적으로 사용&lt;/code&gt;할 수 있게 되었습니다.&lt;/p&gt;
+&lt;h5 id=&#34;시스템-관리&#34; &gt;시스템 관리
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%8b%9c%ec%8a%a4%ed%85%9c-%ea%b4%80%eb%a6%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;물리적 &lt;code&gt;컴퓨팅 자원들&lt;/code&gt;이 가상화되었으므로, 이들을 &lt;code&gt;소프트웨어 도구를 사용해 관리&lt;/code&gt;할 수 있게 됩니다.&lt;br&gt;
+&lt;code&gt;인프라를 복제&lt;/code&gt;하는데도 &lt;code&gt;자동화&lt;/code&gt;를 할 수 있고, &lt;code&gt;프로비저닝이 더 빨라집니다&lt;/code&gt;.&lt;/p&gt;
+&lt;h5 id=&#34;빠른-장애-복구&#34; &gt;빠른 장애 복구
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b9%a0%eb%a5%b8-%ec%9e%a5%ec%95%a0-%eb%b3%b5%ea%b5%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;기존의 경우, 시스템 장애가 일어나면 &lt;em&gt;IT 인프라 현장에 직접 접근해 &lt;code&gt;물리적 서버를 교체 및 수리&lt;/code&gt;&lt;/em&gt; 하는데 &lt;code&gt;많은 시간&lt;/code&gt;이 걸렸습니다.&lt;br&gt;
+반면 가상 환경에서는 &lt;code&gt;중복되는 가상 머신으로 대체&lt;/code&gt;하여 빠르게 장애를 복구할 수 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;단점&#34; &gt;단점
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8b%a8%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;자원-효율성&#34; &gt;자원 효율성
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%ec%9b%90-%ed%9a%a8%ec%9c%a8%ec%84%b1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;시스템에 가상화를 도입하게 되면 &lt;code&gt;VM&lt;/code&gt;, &lt;code&gt;하이퍼바이저&lt;/code&gt;, &lt;code&gt;게스트 OS&lt;/code&gt;에서 더 많은 컴퓨팅 능력을 요구할 수 있어 때때로 하드웨어 자원 요구량을 증가시키기도 합니다.&lt;/p&gt;
+&lt;h5 id=&#34;공유-자원&#34; &gt;공유 자원
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ec%9c%a0-%ec%9e%90%ec%9b%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;VM&lt;/code&gt;들은 &lt;code&gt;하이퍼바이저&lt;/code&gt;, &lt;code&gt;호스트 OS&lt;/code&gt;, &lt;code&gt;프로세서 내부 자원(L3 캐시, 시스템 버스 등)&lt;/code&gt;, &lt;code&gt;프로세스 외부 자원(메인 메모리, I/O 기기 및 네트워크)&lt;/code&gt;을 공유하기 때문에, 단일 장애 지점이 존재할 수 밖에 없습니다.&lt;br&gt;
+또한 한 VM에서 실행중인 소프트웨어가 &lt;code&gt;다른 VM에서 실행중인 소프트웨어&lt;/code&gt;에 &lt;code&gt;영향&lt;/code&gt;을 미칠 수도 있습니다. (= 격리 위반이 발생할 수 있습니다.)&lt;/p&gt;
+&lt;h5 id=&#34;간섭&#34; &gt;간섭
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%84%ec%84%ad&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;공간적 격리 실패(공유 메모리로 인한)&lt;/code&gt; 또는 &lt;code&gt;시간적 격리 실패(간섭 지연 또는 페널티로 인한)&lt;/code&gt;에 의해 한 VM에서 실행중인 소프트웨어가 다른 VM에서 실행중인 소프트웨어의 동작에 영향을 미칠 수 있습니다.&lt;br&gt;
+이러한 &lt;code&gt;간섭&lt;/code&gt;이 가능한 경로의 수는 VM의 수가 늘어남에 따라 빠르게 증가합니다.&lt;br&gt;
+예시로 아래 그림은 6개의 &lt;code&gt;공유 자원(빨간색으로 표시된)&lt;/code&gt;을 사용하는 애플리케이션 쌍 간에 발생 가능한 3가지 &lt;code&gt;간섭 경로&lt;/code&gt;를 나타냅니다.&lt;br&gt;
+&lt;img src=&#34;interference-example.png&#34; alt=&#34;interference-example.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처: &lt;a href=&#34;https://insights.sei.cmu.edu/blog/virtualization-via-virtual-machines/&#34;&gt;Virtualization via Virtual Machines (cmu.edu)&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;하이퍼바이저hypervisor&#34; &gt;&lt;code&gt;하이퍼바이저(Hypervisor)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%98%ec%9d%b4%ed%8d%bc%eb%b0%94%ec%9d%b4%ec%a0%80hypervisor&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;하이퍼바이저&lt;/code&gt;(또는 &lt;code&gt;가상 머신 모니터(VMM)&lt;/code&gt;)란, &lt;code&gt;호스트 머신&lt;/code&gt;에서 &lt;code&gt;가상 머신(VM)&lt;/code&gt;을 생성 및 실행하는 소프트웨어로 VM들을 생성 및 관리합니다.&lt;br&gt;
+&lt;code&gt;하이퍼바이저&lt;/code&gt;는 &lt;em&gt;CPU, 메모리, 스토리지 등&lt;/em&gt; 컴퓨팅 자원들을 기존 게스트 머신 간에, 또는 새로운 VM으로 쉽게 재배치할 수 있는 자원 풀로 취급해 물리적 자원과 가상 환경을 분리합니다.&lt;br&gt;
+&lt;img src=&#34;type-of-hypervisor.png&#34; alt=&#34;type-of-hypervisor.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;일반적으로 &lt;code&gt;하이퍼바이저&lt;/code&gt;는 하드웨어상에서 직접 실행되는 &lt;code&gt;타입 1(bare-metal)&lt;/code&gt; 또는 호스트 운영체제 위에서 실행되는 &lt;code&gt;타입 2(Hosted)&lt;/code&gt;로 나뉩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.redhat.com/en/topics/virtualization/what-is-a-hypervisor&#34;&gt;What is a hypervisor? (redhat.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://ko.wikipedia.org/wiki/%ED%95%98%EC%9D%B4%ED%8D%BC%EB%B0%94%EC%9D%B4%EC%A0%80&#34;&gt;하이퍼바이저 - 위키백과, 우리 모두의 백과사전 (wikipedia.org)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;타입-1&#34; &gt;타입 1
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%83%80%ec%9e%85-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;type1-hypervisor.png&#34; alt=&#34;type1-hypervisor.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처: &lt;a href=&#34;https://insights.sei.cmu.edu/blog/virtualization-via-virtual-machines/&#34;&gt;Virtualization via Virtual Machines (cmu.edu)&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt;타입 1&lt;/code&gt; 하이퍼바이저는 &lt;strong&gt;&lt;code&gt;호스트의 하드웨어에서 직접 실행&lt;/code&gt;&lt;/strong&gt; 되어 게스트 OS들을 관리합니다.&lt;br&gt;
+그리고 &lt;code&gt;호스트 OS&lt;/code&gt;를 대신해 하드웨어에 직접 &lt;code&gt;가상 머신&lt;/code&gt;들의 자원들을 조정합니다.&lt;br&gt;
+&lt;code&gt;타입 1&lt;/code&gt;과 같은 형태의 하이퍼바이저는 1960년대 &lt;code&gt;IBM CP&lt;/code&gt;에서 시작되었으며, 엔터프라이즈 및 서버기반 환경에서 일반적인 형태입니다.&lt;br&gt;
+&lt;a href=&#34;https://linux-kvm.org/page/Main_Page&#34;&gt;KVM(커널-기반 가상 머신)&lt;/a&gt;, &lt;a href=&#34;https://learn.microsoft.com/ko-kr/windows-server/virtualization/hyper-v/hyper-v-technology-overview&#34;&gt;MS Hyper-V&lt;/a&gt;, &lt;a href=&#34;https://docs.vmware.com/kr/VMware-vSphere/index.html&#34;&gt;VMWare vSphere&lt;/a&gt; 등이 &lt;code&gt;타입 1&lt;/code&gt;의 대표적인 예시 입니다.&lt;/p&gt;
+&lt;h4 id=&#34;타입-2&#34; &gt;타입 2
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%83%80%ec%9e%85-2&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;type2-hypervisor.png&#34; alt=&#34;type2-hypervisor.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처 : &lt;a href=&#34;https://insights.sei.cmu.edu/blog/virtualization-via-virtual-machines/&#34;&gt;Virtualization via Virtual Machines (cmu.edu)&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt;타입 2&lt;/code&gt; 하이퍼바이저는 일반 프로그램처럼 &lt;strong&gt;&lt;code&gt;호스트 OS 위&lt;/code&gt;&lt;/strong&gt; 에서 실행되는 하이퍼바이저를 말합니다.&lt;br&gt;
+&lt;code&gt;게스트 OS&lt;/code&gt;를 &lt;code&gt;호스트 OS&lt;/code&gt;로부터 추상화시키는 방식으로 동작하며, &lt;code&gt;가상 머신&lt;/code&gt;들의 자원은 &lt;code&gt;호스트 OS&lt;/code&gt;에 의해 스케줄링되며 이후 하드웨어에 의해 실행됩니다.&lt;br&gt;
+&lt;code&gt;타입 2&lt;/code&gt;에 해당하는 하이퍼바이저로는 &lt;a href=&#34;https://www.virtualbox.org/&#34;&gt;Oracle VirtualBox&lt;/a&gt;, &lt;a href=&#34;https://www.vmware.com/info/workstation-player/evaluation&#34;&gt;VMWare Workstation&lt;/a&gt; 등이 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;가상-머신virtual-machine&#34; &gt;&lt;code&gt;가상 머신(Virtual Machine)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%80%ec%83%81-%eb%a8%b8%ec%8b%a0virtual-machine&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;가상 머신&lt;/code&gt;(또는 &lt;code&gt;게스트 머신&lt;/code&gt;)이란, &lt;code&gt;하드웨어 자원 풀에서 생성된 컴퓨팅 환경&lt;/code&gt;으로, &lt;em&gt;자체 CPU, 메모리, 네트워크 인터페이스, 저장공간 등&lt;/em&gt;을 갖춘 &lt;code&gt;격리된 시스템&lt;/code&gt;을 말합니다.&lt;br&gt;
+달리 말하자면, 게스트 OS를 위한 가상 운영 환경을 제공하는 하드웨어 플랫폼의 소프트웨어 시뮬레이션이라고 할 수 있습니다.&lt;br&gt;
+이러한 VM들을 실행하는 물리적 기기를 &lt;code&gt;호스트 머신&lt;/code&gt;이라고 부르며, 호스트 머신의 자원을 사용하는 VM들을 &lt;code&gt;게스트 머신&lt;/code&gt;이라고 부릅니다.&lt;br&gt;
+&lt;code&gt;가상 머신&lt;/code&gt;을 사용하게 되면, 한 컴퓨터에서 여러 개의 서로 다른 OS를 동시에 실행할 수 있으며 각 OS는 &lt;code&gt;호스트 머신&lt;/code&gt;에서 실행되는 것과 동일한 방식으로 실행됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.redhat.com/en/topics/virtualization/what-is-a-virtual-machine&#34;&gt;What is a virtual machine (VM)? (redhat.com)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;docker는-어디에-속하는가-그리고-docker가-많이-사용되는-이유는&#34; &gt;Docker는 어디에 속하는가? 그리고 Docker가 많이 사용되는 이유는?
+&lt;span&gt;
+    &lt;a href=&#34;#docker%eb%8a%94-%ec%96%b4%eb%94%94%ec%97%90-%ec%86%8d%ed%95%98%eb%8a%94%ea%b0%80-%ea%b7%b8%eb%a6%ac%ea%b3%a0-docker%ea%b0%80-%eb%a7%8e%ec%9d%b4-%ec%82%ac%ec%9a%a9%eb%90%98%eb%8a%94-%ec%9d%b4%ec%9c%a0%eb%8a%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;OS 가상화, 즉 &lt;code&gt;컨테이너화&lt;/code&gt;와 &lt;code&gt;가상 머신&lt;/code&gt;을 사용하는 가상화 중 Docker는 &lt;code&gt;컨테이너화&lt;/code&gt;에 속한다고 할 수 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;가상-머신---컨테이너의-차이점&#34; &gt;가상 머신 - 컨테이너의 차이점
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%80%ec%83%81-%eb%a8%b8%ec%8b%a0---%ec%bb%a8%ed%85%8c%ec%9d%b4%eb%84%88%ec%9d%98-%ec%b0%a8%ec%9d%b4%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img src=&#34;vm-vs-container.png&#34; alt=&#34;vm-vs-container.png&#34;&gt;
+&lt;code&gt;가상 머신&lt;/code&gt;의 경우, &lt;code&gt;하이퍼바이저&lt;/code&gt;를 사용해 물리적 하드웨어를 가상화하게 됩니다.  따라서 각 가상 머신에 게스트 OS와 이에 필요한 프로세서, 메모리 등의 자원을 할당하여 사용합니다.&lt;br&gt;
+또한 서로 다른 OS를 실행하는 가상 머신들이 하나의 물리적 하드웨어 위에서 구동될 수 있습니다.&lt;br&gt;
+&lt;code&gt;컨테이너&lt;/code&gt;는 &lt;em&gt;하드웨어 대신&lt;/em&gt;  &lt;code&gt;운영체제&lt;/code&gt;를 &lt;strong&gt;가상화&lt;/strong&gt;하기 때문에 &lt;em&gt;&lt;code&gt;별도의 게스트 OS&lt;/code&gt; 없이&lt;/em&gt; &lt;code&gt;호스트 OS&lt;/code&gt;위에서 구동됩니다. 따라서 각 컨테이너들은 애플리케이션과 이에 필요한 의존성 및 라이브러리만 포함하며, 가상 머신과 달리 &lt;code&gt;메인 메모리&lt;/code&gt; 등의 자원을 미리 &lt;code&gt;할당할 필요가 없습니다&lt;/code&gt;.&lt;/p&gt;
+&lt;h3 id=&#34;docker의-장점&#34; &gt;Docker의 장점
+&lt;span&gt;
+    &lt;a href=&#34;#docker%ec%9d%98-%ec%9e%a5%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;도커는 앞서 말씀드린 것 처럼 여러 패키지, 종속성들을 묶어 이미지화 할 수 있어 &lt;code&gt;이식성&lt;/code&gt;이 뛰어나다는 장점이 있습니다.&lt;br&gt;
+이는 &lt;em&gt;여러 클라우드 환경이 보편화&lt;/em&gt;된 &lt;strong&gt;현재&lt;/strong&gt;에 상당한 장점인데, 특히 어제는 A 공급자의 클라우드에서 실행하던 것을 오늘은 B 공급자의 클라우드에 배포해야하는 등 유연함이 필요한 상황에 빛을 발합니다.&lt;br&gt;
+이에 더해 &lt;code&gt;운영체제&lt;/code&gt;와 관련된 세부 정보를 &lt;code&gt;추상화&lt;/code&gt;하므로, 개발/테스트/프로덕션 등 다양한 환경에서 배포할 때의 문제를 해결하고, CI/CD를 포함한 자동화 및 파이프라인 구현에 알맞습니다.&lt;br&gt;
+그리고 미리 일정량의 자원을 할당해주어야 하는 VM과 달리, 도커 컨테이너는 온디맨드 방식으로 자원을 요청하기 때문에 더 &lt;code&gt;시스템 자원을 효율적으로 사용&lt;/code&gt;할 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://aws.amazon.com/ko/compare/the-difference-between-docker-vm/&#34;&gt;Docker 및 VM 비교 - 애플리케이션 배포 기술 간의 차이 - AWS (amazon.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/difference-between-docker-and-virtualization/&#34;&gt;Difference Between Docker and Virtualization - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://aws.amazon.com/ko/compare/the-difference-between-containers-and-virtual-machines/&#34;&gt;컨테이너와 VM 비교 - 배포 기술 간의 차이점 - AWS (amazon.com)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;한-host-os상에서-구동되므로-컨테이너-간-간섭이-예상되는데-이를-어떻게-방어할-수-있는가&#34; &gt;한 Host OS상에서 구동되므로 컨테이너 간 간섭이 예상되는데, 이를 어떻게 방어할 수 있는가?
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%9c-host-os%ec%83%81%ec%97%90%ec%84%9c-%ea%b5%ac%eb%8f%99%eb%90%98%eb%af%80%eb%a1%9c-%ec%bb%a8%ed%85%8c%ec%9d%b4%eb%84%88-%ea%b0%84-%ea%b0%84%ec%84%ad%ec%9d%b4-%ec%98%88%ec%83%81%eb%90%98%eb%8a%94%eb%8d%b0-%ec%9d%b4%eb%a5%bc-%ec%96%b4%eb%96%bb%ea%b2%8c-%eb%b0%a9%ec%96%b4%ed%95%a0-%ec%88%98-%ec%9e%88%eb%8a%94%ea%b0%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;Docker는 기본적으로 Linux OS 위에서만 실행됩니다.&lt;br&gt;
+따라서 Linux에서 프로세스 격리를 위해 사용되는 &lt;code&gt;namespace&lt;/code&gt;와 &lt;code&gt;cgroup&lt;/code&gt;를 사용해 격리성을 높일 수 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;namespace&#34; &gt;&lt;code&gt;namespace&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#namespace&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;namespace&lt;/code&gt;는 &lt;code&gt;Linux 커널&lt;/code&gt;의 기능으로, &lt;code&gt;전역 시스템 자원(커널 자원)&lt;/code&gt;을 &lt;code&gt;추상화&lt;/code&gt;하여 각 네임스페이스내에 &lt;code&gt;격리된 자체 전역 자원 인스턴스&lt;/code&gt;가 있는 것처럼 보이게하는 기능입니다.&lt;br&gt;
+즉, 각 프로세스들은 본인이 속한 네임스페이스의 자원을 볼 수 있으며, 다른 네임스페이스의 자원은 볼 수 없습니다.&lt;br&gt;
+이러한 네임스페이스 유형으로는 &lt;code&gt;cgroup&lt;/code&gt;, &lt;code&gt;IPC&lt;/code&gt;, &lt;code&gt;Network&lt;/code&gt;, &lt;code&gt;Mount&lt;/code&gt;, &lt;code&gt;PID(Process ID)&lt;/code&gt; 등이 있습니다.&lt;br&gt;
+일반적으로 Linux에서는 새로운 프로세스를 실행할 경우 1번 프로세스의 네임스페이스를 공유하게 됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Linux_namespaces&#34;&gt;Linux namespaces - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://man7.org/linux/man-pages/man7/namespaces.7.html&#34;&gt;namespaces(7) - Linux manual page (man7.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.44bits.io/ko/keyword/linux-namespace&#34;&gt;리눅스 네임스페이스(Linux Namespace)란? | 44BITS&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;cgroup&#34; &gt;&lt;code&gt;cgroup&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#cgroup&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;cgroup(control group)&lt;/code&gt;은 &lt;code&gt;Linux 커널&lt;/code&gt;의 기능으로, &lt;code&gt;CPU 시간&lt;/code&gt;, &lt;code&gt;시스템 메모리&lt;/code&gt;, &lt;code&gt;네트워크 대역폭&lt;/code&gt; 등의 자원을 프로세스 모음에 할당 및 제한하고, 이들을 모니터링할 수 있는 기능입니다.&lt;br&gt;
+프로세스들은 일련의 매개변수 또는 제한(limits)에 의해 각각의 프로세스 모음에 바인딩됩니다.&lt;br&gt;
+부모로 부터 자식 프로세스가 생성되는 &lt;code&gt;Linux 프로세스 모델&lt;/code&gt;처럼, &lt;code&gt;cgroup&lt;/code&gt; 모델 역시 계층적이며 자식 &lt;code&gt;cgroup&lt;/code&gt;은 부모 &lt;code&gt;cgroup&lt;/code&gt;의 특정 속성을 상속하는 등 유사한 형태를 띕니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Cgroups&#34;&gt;cgroups - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.redhat.com/ko/documentation/red_hat_enterprise_linux/6/html/resource_management_guide/ch01#sec-How_Control_Groups_Are_Organized&#34;&gt;1장. 컨트롤 그룹 (Cgroups) 소개 | Red Hat Product Documentation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://man7.org/linux/man-pages/man7/cgroups.7.html&#34;&gt;cgroups(7) - Linux manual page (man7.org)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;enhanced-container-isolation-eci&#34; &gt;&lt;code&gt;Enhanced Container Isolation (ECI)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#enhanced-container-isolation-eci&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;ECI(Enhanced Container Isolation)&lt;/code&gt;는 컨테이너에서 실행되는 악성 워크로드들이 Docker 또는 호스트를 손상시키지 못하게 추가적인 보안 계층을 제공하는 기능입니다.&lt;br&gt;
+&lt;code&gt;ECI&lt;/code&gt;는 모든 프로세스를 &lt;code&gt;Linux 사용자-네임스페이스&lt;/code&gt;를 통해 &lt;code&gt;권한 없이(unprivileged) 실행&lt;/code&gt;하며, &lt;code&gt;--privileged&lt;/code&gt; 플래그도 무시합니다. 또한 컨테이너나 유저가 내부 설정을 수정할 수 없게해 Docker VM의 불변성을 보장합니다.&lt;br&gt;
+그리고 컨테이너 탈출을 방지하기 위해 몇몇 중요 system call을 검사하고, 컨테이너 내부의 &lt;code&gt;/proc&lt;/code&gt;과 &lt;code&gt;/sys&lt;/code&gt; 일부를 가상화해 추가적으로 격리를 진행합니다.&lt;br&gt;
+또한 사용자 콘솔에서 Docker Desktop VM에 접근하지 못하도록 차단합니다.&lt;br&gt;
+&lt;code&gt;ECI&lt;/code&gt;를 사용하면 기능 및 성능에 대한 영향을 최소화한체, 이러한 기능들이 적용됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.docker.com/security/for-admins/hardened-desktop/enhanced-container-isolation/&#34;&gt;What is Enhanced Container Isolation? | Docker Docs&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.docker.com/engine/security/&#34;&gt;Docker security | Docker Docs&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;docker-위에-docker를-올릴-수-있을까&#34; &gt;Docker 위에 Docker를 올릴 수 있을까?
+&lt;span&gt;
+    &lt;a href=&#34;#docker-%ec%9c%84%ec%97%90-docker%eb%a5%bc-%ec%98%ac%eb%a6%b4-%ec%88%98-%ec%9e%88%ec%9d%84%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;가능합니다.&lt;br&gt;
+크게 도커 컨테이너 내부에서 &lt;code&gt;privileged&lt;/code&gt; 모드를 통해 도커 데몬을 실행하는 &lt;code&gt;DinD(Docker in Docker)&lt;/code&gt; 방식과, 동일한 도커 데몬상에 컨테이너를 추가 생성한 뒤 &lt;code&gt;소켓 파일&lt;/code&gt;(&lt;code&gt;/var/run/docker.sock&lt;/code&gt;)을 공유해 &lt;code&gt;호스트 컨테이너(도커 서버)&lt;/code&gt;가 &lt;strong&gt;도커 명령을 실행&lt;/strong&gt;하는 방식인 &lt;code&gt;DooD(Docker out of Docker)&lt;/code&gt; 두 가지가 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.naver.com/isc0304/222274955992&#34;&gt;도커 컨테이너 안에서 도커 실행하기(Docke.. : 네이버블로그 (naver.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.nixknight.com/2022/01/dind-vs-dood/&#34;&gt;Docker in Docker vs Docker Outside of Docker | NIXKNIGHT&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.nixknight.com/2021/04/jenkins-docker-in-docker/&#34;&gt;Jenkins - Docker-in-Docker | NIXKNIGHT&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.docker.com/blog/docker-can-now-run-within-docker/&#34;&gt;Docker can now run within Docker | Docker&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.redhat.com/ko/topics/virtualization/what-is-virtualization&#34;&gt;가상화란? 개념, 가상화 기술, 서버 가상화에 대한 포괄적인 안내 (redhat.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.redhat.com/en/topics/virtualization/what-is-virtualization&#34;&gt;What is virtualization? (redhat.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.ibm.com/kr-ko/topics/virtualization&#34;&gt;가상화란? | IBM&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.ibm.com/topics/virtualization&#34;&gt;What Is Virtualization? | IBM&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Virtualization&#34;&gt;Virtualization - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Desktop_virtualization&#34;&gt;Desktop virtualization - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://insights.sei.cmu.edu/blog/virtualization-via-virtual-machines/&#34;&gt;Virtualization via Virtual Machines (cmu.edu)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>[Javascript] 추상 구문 트리(AST) 알아보기(w. 파스 트리, CFG, BNF)</title>

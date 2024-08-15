@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[CS] 가상화 알아보기 (w. Hypervisor, Docker) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 8월 13일 발표한 가상화에 대해 정리한 문서를 블로그에 공유하고자 한다.
+가상화에 대하여가상화란?가상화(Virtualization)란 하나의 물리적인 하드웨어 시스템(컴퓨터) 위에 추상화 계층을 생성해, 여러 개의 시뮬레이션 환경 또는 전용 리소스로 분할할 수 있게 해주는 기술을 말합니다. 즉, 하드웨어에 묶여있던 자원들을 추상화를 통해 분산하여 사용할 수 있게 해주는 기술인 것입니다.
+이러한 분리는 하이퍼바이저(Hypervisor)라고 부르는 소프트웨어를 통해 이뤄지며, 가상화를 통해 생성된 가상 표현을 VM(Virtual Machine, 가상 머신)이라고 합니다.
+가상화의 역사가상화는 1960년대 대형 메인프레임 컴퓨터를 사용하던 시절, 각 메인프레임들이 한 번에 한 프로세스만 수행하던 것을 개선하고자 등장하게 되었습니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[CS] 가상화 알아보기 (w. Hypervisor, Docker)" />
+<meta property="og:description" content="서론CS 스터디에서 8월 13일 발표한 가상화에 대해 정리한 문서를 블로그에 공유하고자 한다.
+가상화에 대하여가상화란?가상화(Virtualization)란 하나의 물리적인 하드웨어 시스템(컴퓨터) 위에 추상화 계층을 생성해, 여러 개의 시뮬레이션 환경 또는 전용 리소스로 분할할 수 있게 해주는 기술을 말합니다. 즉, 하드웨어에 묶여있던 자원들을 추상화를 통해 분산하여 사용할 수 있게 해주는 기술인 것입니다.
+이러한 분리는 하이퍼바이저(Hypervisor)라고 부르는 소프트웨어를 통해 이뤄지며, 가상화를 통해 생성된 가상 표현을 VM(Virtual Machine, 가상 머신)이라고 합니다.
+가상화의 역사가상화는 1960년대 대형 메인프레임 컴퓨터를 사용하던 시절, 각 메인프레임들이 한 번에 한 프로세스만 수행하던 것을 개선하고자 등장하게 되었습니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/cs/virtualization/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-08-15T19:45:01+09:00" />
+<meta property="article:modified_time" content="2024-08-15T19:45:01+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[CS] 가상화 알아보기 (w. Hypervisor, Docker)"/>
+<meta name="twitter:description" content="서론CS 스터디에서 8월 13일 발표한 가상화에 대해 정리한 문서를 블로그에 공유하고자 한다.
+가상화에 대하여가상화란?가상화(Virtualization)란 하나의 물리적인 하드웨어 시스템(컴퓨터) 위에 추상화 계층을 생성해, 여러 개의 시뮬레이션 환경 또는 전용 리소스로 분할할 수 있게 해주는 기술을 말합니다. 즉, 하드웨어에 묶여있던 자원들을 추상화를 통해 분산하여 사용할 수 있게 해주는 기술인 것입니다.
+이러한 분리는 하이퍼바이저(Hypervisor)라고 부르는 소프트웨어를 통해 이뤄지며, 가상화를 통해 생성된 가상 표현을 VM(Virtual Machine, 가상 머신)이라고 합니다.
+가상화의 역사가상화는 1960년대 대형 메인프레임 컴퓨터를 사용하던 시절, 각 메인프레임들이 한 번에 한 프로세스만 수행하던 것을 개선하고자 등장하게 되었습니다."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[CS] 가상화 알아보기 (w. Hypervisor, Docker)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#가상화에-대하여">가상화에 대하여</a>
+      <ul>
+        <li><a href="#가상화란"><code>가상화</code>란?</a></li>
+        <li><a href="#하이퍼바이저hypervisor"><code>하이퍼바이저(Hypervisor)</code></a></li>
+        <li><a href="#가상-머신virtual-machine"><code>가상 머신(Virtual Machine)</code></a></li>
+      </ul>
+    </li>
+    <li><a href="#docker는-어디에-속하는가-그리고-docker가-많이-사용되는-이유는">Docker는 어디에 속하는가? 그리고 Docker가 많이 사용되는 이유는?</a>
+      <ul>
+        <li><a href="#가상-머신---컨테이너의-차이점">가상 머신 - 컨테이너의 차이점</a></li>
+        <li><a href="#docker의-장점">Docker의 장점</a></li>
+      </ul>
+    </li>
+    <li><a href="#한-host-os상에서-구동되므로-컨테이너-간-간섭이-예상되는데-이를-어떻게-방어할-수-있는가">한 Host OS상에서 구동되므로 컨테이너 간 간섭이 예상되는데, 이를 어떻게 방어할 수 있는가?</a>
+      <ul>
+        <li><a href="#namespace"><code>namespace</code></a></li>
+        <li><a href="#cgroup"><code>cgroup</code></a></li>
+        <li><a href="#enhanced-container-isolation-eci"><code>Enhanced Container Isolation (ECI)</code></a></li>
+      </ul>
+    </li>
+    <li><a href="#docker-위에-docker를-올릴-수-있을까">Docker 위에 Docker를 올릴 수 있을까?</a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 8월 13일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/05-ETC/1_Virtualization/Readme.md"><strong>가상화</strong></a>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h2 id="가상화에-대하여" >가상화에 대하여
+<span>
+    <a href="#%ea%b0%80%ec%83%81%ed%99%94%ec%97%90-%eb%8c%80%ed%95%98%ec%97%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="가상화란" ><code>가상화</code>란?
+<span>
+    <a href="#%ea%b0%80%ec%83%81%ed%99%94%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>가상화(Virtualization)</code>란 하나의 <code>물리적인 하드웨어 시스템</code>(컴퓨터) 위에 <code>추상화 계층</code>을 생성해, 여러 개의 시뮬레이션 환경 또는 전용 리소스로 분할할 수 있게 해주는 기술을 말합니다. 즉, 하드웨어에 묶여있던 <code>자원들</code>을 <code>추상화</code>를 통해 <code>분산하여 사용</code>할 수 있게 해주는 기술인 것입니다.<br>
+이러한 분리는 <code>하이퍼바이저(Hypervisor)</code>라고 부르는 소프트웨어를 통해 이뤄지며, 가상화를 통해 생성된 가상 표현을 <code>VM(Virtual Machine, 가상 머신)</code>이라고 합니다.</p>
+<h4 id="가상화의-역사" >가상화의 역사
+<span>
+    <a href="#%ea%b0%80%ec%83%81%ed%99%94%ec%9d%98-%ec%97%ad%ec%82%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>가상화</code>는 1960년대 대형 메인프레임 컴퓨터를 사용하던 시절, 각 메인프레임들이 <code>한 번에 한 프로세스만 수행</code>하던 것을 <strong>개선</strong>하고자 등장하게 되었습니다.<br>
+당시 고객의 요구로 한 메인프레임이 동시에 둘 이상의 사용자, 또는 둘 이상의 프로세스를 지원할 수 있어야 했고, 이를 위해 IBM에서는 <code>가상 메모리</code>를 도입한 <code>하이퍼바이저</code>인 <a href="https://en.wikipedia.org/wiki/IBM_CP-40">IBM CP-40</a>, <a href="https://en.wikipedia.org/wiki/CP-67">CP-67</a> OS를 출시하며 가상화 SW가 시장에 등장하게 되었습니다.<br>
+이후 단일 공급자 IT 스택, 레거시 애플리케이션의 리소스 사용 방식으로는 변화에 유연하게 대응하기 어렵다는 점이 대두되고 인터넷이 성장하자 가상화 사용이 점점 증가하게 되었습니다.</p>
+<h4 id="가상화의-종류" >가상화의 종류
+<span>
+    <a href="#%ea%b0%80%ec%83%81%ed%99%94%ec%9d%98-%ec%a2%85%eb%a5%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>도커</code>의 등장으로 가장 잘 알려진 가상화인 <code>운영체제 가상화(OS-Level Virtualization)</code>(또는 <code>컨테이너화(Containerization)</code>)이외에도 여러 유형의 가상화들이 존재합니다.</p>
+<h5 id="운영체제-가상화os-level-virtualization" >운영체제 가상화(OS-Level Virtualization)
+<span>
+    <a href="#%ec%9a%b4%ec%98%81%ec%b2%b4%ec%a0%9c-%ea%b0%80%ec%83%81%ed%99%94os-level-virtualization">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><code>컨테이너화(Containerization)</code>라고도 불리는 이 방법은, OS의 중앙 자원 및 작업 관리자인 커널이 여러 <code>사용자 공간(커널 외부에서 실행되는 모든 코드)</code> 인스턴스를 허용하는 가상화를 말합니다.<br>
+<code>사용자 공간 인스턴스(user space instance)</code>로는 <code>컨테이너(LXC, Solaris Container, Docker)</code>, <code>존(Solaris Container)</code>, <code>가상 커널(DragonFly BSD)</code>등이 있습니다.<br>
+각 <code>컨테이너</code>들은 컴퓨터 전체에 가용한 자원 중 일부만 할당되며, 컨테이너상에서 실행되는 프로그램들은 컨테이너에 할당된 리소스들을 현재 컴퓨터(컨테이너)의 가용한 전체 리소스로 인식합니다.</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/OS-level_virtualization">OS-level virtualization - Wikipedia</a></li>
+</ul>
+<h5 id="데스크톱-가상화desktop-virtualization" >데스크톱 가상화(Desktop Virtualization)
+<span>
+    <a href="#%eb%8d%b0%ec%8a%a4%ed%81%ac%ed%86%b1-%ea%b0%80%ec%83%81%ed%99%94desktop-virtualization">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><img src="vdi-architecture.png" alt="vdi-architecture.png"></p>
+<blockquote>
+<p>출처: <a href="https://library.gabia.com/contents/infrahosting/13429/">VDI(가상 데스크톱 인프라)란? (feat. VDI vs. DaaS 비교 분석) | 가비아 라이브러리 (gabia.com)</a></p>
+</blockquote>
+<p>중앙 서버에서 <code>가상 머신</code>들을 생성해 여러 데스크톱 환경을 실행하고 이를 클라이언트 기기에서 로그인한 사용자에게 스트리밍하므로써, 물리적 클라이언트 장치와 데스크톱 환경을 분리하는 것을 말합니다.<br>
+이를 <code>가상 데스크톱 인프라(Virtual Desktop Infrastructure, VDI)</code>라고도 합니다.<br>
+또한 <code>VDI</code>를 클라우드 환경을 통해 제공하는 것을 <code>서비스형 데스크톱(Desktop-as-a-Service, DaaS)</code>라고 합니다.</p>
+<ul>
+<li><a href="https://www.ibm.com/blog/what-is-virtual-desktop-infrastructure/">What is virtual desktop infrastructure (VDI)? - IBM Blog</a></li>
+<li><a href="https://www.ibm.com/kr-ko/topics/desktop-as-a-service">DaaS(Desktop-as-a-Service)란 무엇인가요? | IBM</a></li>
+</ul>
+<h5 id="서버-가상화server-virtualization" >서버 가상화(Server Virtualization)
+<span>
+    <a href="#%ec%84%9c%eb%b2%84-%ea%b0%80%ec%83%81%ed%99%94server-virtualization">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>하나의 서버 컴퓨터에서 여러 개의 가상 머신을 구동해 컴퓨팅 자원을 최대한 활용하고 여러 어플리케이션을 구동할 수 있는 가상화입니다. <a href="https://computer.howstuffworks.com/server-virtualization.htm">#</a></p>
+<h5 id="네트워크-기능-가상화network-function-virtualization" >네트워크 기능 가상화(Network Function Virtualization)
+<span>
+    <a href="#%eb%84%a4%ed%8a%b8%ec%9b%8c%ed%81%ac-%ea%b8%b0%eb%8a%a5-%ea%b0%80%ec%83%81%ed%99%94network-function-virtualization">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><img src="nfv-architecture.png" alt="nfv-architecture.png"></p>
+<blockquote>
+<p>NFV의 아키텍처</p>
+</blockquote>
+<p>네트워크 하드웨어로부터 <code>라우터</code>, <code>방화벽</code>, <code>로드 밸런서</code>등의 물리적인 네트워크 <code>기능을 추상화</code>하여, 하이퍼바이저위에서 실행중인 소프트웨어로 추상화하는 가상화를 말합니다.<br>
+따라서 네트워크 관리자는 하드웨어들을 건드리지 않고도 네트워크를 관리할 수 있고, 서비스 제공업체에 새로운 기능을 요청하면 제공업체는 새 VM을 가동해 해당 요청을 처리할 수 있게 됩니다.</p>
+<ul>
+<li><a href="https://www.redhat.com/ko/topics/virtualization/what-is-nfv">NFV란? (redhat.com)</a></li>
+<li><a href="https://www.ciena.kr/insights/what-is/What-is-Network-Functions-Virtualization_ko_KR.html">NFV란? - Ciena KR</a></li>
+<li><a href="https://www.geeksforgeeks.org/network-functions-virtualization/">Network Functions Virtualization - GeeksforGeeks</a></li>
+</ul>
+<h4 id="장점" >장점
+<span>
+    <a href="#%ec%9e%a5%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h5 id="자원의-효율화" >자원의 효율화
+<span>
+    <a href="#%ec%9e%90%ec%9b%90%ec%9d%98-%ed%9a%a8%ec%9c%a8%ed%99%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>가상화 이전에는 <code>하나의 애플리케이션</code>에 <code>하나의 서버(물리적인 CPU를 포함한)</code>가 필요했습니다.
+이러한 형태는 한 서버에서 <code>가용한 자원</code>을 <code>최대로 활용할 수 없으며</code> 사용중이지 않은 <code>자원은 낭비</code> 되어왔습니다.<br>
+이와 다르게, <code>서버 가상화</code>를 통해 단일 컴퓨터에 <code>자체 OS를 포함한 VM들</code>을 실행해 <code>다수의 애플리케이션을 실행</code>하므로써 하드웨어의 <code>컴퓨팅 자원을 효율적으로 사용</code>할 수 있게 되었습니다.</p>
+<h5 id="시스템-관리" >시스템 관리
+<span>
+    <a href="#%ec%8b%9c%ec%8a%a4%ed%85%9c-%ea%b4%80%eb%a6%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>물리적 <code>컴퓨팅 자원들</code>이 가상화되었으므로, 이들을 <code>소프트웨어 도구를 사용해 관리</code>할 수 있게 됩니다.<br>
+<code>인프라를 복제</code>하는데도 <code>자동화</code>를 할 수 있고, <code>프로비저닝이 더 빨라집니다</code>.</p>
+<h5 id="빠른-장애-복구" >빠른 장애 복구
+<span>
+    <a href="#%eb%b9%a0%eb%a5%b8-%ec%9e%a5%ec%95%a0-%eb%b3%b5%ea%b5%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>기존의 경우, 시스템 장애가 일어나면 <em>IT 인프라 현장에 직접 접근해 <code>물리적 서버를 교체 및 수리</code></em> 하는데 <code>많은 시간</code>이 걸렸습니다.<br>
+반면 가상 환경에서는 <code>중복되는 가상 머신으로 대체</code>하여 빠르게 장애를 복구할 수 있습니다.</p>
+<h4 id="단점" >단점
+<span>
+    <a href="#%eb%8b%a8%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h5 id="자원-효율성" >자원 효율성
+<span>
+    <a href="#%ec%9e%90%ec%9b%90-%ed%9a%a8%ec%9c%a8%ec%84%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>시스템에 가상화를 도입하게 되면 <code>VM</code>, <code>하이퍼바이저</code>, <code>게스트 OS</code>에서 더 많은 컴퓨팅 능력을 요구할 수 있어 때때로 하드웨어 자원 요구량을 증가시키기도 합니다.</p>
+<h5 id="공유-자원" >공유 자원
+<span>
+    <a href="#%ea%b3%b5%ec%9c%a0-%ec%9e%90%ec%9b%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><code>VM</code>들은 <code>하이퍼바이저</code>, <code>호스트 OS</code>, <code>프로세서 내부 자원(L3 캐시, 시스템 버스 등)</code>, <code>프로세스 외부 자원(메인 메모리, I/O 기기 및 네트워크)</code>을 공유하기 때문에, 단일 장애 지점이 존재할 수 밖에 없습니다.<br>
+또한 한 VM에서 실행중인 소프트웨어가 <code>다른 VM에서 실행중인 소프트웨어</code>에 <code>영향</code>을 미칠 수도 있습니다. (= 격리 위반이 발생할 수 있습니다.)</p>
+<h5 id="간섭" >간섭
+<span>
+    <a href="#%ea%b0%84%ec%84%ad">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><code>공간적 격리 실패(공유 메모리로 인한)</code> 또는 <code>시간적 격리 실패(간섭 지연 또는 페널티로 인한)</code>에 의해 한 VM에서 실행중인 소프트웨어가 다른 VM에서 실행중인 소프트웨어의 동작에 영향을 미칠 수 있습니다.<br>
+이러한 <code>간섭</code>이 가능한 경로의 수는 VM의 수가 늘어남에 따라 빠르게 증가합니다.<br>
+예시로 아래 그림은 6개의 <code>공유 자원(빨간색으로 표시된)</code>을 사용하는 애플리케이션 쌍 간에 발생 가능한 3가지 <code>간섭 경로</code>를 나타냅니다.<br>
+<img src="interference-example.png" alt="interference-example.png"></p>
+<blockquote>
+<p>출처: <a href="https://insights.sei.cmu.edu/blog/virtualization-via-virtual-machines/">Virtualization via Virtual Machines (cmu.edu)</a></p>
+</blockquote>
+<h3 id="하이퍼바이저hypervisor" ><code>하이퍼바이저(Hypervisor)</code>
+<span>
+    <a href="#%ed%95%98%ec%9d%b4%ed%8d%bc%eb%b0%94%ec%9d%b4%ec%a0%80hypervisor">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>하이퍼바이저</code>(또는 <code>가상 머신 모니터(VMM)</code>)란, <code>호스트 머신</code>에서 <code>가상 머신(VM)</code>을 생성 및 실행하는 소프트웨어로 VM들을 생성 및 관리합니다.<br>
+<code>하이퍼바이저</code>는 <em>CPU, 메모리, 스토리지 등</em> 컴퓨팅 자원들을 기존 게스트 머신 간에, 또는 새로운 VM으로 쉽게 재배치할 수 있는 자원 풀로 취급해 물리적 자원과 가상 환경을 분리합니다.<br>
+<img src="type-of-hypervisor.png" alt="type-of-hypervisor.png"></p>
+<p>일반적으로 <code>하이퍼바이저</code>는 하드웨어상에서 직접 실행되는 <code>타입 1(bare-metal)</code> 또는 호스트 운영체제 위에서 실행되는 <code>타입 2(Hosted)</code>로 나뉩니다.</p>
+<ul>
+<li><a href="https://www.redhat.com/en/topics/virtualization/what-is-a-hypervisor">What is a hypervisor? (redhat.com)</a></li>
+<li><a href="https://ko.wikipedia.org/wiki/%ED%95%98%EC%9D%B4%ED%8D%BC%EB%B0%94%EC%9D%B4%EC%A0%80">하이퍼바이저 - 위키백과, 우리 모두의 백과사전 (wikipedia.org)</a></li>
+</ul>
+<h4 id="타입-1" >타입 1
+<span>
+    <a href="#%ed%83%80%ec%9e%85-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="type1-hypervisor.png" alt="type1-hypervisor.png"></p>
+<blockquote>
+<p>출처: <a href="https://insights.sei.cmu.edu/blog/virtualization-via-virtual-machines/">Virtualization via Virtual Machines (cmu.edu)</a></p>
+</blockquote>
+<p><code>타입 1</code> 하이퍼바이저는 <strong><code>호스트의 하드웨어에서 직접 실행</code></strong> 되어 게스트 OS들을 관리합니다.<br>
+그리고 <code>호스트 OS</code>를 대신해 하드웨어에 직접 <code>가상 머신</code>들의 자원들을 조정합니다.<br>
+<code>타입 1</code>과 같은 형태의 하이퍼바이저는 1960년대 <code>IBM CP</code>에서 시작되었으며, 엔터프라이즈 및 서버기반 환경에서 일반적인 형태입니다.<br>
+<a href="https://linux-kvm.org/page/Main_Page">KVM(커널-기반 가상 머신)</a>, <a href="https://learn.microsoft.com/ko-kr/windows-server/virtualization/hyper-v/hyper-v-technology-overview">MS Hyper-V</a>, <a href="https://docs.vmware.com/kr/VMware-vSphere/index.html">VMWare vSphere</a> 등이 <code>타입 1</code>의 대표적인 예시 입니다.</p>
+<h4 id="타입-2" >타입 2
+<span>
+    <a href="#%ed%83%80%ec%9e%85-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="type2-hypervisor.png" alt="type2-hypervisor.png"></p>
+<blockquote>
+<p>출처 : <a href="https://insights.sei.cmu.edu/blog/virtualization-via-virtual-machines/">Virtualization via Virtual Machines (cmu.edu)</a></p>
+</blockquote>
+<p><code>타입 2</code> 하이퍼바이저는 일반 프로그램처럼 <strong><code>호스트 OS 위</code></strong> 에서 실행되는 하이퍼바이저를 말합니다.<br>
+<code>게스트 OS</code>를 <code>호스트 OS</code>로부터 추상화시키는 방식으로 동작하며, <code>가상 머신</code>들의 자원은 <code>호스트 OS</code>에 의해 스케줄링되며 이후 하드웨어에 의해 실행됩니다.<br>
+<code>타입 2</code>에 해당하는 하이퍼바이저로는 <a href="https://www.virtualbox.org/">Oracle VirtualBox</a>, <a href="https://www.vmware.com/info/workstation-player/evaluation">VMWare Workstation</a> 등이 있습니다.</p>
+<h3 id="가상-머신virtual-machine" ><code>가상 머신(Virtual Machine)</code>
+<span>
+    <a href="#%ea%b0%80%ec%83%81-%eb%a8%b8%ec%8b%a0virtual-machine">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>가상 머신</code>(또는 <code>게스트 머신</code>)이란, <code>하드웨어 자원 풀에서 생성된 컴퓨팅 환경</code>으로, <em>자체 CPU, 메모리, 네트워크 인터페이스, 저장공간 등</em>을 갖춘 <code>격리된 시스템</code>을 말합니다.<br>
+달리 말하자면, 게스트 OS를 위한 가상 운영 환경을 제공하는 하드웨어 플랫폼의 소프트웨어 시뮬레이션이라고 할 수 있습니다.<br>
+이러한 VM들을 실행하는 물리적 기기를 <code>호스트 머신</code>이라고 부르며, 호스트 머신의 자원을 사용하는 VM들을 <code>게스트 머신</code>이라고 부릅니다.<br>
+<code>가상 머신</code>을 사용하게 되면, 한 컴퓨터에서 여러 개의 서로 다른 OS를 동시에 실행할 수 있으며 각 OS는 <code>호스트 머신</code>에서 실행되는 것과 동일한 방식으로 실행됩니다.</p>
+<ul>
+<li><a href="https://www.redhat.com/en/topics/virtualization/what-is-a-virtual-machine">What is a virtual machine (VM)? (redhat.com)</a></li>
+</ul>
+<h2 id="docker는-어디에-속하는가-그리고-docker가-많이-사용되는-이유는" >Docker는 어디에 속하는가? 그리고 Docker가 많이 사용되는 이유는?
+<span>
+    <a href="#docker%eb%8a%94-%ec%96%b4%eb%94%94%ec%97%90-%ec%86%8d%ed%95%98%eb%8a%94%ea%b0%80-%ea%b7%b8%eb%a6%ac%ea%b3%a0-docker%ea%b0%80-%eb%a7%8e%ec%9d%b4-%ec%82%ac%ec%9a%a9%eb%90%98%eb%8a%94-%ec%9d%b4%ec%9c%a0%eb%8a%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>OS 가상화, 즉 <code>컨테이너화</code>와 <code>가상 머신</code>을 사용하는 가상화 중 Docker는 <code>컨테이너화</code>에 속한다고 할 수 있습니다.</p>
+<h3 id="가상-머신---컨테이너의-차이점" >가상 머신 - 컨테이너의 차이점
+<span>
+    <a href="#%ea%b0%80%ec%83%81-%eb%a8%b8%ec%8b%a0---%ec%bb%a8%ed%85%8c%ec%9d%b4%eb%84%88%ec%9d%98-%ec%b0%a8%ec%9d%b4%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><img src="vm-vs-container.png" alt="vm-vs-container.png">
+<code>가상 머신</code>의 경우, <code>하이퍼바이저</code>를 사용해 물리적 하드웨어를 가상화하게 됩니다.  따라서 각 가상 머신에 게스트 OS와 이에 필요한 프로세서, 메모리 등의 자원을 할당하여 사용합니다.<br>
+또한 서로 다른 OS를 실행하는 가상 머신들이 하나의 물리적 하드웨어 위에서 구동될 수 있습니다.<br>
+<code>컨테이너</code>는 <em>하드웨어 대신</em>  <code>운영체제</code>를 <strong>가상화</strong>하기 때문에 <em><code>별도의 게스트 OS</code> 없이</em> <code>호스트 OS</code>위에서 구동됩니다. 따라서 각 컨테이너들은 애플리케이션과 이에 필요한 의존성 및 라이브러리만 포함하며, 가상 머신과 달리 <code>메인 메모리</code> 등의 자원을 미리 <code>할당할 필요가 없습니다</code>.</p>
+<h3 id="docker의-장점" >Docker의 장점
+<span>
+    <a href="#docker%ec%9d%98-%ec%9e%a5%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>도커는 앞서 말씀드린 것 처럼 여러 패키지, 종속성들을 묶어 이미지화 할 수 있어 <code>이식성</code>이 뛰어나다는 장점이 있습니다.<br>
+이는 <em>여러 클라우드 환경이 보편화</em>된 <strong>현재</strong>에 상당한 장점인데, 특히 어제는 A 공급자의 클라우드에서 실행하던 것을 오늘은 B 공급자의 클라우드에 배포해야하는 등 유연함이 필요한 상황에 빛을 발합니다.<br>
+이에 더해 <code>운영체제</code>와 관련된 세부 정보를 <code>추상화</code>하므로, 개발/테스트/프로덕션 등 다양한 환경에서 배포할 때의 문제를 해결하고, CI/CD를 포함한 자동화 및 파이프라인 구현에 알맞습니다.<br>
+그리고 미리 일정량의 자원을 할당해주어야 하는 VM과 달리, 도커 컨테이너는 온디맨드 방식으로 자원을 요청하기 때문에 더 <code>시스템 자원을 효율적으로 사용</code>할 수 있습니다.</p>
+<ul>
+<li><a href="https://aws.amazon.com/ko/compare/the-difference-between-docker-vm/">Docker 및 VM 비교 - 애플리케이션 배포 기술 간의 차이 - AWS (amazon.com)</a></li>
+<li><a href="https://www.geeksforgeeks.org/difference-between-docker-and-virtualization/">Difference Between Docker and Virtualization - GeeksforGeeks</a></li>
+<li><a href="https://aws.amazon.com/ko/compare/the-difference-between-containers-and-virtual-machines/">컨테이너와 VM 비교 - 배포 기술 간의 차이점 - AWS (amazon.com)</a></li>
+</ul>
+<h2 id="한-host-os상에서-구동되므로-컨테이너-간-간섭이-예상되는데-이를-어떻게-방어할-수-있는가" >한 Host OS상에서 구동되므로 컨테이너 간 간섭이 예상되는데, 이를 어떻게 방어할 수 있는가?
+<span>
+    <a href="#%ed%95%9c-host-os%ec%83%81%ec%97%90%ec%84%9c-%ea%b5%ac%eb%8f%99%eb%90%98%eb%af%80%eb%a1%9c-%ec%bb%a8%ed%85%8c%ec%9d%b4%eb%84%88-%ea%b0%84-%ea%b0%84%ec%84%ad%ec%9d%b4-%ec%98%88%ec%83%81%eb%90%98%eb%8a%94%eb%8d%b0-%ec%9d%b4%eb%a5%bc-%ec%96%b4%eb%96%bb%ea%b2%8c-%eb%b0%a9%ec%96%b4%ed%95%a0-%ec%88%98-%ec%9e%88%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>Docker는 기본적으로 Linux OS 위에서만 실행됩니다.<br>
+따라서 Linux에서 프로세스 격리를 위해 사용되는 <code>namespace</code>와 <code>cgroup</code>를 사용해 격리성을 높일 수 있습니다.</p>
+<h3 id="namespace" ><code>namespace</code>
+<span>
+    <a href="#namespace">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>namespace</code>는 <code>Linux 커널</code>의 기능으로, <code>전역 시스템 자원(커널 자원)</code>을 <code>추상화</code>하여 각 네임스페이스내에 <code>격리된 자체 전역 자원 인스턴스</code>가 있는 것처럼 보이게하는 기능입니다.<br>
+즉, 각 프로세스들은 본인이 속한 네임스페이스의 자원을 볼 수 있으며, 다른 네임스페이스의 자원은 볼 수 없습니다.<br>
+이러한 네임스페이스 유형으로는 <code>cgroup</code>, <code>IPC</code>, <code>Network</code>, <code>Mount</code>, <code>PID(Process ID)</code> 등이 있습니다.<br>
+일반적으로 Linux에서는 새로운 프로세스를 실행할 경우 1번 프로세스의 네임스페이스를 공유하게 됩니다.</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Linux_namespaces">Linux namespaces - Wikipedia</a></li>
+<li><a href="https://man7.org/linux/man-pages/man7/namespaces.7.html">namespaces(7) - Linux manual page (man7.org)</a></li>
+<li><a href="https://www.44bits.io/ko/keyword/linux-namespace">리눅스 네임스페이스(Linux Namespace)란? | 44BITS</a></li>
+</ul>
+<h3 id="cgroup" ><code>cgroup</code>
+<span>
+    <a href="#cgroup">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>cgroup(control group)</code>은 <code>Linux 커널</code>의 기능으로, <code>CPU 시간</code>, <code>시스템 메모리</code>, <code>네트워크 대역폭</code> 등의 자원을 프로세스 모음에 할당 및 제한하고, 이들을 모니터링할 수 있는 기능입니다.<br>
+프로세스들은 일련의 매개변수 또는 제한(limits)에 의해 각각의 프로세스 모음에 바인딩됩니다.<br>
+부모로 부터 자식 프로세스가 생성되는 <code>Linux 프로세스 모델</code>처럼, <code>cgroup</code> 모델 역시 계층적이며 자식 <code>cgroup</code>은 부모 <code>cgroup</code>의 특정 속성을 상속하는 등 유사한 형태를 띕니다.</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Cgroups">cgroups - Wikipedia</a></li>
+<li><a href="https://docs.redhat.com/ko/documentation/red_hat_enterprise_linux/6/html/resource_management_guide/ch01#sec-How_Control_Groups_Are_Organized">1장. 컨트롤 그룹 (Cgroups) 소개 | Red Hat Product Documentation</a></li>
+<li><a href="https://man7.org/linux/man-pages/man7/cgroups.7.html">cgroups(7) - Linux manual page (man7.org)</a></li>
+</ul>
+<h3 id="enhanced-container-isolation-eci" ><code>Enhanced Container Isolation (ECI)</code>
+<span>
+    <a href="#enhanced-container-isolation-eci">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>ECI(Enhanced Container Isolation)</code>는 컨테이너에서 실행되는 악성 워크로드들이 Docker 또는 호스트를 손상시키지 못하게 추가적인 보안 계층을 제공하는 기능입니다.<br>
+<code>ECI</code>는 모든 프로세스를 <code>Linux 사용자-네임스페이스</code>를 통해 <code>권한 없이(unprivileged) 실행</code>하며, <code>--privileged</code> 플래그도 무시합니다. 또한 컨테이너나 유저가 내부 설정을 수정할 수 없게해 Docker VM의 불변성을 보장합니다.<br>
+그리고 컨테이너 탈출을 방지하기 위해 몇몇 중요 system call을 검사하고, 컨테이너 내부의 <code>/proc</code>과 <code>/sys</code> 일부를 가상화해 추가적으로 격리를 진행합니다.<br>
+또한 사용자 콘솔에서 Docker Desktop VM에 접근하지 못하도록 차단합니다.<br>
+<code>ECI</code>를 사용하면 기능 및 성능에 대한 영향을 최소화한체, 이러한 기능들이 적용됩니다.</p>
+<ul>
+<li><a href="https://docs.docker.com/security/for-admins/hardened-desktop/enhanced-container-isolation/">What is Enhanced Container Isolation? | Docker Docs</a></li>
+<li><a href="https://docs.docker.com/engine/security/">Docker security | Docker Docs</a></li>
+</ul>
+<h2 id="docker-위에-docker를-올릴-수-있을까" >Docker 위에 Docker를 올릴 수 있을까?
+<span>
+    <a href="#docker-%ec%9c%84%ec%97%90-docker%eb%a5%bc-%ec%98%ac%eb%a6%b4-%ec%88%98-%ec%9e%88%ec%9d%84%ea%b9%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>가능합니다.<br>
+크게 도커 컨테이너 내부에서 <code>privileged</code> 모드를 통해 도커 데몬을 실행하는 <code>DinD(Docker in Docker)</code> 방식과, 동일한 도커 데몬상에 컨테이너를 추가 생성한 뒤 <code>소켓 파일</code>(<code>/var/run/docker.sock</code>)을 공유해 <code>호스트 컨테이너(도커 서버)</code>가 <strong>도커 명령을 실행</strong>하는 방식인 <code>DooD(Docker out of Docker)</code> 두 가지가 있습니다.</p>
+<ul>
+<li><a href="https://blog.naver.com/isc0304/222274955992">도커 컨테이너 안에서 도커 실행하기(Docke.. : 네이버블로그 (naver.com)</a></li>
+<li><a href="https://www.nixknight.com/2022/01/dind-vs-dood/">Docker in Docker vs Docker Outside of Docker | NIXKNIGHT</a></li>
+<li><a href="https://www.nixknight.com/2021/04/jenkins-docker-in-docker/">Jenkins - Docker-in-Docker | NIXKNIGHT</a></li>
+<li><a href="https://www.docker.com/blog/docker-can-now-run-within-docker/">Docker can now run within Docker | Docker</a></li>
+</ul>
+<h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://www.redhat.com/ko/topics/virtualization/what-is-virtualization">가상화란? 개념, 가상화 기술, 서버 가상화에 대한 포괄적인 안내 (redhat.com)</a></li>
+<li><a href="https://www.redhat.com/en/topics/virtualization/what-is-virtualization">What is virtualization? (redhat.com)</a></li>
+<li><a href="https://www.ibm.com/kr-ko/topics/virtualization">가상화란? | IBM</a></li>
+<li><a href="https://www.ibm.com/topics/virtualization">What Is Virtualization? | IBM</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Virtualization">Virtualization - Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Desktop_virtualization">Desktop virtualization - Wikipedia</a></li>
+<li><a href="https://insights.sei.cmu.edu/blog/virtualization-via-virtual-machines/">Virtualization via Virtual Machines (cmu.edu)</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/cs/virtualization/"><time datetime="2024-08-15">2024-08-15 19:45 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/cs/virtualization/">https://cloudsoswift.github.io/post/develop/cs/virtualization/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/cs/">#CS</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/virtualization/">#Virtualization</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/docker/">#Docker</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/linux/">#Linux</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/javascript/ast/">[Javascript] 추상 구문 트리(AST) 알아보기(w. 파스 트리, CFG, BNF)</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/javascript/ast/">[Javascript] 추상 구문 트리(AST) 알아보기(w. 파스 트리, CFG, BNF)</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>
