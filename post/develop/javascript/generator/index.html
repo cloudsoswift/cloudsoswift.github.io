@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Javascript] 제너레이터 알아보기 (w. Iterator, 배열) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 8월 21일 발표한 Generator에 대해 정리한 문서를 블로그에 공유하고자 한다.
+이번 글에서는 크게 다음과 같은 주제를 다룬다.
+제너레이터가 무엇인지 자바스크립트에서 제너레이터는 어떻게 구현되어 있는지 제너레이터와 이를 생성하는 제너레이터 함수들의 prototype은 어떠한지 자바스크립트의 제너레이터는 어떤 특징이 있고, 이를 어떤 케이스에 응용할 수 있을지 제너레이터란?제너레이터란, 반복 루프의 동작을 제어 하는데 사용 가능한 루틴 을 말합니다.
+루틴: 프로그램 실행 동안 반복적으로 호출 및 사용하도록 의도된 코드 시퀀스입니다. # 모든 제너레이터는 반복자(Iterator)이며, 값의 시퀀스를 생성한다는 점에서 배열을 반환하는 함수와 유사하지만 한 번에 값을 모두 반환하지 않고 한 번에 하나의 값을 생성한다는 점이 다릅니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Javascript] 제너레이터 알아보기 (w. Iterator, 배열)" />
+<meta property="og:description" content="서론CS 스터디에서 8월 21일 발표한 Generator에 대해 정리한 문서를 블로그에 공유하고자 한다.
+이번 글에서는 크게 다음과 같은 주제를 다룬다.
+제너레이터가 무엇인지 자바스크립트에서 제너레이터는 어떻게 구현되어 있는지 제너레이터와 이를 생성하는 제너레이터 함수들의 prototype은 어떠한지 자바스크립트의 제너레이터는 어떤 특징이 있고, 이를 어떤 케이스에 응용할 수 있을지 제너레이터란?제너레이터란, 반복 루프의 동작을 제어 하는데 사용 가능한 루틴 을 말합니다.
+루틴: 프로그램 실행 동안 반복적으로 호출 및 사용하도록 의도된 코드 시퀀스입니다. # 모든 제너레이터는 반복자(Iterator)이며, 값의 시퀀스를 생성한다는 점에서 배열을 반환하는 함수와 유사하지만 한 번에 값을 모두 반환하지 않고 한 번에 하나의 값을 생성한다는 점이 다릅니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/javascript/generator/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-08-23T10:26:06+09:00" />
+<meta property="article:modified_time" content="2024-08-23T10:26:06+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Javascript] 제너레이터 알아보기 (w. Iterator, 배열)"/>
+<meta name="twitter:description" content="서론CS 스터디에서 8월 21일 발표한 Generator에 대해 정리한 문서를 블로그에 공유하고자 한다.
+이번 글에서는 크게 다음과 같은 주제를 다룬다.
+제너레이터가 무엇인지 자바스크립트에서 제너레이터는 어떻게 구현되어 있는지 제너레이터와 이를 생성하는 제너레이터 함수들의 prototype은 어떠한지 자바스크립트의 제너레이터는 어떤 특징이 있고, 이를 어떤 케이스에 응용할 수 있을지 제너레이터란?제너레이터란, 반복 루프의 동작을 제어 하는데 사용 가능한 루틴 을 말합니다.
+루틴: 프로그램 실행 동안 반복적으로 호출 및 사용하도록 의도된 코드 시퀀스입니다. # 모든 제너레이터는 반복자(Iterator)이며, 값의 시퀀스를 생성한다는 점에서 배열을 반환하는 함수와 유사하지만 한 번에 값을 모두 반환하지 않고 한 번에 하나의 값을 생성한다는 점이 다릅니다."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Javascript] 제너레이터 알아보기 (w. Iterator, 배열)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#제너레이터란">제너레이터란?</a></li>
+    <li><a href="#javascript의-제너레이터">Javascript의 제너레이터</a>
+      <ul>
+        <li><a href="#제너레이터-함수generatorfunction">제너레이터 함수(<code>GeneratorFunction</code>)</a></li>
+        <li><a href="#제너레이터-프로토타입">제너레이터 프로토타입</a></li>
+        <li><a href="#제너레이터의-동작-방식-참고-글httpskojavascriptinfogenerators">제너레이터의 동작 방식 <a href="https://ko.javascript.info/generators">참고 글</a></a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 8월 21일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/10_Generator/Readme.md"><strong>Generator</strong></a>에 대해 정리한 문서를 블로그에 공유하고자 한다.<br>
+이번 글에서는 크게 다음과 같은 주제를 다룬다.</p>
+<ol>
+<li><code>제너레이터</code>가 <code>무엇인지</code></li>
+<li><code>자바스크립트</code>에서 <code>제너레이터</code>는 <code>어떻게 구현</code>되어 있는지</li>
+<li><code>제너레이터</code>와 이를 생성하는 <code>제너레이터 함수</code>들의 <code>prototype</code>은 어떠한지</li>
+<li><code>자바스크립트</code>의 <code>제너레이터</code>는 어떤 특징이 있고, 이를 <code>어떤 케이스</code>에 <code>응용</code>할 수 있을지</li>
+</ol>
+<h2 id="제너레이터란" >제너레이터란?
+<span>
+    <a href="#%ec%a0%9c%eb%84%88%eb%a0%88%ec%9d%b4%ed%84%b0%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><code>제너레이터</code>란, <strong><code>반복 루프</code>의 동작을 <code>제어</code></strong> 하는데 사용 가능한 <code>루틴</code> 을 말합니다.</p>
+<ul>
+<li><code>루틴</code>: 프로그램 실행 동안 <code>반복적으로 호출 및 사용</code>하도록 의도된 <code>코드 시퀀스</code>입니다. <a href="https://www.geeksforgeeks.org/difference-between-routine-and-process/">#</a></li>
+</ul>
+<p>모든 <code>제너레이터</code>는 <code>반복자(Iterator)</code>이며, <code>값의 시퀀스</code>를 생성한다는 점에서 <em><code>배열을 반환하는 함수</code>와 유사하지만</em> 한 번에 값을 모두 반환하지 않고 <code>한 번에 하나의 값</code>을 <code>생성</code>한다는 점이 다릅니다.<br>
+<code>제너레이터</code>는 1975년 <code>CLU</code>라는 언어에서 처음 등장했으며, 이후 <code>Python</code>, <code>C#</code>, <code>Ruby</code>, <code>PHP</code> 등 다양한 언어에서 구현되어 사용되고 있습니다.</p>
+<h2 id="javascript의-제너레이터" >Javascript의 제너레이터
+<span>
+    <a href="#javascript%ec%9d%98-%ec%a0%9c%eb%84%88%eb%a0%88%ec%9d%b4%ed%84%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>Javascript에서 <code>제너레이터</code>는 <a href="https://262.ecma-international.org/6.0/#sec-generator-function-definitions"><code>ES6</code>에서 도입</a>되었습니다.<br>
+<code>제너레이터</code>는 <code>제너레이터 함수</code>에 의해 생성되는 객체로 <em>실행이 연속적이지 않은 함수</em>의 <strong>실행 결과 값</strong>을 반복(<code>Iterator</code>) 형태로 반환하는 객체입니다.<br>
+<code>제너레이터 객체</code>는 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#the_iterator_protocol"><code>iterable</code>, <code>iterator</code> 프로토콜</a>을 만족하는 객체로, <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator"><code>Iterator</code></a> 클래스의 <code>서브 클래스</code>입니다.<br>
+따라서 <code>Iterator</code>의 <code>next()</code> 메서드를 상속받기 때문에, 이를 통해 <code>동작 흐름</code>을 <code>진행</code> 및 <code>중단</code>시키며 <code>값을 생산</code>해내는 용도로 주로 사용됩니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// ReferenceError: Generator is not defined
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">abc</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Generator</span>();
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// function* 키워드의 익명함수를 통한 제너레이터 생성
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">abcd</span> <span style="color:#f92672">=</span> (<span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">a</span>(){})();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">abc</span>.<span style="color:#a6e22e">constructor</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// GeneratorFunction {prototype: Generator, Symbol(Symbol.toStringTag): &#39;GeneratorFunction&#39;}
+</span></span></span></code></pre></div><p><code>제너레이터</code>는 오직 <code>제너레이터 함수</code>에 의해서만 생성되며, <code>Generator()</code>와 같은 특정한 생성자가 존재하지 않습니다.<br>
+또한 <code>제너레이터</code>와 <code>제너레이터 함수</code>는 global한 이름이 없는, 즉 <code>전역 객체(global object)</code>가 아니기 때문에 <code>Generator</code>나 <code>GeneratorFunction</code>과 같은 키워드로 접근할 수 없습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">gen</span>() {<span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">10</span>;}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">gen</span>.<span style="color:#a6e22e">prototype</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">gen</span>().<span style="color:#a6e22e">__proto__</span>; <span style="color:#75715e">// true
+</span></span></span></code></pre></div><p><code>제너레이터 함수</code>가 호출되면, 그 함수의 <code>prototype</code>은 <em>함수 호출의 결과로 생성된 객체</em>, 즉 <code>제너레이터</code>의 <code>prototype</code>이 됩니다.<br>
+따라서 <code>Generator.prototype</code>으로 언급되는 것들은 실제로 <code>제너레이터 함수의 프로토타입의 프로토타입</code> 입니다. 즉, <code>GeneratorFunction.prototype.prototype</code> 인 것입니다.</p>
+<h3 id="제너레이터-함수generatorfunction" >제너레이터 함수(<code>GeneratorFunction</code>)
+<span>
+    <a href="#%ec%a0%9c%eb%84%88%eb%a0%88%ec%9d%b4%ed%84%b0-%ed%95%a8%ec%88%98generatorfunction">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>제너레이터 함수</code>란, 함수 호출 결과값으로 <code>제너레이터</code>를 반환하는 일련의 함수들을 말합니다.<br>
+<code>제너레이터 함수</code>는 <code>function*</code> 또는 <code>Generator</code>의 프로토타입(<code>[Generator].prototype</code>)에서 접근할 수 있는 <code>GeneratorFunction()</code>에 의해서만 생성될 수 있습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">abc</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">10</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">abc</span>.<span style="color:#a6e22e">__proto__</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// === 출력 ===
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// GeneratorFunction {prototype: Generator, Symbol(Symbol.toStringTag): &#39;GeneratorFunction&#39;}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// constructor: ƒ GeneratorFunction()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// prototype: Generator {Symbol(Symbol.toStringTag): &#39;Generator&#39;, next: ƒ, return: ƒ, throw: ƒ}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Symbol(Symbol.toStringTag): &#34;GeneratorFunction&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// !!!주의할 점!!!
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 제너레이터 함수의 프로토타입을 확인하겠다고 [GeneratorFunction].prototype을 확인하게 되면
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 이는 GeneratorFunction.prototype.prototype,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 즉 진짜 GeneratorFunction.prototype이 갖고 있는 prototype이라는 프로퍼티를 확인하게 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 되는 것이므로 __proto__로 확인해야 한다!
+</span></span></span></code></pre></div><p><code>제너레이터 함수</code>들은 모두 <code>GenerationFunction</code> 객체이며, <code>GeneratorFunction</code>은 <code>prototype</code>에 생성자인 <code>constructor</code>와 제너레이터들이 물려받을 프로토타입인 <code>prototype</code> 프로퍼티를 갖고 있습니다.<br>
+참고로 <code>화살표 함수</code>의 경우, <em><code>yield</code> 키워드를 포함할 수 없기 때문에</em> <code>제너레이터 함수</code>를 만드는데 <strong>사용할 수 없습니다</strong>. (다만 내부에 <code>제너레이터 함수</code>를 포함하는 경우, 해당 <code>제너레이터 함수</code> 내부에서는 <code>yield</code> 키워드를 사용할 수 있습니다.) <a href="https://www.codeproject.com/Articles/5279077/Understanding-JavaScript-Generators">#</a></p>
+<h3 id="제너레이터-프로토타입" >제너레이터 프로토타입
+<span>
+    <a href="#%ec%a0%9c%eb%84%88%eb%a0%88%ec%9d%b4%ed%84%b0-%ed%94%84%eb%a1%9c%ed%86%a0%ed%83%80%ec%9e%85">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">abc</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">10</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">abc</span>.<span style="color:#a6e22e">prototype</span>) <span style="color:#75715e">// Generator {}
+</span></span></span></code></pre></div><p><code>GeneratorFunction.prototype</code>에는 <strong>모든 <code>제너레이터 함수</code>들이 공유</strong>하는 <code>prototype</code> 프로퍼티가 존재합니다.<br>
+이 <code>프로퍼티</code>는 <em>제너레이터 함수를 통해 생성된</em> <code>제너레이터의 프로토타입</code>, 즉 <code>Generator.prototype</code> 입니다.<br>
+다르게 말하자면, <code>제너레이터 함수</code>를 통해 생성된 제너레이터는 함수의 <code>prototype</code> 프로퍼티를 <code>직접 상속</code>합니다.<br>
+기본적으로 <code>제너레이터</code>의 프로토타입에는 부모인 <code>Iterator</code> 객체로부터 물려받은 3가지 메서드가 존재합니다.</p>
+<h4 id="프로토타입-구조도" >프로토타입 구조도
+<span>
+    <a href="#%ed%94%84%eb%a1%9c%ed%86%a0%ed%83%80%ec%9e%85-%ea%b5%ac%ec%a1%b0%eb%8f%84">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="ecma-generator-figure.png" alt="ecma-generator-figure.png"></p>
+<blockquote>
+<p>출처: <a href="https://262.ecma-international.org/7.0/#sec-generatorfunction-objects">ECMAScript® 2016 Language Specification (ecma-international.org)</a></p>
+</blockquote>
+<p><img src="generator-prototype-chain.svg" alt="generator-prototype-chain.svg"></p>
+<blockquote>
+<p>출처: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction/prototype">GeneratorFunction.prototype.prototype - JavaScript | MDN (mozilla.org)</a></p>
+</blockquote>
+<h4 id="nextvalue-문서httpsdevelopermozillaorgen-usdocswebjavascriptreferenceglobal_objectsgeneratornext" ><code>next(value)</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/next">문서</a>
+<span>
+    <a href="#nextvalue-%eb%ac%b8%ec%84%9chttpsdevelopermozillaorgen-usdocswebjavascriptreferenceglobal_objectsgeneratornext">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">gen</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">2</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">3</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">g</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">gen</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">g</span>.<span style="color:#a6e22e">next</span>(); <span style="color:#75715e">// { value: 1, done: false }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">g</span>.<span style="color:#a6e22e">next</span>(); <span style="color:#75715e">// { value: 2, done: false }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">g</span>.<span style="color:#a6e22e">next</span>(); <span style="color:#75715e">// { value: 3, done: false }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">g</span>.<span style="color:#a6e22e">next</span>(); <span style="color:#75715e">// { value: undefined, done: true }
+</span></span></span></code></pre></div><p><code>next()</code>는 호출 시, <code>제너레이터 함수</code> 내용에서 함수 끝에 다다르거나, 다음 <code>yield</code>을 만날 때까지 계속 진행하도록 하는 함수입니다.<br>
+또한, <code>next()</code> 메서드는 항상 <code>done</code> 과 <code>value</code> 두가지 프로퍼티를 갖는 객체를 반환합니다.<br>
+<code>done</code>은 만약 <code>return 문</code> 또는 <code>함수의 끝</code>에 다다랐다면 <code>true</code>이며, 만약 함수가 더 값을 생성할 수 있는 경우 <code>false</code>입니다.<br>
+<code>value</code>는 <code>제너레이터 함수</code> 내용을 진행해 마주한 <code>yield</code> 키워드 또는 <code>return</code> 키워드에 달려있는 표현식의 결과 값입니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">gen</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> (<span style="color:#66d9ef">true</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">yield</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">value</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">g</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">gen</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">g</span>.<span style="color:#a6e22e">next</span>(<span style="color:#ae81ff">1</span>); <span style="color:#75715e">// { value: undefined, done: false }을 반환합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 첫 번째 next() 호출에 전달된 인자는 무시되고 undefined로 전달됩니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">g</span>.<span style="color:#a6e22e">next</span>(<span style="color:#ae81ff">2</span>); <span style="color:#75715e">// Returns { value: undefined, done: false }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// console에 2가 출력됩니다.
+</span></span></span></code></pre></div><p>만약 <code>next()</code> 메서드에 인자값을 전달했다면, 해당 값은 <code>next()</code>가 원래 반환했어야 할 <code>yield</code> 표현식의 값을 대신합니다. 예를 들어, <code>variable = yield [표현식]</code>이라는 코드가 있다면, <code>next()</code>에 전달된 값은 <code>variable</code>에 <code>yield [표현식]</code> 대신 할당되는 것입니다.</p>
+<h4 id="return-문서httpsdevelopermozillaorgen-usdocswebjavascriptreferenceglobal_objectsgeneratorreturn" ><code>return()</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/return">문서</a>
+<span>
+    <a href="#return-%eb%ac%b8%ec%84%9chttpsdevelopermozillaorgen-usdocswebjavascriptreferenceglobal_objectsgeneratorreturn">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">gen</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">2</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">3</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">g</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">gen</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">g</span>.<span style="color:#a6e22e">next</span>(); <span style="color:#75715e">// { value: 1, done: false }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">g</span>.<span style="color:#66d9ef">return</span>(<span style="color:#e6db74">&#34;foo&#34;</span>); <span style="color:#75715e">// { value: &#34;foo&#34;, done: true }. 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// return 문을 호출했기 때문에 이후의 흐름은 진행되지 않으며, 제너레이터 내용은 종료됩니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">g</span>.<span style="color:#a6e22e">next</span>(); <span style="color:#75715e">// { value: undefined, done: true }
+</span></span></span></code></pre></div><p><code>return()</code>은 호출시 <code>제너레이터 내용</code>의 현재 <code>중단된(suspended) 위치</code>에 <code>return</code>문을 삽입한 것처럼 동작하여, <code>제너레이터</code>를 종료하고 <code>try..finally</code> 블록이 있다면 해당 블록의 작업을 수행하도록 합니다.<br>
+<code>next()</code>와 마찬가지로, <code>done</code>과 <code>value</code> 두 프로퍼티를 갖는 객체를 반환합니다.<br>
+<code>done</code>의 경우 &ldquo;<em><code>제너레이터</code>가 <code>try..finally</code> 블록 내부에서 일시 중단되었으며, <code>finally</code> 블록에 <code>yield</code> 표현식이 존재하는 경우</em>&rdquo; 에만 <code>true</code>이며, 이외의 경우에는 <code>false</code> 값을 갖습니다.<br>
+<code>value</code>는 웬만한 경우 <code>return()</code>에서 주어진 인자값이지만, &ldquo;<code>try...finally</code> 블록에 <code>yield</code> 표현식이 존재하는 경우, <code>finally</code> 블록에 <code>yield</code> 또는 <code>return</code>되는 값&rdquo; 을 반환할 수도 있습니다.<br>
+<code>return()</code> 역시 인자값을 전달 받을 수 있는데, 아무 값도 주어지지 않았다면 <code>undefined</code>를, 그렇지 않다면 <code>인자 값을 반환</code>하게 됩니다.(<em>반환할 수 있는 경우</em>)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">gen</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">2</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">3</span>;
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">finally</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">yield</span> <span style="color:#e6db74">&#34;cleanup&#34;</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">g1</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">gen</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">g1</span>.<span style="color:#a6e22e">next</span>(); <span style="color:#75715e">// { value: 1, done: false }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// try...finally 블록에 진입하기 전, return 문을 호출해 제너레이터 실행이 중단됩니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">g1</span>.<span style="color:#66d9ef">return</span>(<span style="color:#e6db74">&#34;early return&#34;</span>); <span style="color:#75715e">// { value: &#39;early return&#39;, done: true }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">g2</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">gen</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">g2</span>.<span style="color:#a6e22e">next</span>(); <span style="color:#75715e">// { value: 1, done: false }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">g2</span>.<span style="color:#a6e22e">next</span>(); <span style="color:#75715e">// { value: 2, done: false }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 이 위치에서 제너레이터 진행은 `yield 2`와 `yield 3` 사이
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 즉, try...finally 블록 내부에서 중단되어 있습니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 따라서 return 문을 호출해도, finally 블록에 yield 표현식이 존재해
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 해당 표현식의 값을 반환하게 됩니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">g2</span>.<span style="color:#66d9ef">return</span>(<span style="color:#e6db74">&#34;이른 return&#34;</span>); <span style="color:#75715e">// { value: &#39;cleanup&#39;, done: false }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 이전에 return 문에 전달한 인자는 보존되어, 이후 호출한 next() 문에서 반환됩니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 그리고 제너레이터는 완료 상태(completed state)에 진입합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">g2</span>.<span style="color:#a6e22e">next</span>(); <span style="color:#75715e">// { value: &#39;early return&#39;, done: true }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 완료 상태에 진입했어도, 여전히 return() 호출은 가능하며, 인자 역시 정상적으로 전달되어 동작합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">g2</span>.<span style="color:#66d9ef">return</span>(<span style="color:#e6db74">&#34;not so early return&#34;</span>); <span style="color:#75715e">// { value: &#39;not so early return&#39;, done: true }
+</span></span></span></code></pre></div><p>위 코드는 <code>try...finally</code> 블록이 존재하는 <code>제너레이터</code>에서,  <code>return</code>문을 <code>try..finally</code> 블록 진입 전/진입 후 호출한 케이스와 그에 따른 동작을 설명하고 있습니다.</p>
+<h4 id="throwexception-문서httpsdevelopermozillaorgen-usdocswebjavascriptreferenceglobal_objectsgeneratorthrow" ><code>throw(exception)</code> <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/throw">문서</a>
+<span>
+    <a href="#throwexception-%eb%ac%b8%ec%84%9chttpsdevelopermozillaorgen-usdocswebjavascriptreferenceglobal_objectsgeneratorthrow">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>throw()</code>은 호출시 <code>제너레이터</code>의 현재 <code>중단된 위치</code>에 <code>throw 문</code>을 삽입해 <code>제너레이터</code>에게 오류가 발생했음을 알려 <code>오류 처리</code> 및 (<em>필요하다면</em>)<code>정리(cleanup)</code> 작업을 수행하도록 합니다.<br>
+인자로 던질 예외인 <code>exception</code>을 필수로 전달해야하며, <code>exception</code>은 원활한 디버깅을 위해 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error"><code>Error</code></a>의 인스턴스로 만드는 것이 좋습니다.<br>
+만약 던져진 <code>exception</code>이 <code>try...catch</code>문에 의해 잡히고, 재개될 경우  <em><code>next()</code>, <code>return()</code>과 마찬가지로</em>, <code>done</code>과 <code>value</code> 두 프로퍼티를 갖는 객체를 반환합니다.<br>
+반대로, <code>exception</code> 이 잡히지 않는다면 이는 <code>제너레이터</code> 외부로 던져집니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">gen</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> (<span style="color:#66d9ef">true</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">10</span>;
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;Error caught!&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">g</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">gen</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">g</span>.<span style="color:#a6e22e">next</span>();
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// { value: 42, done: false }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">g</span>.<span style="color:#66d9ef">throw</span>(<span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#34;Something went wrong&#34;</span>));
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// &#34;Error caught!&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// { value: 42, done: false }
+</span></span></span></code></pre></div><p>위 코드는 <code>next()</code>문을 통해, 먼저 <code>try-catch</code> 구문 내에서 중단되게 한 뒤 <code>에러</code>를 <code>throw</code>해 <code>catch</code>문에서 처리되도록 동작합니다.</p>
+<h3 id="제너레이터의-동작-방식-참고-글httpskojavascriptinfogenerators" >제너레이터의 동작 방식 <a href="https://ko.javascript.info/generators">참고 글</a>
+<span>
+    <a href="#%ec%a0%9c%eb%84%88%eb%a0%88%ec%9d%b4%ed%84%b0%ec%9d%98-%eb%8f%99%ec%9e%91-%eb%b0%a9%ec%8b%9d-%ec%b0%b8%ea%b3%a0-%ea%b8%80httpskojavascriptinfogenerators">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>제너레이터 함수</code>는 내부에 특수한 연산자인 <code>yield</code>를 포함할 수 있습니다. 이를 통해 제너레이터는 동작을 중지 및 재개할 수 있습니다.<br>
+<code>제너레이터</code>가 갖고있는 <code>next()</code> 메서드를 호출하면, 가장 가까운 <code>yield [값]</code> 문을 만날 때 까지 <code>제너레이터 함수</code>에 기술된 동작이 계속 진행됩니다.<br>
+이후 <code>yield [값]</code> 문을 만나면 실행을 중단하고 <code>[값]</code>을 외부에 반환합니다.(<code>[값]</code>을  생략할 수도 있는데, 이때는 <code>undefined</code>가 반환됩니다.)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">abc</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">10</span>; <span style="color:#75715e">// 1
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">5</span>; <span style="color:#75715e">// 2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">gen</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">abc</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">gen</span>.<span style="color:#a6e22e">next</span>(); <span style="color:#75715e">// 1번을 실행. {value: 10, done: false} 을 반환
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">gen</span>.<span style="color:#a6e22e">next</span>(); <span style="color:#75715e">// 2번를 실행. {value: 5, done: true} 를 반환
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">gen</span>.<span style="color:#a6e22e">next</span>(); <span style="color:#75715e">// {value: undefined, done: true} 를 반환
+</span></span></span></code></pre></div><p><code>제너레이터</code>의 실행은 <code>제너레이터 함수</code>의 끝에 다다를 때 까지 계속되며, 함수의 마지막 <code>yield</code>또는 <code>return</code>문 이후에는 <code>{value: undefined, done: true}</code> 객체만 반환하게 됩니다.</p>
+<h4 id="제너레이터의-iterable-특성" >제너레이터의 <code>Iterable</code> 특성
+<span>
+    <a href="#%ec%a0%9c%eb%84%88%eb%a0%88%ec%9d%b4%ed%84%b0%ec%9d%98-iterable-%ed%8a%b9%ec%84%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>제너레이터</code>는 <code>Iterator</code>의 서브 클래스이므로 상기한대로 <code>Iterable</code> 프로토콜을 만족하며, <code>for..of</code> 문을 사용할 수 있습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">abc</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">2</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">3</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">gen</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">abc</span>();
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">a</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">gen</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">a</span>); <span style="color:#75715e">// 1, 2 출력됨
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>다만, 주의할 점이 있는데 <code>for..of</code>문을 사용할 때 반환된 값이 <code>done:true</code>인 경우 <code>값(value)</code>이 무시된다는 것입니다.<br>
+따라서 <em>마지막 값까지 출력되길 원한다면</em> <code>return</code> 보다 <code>yield</code>를 사용해 값을 반환해야 합니다.<br>
+또한, <code>끊임없이 값을 생성</code>하는 <code>제너레이터</code>를 <code>for..of</code>문에서 사용할 경우 무한 반복으로 스크립트가 멈추므로, <code>for문</code> 내부에 <code>break</code> 또는 함수 내부에 <code>return</code>문을 포함해야 합니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">abc</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">yield</span> <span style="color:#ae81ff">2</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">3</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">arr</span> <span style="color:#f92672">=</span> [<span style="color:#ae81ff">0</span>, ...<span style="color:#a6e22e">abc</span>()];
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">arr</span>); <span style="color:#75715e">// (3) [0, 1, 2]
+</span></span></span></code></pre></div><p>또한 <code>제너레이터</code>는 위처럼 <code>전개 구문(Spread Syntax)</code>을 사용할 수 있습니다.</p>
+<h4 id="yield-위임하기제너레이터-컴포지션" ><code>yield</code> 위임하기(제너레이터 컴포지션)
+<span>
+    <a href="#yield-%ec%9c%84%ec%9e%84%ed%95%98%ea%b8%b0%ec%a0%9c%eb%84%88%eb%a0%88%ec%9d%b4%ed%84%b0-%ec%bb%b4%ed%8f%ac%ec%a7%80%ec%85%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>제너레이터</code>에서 <code>yield*</code> 연산자를 사용하면, 다른 <code>제너레이터</code> 또는 <code>이터러블 객체(즉, 이터레이터)</code>에게 <code>yield</code>를 위임할 수 있습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">gen</span> <span style="color:#f92672">=</span> (<span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> () {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">yield</span><span style="color:#f92672">*</span> [<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">5</span>]; <span style="color:#75715e">// 참고: 자바스크립트에서 배열은 Iterable 객체이다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>})(); <span style="color:#75715e">// IIFE(즉시실행함수표현) 으로 제너레이터를 바로 할당한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">v</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">gen</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">v</span>); <span style="color:#75715e">// 1, 2, 3, 4, 5가 각각 차례대로 출력된다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">gen2</span> <span style="color:#f92672">=</span> (<span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> () {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">yield</span><span style="color:#f92672">*</span> (<span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> () {<span style="color:#66d9ef">yield</span><span style="color:#f92672">*</span> [<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">5</span>]})(); <span style="color:#75715e">// 배열에 yield를 위임한 제너레이터(IFFE 표현을 통해 생성한)에 다시 yield를 위임한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>})();
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">v</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">gen2</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">v</span>); <span style="color:#75715e">// 1, 2, 3, 4, 5가 각각 차례대로 출력된다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>따라서 위 예시처럼, <code>배열</code>과 같은 <code>이터러블 객체</code>에 <code>yield</code>를 위임할 수도 있고, 다른 <code>제너레이터</code>에게 <code>yield</code>를 위임할 수도 있습니다.<br>
+위임할 경우 <code>이터레이터</code>가 <code>닫힐 때까지(즉, done: true 가 될 때 까지</code> 함수를 진행하며, 해당 <code>이터레이터</code>가 반환한 값을 반환하게 됩니다.<br>
+<code>yield*</code> 키워드를 사용하게 되면, 먼저 해당 <code>이터레이터</code>를 <code>[Iterator]()</code>를 통해 얻어오고, 이후 <code>next()</code>  메서드를 반복적으로 호출합니다.(이때, <code>제너레이터</code>의 <code>next()</code>에 인수가 있다면 이를 <code>이터레이터</code>의 <code>next()</code>에 전달합니다.) 이후 <code>이터레이터</code>의 <code>next()</code>가 반환한 객체와 동일한 객체를 반환합니다.</p>
+<ul>
+<li>이때, 첫 번째 <code>next()</code> 호출의 인자는 무조건 무시됩니다. 즉, <code>undefined</code>로 전달됩니다.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">iterable</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  [<span style="color:#a6e22e">Symbol</span>.<span style="color:#a6e22e">iterator</span>]() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">count</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Iterable은 Iterator의 next, return, throw 동작을 아래와 같이 재정의한 객체입니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">next</span>(<span style="color:#a6e22e">v</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;next called with&#34;</span>, <span style="color:#a6e22e">v</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">count</span><span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> { <span style="color:#a6e22e">value</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">count</span>, <span style="color:#a6e22e">done</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span> };
+</span></span><span style="display:flex;"><span>      },
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span>(<span style="color:#a6e22e">v</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;return called with&#34;</span>, <span style="color:#a6e22e">v</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> { <span style="color:#a6e22e">value</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;iterable return value&#34;</span>, <span style="color:#a6e22e">done</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span> };
+</span></span><span style="display:flex;"><span>      },
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">throw</span>(<span style="color:#a6e22e">v</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#34;throw called with&#34;</span>, <span style="color:#a6e22e">v</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> { <span style="color:#a6e22e">value</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;iterable thrown value&#34;</span>, <span style="color:#a6e22e">done</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span> };
+</span></span><span style="display:flex;"><span>      },
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">gf</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">yield</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">iterable</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;gf return value&#34;</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">gen</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">gf</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">gen</span>.<span style="color:#a6e22e">next</span>(<span style="color:#ae81ff">10</span>));
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// next called with undefined; 첫 번째 next() 호출의 인자는 무조건 무시됩니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// { value: 1, done: false }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">gen</span>.<span style="color:#a6e22e">next</span>(<span style="color:#ae81ff">20</span>));
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// next called with 20
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// { value: 2, done: false }
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">gen</span>.<span style="color:#66d9ef">return</span>(<span style="color:#ae81ff">30</span>));
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// return called with 30
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// { value: &#39;iterable return value&#39;, done: true }
+</span></span></span></code></pre></div><p>반환 값 위임은 <code>제너레이터</code>의 <code>return()</code>, <code>throw()</code>문에도 동일하게 적용되어, 내부 <code>제너레이터</code>가 <code>throw()</code>/<code>return()</code> 문을 호출할 경우 외부 <code>제너레이터</code> 역시 동일하게 해당 함수를 호출하며 인자 역시 내부의 것과 동일하게 전달됩니다.</p>
+<h4 id="yield를-통한-값-주고받기" ><code>yield</code>를 통한 값 주고받기
+<span>
+    <a href="#yield%eb%a5%bc-%ed%86%b5%ed%95%9c-%ea%b0%92-%ec%a3%bc%ea%b3%a0%eb%b0%9b%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>상기한대로, <code>제너레이터</code>는 <code>yield</code>를 통해 값을 생산(바깥으로 전달)하고, <code>next()</code> 메서드의 매개변수를 통해 내부로 값을 전달받기도 합니다.<br>
+이를 활용해, <code>제너레이터</code>와 값을 주고 받는 것이 가능합니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">gen</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// yield 표현식을 통해 &#34;2 + 2 = ?&#34;라는 문자열을 밖으로 내보냅니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">yield</span> <span style="color:#e6db74">&#34;2 + 2 = ?&#34;</span>; <span style="color:#75715e">// (#)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">result</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">generator</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">gen</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// yield 표현식을 통해 반환된 객체의 값을 추출합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 다시 한 번 얘기하자면, 첫 번째로 호출한 next()는 인자 값을 무시하기 때문에
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 여기서 인자값을 넘겨주지 않습니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">question</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">generator</span>.<span style="color:#a6e22e">next</span>().<span style="color:#a6e22e">value</span>; <span style="color:#75715e">// &#34;2 + 2 = ?&#34;; 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 제너레이터는 동작 수행 후 `(#)` 위치에서 동작을 잠시 멈춥니다. (suspended)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// next(value)를 호출해 내부로 값을 전달합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 아래의 경우 인자로 주어진 4가, 제너레이터 함수 내부의 result에 대입됩니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 따라서 console.log()에 4가 전달됩니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">generator</span>.<span style="color:#a6e22e">next</span>(<span style="color:#ae81ff">4</span>); <span style="color:#75715e">// &#34;4&#34;
+</span></span></span></code></pre></div><h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://262.ecma-international.org/7.0/#sec-generatorfunction-constructor">ECMAScript® 2016 Language Specification</a></li>
+<li><a href="https://ko.javascript.info/generators">제너레이터 (javascript.info)</a></li>
+<li><a href="https://www.codeproject.com/Articles/5279077/Understanding-JavaScript-Generators">Understanding JavaScript Generators - CodeProject</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield">yield - JavaScript | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator#see_also">Generator - JavaScript | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/GeneratorFunction/prototype">GeneratorFunction.prototype.prototype - JavaScript | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/next">Generator.prototype.next() - JavaScript | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/return">Generator.prototype.return() - JavaScript | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Generator/throw">Generator.prototype.throw() - JavaScript | MDN (mozilla.org)</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/javascript/generator/"><time datetime="2024-08-23">2024-08-23 10:26 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/generator/">https://cloudsoswift.github.io/post/develop/javascript/generator/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/generator/">#Generator</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/iterator/">#Iterator</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/javascript/ast/">[Javascript] 추상 구문 트리(AST) 알아보기(w. 파스 트리, CFG, BNF)</a></li>
+                
+                <li><a href="/post/develop/javascript/scope/">[Javascript] Scope 알아보기 (w. 일반 프로그래밍에서의 Scope)</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/cs/virtualization/">[CS] 가상화 알아보기 (w. Hypervisor, Docker)</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>
