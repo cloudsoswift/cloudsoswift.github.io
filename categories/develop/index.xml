@@ -6,10 +6,590 @@
     <description>오늘도 개발을 한다. (develop)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Fri, 23 Aug 2024 10:26:06 +0900</lastBuildDate>
+    <lastBuildDate>Sat, 14 Sep 2024 20:55:53 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/categories/develop/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[Javascript] async/await 알아보기 (w. V8 Engine, task, microtask)</title>
+      <link>https://cloudsoswift.github.io/post/develop/javascript/async-await/</link>
+      <pubDate>Sat, 14 Sep 2024 20:55:53 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/javascript/async-await/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 9월 10일에 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/11_async-await/Readme.md&#34;&gt;&lt;strong&gt;async function과 await 키워드&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h1 id=&#34;async-function---await는-어떻게-동작할까&#34; &gt;&lt;code&gt;async function&lt;/code&gt; - &lt;code&gt;await&lt;/code&gt;는 어떻게 동작할까?
+&lt;span&gt;
+    &lt;a href=&#34;#async-function---await%eb%8a%94-%ec%96%b4%eb%96%bb%ea%b2%8c-%eb%8f%99%ec%9e%91%ed%95%a0%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;h2 id=&#34;asyncawait란&#34; &gt;&lt;code&gt;async/await&lt;/code&gt;란?
+&lt;span&gt;
+    &lt;a href=&#34;#asyncawait%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;async function&lt;/code&gt;이란, 여러 &lt;code&gt;Promise&lt;/code&gt;간의 흐름을 순서대로 처리할 수 있는, 즉 여러 비동기 함수들을 동기적인 순서로 진행할 수 있는 함수를 말합니다.&lt;br&gt;
+&lt;code&gt;async function&lt;/code&gt;은 0개 이상의 &lt;code&gt;await&lt;/code&gt; 키워드를 포함할 수 있는데, 함수를 진행하다 &lt;code&gt;await&lt;/code&gt;가 달린 &lt;code&gt;Promise&lt;/code&gt;를 만나게 되면 해당 &lt;code&gt;Promise&lt;/code&gt;가 &lt;em&gt;&lt;code&gt;이행&lt;/code&gt;/&lt;code&gt;거부&lt;/code&gt;될 때 까지&lt;/em&gt; &lt;strong&gt;함수 실행을 &lt;code&gt;일시 중단&lt;/code&gt;&lt;/strong&gt; 하며 처리가 완료된 뒤 다시 진행됩니다.&lt;br&gt;
+즉, &lt;code&gt;Promise&lt;/code&gt;를 반환하는 함수를 동기식인 것처럼 동작하도록 해줍니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;이는 &lt;code&gt;await&lt;/code&gt; 이후의 코드를 &lt;code&gt;Promise.then()&lt;/code&gt; 콜백에서 수행하는 것과 거의 유사&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 일반 Promise와 callback 예시
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getProcessedData&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;downloadData&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;// returns a promise
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    .&lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;) =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;downloadFallbackData&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;)) &lt;span style=&#34;color:#75715e&#34;&gt;// returns a promise
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    .&lt;span style=&#34;color:#a6e22e&#34;&gt;then&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;) =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;processDataInWorker&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;)); &lt;span style=&#34;color:#75715e&#34;&gt;// returns a promise
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 위 예시를 async function - await로 변환한 예시
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getProcessedData&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;downloadData&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  } &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;downloadFallbackData&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;processDataInWorker&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;또한, &lt;code&gt;async function&lt;/code&gt;은 항상 &lt;code&gt;Promise&lt;/code&gt;를 &lt;code&gt;반환&lt;/code&gt;하며, 만약 &lt;em&gt;Promise가 아닌 값&lt;/em&gt;을 반환(&lt;code&gt;심지어 아무것도 return하지 않아도!&lt;/code&gt;)하는 경우 &lt;em&gt;암시적으로&lt;/em&gt; &lt;code&gt;Promise&lt;/code&gt;로 래핑되어 반환됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Promise가 아닌 값을 반환하는 경우
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;abc&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; () =&amp;gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;abc&lt;/span&gt;(); &lt;span style=&#34;color:#75715e&#34;&gt;// Promise {&amp;lt;fulfilled&amp;gt;: 1}
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 아무것도 반환하지 않는 경우
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;none&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; () =&amp;gt; {};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;none&lt;/span&gt;(); &lt;span style=&#34;color:#75715e&#34;&gt;// Promise {&amp;lt;fulfilled&amp;gt;: undefined}
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;asyncawait의-특징&#34; &gt;&lt;code&gt;async/await&lt;/code&gt;의 특징
+&lt;span&gt;
+    &lt;a href=&#34;#asyncawait%ec%9d%98-%ed%8a%b9%ec%a7%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;어떠한-값이든-await-할-수-있음&#34; &gt;어떠한 값이든 &lt;code&gt;await&lt;/code&gt; 할 수 있음
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%96%b4%eb%96%a0%ed%95%9c-%ea%b0%92%ec%9d%b4%eb%93%a0-await-%ed%95%a0-%ec%88%98-%ec%9e%88%ec%9d%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;웬만한 경우, &lt;code&gt;Promise&lt;/code&gt; 앞에 &lt;code&gt;await&lt;/code&gt; 키워드를 붙여 비동기 작업의 결과를 기다리도록 합니다.&lt;br&gt;
+하지만 실제로는 어떠한 &lt;code&gt;Javascript 값&lt;/code&gt;이든 기다리게 할 수 있습니다.&lt;br&gt;
+만약 &lt;code&gt;await&lt;/code&gt; 키워드 뒤에 오는 &lt;code&gt;표현식&lt;/code&gt;의 값이 &lt;code&gt;Promise&lt;/code&gt;가 아닌 경우, 이를 &lt;code&gt;Promise&lt;/code&gt;로 변환합니다.&lt;br&gt;
+예를들어, &lt;code&gt;25&lt;/code&gt;와 같은 아무런 숫자도 &lt;code&gt;await&lt;/code&gt;를 붙일 수 있는 것입니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;foo&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;25&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;foo&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// → Promise
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;then&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// `25`를 출력한다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;await-은-어떠한-thenable-객체와도-정상-동작함&#34; &gt;&lt;code&gt;await&lt;/code&gt; 은 어떠한 &lt;code&gt;thenable&lt;/code&gt; 객체와도 정상 동작함
+&lt;span&gt;
+    &lt;a href=&#34;#await-%ec%9d%80-%ec%96%b4%eb%96%a0%ed%95%9c-thenable-%ea%b0%9d%ec%b2%b4%ec%99%80%eb%8f%84-%ec%a0%95%ec%83%81-%eb%8f%99%ec%9e%91%ed%95%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;await&lt;/code&gt; 키워드는 어떤 객체든 &lt;code&gt;then&lt;/code&gt; 메서드만 있다면 꼭 &lt;code&gt;Promise&lt;/code&gt;가 아니어도 잘 동작하게 됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Sleep&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;constructor&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;timeout&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;timeout&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;timeout&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;then&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;reject&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;startTime&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Date.&lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(Date.&lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;startTime&lt;/span&gt;),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;               &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;timeout&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; () =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;actualTime&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Sleep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;actualTime&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;})();
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;async-function-내부의-await-동작&#34; &gt;&lt;code&gt;async function&lt;/code&gt; 내부의 &lt;code&gt;await&lt;/code&gt; 동작
+&lt;span&gt;
+    &lt;a href=&#34;#async-function-%eb%82%b4%eb%b6%80%ec%9d%98-await-%eb%8f%99%ec%9e%91&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;async function&lt;/code&gt;은 일반 함수처럼 진행되다가, &lt;code&gt;await&lt;/code&gt; 키워드가 달린 &lt;code&gt;Promise&lt;/code&gt;를 만나게 될 경우, 해당 &lt;code&gt;Promise&lt;/code&gt;가 &lt;code&gt;resolve(또는 reject)&lt;/code&gt;될 때까지 &lt;code&gt;async function&lt;/code&gt;의 실행을 일시 중단합니다.&lt;br&gt;
+이때, Javascript의 &lt;code&gt;논-블로킹&lt;/code&gt; 특성상, &lt;code&gt;await&lt;/code&gt; 키워드로 인해 &lt;em&gt;함수 실행이 멈추더라도&lt;/em&gt; &lt;code&gt;다른 연산&lt;/code&gt;들은 &lt;code&gt;백그라운드에서 계속 진행&lt;/code&gt;됩니다.&lt;br&gt;
+이는 &lt;a href=&#34;../1_Promise-async/Readme.md&#34;&gt;콜백 vs async&lt;/a&gt; 에서 언급한 것처럼, &lt;code&gt;Javascript&lt;/code&gt;에서는 코드 실행을 수행하는 &lt;code&gt;메인 스레드&lt;/code&gt; 뿐만 아니라, &lt;code&gt;타이머 기반 작업&lt;/code&gt;, &lt;code&gt;네트워크 요청&lt;/code&gt; 등의 &lt;code&gt;비동기 작업&lt;/code&gt;을 처리하는 &lt;code&gt;Web API&lt;/code&gt;를 사용하기 때문입니다.&lt;br&gt;
+즉, 만약 상기한 &lt;code&gt;비동기 작업&lt;/code&gt;을 마주한다 해도 &lt;code&gt;메인 스레드&lt;/code&gt;는 이를 &lt;em&gt;직접 처리하지 않고&lt;/em&gt; &lt;code&gt;Web API&lt;/code&gt;에게 이를 &lt;code&gt;전달&lt;/code&gt;합니다. 따라서 해당 작업이 완료되길 &lt;code&gt;기다리지 않고&lt;/code&gt; 이어지는 코드들을 &lt;code&gt;계속 실행&lt;/code&gt;하게 됩니다.&lt;/p&gt;
+&lt;h3 id=&#34;그렇다면-asyncawait는-진짜-동기적으로-동작할까&#34; &gt;그렇다면 &lt;code&gt;async/await&lt;/code&gt;는 진짜 동기적으로 동작할까?
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b7%b8%eb%a0%87%eb%8b%a4%eb%a9%b4-asyncawait%eb%8a%94-%ec%a7%84%ec%a7%9c-%eb%8f%99%ea%b8%b0%ec%a0%81%ec%9c%bc%eb%a1%9c-%eb%8f%99%ec%9e%91%ed%95%a0%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Promise((&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;) =&amp;gt; {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;첫 번째 타이머&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;10000&lt;/span&gt;);  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Promise((&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;) =&amp;gt; {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;두 번째 타이머&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;10000&lt;/span&gt;);  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;코드 1&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;위처럼 각각 10초 이후 문자열을 &lt;code&gt;resolve&lt;/code&gt;하는 타이머 &lt;code&gt;t1&lt;/code&gt;, &lt;code&gt;t2&lt;/code&gt;를 예로 들어보겠습니다.&lt;br&gt;
+만약 이 둘을 &lt;code&gt;async function&lt;/code&gt; 내부에서 &lt;code&gt;await&lt;/code&gt;를 달아주면 어떻게 동작할까요?&lt;br&gt;
+10초짜리 타이머 2개가 동기적으로 호출될 것이니, 20초가 소요될까요?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;시작&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Promise((&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;) =&amp;gt; {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;첫 번째 타이머&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;10000&lt;/span&gt;);  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	});  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Promise((&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;) =&amp;gt; {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;두 번째 타이머&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;10000&lt;/span&gt;);  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	});
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;startTime&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Date.&lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;result1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;T1에 소요된 시간 : &amp;#34;&lt;/span&gt;, Date.&lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;startTime&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ms&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;result2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t2&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;T2에 소요된 시간 : &amp;#34;&lt;/span&gt;, Date.&lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;startTime&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ms&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;끝&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;test&lt;/span&gt;(); &lt;span style=&#34;color:#75715e&#34;&gt;// ?
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;코드 2&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;await-with-timer.png&#34; alt=&#34;await-with-timer.png&#34;&gt;&lt;br&gt;
+하지만, 실제로는 두 타이머 작업을 수행하는데에 총 10초밖에 들지 않았습니다.&lt;br&gt;
+그렇다면 작업이 동기적으로 수행되지 않은 걸까요?&lt;br&gt;
+이를 이해하려면 Javascript Event Loop 내부 동작이 어떻게 수행되는지 알아야 합니다.&lt;/p&gt;
+&lt;h3 id=&#34;event-loop-내부의-asyncawait-동작&#34; &gt;Event Loop 내부의 &lt;code&gt;async/await&lt;/code&gt; 동작
+&lt;span&gt;
+    &lt;a href=&#34;#event-loop-%eb%82%b4%eb%b6%80%ec%9d%98-asyncawait-%eb%8f%99%ec%9e%91&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;간단하게 설명하면, &lt;code&gt;Event Loop&lt;/code&gt;는 Javascript 코드를 한 줄 한 줄 실행하면서, 지속적으로 &lt;code&gt;메시지 큐&lt;/code&gt;에 &lt;code&gt;보류(Pending)중인 메시지&lt;/code&gt;(ex. &lt;code&gt;resolve&lt;/code&gt;된 &lt;code&gt;Promise&lt;/code&gt;)를 확인하며 하나 하나 처리합니다.&lt;br&gt;
+즉, &lt;code&gt;t1&lt;/code&gt;, &lt;code&gt;t2&lt;/code&gt;를 초기화하는 &lt;code&gt;코드 1&lt;/code&gt; 코드를 &lt;code&gt;메인 스레드&lt;/code&gt;가 읽고 실행한 순간, 백그라운드에서 해당 타이머 작업은 &lt;code&gt;Web API&lt;/code&gt;에게 전달되어 실행되고 있는 것입니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Promise()&lt;/code&gt;의 첫 번째 인자로 주어진 함수는 즉시 실행됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;따라서 &lt;code&gt;t1&lt;/code&gt;, &lt;code&gt;t2&lt;/code&gt;는 백그라운드에서 동시에 실행되고 있으며, &lt;code&gt;메인 스레드&lt;/code&gt;는 이후 이어지는 코드(&lt;code&gt;코드 2&lt;/code&gt;)들을 계속 실행해나갑니다.&lt;br&gt;
+그리고 &lt;code&gt;test()&lt;/code&gt; 내부의 &lt;code&gt;await t1&lt;/code&gt;에 도달했을 때, &lt;code&gt;t1&lt;/code&gt;이 &lt;code&gt;resolve&lt;/code&gt;될 때 까지 기다렸다가 코드 진행을 계속 이어나갑니다.&lt;br&gt;
+&lt;code&gt;t1&lt;/code&gt;과 &lt;code&gt;t2&lt;/code&gt; 모두 10초짜리 타이머이므로, &lt;code&gt;t1&lt;/code&gt;이 완료됨과 거의 동시에 &lt;code&gt;t2&lt;/code&gt;도 완료되게 됩니다. 따라서 &lt;code&gt;await t2&lt;/code&gt;는 거의 기다리지 않고 이후 코드들이 즉시 실행되게 됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Promise((&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;) =&amp;gt; {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;첫 번째 타이머&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;10000&lt;/span&gt;);  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Promise((&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;) =&amp;gt; {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;두 번째 타이머&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;5000&lt;/span&gt;);  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;만약 &lt;code&gt;t2&lt;/code&gt;를 5초로 줄이더라도, 백그라운드에서는 &lt;code&gt;t2&lt;/code&gt;가 &lt;code&gt;t1&lt;/code&gt;보다 먼저 완료되지만 &lt;code&gt;test()&lt;/code&gt; 함수의 동작은 이전과 동일하게 작동합니다.&lt;/p&gt;
+&lt;h3 id=&#34;asyncawait을-사용하면-비동기-병렬-처리가-불가능한가요&#34; &gt;&lt;code&gt;async/await&lt;/code&gt;을 사용하면, 비동기 병렬 처리가 불가능한가요?
+&lt;span&gt;
+    &lt;a href=&#34;#asyncawait%ec%9d%84-%ec%82%ac%ec%9a%a9%ed%95%98%eb%a9%b4-%eb%b9%84%eb%8f%99%ea%b8%b0-%eb%b3%91%eb%a0%ac-%ec%b2%98%eb%a6%ac%ea%b0%80-%eb%b6%88%ea%b0%80%eb%8a%a5%ed%95%9c%ea%b0%80%ec%9a%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;그렇지 않습니다. &lt;code&gt;Promise&lt;/code&gt;의 &lt;code&gt;all&lt;/code&gt; 또는 &lt;code&gt;allSettled&lt;/code&gt; 함수를 통해 &lt;code&gt;await&lt;/code&gt; 키워드를 사용하면서 비동기 작업들을 병렬적으로 처리할 수 있습니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;fetchData&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;userDataPromise&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;fetchUserData&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;productDataPromise&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;fetchProductData&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; [&lt;span style=&#34;color:#a6e22e&#34;&gt;userData&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;productData&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; Promise.&lt;span style=&#34;color:#a6e22e&#34;&gt;all&lt;/span&gt;([&lt;span style=&#34;color:#a6e22e&#34;&gt;userDataPromise&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;productDataPromise&lt;/span&gt;]);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;User data:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;userData&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Product data:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;productData&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}&lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error fetching data:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;위 코드처럼, 병렬로 실행할 &lt;code&gt;비동기 작업(Promise)&lt;/code&gt;들을 &lt;code&gt;배열(또는 Iterable 객체)&lt;/code&gt;에 담아 &lt;code&gt;all&lt;/code&gt; 또는 &lt;code&gt;allSettled&lt;/code&gt;에 넘겨주면 이들을 병렬적으로 수행하게 됩니다.&lt;br&gt;
+이후 배열의 모든 &lt;code&gt;비동기 작업&lt;/code&gt;이 완료되면 코드 진행을 이어나갑니다.&lt;/p&gt;
+&lt;h2 id=&#34;v8-엔진에서의-내부-await-동작-과정-httpsv8devblogfast-async&#34; &gt;V8 엔진에서의 내부 await 동작 과정 &lt;a href=&#34;https://v8.dev/blog/fast-async&#34;&gt;#&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#v8-%ec%97%94%ec%a7%84%ec%97%90%ec%84%9c%ec%9d%98-%eb%82%b4%eb%b6%80-await-%eb%8f%99%ec%9e%91-%ea%b3%bc%ec%a0%95-httpsv8devblogfast-async&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;foo&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;위와 같은 함수를 실행한다고 할 때, V8 엔진 내부에서는 아래와 같이 처리가 이뤄집니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;await-under-the-hood.svg&#34; alt=&#34;await-under-the-hood.svg&#34;&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;V8 엔진이 &lt;code&gt;async function&lt;/code&gt;을 &lt;code&gt;resumable&lt;/code&gt;(&lt;code&gt;await&lt;/code&gt; 위치에서 함수 실행을 중단하고 재개할 수 있음을 뜻함)하다고 표시합니다.
+&lt;ul&gt;
+&lt;li&gt;그런 다음 &lt;code&gt;implicit_promise&lt;/code&gt;(&lt;code&gt;async function&lt;/code&gt;을 호출할 때 반환되며, 최종적으로 &lt;code&gt;async function&lt;/code&gt;이 생성한 값을 &lt;code&gt;resolve&lt;/code&gt;하는 &lt;code&gt;Promise&lt;/code&gt;)를 생성합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;await&lt;/code&gt;에 전달된 값(여기서는 &lt;code&gt;v&lt;/code&gt;)을 &lt;code&gt;Promise&lt;/code&gt;로 래핑합니다.&lt;/li&gt;
+&lt;li&gt;만약 &lt;code&gt;Promise&lt;/code&gt;가 &lt;code&gt;이행(fulfilled)&lt;/code&gt;되면 &lt;code&gt;async function&lt;/code&gt;을 &lt;code&gt;재개&lt;/code&gt;하도록 하는 &lt;code&gt;핸들러&lt;/code&gt;를 래핑된 &lt;code&gt;Promise&lt;/code&gt;에 연결합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;async function&lt;/code&gt;의 실행을 &lt;code&gt;일시 중단(suspend)&lt;/code&gt;한 뒤, 호출자에게 &lt;code&gt;implicit_promise&lt;/code&gt;를 반환합니다.
+&lt;ul&gt;
+&lt;li&gt;이후 &lt;code&gt;Promise&lt;/code&gt;가 이행된 경우, &lt;code&gt;Promise&lt;/code&gt;의 값 &lt;code&gt;w&lt;/code&gt;와 함께 &lt;code&gt;async function&lt;/code&gt;이 재개되고 &lt;code&gt;implicit_promise&lt;/code&gt;는 &lt;code&gt;w&lt;/code&gt;를 &lt;code&gt;resolve&lt;/code&gt;합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;자세히-살펴보기&#34; &gt;자세히 살펴보기
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%ec%84%b8%ed%9e%88-%ec%82%b4%ed%8e%b4%eb%b3%b4%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;위 과정을 하나 하나 살펴보겠습니다.&lt;br&gt;
+참고로 위 예시에서 &lt;code&gt;await&lt;/code&gt;한 표현식이 &lt;em&gt;42라는 값으로 이행된&lt;/em&gt; &lt;code&gt;Promise&lt;/code&gt;라고 가정하겠습니다.&lt;br&gt;
+&lt;img src=&#34;await-step-1.svg&#34; alt=&#34;await-step-1.svg&#34;&gt;
+엔진은 이 &lt;code&gt;await&lt;/code&gt;된 값을 &lt;code&gt;promise&lt;/code&gt;라는 &lt;code&gt;Promise&lt;/code&gt;로 래핑합니다.&lt;br&gt;
+이는 다음 차례에 &lt;code&gt;Promise&lt;/code&gt;들의 &lt;code&gt;지연된 연쇄(deferred chaining)&lt;/code&gt;를 수행합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ECMA 사양&lt;/code&gt;에서는 이를 &lt;a href=&#34;https://tc39.es/ecma262/#sec-promiseresolvethenablejob&#34;&gt;&lt;code&gt;PromiseResolveThenableJob&lt;/code&gt;&lt;/a&gt;이라고 부릅니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;이후 엔진은 &lt;em&gt;아무것도 체인으로 연결 되어있지 않고, 완전히 &lt;code&gt;엔진 내부에 존재&lt;/code&gt;하는&lt;/em&gt; &lt;code&gt;throwaway&lt;/code&gt;라는 &lt;code&gt;Promise&lt;/code&gt;를 생성합니다.&lt;br&gt;
+이 &lt;code&gt;throwaway&lt;/code&gt;는 &lt;code&gt;async function&lt;/code&gt;을 재개하기 위한 적절한 핸들러와 함께 &lt;code&gt;promise&lt;/code&gt;와 체이닝됩니다.&lt;br&gt;
+&lt;code&gt;performPromiseThen&lt;/code&gt;은 &lt;code&gt;Promise.prototype.then()&lt;/code&gt;이 뒤에서 실제로 수행하는 일이며, 마지막으로 &lt;code&gt;async function&lt;/code&gt;의 실행이 일시 중단되고 제어권은 호출자에게 반환됩니다.&lt;br&gt;
+&lt;img src=&#34;await-step-2.svg&#34; alt=&#34;await-step-2.svg&#34;&gt;
+호출자측에서 작업이 계속 이어지고, 끝내 &lt;code&gt;콜 스택&lt;/code&gt;이 비워지게 됩니다.&lt;br&gt;
+이후 &lt;code&gt;Javascript 엔진&lt;/code&gt;은 &lt;code&gt;microtask&lt;/code&gt;들을 실행하기 시작합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;microtask&lt;/code&gt;(또는 &lt;code&gt;job&lt;/code&gt;): &lt;code&gt;I/O&lt;/code&gt;, &lt;code&gt;타이머&lt;/code&gt; 작업과 같이 한 번에 하나씩 실행되는 비동기 작업인 &lt;code&gt;task&lt;/code&gt;들이 끝날 때 실행되며, &lt;code&gt;async/await&lt;/code&gt; 및 &lt;code&gt;Promise&lt;/code&gt;에 대한 &lt;code&gt;지연 실행(Task가 완전히 끝난 후에만 실행됨)&lt;/code&gt;을 구현하는 작업. &lt;code&gt;ES6&lt;/code&gt;에서 &lt;code&gt;Promise&lt;/code&gt;가 등장함에 따라 함께 추가 됨.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;즉, 이전에 예약해두었던 &lt;code&gt;PromiseResolveThenableJob&lt;/code&gt;을 실행하게 되는데 이는 &lt;code&gt;promise&lt;/code&gt;와 &lt;code&gt;await&lt;/code&gt;에 전달된 값(여기서는 &lt;code&gt;42&lt;/code&gt;)을 체이닝하기 위한 &lt;code&gt;PromiseReactionJob&lt;/code&gt;을 예약합니다.&lt;br&gt;
+&lt;img src=&#34;await-step-3.svg&#34; alt=&#34;await-step-3.svg&#34;&gt;
+이어서 &lt;code&gt;await&lt;/code&gt;한 &lt;code&gt;Promise&lt;/code&gt;(&lt;code&gt;v&lt;/code&gt;)의 값으로 &lt;code&gt;promise&lt;/code&gt;를 이행하고, &lt;code&gt;throwaway&lt;/code&gt;에 대한 &lt;code&gt;반응(reaction) 작업&lt;/code&gt;(또다른 &lt;code&gt;PromiseReactionJob&lt;/code&gt;)을 예약하는 &lt;code&gt;PromiseReactionJob&lt;/code&gt;을 수행합니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;await-step-4-final.svg&#34; alt=&#34;await-step-4-final.svg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;이어지는 두 번째 &lt;code&gt;PromiseReactionJob&lt;/code&gt;(&lt;code&gt;throwaway&lt;/code&gt;에 대한 &lt;code&gt;반응&lt;/code&gt;)은 &lt;code&gt;resolve&lt;/code&gt;된 값(&lt;code&gt;42&lt;/code&gt;)을 &lt;code&gt;throwaway&lt;/code&gt;에 전파하고, 일시 중지 되었던 &lt;code&gt;async function&lt;/code&gt;의 실행 재개해, &lt;code&gt;await&lt;/code&gt;에서 &lt;code&gt;42&lt;/code&gt;라는 값을 반환합니다.&lt;/p&gt;
+&lt;h3 id=&#34;asyncawait-작업의-최적화&#34; &gt;&lt;code&gt;async/await&lt;/code&gt; 작업의 최적화
+&lt;span&gt;
+    &lt;a href=&#34;#asyncawait-%ec%9e%91%ec%97%85%ec%9d%98-%ec%b5%9c%ec%a0%81%ed%99%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;원인&#34; &gt;원인
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9b%90%ec%9d%b8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;await-overhead.svg&#34; alt=&#34;await-overhead.svg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;자세히 살펴본 위 작업 과정에 따르면, 각 &lt;code&gt;await&lt;/code&gt;에 대해 JS 엔진은 두 개의 추가 &lt;code&gt;Promise&lt;/code&gt;, 그리고 최소 3개의 &lt;code&gt;Microtask&lt;/code&gt;가 필요하게 됩니다.&lt;br&gt;
+&lt;img src=&#34;await-code-before.svg&#34; alt=&#34;await-code-before.svg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;이 중, 하나의 &lt;code&gt;Promise&lt;/code&gt;와 2개의 &lt;code&gt;Microtask&lt;/code&gt;는 위 코드의 맨 위의 두 줄의 코드에 의해 발생합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;promise&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;createPromise&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;resolvePromise&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;promise&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이는 심지어 &lt;code&gt;v&lt;/code&gt;가 이미 &lt;code&gt;Promise&lt;/code&gt;여도 수행되기 때문에, &lt;strong&gt;&lt;code&gt;v&lt;/code&gt;가 &lt;code&gt;Promise&lt;/code&gt;인 경우&lt;/strong&gt; 상당히 비싼 오버헤드를 발생시킬 수 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;해결&#34; &gt;해결
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%b4%ea%b2%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;사실 &lt;code&gt;ECMA 사양&lt;/code&gt;에는 이미 필요할 때만 &lt;code&gt;Promise&lt;/code&gt;로의 래핑을 수행하는 &lt;a href=&#34;https://tc39.es/ecma262/#sec-promise-resolve&#34;&gt;&lt;code&gt;promiseResolve&lt;/code&gt;&lt;/a&gt;라는 작업이 존재합니다.&lt;br&gt;
+&lt;img src=&#34;await-code-comparison.svg&#34; alt=&#34;await-code-comparison.svg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;즉, 위 두 줄을 &lt;code&gt;promise = promiseResolve(v)&lt;/code&gt; 단 한 줄로 변경하게 되면, &lt;code&gt;promise&lt;/code&gt;에는 아무런 변화도 없으며 오직 필요할 경우에만 &lt;code&gt;Promise&lt;/code&gt;로 래핑하게 됩니다.&lt;br&gt;
+이렇게 하면 이전의 코드에서 &lt;code&gt;throwaway&lt;/code&gt;를 생성하고, 이를 &lt;code&gt;v&lt;/code&gt;와 체이닝하는 &lt;code&gt;PromiseReactionJob&lt;/code&gt;을 예약하는 작업 정도만 남게 됩니다.&lt;br&gt;
+또한, &lt;code&gt;throwaway&lt;/code&gt;는 &lt;code&gt;performPromiseThen&lt;/code&gt; 의 API 제약 조건을 충족하기 위해서 존재하는데, &lt;a href=&#34;https://github.com/tc39/ecma262/issues/694&#34;&gt;ECMA 사양의 변경&lt;/a&gt;으로 더 이상 웬만해서는 &lt;code&gt;await&lt;/code&gt;을 위해 &lt;code&gt;throwaway&lt;/code&gt;를 생성할 필요가 없어졌습니다.&lt;/p&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://rehmat-sayany.medium.com/demystifying-the-background-scene-of-async-await-in-javascript-5e6b8f4eca73&#34;&gt;Demystifying the background Scene of Async/Await in JavaScript | by Rehmat Sayany | Medium&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function&#34;&gt;async function - JavaScript | MDN&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://scientyficworld.org/how-the-async-await-works-in-javascript/&#34;&gt;How The Async-await Works In JavaScript? • Scientyfic World&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://v8.dev/blog/fast-async&#34;&gt;Faster async functions and promises · V8&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>[DB] SQL Injection 알아보기 (w. PreparedStatement, Stored Procedures)</title>
+      <link>https://cloudsoswift.github.io/post/develop/database/sql-injection/</link>
+      <pubDate>Sat, 14 Sep 2024 20:29:34 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/database/sql-injection/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 9월 4일에 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/04-DATABASE/16_SQL-Injection/Readme.md&#34;&gt;&lt;strong&gt;SQL Injection&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;sql-injection에-대해-설명해-주세요&#34; &gt;SQL Injection에 대해 설명해 주세요.
+&lt;span&gt;
+    &lt;a href=&#34;#sql-injection%ec%97%90-%eb%8c%80%ed%95%b4-%ec%84%a4%eb%aa%85%ed%95%b4-%ec%a3%bc%ec%84%b8%ec%9a%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;SQL Injection&lt;/code&gt;이란, &lt;em&gt;데이터베이스를 사용하는&lt;/em&gt; 웹 애플리케이션을 공격하는데 사용되는 &lt;code&gt;코드 인젝션 공격 기법&lt;/code&gt;을 말합니다.&lt;br&gt;
+주로 공격자가 &lt;code&gt;입력 필드&lt;/code&gt;에 &lt;code&gt;악성 SQL 문&lt;/code&gt;을 삽입해 실행시키는 방식으로 공격하며, &lt;code&gt;데이터베이스의 정보&lt;/code&gt;를 불법적으로 &lt;code&gt;열람&lt;/code&gt; 또는 &lt;code&gt;조작&lt;/code&gt;할 수 있는 취약점입니다.&lt;br&gt;
+&lt;code&gt;Injection&lt;/code&gt; 공격은 오픈소스 웹 애플리케이션 보안 프로젝트인 &lt;a href=&#34;https://owasp.org/&#34;&gt;OWASP&lt;/a&gt;에서 매년 &lt;a href=&#34;https://owasp.org/www-project-top-ten/&#34;&gt;상위 10대 취약점&lt;/a&gt;에서 근 20년간 상위권을 차지하고 있으며, 단순히 신원 위조, 기존 데이터 변조와 같은 공격 뿐만 아니라 관리자 탈취, 데이터 삭제, 시스템 데이터 공개와 같이 &lt;code&gt;시스템에 치명적인 공격&lt;/code&gt;을 불러올 수 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;공격-유형&#34; &gt;공격 유형
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b2%a9-%ec%9c%a0%ed%98%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;SQL Injection&lt;/code&gt;은 기본적으로 &lt;code&gt;데이터 입력&lt;/code&gt; 란에 &lt;code&gt;메타 문자&lt;/code&gt;(&lt;code&gt;&#39;&#39;&lt;/code&gt;, &lt;code&gt;OR&lt;/code&gt; 등 SQL문을 이루는 문자들)를 삽입해 기존에 존재하지 않던 SQL 명령을 &lt;code&gt;제어 영역(control plane, SQL 명령어 및 관련 구조가 위치하는 영역. ~= user input)&lt;/code&gt;에 배치하는 방식으로 이뤄집니다.&lt;br&gt;
+이러한 구조적 결함은 SQL이 &lt;code&gt;제어 영역&lt;/code&gt;과 &lt;code&gt;데이터 영역(data plane, 실제 데이터 값이 위치하는 영역. ~= SQL Query)&lt;/code&gt;을 구분하지 않고, 단순히 문자열로 된 명령을 실행한다는 점에서 기인합니다.&lt;br&gt;
+&lt;code&gt;SQL Injection&lt;/code&gt;은 크게 아래 3가지 유형으로 구분됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;에러-기반-sql-인젝션error-based-sql-injection&#34; &gt;에러 기반 SQL 인젝션(Error-based SQL Injection)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%97%90%eb%9f%ac-%ea%b8%b0%eb%b0%98-sql-%ec%9d%b8%ec%a0%9d%ec%85%98error-based-sql-injection&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;에러 기반 SQL 인젝션&lt;/code&gt;은 데이터베이스 서버에서 발생한 &lt;code&gt;오류 메세지&lt;/code&gt;를 바탕으로 현재 API가 &lt;code&gt;어떤 SQL 명령&lt;/code&gt;을 호출하는지, &lt;code&gt;데이터베이스 구조&lt;/code&gt;는 어떤지 등의 &lt;code&gt;정보&lt;/code&gt;를 얻어내 공격하는 기법입니다.&lt;br&gt;
+이는 공격당하는 &lt;code&gt;웹 애플리케이션&lt;/code&gt; 서버가 &lt;em&gt;SQL 쿼리 수행시 발생한&lt;/em&gt; &lt;code&gt;오류&lt;/code&gt;를 &lt;code&gt;HTTP 응답&lt;/code&gt;으로 &lt;code&gt;반환&lt;/code&gt;하도록 동작하는 경우 가능한 공격입니다.&lt;/p&gt;
+&lt;h5 id=&#34;예시&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;img src=&#34;error-based-form.png&#34; alt=&#34;error-based-form.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;위와 같은 입력 폼으로 아이디, 비밀번호를 입력받아 로그인을 수행하는 웹 애플리케이션이 있다고 가정하겠습니다.&lt;br&gt;
+위 애플리케이션이 구동되는 Spring 서버에서는 DB에서 일치하는 유저를 불러오기 위해 다음과 같은 코드가 동작하게 됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	Statement st &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; conn&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;createStatement&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	ResultSet rs &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; st&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;executeQuery&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SELECT * FROM member WHERE userid = &amp;#39;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; ID &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#39; AND userpw =&amp;#39;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; PW &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;&amp;#39;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;즉, DB에서는 다음과 같은 SQL문이 동작하게 될 것입니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; member &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; userid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$ID&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; userpw &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$PW&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이때, pw에 &lt;code&gt;&#39;OR 1=1 --&lt;/code&gt;를 입력하거나 &lt;code&gt;extractvalue()&lt;/code&gt; 함수 등을 사용해 DB 정보를 탈취할 수 있습니다.&lt;br&gt;
+&lt;code&gt;OR 1=1 --&lt;/code&gt;는 &lt;code&gt;WHERE&lt;/code&gt; 절의 조건을 항상 참이 되도록 하고, 이어지는 조건들을 &lt;code&gt;--&lt;/code&gt;를 통해 &lt;code&gt;주석 처리&lt;/code&gt;하게 됩니다. 따라서 id에 (실제 서비스에 가입된) id중 어떤 것을 입력해도 로그인할 수 있게 됩니다.&lt;br&gt;
+&lt;code&gt;extractvalue(xml_frag, xpath_expr)&lt;/code&gt; 함수의 경우 &lt;code&gt;XML&lt;/code&gt;과 &lt;code&gt;XPath 표현식&lt;/code&gt;을 인자로 받아, &lt;code&gt;XML&lt;/code&gt;에서 &lt;code&gt;XPath 표현식&lt;/code&gt;에 일치하는 데이터를 추출 및 반환하는 함수입니다.&lt;br&gt;
+이때, &lt;code&gt;두 번째 인수&lt;/code&gt;에 유효하지 않은 XPath 표현식이 사용될 경우 &lt;code&gt;XPATH syntax error&lt;/code&gt;를 통해 해당 인수 값을 &lt;code&gt;출력&lt;/code&gt;하게 되는데, 이것이 &lt;code&gt;SQL 쿼리&lt;/code&gt;일 경우 &lt;code&gt;실행 결과를 에러 메시지에 포함&lt;/code&gt;한다는 점을 활용해 공격에 사용됩니다.&lt;br&gt;
+따라서 두 번째 인수에 콜론(&lt;code&gt;&#39;:&#39;&lt;/code&gt; 또는 &lt;code&gt;0x3a&lt;/code&gt;(16진수 표현)을 사용)을 맨 앞에 추가하므로써 항상 유효하지 않은 &lt;code&gt;XPath 표현식&lt;/code&gt;을 만들고, &lt;code&gt;concat()&lt;/code&gt;으로 뒤에 실제 실행할 &lt;code&gt;SQL 쿼리&lt;/code&gt;를 넘겨 정보 탈취를 시도합니다.&lt;br&gt;
+가령 PW에 &lt;code&gt;&#39; AND extractvalue(rand(),concat(0x3a,version()))--&lt;/code&gt; 라는 구문을 넣게 된다면 실제 SQL 쿼리 문은 다음과 같게 될것입니다. (&lt;code&gt;version()&lt;/code&gt;은 현재 MySQL 버전을 반환하는 함수입니다.)&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; member &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; userid &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; userpw &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;&amp;#39;&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; extractvalue(rand(),concat(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;x3a,&lt;span style=&#34;color:#66d9ef&#34;&gt;version&lt;/span&gt;()))&lt;span style=&#34;color:#75715e&#34;&gt;--&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이를 실행하면 아래 그림처럼 서버의 MySQL 버전을 &lt;code&gt;에러와 함께 반환&lt;/code&gt;하게 됩니다.&lt;br&gt;
+&lt;img src=&#34;error-alert.png&#34; alt=&#34;error-alert.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;이를 통해 공격자는 &lt;code&gt;DB 버전&lt;/code&gt;, &lt;code&gt;DB 명&lt;/code&gt;, &lt;code&gt;테이블 명&lt;/code&gt;, &lt;code&gt;컬럼 명&lt;/code&gt; 등 다양한 데이터들을 추출할 수 있게 됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;union-기반-sql-인젝션union-based-sql-injection&#34; &gt;UNION 기반 SQL 인젝션(Union-based SQL Injection)
+&lt;span&gt;
+    &lt;a href=&#34;#union-%ea%b8%b0%eb%b0%98-sql-%ec%9d%b8%ec%a0%9d%ec%85%98union-based-sql-injection&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;UNION 기반 SQL 인젝션&lt;/code&gt;은 웹 애플리케이션이 &lt;code&gt;DB 질의한 결과&lt;/code&gt;를 &lt;code&gt;HTTP 응답&lt;/code&gt;에 포함해 반환하는 경우, &lt;code&gt;SQL&lt;/code&gt;문을 조작하여 &lt;code&gt;DB 구조 및 데이터&lt;/code&gt;를 &lt;code&gt;탈취&lt;/code&gt;하는 공격 기법입니다.&lt;br&gt;
+이때, &lt;em&gt;원래 애플리케이션이 반환할 데이터는 필요하지 않으므로&lt;/em&gt; &lt;code&gt;음수 값&lt;/code&gt;과 같이 DB에 존재하지 않을만한 값을 &lt;code&gt;입력 값으로 전달&lt;/code&gt;하고, 이후 &lt;code&gt;UNION&lt;/code&gt; 또는 &lt;code&gt;UNION ALL&lt;/code&gt;을 이용해 DB의 다른 데이터 값을 추출하는 &lt;code&gt;SQL 쿼리를 덧붙여&lt;/code&gt; 서버에 전달하게 됩니다.&lt;/p&gt;
+&lt;h5 id=&#34;union과-union-all&#34; &gt;&lt;code&gt;UNION&lt;/code&gt;과 &lt;code&gt;UNION ALL&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#union%ea%b3%bc-union-all&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;UNION&lt;/code&gt;과 &lt;code&gt;UNION ALL&lt;/code&gt;은 &lt;strong&gt;두 개 이상&lt;/strong&gt;의 &lt;code&gt;SELECT 쿼리 결과&lt;/code&gt;를 하나로 합쳐주는 집합 연산자로, 이때 합쳐질 쿼리들은 다음 조건을 만족해야 합니다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;각 쿼리들은 &lt;code&gt;SELECT&lt;/code&gt;절에서 &lt;code&gt;동일한 갯수&lt;/code&gt;의 &lt;code&gt;열&lt;/code&gt;을 사용해야 한다.&lt;/li&gt;
+&lt;li&gt;각 쿼리에서 &lt;code&gt;동일한 순서의 컬럼들&lt;/code&gt;은 서로 호환되는 자료형을 가져야 한다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;또한, &lt;code&gt;UNION&lt;/code&gt;은 쿼리 결과값 통합시 중&lt;code&gt;복된 레코드를 제거&lt;/code&gt;하는 반면, &lt;code&gt;UNION ALL&lt;/code&gt;은 &lt;em&gt;중복 제거 절차 없이&lt;/em&gt; &lt;code&gt;모든 레코드들을 반환&lt;/code&gt;한다는 차이가 있습니다.&lt;/p&gt;
+&lt;h5 id=&#34;예시-1&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;쇼핑몰 웹 애플리케이션에서 물품의 ID를 사용자로 부터 입력받으면, 해당 물품의 &lt;code&gt;ID&lt;/code&gt;, &lt;code&gt;이름&lt;/code&gt;, &lt;code&gt;가격&lt;/code&gt;을 조회하는 API가 있다고 가정하겠습니다.&lt;br&gt;
+해당 API가 DB에 요청할 SQL 쿼리는 다음과 같을 것입니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; item_id, item_name, item_price 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; item 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; item_id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$item_id&amp;#39;&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;또한, 해당 API는 HTTP 응답으로 이름과 가격, 즉 &lt;code&gt;item_name&lt;/code&gt;, &lt;code&gt;item_price&lt;/code&gt;를 반환합니다.&lt;/p&gt;
+&lt;p&gt;이러한 상황에서 ID로 &lt;code&gt;-99 UNION ALL SELECT version(), database(), 2--&lt;/code&gt;를 전달한다면 SQL 쿼리는 다음과 같이 바뀌게 됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; item_id, item_name, item_price 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; item 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; item_id &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;99&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UNION&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ALL&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;version&lt;/span&gt;(), &lt;span style=&#34;color:#66d9ef&#34;&gt;database&lt;/span&gt;(), &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;당연히 상품 ID가 음수인 상품은 존재하지 않을 것이므로 상품 데이터는 전혀 반환되지 않고 &lt;code&gt;UNION&lt;/code&gt;으로 결합한 &lt;code&gt;SELECT&lt;/code&gt; 쿼리에 포함된 &lt;code&gt;SQL 서버 버전&lt;/code&gt;, &lt;code&gt;DB명&lt;/code&gt;, &lt;code&gt;숫자(컬럼 갯수 및 타입을 맞추기 위한 임의 값)&lt;/code&gt;를 반환하게 됩니다.&lt;/p&gt;
+&lt;h5 id=&#34;열-갯수-알아내기&#34; &gt;열 갯수 알아내기
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%97%b4-%ea%b0%af%ec%88%98-%ec%95%8c%ec%95%84%eb%82%b4%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;그리고 &lt;code&gt;UNION&lt;/code&gt;에서 열의 갯수를 맞춰야 하는 조건 때문에, 현재 쿼리의 컬럼 갯수를 알아야 할 수 있습니다.&lt;br&gt;
+이때 &lt;code&gt;ORDER BY&lt;/code&gt; 절을 활용하면, 원래의 &lt;code&gt;SQL 쿼리&lt;/code&gt;의 열 갯수를 알아낼 수 있습니다.&lt;br&gt;
+&lt;code&gt;ORDER BY&lt;/code&gt; 절에서 정렬 기준 컬럼을 지정할 때, 열 이름을 직접 기입할 수도 있지만 &lt;code&gt;해당 컬럼의 순번&lt;/code&gt;을 기입할 수도 있습니다.&lt;br&gt;
+즉, 위 케이스의 경우 &lt;code&gt;ORDER BY 3&lt;/code&gt;을 기입하면 &lt;code&gt;SQL 쿼리&lt;/code&gt;의 세 번째 컬럼인 &lt;code&gt;item_price&lt;/code&gt;를 기준으로 정렬하게 됩니다.&lt;br&gt;
+이러한 순번은 &lt;code&gt;SQL 쿼리가 불러올 컬럼 갯수&lt;/code&gt;만큼 배정되므로 &lt;code&gt;해당 갯수 이상의 숫자&lt;/code&gt;를 기입하게 되면 다음과 같은 &lt;code&gt;오류가 발생&lt;/code&gt;하게 됩니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;union-alert.png&#34; alt=&#34;union-alert.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;따라서 &lt;code&gt;ORDER BY&lt;/code&gt; 문에 기입할 순번을 하나씩 &lt;code&gt;차례대로 증가&lt;/code&gt;시키다가 &lt;code&gt;DB에서 오류가 발생&lt;/code&gt;하거나 &lt;code&gt;비정상 응답을 반환&lt;/code&gt;하게 되면, 바로 전의 순번이 원래의 SQL문의 &lt;code&gt;컬럼 갯수&lt;/code&gt;와 같게되는 것입니다.&lt;/p&gt;
+&lt;h4 id=&#34;블라인드-sql-인젝션blind-sql-injection&#34; &gt;블라인드 SQL 인젝션(Blind SQL Injection)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b8%94%eb%9d%bc%ec%9d%b8%eb%93%9c-sql-%ec%9d%b8%ec%a0%9d%ec%85%98blind-sql-injection&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;블라인드 SQL 인젝션&lt;/code&gt;은 &lt;em&gt;상기한 SQL 인젝션들과 달리&lt;/em&gt;, 웹 애플리케이션이 &lt;code&gt;HTTP 응답&lt;/code&gt;에 &lt;code&gt;DB 오류 메시지&lt;/code&gt;나 &lt;code&gt;데이터&lt;/code&gt;를 포함하지 않을때 사용할 수 있는 공격 기법입니다.&lt;br&gt;
+즉, &lt;em&gt;서버의 직접적인 응답 대신&lt;/em&gt; &lt;code&gt;알고싶은 정보가 포함된 특정 조건&lt;/code&gt;을 SQL 쿼리에 포함시켰을때 &lt;code&gt;HTTP 응답&lt;/code&gt;의 &lt;code&gt;상태&lt;/code&gt;가 달라지거나, &lt;code&gt;응답에 걸리는 시간&lt;/code&gt;의 차이를 통해 해당 조건이 &lt;code&gt;참인지 거짓인지&lt;/code&gt; 알아내므로써 데이터베이스 내 &lt;code&gt;정보를 유추&lt;/code&gt;하는 공격 기법입니다.&lt;br&gt;
+크게 응답의 차이를 통해 유추하는 &lt;code&gt;불린 기반&lt;/code&gt; 방식과 서버의 응답 시간 차이를 통해 유추하는 &lt;code&gt;시간 기반&lt;/code&gt; 방식이 있습니다.&lt;/p&gt;
+&lt;h5 id=&#34;블라인드-불린-기반-sql-인젝션blind-boolean-based-sql-injection&#34; &gt;블라인드 불린 기반 SQL 인젝션(Blind Boolean-Based SQL Injection)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b8%94%eb%9d%bc%ec%9d%b8%eb%93%9c-%eb%b6%88%eb%a6%b0-%ea%b8%b0%eb%b0%98-sql-%ec%9d%b8%ec%a0%9d%ec%85%98blind-boolean-based-sql-injection&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;블라인드 불린 기반 SQL 인젝션&lt;/code&gt;은 &lt;code&gt;SQL 쿼리&lt;/code&gt;의 &lt;code&gt;참/거짓&lt;/code&gt;여부에 따른  &lt;code&gt;HTTP 응답 내용&lt;/code&gt;, &lt;code&gt;상태 코드&lt;/code&gt; 등의 &lt;code&gt;차이가 존재&lt;/code&gt;할 때 이를 통해 &lt;code&gt;정보를 유추&lt;/code&gt;할 수 있는 공격 기법입니다.&lt;/p&gt;
+&lt;h6 id=&#34;예시-2&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-2&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;p&gt;게시판 애플리케이션에서 게시글 id를 URL 인자로 받아 게시물을 불러오는 API를 예시로 들어보겠습니다. 해당 API는 다음과 같은 SQL 쿼리를 요청합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; subject, content, author  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; board  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;$id&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;만약 올바른 게시글 id를 전달받았다면 정상적으로 해당 게시글을 가져올 것이고, 그렇지 않다면 아무것도 반환하지 않을 것입니다.&lt;br&gt;
+예를 들어 id를 &lt;code&gt;1 AND 1=0--&lt;/code&gt; 로 넘겼다면 SQL문은 다음과 같게 됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; subject, content, author  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; board  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;우리가 넘긴 &lt;code&gt;AND 1=0&lt;/code&gt; 조건 때문에 게시물 조회 &lt;code&gt;SQL 쿼리&lt;/code&gt;는 거짓이 되어 아무 것도 불러올 수 없을 것입니다. 반면 &lt;code&gt;1 AND 1=1 --&lt;/code&gt;을 넘겼다면 정상적으로 게시물을 조회해올 것입니다.&lt;br&gt;
+이를 바탕으로 데이터베이스의 이름을 알아내고 싶다고 가정해보겠습니다.&lt;br&gt;
+그렇다면 먼저 DB 이름의 길이를 알아내야 하므로, SQL의 &lt;code&gt;LENGTH()&lt;/code&gt;을 활용합니다.&lt;br&gt;
+id로 &lt;code&gt;1 AND LENGTH(database()) = 1 --&lt;/code&gt;, &lt;code&gt;1 AND LENGTH(database()) = 2 --&lt;/code&gt;, &amp;hellip; 처럼 점점 값을 증가시키며 응답이 정상적으로 반환될 때 까지 반복합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;LENGTH&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;database&lt;/span&gt;())&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--+                (결과:거짓)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;LENGTH&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;database&lt;/span&gt;())&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--+                (결과:거짓)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;LENGTH&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;database&lt;/span&gt;())&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--+                (결과:참) &amp;lt;- 현재 DB의 이름의 길이는 3임
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이후 한글자 한글자씩 비교하며 DB 이름의 각 자리가 무엇인지 확인합니다. 이때 &lt;code&gt;SUBSTRING()&lt;/code&gt; 함수를 활용합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;SUBSTRING&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;database&lt;/span&gt;(), &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;a&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--+                (결과:거짓)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;SUBSTRING&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;database&lt;/span&gt;(), &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;b&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--+                (결과:거짓)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;SUBSTRING&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;database&lt;/span&gt;(), &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;c&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;--+                (결과:참) &amp;lt;- 현재 DB의 이름의 첫 글자는 &amp;#39;c&amp;#39;임
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이를 반복해 알아낸 각 자리의 문자들을 결합하면 DB의 이름을 알아낼 수 있습니다.&lt;/p&gt;
+&lt;h5 id=&#34;블라인드-시간-기반-sql-인젝션blind-time-based-sql-injection&#34; &gt;블라인드 시간 기반 SQL 인젝션(Blind Time-Based SQL Injection)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b8%94%eb%9d%bc%ec%9d%b8%eb%93%9c-%ec%8b%9c%ea%b0%84-%ea%b8%b0%eb%b0%98-sql-%ec%9d%b8%ec%a0%9d%ec%85%98blind-time-based-sql-injection&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;블라인드 불린 기반 SQL 인젝션&lt;/code&gt;은 &lt;code&gt;SQL 쿼리&lt;/code&gt;의 &lt;code&gt;참/거짓&lt;/code&gt;여부에 따른  &lt;code&gt;HTTP 응답 내용&lt;/code&gt;, &lt;code&gt;상태 코드&lt;/code&gt; 등의 차이가 존재를 &lt;code&gt;확인할 수 없지만&lt;/code&gt;, 서버 응답 시간을 제어할 수 있을 경우 사용 가능한 공격 기법입니다.&lt;br&gt;
+즉, 기존 &lt;code&gt;SQL 쿼리&lt;/code&gt;에 &lt;code&gt;특정 조건&lt;/code&gt;이 참일 경우 &lt;code&gt;응답을 지연시키는 함수&lt;/code&gt;를 사용해 해당 조건의 참/거짓 여부를 판별하게 됩니다.&lt;br&gt;
+응답 시간을 제어하는 함수는 DBMS별로 상이하며, 예시로 들 &lt;code&gt;MySQL&lt;/code&gt;(및 &lt;code&gt;MariaDB&lt;/code&gt;)의 경우 &lt;code&gt;sleep()&lt;/code&gt; 함수를 사용합니다.&lt;/p&gt;
+&lt;h6 id=&#34;예시-3&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-3&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h6&gt;&lt;p&gt;위와 마찬가지로 게시판 애플리케이션에서 게시물 조회 API를 사용한다고 가정하겠습니다.&lt;br&gt;
+이때 id로 &lt;code&gt;1 AND if(1=1, sleep(5), false)--&lt;/code&gt; 와 같은 구문을 전달했을 때 기존 &lt;code&gt;SQL 쿼리&lt;/code&gt;에 정상적으로 포함된다면, SQL문은 다음과 같게 됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; subject, content, author  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; board  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; id&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;), &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;)&lt;span style=&#34;color:#75715e&#34;&gt;--
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이때 if문이 동작하기 때문에 첫 번째 인자로 주어진 조건식인 &lt;code&gt;1=1&lt;/code&gt;이 참이므로, 서버는 &lt;code&gt;5초간 대기&lt;/code&gt; 상태에 있다가 응답하게 될 것입니다.&lt;br&gt;
+이를 바탕으로 &lt;em&gt;불린 기반 공격 처럼&lt;/em&gt;, 조건문에 &lt;code&gt;원하는 정보에 대한 조건&lt;/code&gt;을 포함해 API 요청을 반복하므로써 원하는 정보를 알아낼 수 있습니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;LENGTH&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;database&lt;/span&gt;())&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;), &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;)&lt;span style=&#34;color:#75715e&#34;&gt;--+                (결과:거짓)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;LENGTH&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;database&lt;/span&gt;())&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;, sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;), &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;)&lt;span style=&#34;color:#75715e&#34;&gt;--+                (결과:거짓)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;AND&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;LENGTH&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;database&lt;/span&gt;())&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;3&lt;/span&gt;, sleep(&lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;), &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;)&lt;span style=&#34;color:#75715e&#34;&gt;--+                (결과:참) &amp;lt;- 현재 DB의 이름의 길이는 3임
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;방어법-httpscheatsheetseriesowasporgcheatsheetssql_injection_prevention_cheat_sheethtml&#34; &gt;방어법 &lt;a href=&#34;https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html&#34;&gt;#&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%a9%ec%96%b4%eb%b2%95-httpscheatsheetseriesowasporgcheatsheetssql_injection_prevention_cheat_sheethtml&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;이러한 &lt;code&gt;SQL 인젝션&lt;/code&gt;을 방지하기 위해서는 ① &lt;code&gt;문자열들을 연결&lt;/code&gt;해 &lt;code&gt;동적 SQL 쿼리&lt;/code&gt;를 &lt;code&gt;생성하지 않거나&lt;/code&gt;, ② 실행된 쿼리에 &lt;code&gt;악성 SQL 입력&lt;/code&gt;이 &lt;code&gt;포함되지 않도록&lt;/code&gt; 해야 합니다.&lt;/p&gt;
+&lt;h4 id=&#34;prepared-statement-사용하기&#34; &gt;Prepared Statement 사용하기
+&lt;span&gt;
+    &lt;a href=&#34;#prepared-statement-%ec%82%ac%ec%9a%a9%ed%95%98%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;준비된 구문(Prepared Statement)&lt;/code&gt;, 또는 &lt;code&gt;파라미터화 된 쿼리(Parameterized Query)&lt;/code&gt;를 사용하게 되면 &lt;code&gt;동적 쿼리&lt;/code&gt;보다 쿼리를 작성 및 이해하는데 쉬우며, 개발자가 먼저 SQL 쿼리를 정의한 뒤 이후에 각 매개변수들을 쿼리에 전달하도록 합니다.&lt;br&gt;
+또한 DB 쿼리가 이러한 형태를 띄는 경우 DB는 사용자 입력에 상관없이 항상 코드와 데이터를 구분합니다. 그리고 공격자가 SQL 명령을 삽입해도 쿼리의 원래 의도를 변경할 수 없도록 보장합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 코드 예시
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 매개변수로 사용될 해당 인자는 꼭 검증하는 것이 좋습니다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;String custname &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; request&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;getParameter&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;customerName&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;String query &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SELECT account_balance FROM user_data WHERE user_name = ? &amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;PreparedStatement pstmt &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; connection&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;prepareStatement&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt; query &lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;pstmt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;setString&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; custname&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ResultSet results &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; pstmt&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;executeQuery&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Java의 &lt;code&gt;PreparedStatement&lt;/code&gt;, C# .NET의 &lt;code&gt;OleDbCommand&lt;/code&gt; 등이 이를 구현하고 있으며 이외에도 Ruby, PHP, Perl 등 다양한 언어에 &lt;code&gt;Prepared Statement&lt;/code&gt; 구현체가 존재합니다.&lt;br&gt;
+또한 &lt;code&gt;SQL 인젝션&lt;/code&gt;과 유사한 &lt;code&gt;HQL 인젝션&lt;/code&gt;이 존재하는 SQL 추상화 계층인 &lt;code&gt;HQL(Hibernate Query Language)&lt;/code&gt;에도 &lt;code&gt;Prepared Statement&lt;/code&gt; 형태의 구현체가 존재합니다.&lt;/p&gt;
+&lt;h4 id=&#34;stored-procedures-사용하기&#34; &gt;Stored Procedures 사용하기
+&lt;span&gt;
+    &lt;a href=&#34;#stored-procedures-%ec%82%ac%ec%9a%a9%ed%95%98%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;저장 프로시저 (Stored procedure)&lt;/code&gt;란 DBMS에 저장되어 재사용 및 공유할 수 있는 일련의 &lt;code&gt;SQL 쿼리 집합&lt;/code&gt;입니다.&lt;br&gt;
+&lt;code&gt;Stored Procedure&lt;/code&gt;가 항상 &lt;code&gt;SQL 인젝션&lt;/code&gt;으로 부터 안전하지 않지만, 특정 표준 &lt;code&gt;Stored Procedure&lt;/code&gt;를 사용하면 &lt;code&gt;Parameterized Query&lt;/code&gt;를 사용하는 것과 동일한 효과를 갖게 됩니다.&lt;br&gt;
+다만, &lt;code&gt;Stored Procedure&lt;/code&gt;를 사용할 경우 오히려 시스템이 노출될 경우의 위험을 증가시킬 수 있습니다.&lt;br&gt;
+가령 &lt;code&gt;db_datareader&lt;/code&gt;, &lt;code&gt;db_datawriter&lt;/code&gt;, &lt;code&gt;db_owner&lt;/code&gt;세 가지 기본 역할이 존재하는 &lt;code&gt;MS SQL Server&lt;/code&gt;에서는 &lt;code&gt;Stored Procedure&lt;/code&gt; 실행을 위해 &lt;code&gt;실행 권한(Execute right)&lt;/code&gt;이 필요하며, 만약 이 세가지 역할만 사용하는 서비스라면 웹앱이 &lt;code&gt;db_owner&lt;/code&gt; 역할로 실행되어야 &lt;code&gt;Stored Procedure&lt;/code&gt;를 사용할 수 있게 됩니다.&lt;br&gt;
+따라서 사용자에게 읽기 접근 권한만 할당하기 위해 &lt;code&gt;db_datareader&lt;/code&gt; 역할을 할당하는게 불가능해지며, 공격자는 DB에 대한 모든 권한을 얻게 됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;String custname &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; request&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;getParameter&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;customerName&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// Stored Procedure를 호출할 때, 매개변수들을 인자로 전달한다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  CallableStatement cs &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; connection&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;prepareCall&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;{call sp_getAccountBalance(?)}&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  cs&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;setString&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; custname&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  ResultSet results &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; cs&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;executeQuery&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// … result set handling
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;SQLException se&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#75715e&#34;&gt;// … logging and error handling
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;입력-허용-목록을-통한-유효성-검사&#34; &gt;입력 허용 목록을 통한 유효성 검사
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%85%eb%a0%a5-%ed%97%88%ec%9a%a9-%eb%aa%a9%eb%a1%9d%ec%9d%84-%ed%86%b5%ed%95%9c-%ec%9c%a0%ed%9a%a8%ec%84%b1-%ea%b2%80%ec%82%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;만약 사용자 입력에 의해 변경될 값이 &lt;code&gt;테이블 이름&lt;/code&gt;, &lt;code&gt;컬럼 명&lt;/code&gt; 처럼 &lt;code&gt;바인드 변수&lt;/code&gt;를 할당할 수 없는 위치라면 쿼리를 재설계 하거나, 설명할 &lt;code&gt;입력 유효성 검사&lt;/code&gt;를 수행하는 것이 알맞은 방어책 입니다.&lt;br&gt;
+이때, &lt;code&gt;테이블&lt;/code&gt; 또는 &lt;code&gt;컬럼 명&lt;/code&gt;을 사용자 매개변수 값을 통해 전달 받을 경우, 해당 값이 다른 테이블의 다른 컬럼을 이름을 가질 수도 있습니다.&lt;br&gt;
+이러한 경우 근본적으로 이를 막도록 &lt;code&gt;코드를 재작성&lt;/code&gt; 하는것이 좋지만, 이는 현실적으로 쉽지 않습니다.
+따라서 사용자 매개변수를 &lt;code&gt;예상 가능한 테이블&lt;/code&gt;에 매핑하여 &lt;code&gt;유효하지 않은 사용자 입력&lt;/code&gt;이 쿼리에 &lt;code&gt;포함되는 것을 막아야&lt;/code&gt; 합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;String tableName&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 사용자 매개변수 값에 따라 tableName을 코드에서 지정합니다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;switch&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;PARAM&lt;span style=&#34;color:#f92672&#34;&gt;):&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;case&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Value1&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; tableName &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;fooTable&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                 &lt;span style=&#34;color:#66d9ef&#34;&gt;break&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;case&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Value2&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; tableName &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;barTable&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                 &lt;span style=&#34;color:#66d9ef&#34;&gt;break&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;default&lt;/span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;throw&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; InputValidationException&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;unexpected value provided&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                                                  &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; for table name&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;추가로, 꼭 동적 쿼리를 사용해야 한다면 동적 쿼리에 SQL 구문을 삽입할 수 없도록 &lt;code&gt;API&lt;/code&gt; 또는 &lt;code&gt;StoredProcedure&lt;/code&gt;의 매개변수를 가능한 문자열이 아닌 타입으로 받는것이 좋습니다.&lt;br&gt;
+즉, 예를 들어 &lt;code&gt;Date&lt;/code&gt;, &lt;code&gt;Number&lt;/code&gt;, &lt;code&gt;boolean&lt;/code&gt;, &lt;code&gt;enum&lt;/code&gt; 등으로 받게 된다면 안전하게 사용자로부터 입력을 받는것이 가능합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;String&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;someMethod&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;boolean&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;sortOrder&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;String&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;SQLquery&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;some SQL ... order by Salary &amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;sortOrder&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ASC&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;DESC&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;`&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/types-of-sql-injection-sqli/&#34;&gt;Types of SQL Injection (SQLi) - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://brightsec.com/blog/sql-injection-attack/&#34;&gt;SQL Injection Attack: How It Works, Examples and Prevention (brightsec.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/ko/docs/Glossary/SQL_Injection&#34;&gt;SQL 인젝션 (SQL Injection) - MDN Web Docs 용어 사전: 웹 용어 정의 | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html&#34;&gt;SQL Injection Prevention - OWASP Cheat Sheet Series&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.invicti.com/blog/web-security/sql-injection-cheat-sheet/&#34;&gt;SQL Injection Cheat Sheet | Invicti&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://owasp.org/www-community/attacks/SQL_Injection&#34;&gt;SQL Injection | OWASP Foundation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://owasp.org/www-community/attacks/Blind_SQL_Injection&#34;&gt;Blind SQL Injection | OWASP Foundation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.boannews.com/media/view.asp?idx=128286&amp;amp;page=1&amp;amp;mkind=&amp;amp;kind=5&amp;amp;skind=J&amp;amp;search=title&amp;amp;find=&#34;&gt;[카드뉴스] ‘오래된 위협, 그러나 여전히 강력한’ SQL 인젝션 (boannews.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.bugbountyclub.com/pentestgym/view/53&#34;&gt;Error 기반 SQL 인젝션 | Pentest Gym | 버그바운티클럽 (bugbountyclub.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.bugbountyclub.com/pentestgym/view/54&#34;&gt;UNION 기반 SQL 인젝션 | Pentest Gym | 버그바운티클럽 (bugbountyclub.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.bugbountyclub.com/pentestgym/view/55&#34;&gt;Blind SQL 인젝션 | Pentest Gym | 버그바운티클럽 (bugbountyclub.com)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>[Javascript] 제너레이터 알아보기 (w. Iterator, 배열)</title>

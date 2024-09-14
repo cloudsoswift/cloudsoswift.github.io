@@ -6,10 +6,313 @@
     <description>오늘도 개발을 한다. (Javascript)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Fri, 23 Aug 2024 10:26:06 +0900</lastBuildDate>
+    <lastBuildDate>Sat, 14 Sep 2024 20:55:53 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/tags/javascript/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[Javascript] async/await 알아보기 (w. V8 Engine, task, microtask)</title>
+      <link>https://cloudsoswift.github.io/post/develop/javascript/async-await/</link>
+      <pubDate>Sat, 14 Sep 2024 20:55:53 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/javascript/async-await/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 9월 10일에 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/11_async-await/Readme.md&#34;&gt;&lt;strong&gt;async function과 await 키워드&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h1 id=&#34;async-function---await는-어떻게-동작할까&#34; &gt;&lt;code&gt;async function&lt;/code&gt; - &lt;code&gt;await&lt;/code&gt;는 어떻게 동작할까?
+&lt;span&gt;
+    &lt;a href=&#34;#async-function---await%eb%8a%94-%ec%96%b4%eb%96%bb%ea%b2%8c-%eb%8f%99%ec%9e%91%ed%95%a0%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;h2 id=&#34;asyncawait란&#34; &gt;&lt;code&gt;async/await&lt;/code&gt;란?
+&lt;span&gt;
+    &lt;a href=&#34;#asyncawait%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;async function&lt;/code&gt;이란, 여러 &lt;code&gt;Promise&lt;/code&gt;간의 흐름을 순서대로 처리할 수 있는, 즉 여러 비동기 함수들을 동기적인 순서로 진행할 수 있는 함수를 말합니다.&lt;br&gt;
+&lt;code&gt;async function&lt;/code&gt;은 0개 이상의 &lt;code&gt;await&lt;/code&gt; 키워드를 포함할 수 있는데, 함수를 진행하다 &lt;code&gt;await&lt;/code&gt;가 달린 &lt;code&gt;Promise&lt;/code&gt;를 만나게 되면 해당 &lt;code&gt;Promise&lt;/code&gt;가 &lt;em&gt;&lt;code&gt;이행&lt;/code&gt;/&lt;code&gt;거부&lt;/code&gt;될 때 까지&lt;/em&gt; &lt;strong&gt;함수 실행을 &lt;code&gt;일시 중단&lt;/code&gt;&lt;/strong&gt; 하며 처리가 완료된 뒤 다시 진행됩니다.&lt;br&gt;
+즉, &lt;code&gt;Promise&lt;/code&gt;를 반환하는 함수를 동기식인 것처럼 동작하도록 해줍니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;이는 &lt;code&gt;await&lt;/code&gt; 이후의 코드를 &lt;code&gt;Promise.then()&lt;/code&gt; 콜백에서 수행하는 것과 거의 유사&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 일반 Promise와 callback 예시
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getProcessedData&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;downloadData&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;// returns a promise
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    .&lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;) =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;downloadFallbackData&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;)) &lt;span style=&#34;color:#75715e&#34;&gt;// returns a promise
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    .&lt;span style=&#34;color:#a6e22e&#34;&gt;then&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;) =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;processDataInWorker&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;)); &lt;span style=&#34;color:#75715e&#34;&gt;// returns a promise
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 위 예시를 async function - await로 변환한 예시
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getProcessedData&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;downloadData&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  } &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;downloadFallbackData&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;processDataInWorker&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;또한, &lt;code&gt;async function&lt;/code&gt;은 항상 &lt;code&gt;Promise&lt;/code&gt;를 &lt;code&gt;반환&lt;/code&gt;하며, 만약 &lt;em&gt;Promise가 아닌 값&lt;/em&gt;을 반환(&lt;code&gt;심지어 아무것도 return하지 않아도!&lt;/code&gt;)하는 경우 &lt;em&gt;암시적으로&lt;/em&gt; &lt;code&gt;Promise&lt;/code&gt;로 래핑되어 반환됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// Promise가 아닌 값을 반환하는 경우
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;abc&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; () =&amp;gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;abc&lt;/span&gt;(); &lt;span style=&#34;color:#75715e&#34;&gt;// Promise {&amp;lt;fulfilled&amp;gt;: 1}
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 아무것도 반환하지 않는 경우
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;none&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; () =&amp;gt; {};
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;none&lt;/span&gt;(); &lt;span style=&#34;color:#75715e&#34;&gt;// Promise {&amp;lt;fulfilled&amp;gt;: undefined}
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;asyncawait의-특징&#34; &gt;&lt;code&gt;async/await&lt;/code&gt;의 특징
+&lt;span&gt;
+    &lt;a href=&#34;#asyncawait%ec%9d%98-%ed%8a%b9%ec%a7%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;어떠한-값이든-await-할-수-있음&#34; &gt;어떠한 값이든 &lt;code&gt;await&lt;/code&gt; 할 수 있음
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%96%b4%eb%96%a0%ed%95%9c-%ea%b0%92%ec%9d%b4%eb%93%a0-await-%ed%95%a0-%ec%88%98-%ec%9e%88%ec%9d%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;웬만한 경우, &lt;code&gt;Promise&lt;/code&gt; 앞에 &lt;code&gt;await&lt;/code&gt; 키워드를 붙여 비동기 작업의 결과를 기다리도록 합니다.&lt;br&gt;
+하지만 실제로는 어떠한 &lt;code&gt;Javascript 값&lt;/code&gt;이든 기다리게 할 수 있습니다.&lt;br&gt;
+만약 &lt;code&gt;await&lt;/code&gt; 키워드 뒤에 오는 &lt;code&gt;표현식&lt;/code&gt;의 값이 &lt;code&gt;Promise&lt;/code&gt;가 아닌 경우, 이를 &lt;code&gt;Promise&lt;/code&gt;로 변환합니다.&lt;br&gt;
+예를들어, &lt;code&gt;25&lt;/code&gt;와 같은 아무런 숫자도 &lt;code&gt;await&lt;/code&gt;를 붙일 수 있는 것입니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;foo&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;25&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;foo&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// → Promise
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;then&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// `25`를 출력한다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;await-은-어떠한-thenable-객체와도-정상-동작함&#34; &gt;&lt;code&gt;await&lt;/code&gt; 은 어떠한 &lt;code&gt;thenable&lt;/code&gt; 객체와도 정상 동작함
+&lt;span&gt;
+    &lt;a href=&#34;#await-%ec%9d%80-%ec%96%b4%eb%96%a0%ed%95%9c-thenable-%ea%b0%9d%ec%b2%b4%ec%99%80%eb%8f%84-%ec%a0%95%ec%83%81-%eb%8f%99%ec%9e%91%ed%95%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;await&lt;/code&gt; 키워드는 어떤 객체든 &lt;code&gt;then&lt;/code&gt; 메서드만 있다면 꼭 &lt;code&gt;Promise&lt;/code&gt;가 아니어도 잘 동작하게 됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Sleep&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;constructor&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;timeout&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;timeout&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;timeout&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;then&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;reject&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;startTime&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Date.&lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(Date.&lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;startTime&lt;/span&gt;),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;               &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;timeout&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; () =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;actualTime&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Sleep&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;1000&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;actualTime&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;})();
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;async-function-내부의-await-동작&#34; &gt;&lt;code&gt;async function&lt;/code&gt; 내부의 &lt;code&gt;await&lt;/code&gt; 동작
+&lt;span&gt;
+    &lt;a href=&#34;#async-function-%eb%82%b4%eb%b6%80%ec%9d%98-await-%eb%8f%99%ec%9e%91&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;async function&lt;/code&gt;은 일반 함수처럼 진행되다가, &lt;code&gt;await&lt;/code&gt; 키워드가 달린 &lt;code&gt;Promise&lt;/code&gt;를 만나게 될 경우, 해당 &lt;code&gt;Promise&lt;/code&gt;가 &lt;code&gt;resolve(또는 reject)&lt;/code&gt;될 때까지 &lt;code&gt;async function&lt;/code&gt;의 실행을 일시 중단합니다.&lt;br&gt;
+이때, Javascript의 &lt;code&gt;논-블로킹&lt;/code&gt; 특성상, &lt;code&gt;await&lt;/code&gt; 키워드로 인해 &lt;em&gt;함수 실행이 멈추더라도&lt;/em&gt; &lt;code&gt;다른 연산&lt;/code&gt;들은 &lt;code&gt;백그라운드에서 계속 진행&lt;/code&gt;됩니다.&lt;br&gt;
+이는 &lt;a href=&#34;../1_Promise-async/Readme.md&#34;&gt;콜백 vs async&lt;/a&gt; 에서 언급한 것처럼, &lt;code&gt;Javascript&lt;/code&gt;에서는 코드 실행을 수행하는 &lt;code&gt;메인 스레드&lt;/code&gt; 뿐만 아니라, &lt;code&gt;타이머 기반 작업&lt;/code&gt;, &lt;code&gt;네트워크 요청&lt;/code&gt; 등의 &lt;code&gt;비동기 작업&lt;/code&gt;을 처리하는 &lt;code&gt;Web API&lt;/code&gt;를 사용하기 때문입니다.&lt;br&gt;
+즉, 만약 상기한 &lt;code&gt;비동기 작업&lt;/code&gt;을 마주한다 해도 &lt;code&gt;메인 스레드&lt;/code&gt;는 이를 &lt;em&gt;직접 처리하지 않고&lt;/em&gt; &lt;code&gt;Web API&lt;/code&gt;에게 이를 &lt;code&gt;전달&lt;/code&gt;합니다. 따라서 해당 작업이 완료되길 &lt;code&gt;기다리지 않고&lt;/code&gt; 이어지는 코드들을 &lt;code&gt;계속 실행&lt;/code&gt;하게 됩니다.&lt;/p&gt;
+&lt;h3 id=&#34;그렇다면-asyncawait는-진짜-동기적으로-동작할까&#34; &gt;그렇다면 &lt;code&gt;async/await&lt;/code&gt;는 진짜 동기적으로 동작할까?
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b7%b8%eb%a0%87%eb%8b%a4%eb%a9%b4-asyncawait%eb%8a%94-%ec%a7%84%ec%a7%9c-%eb%8f%99%ea%b8%b0%ec%a0%81%ec%9c%bc%eb%a1%9c-%eb%8f%99%ec%9e%91%ed%95%a0%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Promise((&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;) =&amp;gt; {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;첫 번째 타이머&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;10000&lt;/span&gt;);  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Promise((&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;) =&amp;gt; {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;두 번째 타이머&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;10000&lt;/span&gt;);  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;코드 1&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;위처럼 각각 10초 이후 문자열을 &lt;code&gt;resolve&lt;/code&gt;하는 타이머 &lt;code&gt;t1&lt;/code&gt;, &lt;code&gt;t2&lt;/code&gt;를 예로 들어보겠습니다.&lt;br&gt;
+만약 이 둘을 &lt;code&gt;async function&lt;/code&gt; 내부에서 &lt;code&gt;await&lt;/code&gt;를 달아주면 어떻게 동작할까요?&lt;br&gt;
+10초짜리 타이머 2개가 동기적으로 호출될 것이니, 20초가 소요될까요?&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;test&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;시작&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Promise((&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;) =&amp;gt; {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;첫 번째 타이머&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;10000&lt;/span&gt;);  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	});  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Promise((&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;) =&amp;gt; {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;두 번째 타이머&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;10000&lt;/span&gt;);  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	});
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;startTime&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Date.&lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;result1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t1&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;T1에 소요된 시간 : &amp;#34;&lt;/span&gt;, Date.&lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;startTime&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ms&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;result2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t2&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;T2에 소요된 시간 : &amp;#34;&lt;/span&gt;, Date.&lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt;() &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;startTime&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ms&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;끝&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;test&lt;/span&gt;(); &lt;span style=&#34;color:#75715e&#34;&gt;// ?
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;blockquote&gt;
+&lt;p&gt;코드 2&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;await-with-timer.png&#34; alt=&#34;await-with-timer.png&#34;&gt;&lt;br&gt;
+하지만, 실제로는 두 타이머 작업을 수행하는데에 총 10초밖에 들지 않았습니다.&lt;br&gt;
+그렇다면 작업이 동기적으로 수행되지 않은 걸까요?&lt;br&gt;
+이를 이해하려면 Javascript Event Loop 내부 동작이 어떻게 수행되는지 알아야 합니다.&lt;/p&gt;
+&lt;h3 id=&#34;event-loop-내부의-asyncawait-동작&#34; &gt;Event Loop 내부의 &lt;code&gt;async/await&lt;/code&gt; 동작
+&lt;span&gt;
+    &lt;a href=&#34;#event-loop-%eb%82%b4%eb%b6%80%ec%9d%98-asyncawait-%eb%8f%99%ec%9e%91&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;간단하게 설명하면, &lt;code&gt;Event Loop&lt;/code&gt;는 Javascript 코드를 한 줄 한 줄 실행하면서, 지속적으로 &lt;code&gt;메시지 큐&lt;/code&gt;에 &lt;code&gt;보류(Pending)중인 메시지&lt;/code&gt;(ex. &lt;code&gt;resolve&lt;/code&gt;된 &lt;code&gt;Promise&lt;/code&gt;)를 확인하며 하나 하나 처리합니다.&lt;br&gt;
+즉, &lt;code&gt;t1&lt;/code&gt;, &lt;code&gt;t2&lt;/code&gt;를 초기화하는 &lt;code&gt;코드 1&lt;/code&gt; 코드를 &lt;code&gt;메인 스레드&lt;/code&gt;가 읽고 실행한 순간, 백그라운드에서 해당 타이머 작업은 &lt;code&gt;Web API&lt;/code&gt;에게 전달되어 실행되고 있는 것입니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Promise()&lt;/code&gt;의 첫 번째 인자로 주어진 함수는 즉시 실행됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;따라서 &lt;code&gt;t1&lt;/code&gt;, &lt;code&gt;t2&lt;/code&gt;는 백그라운드에서 동시에 실행되고 있으며, &lt;code&gt;메인 스레드&lt;/code&gt;는 이후 이어지는 코드(&lt;code&gt;코드 2&lt;/code&gt;)들을 계속 실행해나갑니다.&lt;br&gt;
+그리고 &lt;code&gt;test()&lt;/code&gt; 내부의 &lt;code&gt;await t1&lt;/code&gt;에 도달했을 때, &lt;code&gt;t1&lt;/code&gt;이 &lt;code&gt;resolve&lt;/code&gt;될 때 까지 기다렸다가 코드 진행을 계속 이어나갑니다.&lt;br&gt;
+&lt;code&gt;t1&lt;/code&gt;과 &lt;code&gt;t2&lt;/code&gt; 모두 10초짜리 타이머이므로, &lt;code&gt;t1&lt;/code&gt;이 완료됨과 거의 동시에 &lt;code&gt;t2&lt;/code&gt;도 완료되게 됩니다. 따라서 &lt;code&gt;await t2&lt;/code&gt;는 거의 기다리지 않고 이후 코드들이 즉시 실행되게 됩니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Promise((&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;) =&amp;gt; {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;첫 번째 타이머&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;10000&lt;/span&gt;);  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;t2&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; Promise((&lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;) =&amp;gt; {  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(() =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;resolve&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;두 번째 타이머&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;5000&lt;/span&gt;);  
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;});
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;만약 &lt;code&gt;t2&lt;/code&gt;를 5초로 줄이더라도, 백그라운드에서는 &lt;code&gt;t2&lt;/code&gt;가 &lt;code&gt;t1&lt;/code&gt;보다 먼저 완료되지만 &lt;code&gt;test()&lt;/code&gt; 함수의 동작은 이전과 동일하게 작동합니다.&lt;/p&gt;
+&lt;h3 id=&#34;asyncawait을-사용하면-비동기-병렬-처리가-불가능한가요&#34; &gt;&lt;code&gt;async/await&lt;/code&gt;을 사용하면, 비동기 병렬 처리가 불가능한가요?
+&lt;span&gt;
+    &lt;a href=&#34;#asyncawait%ec%9d%84-%ec%82%ac%ec%9a%a9%ed%95%98%eb%a9%b4-%eb%b9%84%eb%8f%99%ea%b8%b0-%eb%b3%91%eb%a0%ac-%ec%b2%98%eb%a6%ac%ea%b0%80-%eb%b6%88%ea%b0%80%eb%8a%a5%ed%95%9c%ea%b0%80%ec%9a%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;그렇지 않습니다. &lt;code&gt;Promise&lt;/code&gt;의 &lt;code&gt;all&lt;/code&gt; 또는 &lt;code&gt;allSettled&lt;/code&gt; 함수를 통해 &lt;code&gt;await&lt;/code&gt; 키워드를 사용하면서 비동기 작업들을 병렬적으로 처리할 수 있습니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;fetchData&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;userDataPromise&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;fetchUserData&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;productDataPromise&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;fetchProductData&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; [&lt;span style=&#34;color:#a6e22e&#34;&gt;userData&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;productData&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; Promise.&lt;span style=&#34;color:#a6e22e&#34;&gt;all&lt;/span&gt;([&lt;span style=&#34;color:#a6e22e&#34;&gt;userDataPromise&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;productDataPromise&lt;/span&gt;]);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;User data:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;userData&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Product data:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;productData&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}&lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Error fetching data:&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;위 코드처럼, 병렬로 실행할 &lt;code&gt;비동기 작업(Promise)&lt;/code&gt;들을 &lt;code&gt;배열(또는 Iterable 객체)&lt;/code&gt;에 담아 &lt;code&gt;all&lt;/code&gt; 또는 &lt;code&gt;allSettled&lt;/code&gt;에 넘겨주면 이들을 병렬적으로 수행하게 됩니다.&lt;br&gt;
+이후 배열의 모든 &lt;code&gt;비동기 작업&lt;/code&gt;이 완료되면 코드 진행을 이어나갑니다.&lt;/p&gt;
+&lt;h2 id=&#34;v8-엔진에서의-내부-await-동작-과정-httpsv8devblogfast-async&#34; &gt;V8 엔진에서의 내부 await 동작 과정 &lt;a href=&#34;https://v8.dev/blog/fast-async&#34;&gt;#&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#v8-%ec%97%94%ec%a7%84%ec%97%90%ec%84%9c%ec%9d%98-%eb%82%b4%eb%b6%80-await-%eb%8f%99%ec%9e%91-%ea%b3%bc%ec%a0%95-httpsv8devblogfast-async&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;foo&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;w&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;위와 같은 함수를 실행한다고 할 때, V8 엔진 내부에서는 아래와 같이 처리가 이뤄집니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;await-under-the-hood.svg&#34; alt=&#34;await-under-the-hood.svg&#34;&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;V8 엔진이 &lt;code&gt;async function&lt;/code&gt;을 &lt;code&gt;resumable&lt;/code&gt;(&lt;code&gt;await&lt;/code&gt; 위치에서 함수 실행을 중단하고 재개할 수 있음을 뜻함)하다고 표시합니다.
+&lt;ul&gt;
+&lt;li&gt;그런 다음 &lt;code&gt;implicit_promise&lt;/code&gt;(&lt;code&gt;async function&lt;/code&gt;을 호출할 때 반환되며, 최종적으로 &lt;code&gt;async function&lt;/code&gt;이 생성한 값을 &lt;code&gt;resolve&lt;/code&gt;하는 &lt;code&gt;Promise&lt;/code&gt;)를 생성합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;await&lt;/code&gt;에 전달된 값(여기서는 &lt;code&gt;v&lt;/code&gt;)을 &lt;code&gt;Promise&lt;/code&gt;로 래핑합니다.&lt;/li&gt;
+&lt;li&gt;만약 &lt;code&gt;Promise&lt;/code&gt;가 &lt;code&gt;이행(fulfilled)&lt;/code&gt;되면 &lt;code&gt;async function&lt;/code&gt;을 &lt;code&gt;재개&lt;/code&gt;하도록 하는 &lt;code&gt;핸들러&lt;/code&gt;를 래핑된 &lt;code&gt;Promise&lt;/code&gt;에 연결합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;async function&lt;/code&gt;의 실행을 &lt;code&gt;일시 중단(suspend)&lt;/code&gt;한 뒤, 호출자에게 &lt;code&gt;implicit_promise&lt;/code&gt;를 반환합니다.
+&lt;ul&gt;
+&lt;li&gt;이후 &lt;code&gt;Promise&lt;/code&gt;가 이행된 경우, &lt;code&gt;Promise&lt;/code&gt;의 값 &lt;code&gt;w&lt;/code&gt;와 함께 &lt;code&gt;async function&lt;/code&gt;이 재개되고 &lt;code&gt;implicit_promise&lt;/code&gt;는 &lt;code&gt;w&lt;/code&gt;를 &lt;code&gt;resolve&lt;/code&gt;합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;자세히-살펴보기&#34; &gt;자세히 살펴보기
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%ec%84%b8%ed%9e%88-%ec%82%b4%ed%8e%b4%eb%b3%b4%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;위 과정을 하나 하나 살펴보겠습니다.&lt;br&gt;
+참고로 위 예시에서 &lt;code&gt;await&lt;/code&gt;한 표현식이 &lt;em&gt;42라는 값으로 이행된&lt;/em&gt; &lt;code&gt;Promise&lt;/code&gt;라고 가정하겠습니다.&lt;br&gt;
+&lt;img src=&#34;await-step-1.svg&#34; alt=&#34;await-step-1.svg&#34;&gt;
+엔진은 이 &lt;code&gt;await&lt;/code&gt;된 값을 &lt;code&gt;promise&lt;/code&gt;라는 &lt;code&gt;Promise&lt;/code&gt;로 래핑합니다.&lt;br&gt;
+이는 다음 차례에 &lt;code&gt;Promise&lt;/code&gt;들의 &lt;code&gt;지연된 연쇄(deferred chaining)&lt;/code&gt;를 수행합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ECMA 사양&lt;/code&gt;에서는 이를 &lt;a href=&#34;https://tc39.es/ecma262/#sec-promiseresolvethenablejob&#34;&gt;&lt;code&gt;PromiseResolveThenableJob&lt;/code&gt;&lt;/a&gt;이라고 부릅니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;이후 엔진은 &lt;em&gt;아무것도 체인으로 연결 되어있지 않고, 완전히 &lt;code&gt;엔진 내부에 존재&lt;/code&gt;하는&lt;/em&gt; &lt;code&gt;throwaway&lt;/code&gt;라는 &lt;code&gt;Promise&lt;/code&gt;를 생성합니다.&lt;br&gt;
+이 &lt;code&gt;throwaway&lt;/code&gt;는 &lt;code&gt;async function&lt;/code&gt;을 재개하기 위한 적절한 핸들러와 함께 &lt;code&gt;promise&lt;/code&gt;와 체이닝됩니다.&lt;br&gt;
+&lt;code&gt;performPromiseThen&lt;/code&gt;은 &lt;code&gt;Promise.prototype.then()&lt;/code&gt;이 뒤에서 실제로 수행하는 일이며, 마지막으로 &lt;code&gt;async function&lt;/code&gt;의 실행이 일시 중단되고 제어권은 호출자에게 반환됩니다.&lt;br&gt;
+&lt;img src=&#34;await-step-2.svg&#34; alt=&#34;await-step-2.svg&#34;&gt;
+호출자측에서 작업이 계속 이어지고, 끝내 &lt;code&gt;콜 스택&lt;/code&gt;이 비워지게 됩니다.&lt;br&gt;
+이후 &lt;code&gt;Javascript 엔진&lt;/code&gt;은 &lt;code&gt;microtask&lt;/code&gt;들을 실행하기 시작합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;microtask&lt;/code&gt;(또는 &lt;code&gt;job&lt;/code&gt;): &lt;code&gt;I/O&lt;/code&gt;, &lt;code&gt;타이머&lt;/code&gt; 작업과 같이 한 번에 하나씩 실행되는 비동기 작업인 &lt;code&gt;task&lt;/code&gt;들이 끝날 때 실행되며, &lt;code&gt;async/await&lt;/code&gt; 및 &lt;code&gt;Promise&lt;/code&gt;에 대한 &lt;code&gt;지연 실행(Task가 완전히 끝난 후에만 실행됨)&lt;/code&gt;을 구현하는 작업. &lt;code&gt;ES6&lt;/code&gt;에서 &lt;code&gt;Promise&lt;/code&gt;가 등장함에 따라 함께 추가 됨.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;즉, 이전에 예약해두었던 &lt;code&gt;PromiseResolveThenableJob&lt;/code&gt;을 실행하게 되는데 이는 &lt;code&gt;promise&lt;/code&gt;와 &lt;code&gt;await&lt;/code&gt;에 전달된 값(여기서는 &lt;code&gt;42&lt;/code&gt;)을 체이닝하기 위한 &lt;code&gt;PromiseReactionJob&lt;/code&gt;을 예약합니다.&lt;br&gt;
+&lt;img src=&#34;await-step-3.svg&#34; alt=&#34;await-step-3.svg&#34;&gt;
+이어서 &lt;code&gt;await&lt;/code&gt;한 &lt;code&gt;Promise&lt;/code&gt;(&lt;code&gt;v&lt;/code&gt;)의 값으로 &lt;code&gt;promise&lt;/code&gt;를 이행하고, &lt;code&gt;throwaway&lt;/code&gt;에 대한 &lt;code&gt;반응(reaction) 작업&lt;/code&gt;(또다른 &lt;code&gt;PromiseReactionJob&lt;/code&gt;)을 예약하는 &lt;code&gt;PromiseReactionJob&lt;/code&gt;을 수행합니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;await-step-4-final.svg&#34; alt=&#34;await-step-4-final.svg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;이어지는 두 번째 &lt;code&gt;PromiseReactionJob&lt;/code&gt;(&lt;code&gt;throwaway&lt;/code&gt;에 대한 &lt;code&gt;반응&lt;/code&gt;)은 &lt;code&gt;resolve&lt;/code&gt;된 값(&lt;code&gt;42&lt;/code&gt;)을 &lt;code&gt;throwaway&lt;/code&gt;에 전파하고, 일시 중지 되었던 &lt;code&gt;async function&lt;/code&gt;의 실행 재개해, &lt;code&gt;await&lt;/code&gt;에서 &lt;code&gt;42&lt;/code&gt;라는 값을 반환합니다.&lt;/p&gt;
+&lt;h3 id=&#34;asyncawait-작업의-최적화&#34; &gt;&lt;code&gt;async/await&lt;/code&gt; 작업의 최적화
+&lt;span&gt;
+    &lt;a href=&#34;#asyncawait-%ec%9e%91%ec%97%85%ec%9d%98-%ec%b5%9c%ec%a0%81%ed%99%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;원인&#34; &gt;원인
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9b%90%ec%9d%b8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;await-overhead.svg&#34; alt=&#34;await-overhead.svg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;자세히 살펴본 위 작업 과정에 따르면, 각 &lt;code&gt;await&lt;/code&gt;에 대해 JS 엔진은 두 개의 추가 &lt;code&gt;Promise&lt;/code&gt;, 그리고 최소 3개의 &lt;code&gt;Microtask&lt;/code&gt;가 필요하게 됩니다.&lt;br&gt;
+&lt;img src=&#34;await-code-before.svg&#34; alt=&#34;await-code-before.svg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;이 중, 하나의 &lt;code&gt;Promise&lt;/code&gt;와 2개의 &lt;code&gt;Microtask&lt;/code&gt;는 위 코드의 맨 위의 두 줄의 코드에 의해 발생합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;promise&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;createPromise&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;resolvePromise&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;promise&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이는 심지어 &lt;code&gt;v&lt;/code&gt;가 이미 &lt;code&gt;Promise&lt;/code&gt;여도 수행되기 때문에, &lt;strong&gt;&lt;code&gt;v&lt;/code&gt;가 &lt;code&gt;Promise&lt;/code&gt;인 경우&lt;/strong&gt; 상당히 비싼 오버헤드를 발생시킬 수 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;해결&#34; &gt;해결
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%b4%ea%b2%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;사실 &lt;code&gt;ECMA 사양&lt;/code&gt;에는 이미 필요할 때만 &lt;code&gt;Promise&lt;/code&gt;로의 래핑을 수행하는 &lt;a href=&#34;https://tc39.es/ecma262/#sec-promise-resolve&#34;&gt;&lt;code&gt;promiseResolve&lt;/code&gt;&lt;/a&gt;라는 작업이 존재합니다.&lt;br&gt;
+&lt;img src=&#34;await-code-comparison.svg&#34; alt=&#34;await-code-comparison.svg&#34;&gt;&lt;/p&gt;
+&lt;p&gt;즉, 위 두 줄을 &lt;code&gt;promise = promiseResolve(v)&lt;/code&gt; 단 한 줄로 변경하게 되면, &lt;code&gt;promise&lt;/code&gt;에는 아무런 변화도 없으며 오직 필요할 경우에만 &lt;code&gt;Promise&lt;/code&gt;로 래핑하게 됩니다.&lt;br&gt;
+이렇게 하면 이전의 코드에서 &lt;code&gt;throwaway&lt;/code&gt;를 생성하고, 이를 &lt;code&gt;v&lt;/code&gt;와 체이닝하는 &lt;code&gt;PromiseReactionJob&lt;/code&gt;을 예약하는 작업 정도만 남게 됩니다.&lt;br&gt;
+또한, &lt;code&gt;throwaway&lt;/code&gt;는 &lt;code&gt;performPromiseThen&lt;/code&gt; 의 API 제약 조건을 충족하기 위해서 존재하는데, &lt;a href=&#34;https://github.com/tc39/ecma262/issues/694&#34;&gt;ECMA 사양의 변경&lt;/a&gt;으로 더 이상 웬만해서는 &lt;code&gt;await&lt;/code&gt;을 위해 &lt;code&gt;throwaway&lt;/code&gt;를 생성할 필요가 없어졌습니다.&lt;/p&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://rehmat-sayany.medium.com/demystifying-the-background-scene-of-async-await-in-javascript-5e6b8f4eca73&#34;&gt;Demystifying the background Scene of Async/Await in JavaScript | by Rehmat Sayany | Medium&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function&#34;&gt;async function - JavaScript | MDN&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://scientyficworld.org/how-the-async-await-works-in-javascript/&#34;&gt;How The Async-await Works In JavaScript? • Scientyfic World&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://v8.dev/blog/fast-async&#34;&gt;Faster async functions and promises · V8&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>[Javascript] 제너레이터 알아보기 (w. Iterator, 배열)</title>
