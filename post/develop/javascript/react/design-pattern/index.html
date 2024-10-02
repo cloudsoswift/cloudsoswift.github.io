@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[React] React의 디자인 패턴 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 10월 2일 발표한 React의 디자인 패턴에 대해 정리한 문서를 블로그에 공유하고자 한다.
+React의 디자인 패턴React에서는 웹 화면을 구성하기 위해 버튼, 리스트와 같은 요소들을 사용할 때 최적화 및 간소화 된 방법을 제공합니다.
+또한, 복잡하고 어려운 인터페이스를 구현할 수 있도록 컴포넌트, 프롭스, 상태라는 세 가지 핵심 콘셉트로 웹 화면 인터페이스를 구조화 합니다.
+React는 컴포넌트 중심 라이브러리이므로, 각 디자인 요소들에 대해 완벽히 매핑할 수 있으며 모듈적인 방향으로 사고할 수 있게 해줍니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[React] React의 디자인 패턴" />
+<meta property="og:description" content="서론CS 스터디에서 10월 2일 발표한 React의 디자인 패턴에 대해 정리한 문서를 블로그에 공유하고자 한다.
+React의 디자인 패턴React에서는 웹 화면을 구성하기 위해 버튼, 리스트와 같은 요소들을 사용할 때 최적화 및 간소화 된 방법을 제공합니다.
+또한, 복잡하고 어려운 인터페이스를 구현할 수 있도록 컴포넌트, 프롭스, 상태라는 세 가지 핵심 콘셉트로 웹 화면 인터페이스를 구조화 합니다.
+React는 컴포넌트 중심 라이브러리이므로, 각 디자인 요소들에 대해 완벽히 매핑할 수 있으며 모듈적인 방향으로 사고할 수 있게 해줍니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/javascript/react/design-pattern/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-10-02T18:32:05+09:00" />
+<meta property="article:modified_time" content="2024-10-02T18:32:05+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[React] React의 디자인 패턴"/>
+<meta name="twitter:description" content="서론CS 스터디에서 10월 2일 발표한 React의 디자인 패턴에 대해 정리한 문서를 블로그에 공유하고자 한다.
+React의 디자인 패턴React에서는 웹 화면을 구성하기 위해 버튼, 리스트와 같은 요소들을 사용할 때 최적화 및 간소화 된 방법을 제공합니다.
+또한, 복잡하고 어려운 인터페이스를 구현할 수 있도록 컴포넌트, 프롭스, 상태라는 세 가지 핵심 콘셉트로 웹 화면 인터페이스를 구조화 합니다.
+React는 컴포넌트 중심 라이브러리이므로, 각 디자인 요소들에 대해 완벽히 매핑할 수 있으며 모듈적인 방향으로 사고할 수 있게 해줍니다."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[React] React의 디자인 패턴</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#react의-디자인-패턴">React의 디자인 패턴</a>
+      <ul>
+        <li><a href="#react의-핵심-콘셉트">React의 핵심 콘셉트</a></li>
+      </ul>
+    </li>
+    <li><a href="#컨테이너---프레젠테이션-패턴">컨테이너 - 프레젠테이션 패턴</a>
+      <ul>
+        <li><a href="#프레젠테이션-컴포넌트">프레젠테이션 컴포넌트</a></li>
+        <li><a href="#컨테이너-컴포넌트">컨테이너 컴포넌트</a></li>
+        <li><a href="#훅">훅</a></li>
+        <li><a href="#장점">장점</a></li>
+        <li><a href="#단점">단점</a></li>
+      </ul>
+    </li>
+    <li><a href="#고차-컴포넌트hoc-패턴">고차 컴포넌트(HOC) 패턴</a>
+      <ul>
+        <li><a href="#훅으로의-대체">훅으로의 대체</a></li>
+        <li><a href="#장점-1">장점</a></li>
+        <li><a href="#단점-1">단점</a></li>
+      </ul>
+    </li>
+    <li><a href="#렌더-프롭스render-props-패턴">렌더 프롭스(Render Props) 패턴</a>
+      <ul>
+        <li><a href="#상태-끌어올리기">상태 끌어올리기</a></li>
+        <li><a href="#propschildren을-함수로-활용하기">props.children을 함수로 활용하기</a></li>
+        <li><a href="#훅으로-대체하기">훅으로 대체하기</a></li>
+        <li><a href="#장점-2">장점</a></li>
+      </ul>
+    </li>
+    <li><a href="#react-hooks-패턴">React Hooks 패턴</a>
+      <ul>
+        <li><a href="#hooks-등장-이전">Hooks 등장 이전</a></li>
+        <li><a href="#hooks">Hooks</a></li>
+      </ul>
+    </li>
+    <li><a href="#컴파운드-패턴">컴파운드 패턴</a>
+      <ul>
+        <li><a href="#context-api">Context API</a></li>
+        <li><a href="#reactchildrenmap"><code>React.Children.map</code></a></li>
+        <li><a href="#장점-3">장점</a></li>
+        <li><a href="#단점-2">단점</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 10월 2일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/12_React-Design-Pattern/Readme.md"><strong>React의 디자인 패턴</strong></a>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h2 id="react의-디자인-패턴" >React의 디자인 패턴
+<span>
+    <a href="#react%ec%9d%98-%eb%94%94%ec%9e%90%ec%9d%b8-%ed%8c%a8%ed%84%b4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><code>React</code>에서는 웹 화면을 구성하기 위해 <em>버튼, 리스트와 같은 요소들</em>을 사용할 때 <code>최적화 및 간소화 된 방법</code>을 제공합니다.<br>
+또한, <code>복잡하고 어려운 인터페이스</code>를 구현할 수 있도록 <code>컴포넌트</code>, <code>프롭스</code>, <code>상태</code>라는 세 가지 <strong>핵심 콘셉트</strong>로 웹 화면 인터페이스를 구조화 합니다.<br>
+<code>React</code>는 <code>컴포넌트 중심 라이브러리</code>이므로, 각 디자인 요소들에 대해 완벽히 매핑할 수 있으며 <code>모듈적인 방향으로 사고</code>할 수 있게 해줍니다.</p>
+<h3 id="react의-핵심-콘셉트" >React의 핵심 콘셉트
+<span>
+    <a href="#react%ec%9d%98-%ed%95%b5%ec%8b%ac-%ec%bd%98%ec%85%89%ed%8a%b8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="컴포넌트" >컴포넌트
+<span>
+    <a href="#%ec%bb%b4%ed%8f%ac%eb%84%8c%ed%8a%b8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>React 앱에서 사용되는 블록</code>으로, 임의의 매개변수(<code>props</code>)를 받아 React 요소를 반환하는 <code>JS 함수</code>라고 볼 수 있습니다. 따라서 <code>함수 컴포넌트(function components)</code>라고도 불립니다.<br>
+본질적으로 React 앱은 <code>컴포넌트 내부의 컴포넌트들</code>이므로, 개발자는 <em>페이지를 빌드하는게 아니라</em>, <code>컴포넌트를 빌드</code>하는 것입니다.<br>
+또한 컴포넌트를 사용하므로써, <code>UI</code>를 <code>독립적이며 재사용 가능한 부분</code>으로 <code>분할</code>할 수 있게 됩니다.<br>
+컴포넌트는 <code>함수</code>, <code>클래스</code> 두 가지의 형태로 구성할 수 있으며 <code>React Hooks</code>가 등장하기 이전에는 <code>상태 관리</code>, <code>렌더링 생명주기별 동작</code> 지정을 위해서는 <code>클래스 컴포넌트</code>의 사용이 강제되었으나 현재는 <code>함수형 컴포넌트로</code>도 동일하게 동작할 수 있습니다.</p>
+<h4 id="프롭스" >프롭스
+<span>
+    <a href="#%ed%94%84%eb%a1%ad%ec%8a%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>프로퍼티</code>의 준말로, <code>React</code>에서 <code>컴포넌트 내부 데이터</code>를 가리키는 말입니다.<br>
+<code>컴포넌트 호출</code> 안에 작성되며, 작성된 값은 컴포넌트에게 전달됩니다.<br>
+이러한 작성은 <code>HTML 태그</code>의 <code>어트리뷰트</code>와 동일한 구문(ex. <code>&lt;Tag props=&quot;v&quot;&gt;</code>)으로 이뤄집니다.<br>
+프롭스의 값은 컴포넌트 빌드 전 결정되며, 읽기 전용 값으로 컴포넌트에게 전달됩니다.</p>
+<h4 id="상태" >상태
+<span>
+    <a href="#%ec%83%81%ed%83%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><em>컴포넌트가 존재하는 동안</em> <code>변경될 수 있는 정보</code>를 <code>저장</code>하는 객체입니다.</p>
+<h2 id="컨테이너---프레젠테이션-패턴" >컨테이너 - 프레젠테이션 패턴
+<span>
+    <a href="#%ec%bb%a8%ed%85%8c%ec%9d%b4%eb%84%88---%ed%94%84%eb%a0%88%ec%a0%a0%ed%85%8c%ec%9d%b4%ec%85%98-%ed%8c%a8%ed%84%b4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Container</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 비즈니스 로직을 수행하는 컨테이너 컴포넌트
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// do something like API Communication
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">fetchedData</span>, <span style="color:#a6e22e">setFetchedData</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>();
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">useEffect</span>(()=&gt;{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fetch</span>(...).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">res</span>=&gt;<span style="color:#a6e22e">setFetchedData</span>(<span style="color:#a6e22e">res</span>));
+</span></span><span style="display:flex;"><span>	}, []);
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 컨테이너 컴포넌트로부터 데이터 전달받아
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 화면에 표현하는 프레젠테이션 컴포넌트
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">Presentation</span> <span style="color:#a6e22e">data</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">fetchedData</span>} <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>컨테이너-프레젠테이셔널(Container-Presentational) 패턴</code>이란, <code>비즈니스 로직</code>과 <code>뷰</code>를 <code>분리</code>해 <code>관심사 분리(SoC)</code>를 이끌어 낼 수 있는 디자인 패턴을 말합니다.<br>
+주로 데이터를 <code>시각화하는 방법</code>에 관심이 있는 <code>프레젠테이셔널 컴포넌트</code>와 이를 실제 <code>애플리케이션 로직</code>을 수행하는 <code>컨테이너 컴포넌트</code>로 감싸는 형태로 구현됩니다.</p>
+<h3 id="프레젠테이션-컴포넌트" >프레젠테이션 컴포넌트
+<span>
+    <a href="#%ed%94%84%eb%a0%88%ec%a0%a0%ed%85%8c%ec%9d%b4%ec%85%98-%ec%bb%b4%ed%8f%ac%eb%84%8c%ed%8a%b8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>프레젠테이션 컴포넌트</code>는 <code>프롭스(props)</code>를 통해 데이터를 수신하며, 수신 받은 데이터를 <em>수정하지 않고</em> 원하는 방식으로 표현하는 역할을 수행합니다.<br>
+주로 <code>props</code>를 통해 데이터를 수신하므로 별도의 상태를 관리하지 않는 것이 대부분입니다.(다만, UI 표현에 필요하다면 상태를 사용하는 경우도 있습니다.)</p>
+<h3 id="컨테이너-컴포넌트" >컨테이너 컴포넌트
+<span>
+    <a href="#%ec%bb%a8%ed%85%8c%ec%9d%b4%eb%84%88-%ec%bb%b4%ed%8f%ac%eb%84%8c%ed%8a%b8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>컨테이너 컴포넌트</code>는 그 안에 포함된 <code>프레젠테이션 컴포넌트</code>에게 데이터를 전달하며, <code>프레젠테이션 컴포넌트</code> 외에는 아무것도 렌더링하지 않습니다.</p>
+<h3 id="훅" >훅
+<span>
+    <a href="#%ed%9b%85">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Presentation</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 비즈니스 로직을 수행하는 훅을 호출
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fetchedData</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">useApiHook</span>();
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span><span style="color:#f92672">&gt;</span> {<span style="color:#a6e22e">fetchedData</span>} <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span><span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>대부분의 경우, <code>컨테이너-프레젠테이션 패턴</code>은 <code>React Hook</code>으로 대체할 수 있습니다.<br>
+<code>컨테이너 컴포넌트</code>에서 수행하던 작업을 수행하는 <code>커스텀 훅</code>을 만든 뒤, 해당 훅으로 부터 전달받은 데이터를 <code>프레젠테이션 컴포넌트</code>에서 사용하면 됩니다.</p>
+<h3 id="장점" >장점
+<span>
+    <a href="#%ec%9e%a5%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>관심사 분리를 통해, 각 컴포넌트는 <code>컴포넌트 본연의 역할에 집중</code></li>
+<li><code>프레젠테이션 컴포넌트</code>
+<ul>
+<li>단순히 <code>데이터 수정 없이 표시하는 역할</code>만 수행하므로, <code>재사용이 용이</code></li>
+<li><em>여러 곳에서 재사용될 경우</em>, 컴포넌트에 수정사항을 적용하면 해당 <code>변경 사항</code>이 애플리케이션 전반에 <code>일관되게 적용</code></li>
+<li>보통 순수 함수인 경우가 많으므로, <code>테스트 용이</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="단점" >단점
+<span>
+    <a href="#%eb%8b%a8%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>React Hooks</code>로 충분히 동일한 결과를 얻을 수 있고, 더 명료함</li>
+</ul>
+<h2 id="고차-컴포넌트hoc-패턴" >고차 컴포넌트(HOC) 패턴
+<span>
+    <a href="#%ea%b3%a0%ec%b0%a8-%ec%bb%b4%ed%8f%ac%eb%84%8c%ed%8a%b8hoc-%ed%8c%a8%ed%84%b4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// a.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">HOC</span>(<span style="color:#a6e22e">Component</span>, <span style="color:#a6e22e">url</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> (<span style="color:#a6e22e">props</span>) =&gt; {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// do something like API Communication
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">fetchedData</span>, <span style="color:#a6e22e">setFetchedData</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>();
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">useEffect</span>(()=&gt;{
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">fetch</span>(...).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">res</span>=&gt;<span style="color:#a6e22e">setFetchedData</span>(<span style="color:#a6e22e">res</span>));
+</span></span><span style="display:flex;"><span>		}, []);
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">Component</span> {...<span style="color:#a6e22e">props</span>} <span style="color:#a6e22e">data</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">fetchedData</span>}<span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// b.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Display</span>(<span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">HOC</span>(<span style="color:#a6e22e">props</span>.<span style="color:#a6e22e">component</span>, <span style="color:#a6e22e">props</span>.<span style="color:#a6e22e">url</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>고차 컴포넌트 패턴</code>이란, 여러 컴포넌트에서 <strong><code>동일한 로직</code>을 <code>재사용</code></strong> 하기 위한 방법 중 하나로, <code>컴포넌트</code>를 <code>인자</code>로 받아 특정 <code>로직을 포함시킨 컴포넌트</code>를 <code>반환</code>하는 <code>고차 컴포넌트(HOC)</code>를 사용하는 방법입니다.</p>
+<h3 id="훅으로의-대체" >훅으로의 대체
+<span>
+    <a href="#%ed%9b%85%ec%9c%bc%eb%a1%9c%ec%9d%98-%eb%8c%80%ec%b2%b4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// 기존
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">HOC</span>(<span style="color:#a6e22e">Component</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">clickHandler</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">event</span>) =&gt; { ... };
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">Component</span> <span style="color:#a6e22e">onClick</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">clickHandler</span>} <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>	
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 훅으로 대체
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">useHOC</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">ref</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">useRef</span>(<span style="color:#66d9ef">null</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">clickHandler</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">event</span>) =&gt; { ... };
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">useEffect</span>(()=&gt;{
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">node</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ref</span>.<span style="color:#a6e22e">current</span>;
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// ref 대상이 렌더링 된 경우 클릭 이벤트 핸들러 attach
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">node</span>) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#34;click&#34;</span>, <span style="color:#a6e22e">clickHandler</span>);
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 컴포넌트가 마운트 해제될 때 이벤트 리스너를 지우는 후처리
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">return</span> () =&gt; {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">removeEventListener</span>(<span style="color:#e6db74">&#34;click&#34;</span>, <span style="color:#a6e22e">clickHandler</span>);
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	}, []);
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ref</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Component</span>(<span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">hocRef</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">useHOC</span>();
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span> <span style="color:#a6e22e">ref</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">hocRef</span>}<span style="color:#f92672">&gt;</span> ... <span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/div&gt;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>고차 컴포넌트 패턴</code> 역시 <code>React Hook</code>으로 대체 가능합니다.<br>
+다만, <code>훅</code>은 <code>Element</code>를 반환할 수 없으므로, 대신 <code>Ref(useRef를 통해 얻은)</code>를 반환하며, 기존에 <code>Element</code>에게 <code>props</code>로 직접 전달하던 것을 <code>ref</code>를 통해 <code>설정</code>하는 방식으로 구현 방법이 바뀌게 됩니다.<br>
+위처럼 <code>훅</code>으로 <code>HOC</code>를 대체하는 방식은, <code>컴포넌트 트리의 깊이를 줄여</code> 복잡해지는 것을 방지할 수 있다는 <code>장점</code>이 존재합니다.<br>
+다만, <code>훅</code>을 사용할 경우 해당 <code>훅</code>을 호출하는 각각의 컴포넌트에서 스스로만의 동작을 추가할 수 있으므로 <code>HOC</code>에 비해 <code>Hook 내부의 로직</code>을 <code>수정</code>할 경우 <code>버그가 발생할 위험</code>이 더 높다는 <code>단점</code>이 존재합니다.</p>
+<h4 id="hoc를-사용하기-좋은-케이스" >HOC를 사용하기 좋은 케이스
+<span>
+    <a href="#hoc%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%98%ea%b8%b0-%ec%a2%8b%ec%9d%80-%ec%bc%80%ec%9d%b4%ec%8a%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>동일한, 사용자마다 <code>재정의될 수 없는 동작</code>을 <code>여러 컴포넌트</code>가 수행해야 하는 경우</li>
+<li>추가적인 커스텀 로직 없이, <code>독립적으로 컴포넌트가 동작</code>할 수 있는 경우</li>
+</ul>
+<h4 id="훅을-사용하기-좋은-케이스" >훅을 사용하기 좋은 케이스
+<span>
+    <a href="#%ed%9b%85%ec%9d%84-%ec%82%ac%ec%9a%a9%ed%95%98%ea%b8%b0-%ec%a2%8b%ec%9d%80-%ec%bc%80%ec%9d%b4%ec%8a%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>이를 이용하는 각 컴포넌트마다 <code>동작이 각각에 맞게 수정</code>되어야 하는 경우</li>
+<li>동작이 <code>한 두개의 컴포넌트에서 사용</code>되는 경우</li>
+</ul>
+<h3 id="장점-1" >장점
+<span>
+    <a href="#%ec%9e%a5%ec%a0%90-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>재사용하고자 하는 <code>로직</code>을 <code>한 곳에 모두 보관</code>할 수 있음</li>
+</ul>
+<h3 id="단점-1" >단점
+<span>
+    <a href="#%eb%8b%a8%ec%a0%90-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">HOC</span>(<span style="color:#a6e22e">Component</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">props</span> =&gt; <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">Component</span> <span style="color:#a6e22e">style</span><span style="color:#f92672">=</span>{ ... } {...<span style="color:#a6e22e">props</span>} <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 이 경우, HOC가 전달하는 style 값으로 button에 전달하고 있던 style 값이 대체됨
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">StyledComponent</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">HOC</span>(() =&gt; <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">button</span> <span style="color:#a6e22e">style</span><span style="color:#f92672">=</span>{ ... }<span style="color:#f92672">&gt;</span><span style="color:#a6e22e">button</span><span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/button&gt; );</span>
+</span></span></code></pre></div><ul>
+<li><code>prop</code>간 <code>이름 충돌</code>이 발생할 수 있음
+<ul>
+<li><code>HOC</code>와 <code>Component</code> 모두 특정 prop을 사용한다면, <code>HOC</code>에서 <code>Component</code>에게 전달한 prop 값으로 기존 <code>Component</code> 내부에서 정의되고 있던 prop 값이 덮어씌워짐
+<ul>
+<li>ex) <code>HOC</code>에서 <code>Component</code>에게 <code>style</code> prop 값을 전달하고, <code>Component</code> 함수 내부에서도 <code>style</code> prop 값을 지정하고 있는 경우</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">withStyles</span>(<span style="color:#a6e22e">Component</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">props</span> =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">style</span> <span style="color:#f92672">=</span> { <span style="color:#a6e22e">padding</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;0.2rem&#39;</span>, <span style="color:#a6e22e">margin</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;1rem&#39;</span> }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">Component</span> <span style="color:#a6e22e">style</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">style</span>} {<span style="color:#a6e22e">...props</span>} /&gt;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">Button</span> <span style="color:#f92672">=</span> () <span style="color:#f92672">=</span> &lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">style</span><span style="color:#f92672">=</span>{{ <span style="color:#a6e22e">color</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;red&#39;</span> }}&gt;<span style="color:#a6e22e">Click</span> <span style="color:#a6e22e">me</span><span style="color:#f92672">!</span>&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">StyledButton</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">withStyles</span>(<span style="color:#a6e22e">Button</span>)
+</span></span></code></pre></div><h2 id="렌더-프롭스render-props-패턴" >렌더 프롭스(Render Props) 패턴
+<span>
+    <a href="#%eb%a0%8c%eb%8d%94-%ed%94%84%eb%a1%ad%ec%8a%a4render-props-%ed%8c%a8%ed%84%b4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">Title</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">props</span>) =&gt; <span style="color:#a6e22e">props</span>.<span style="color:#a6e22e">render</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">Title</span> <span style="color:#a6e22e">render</span><span style="color:#f92672">=</span>{() =&gt; &lt;<span style="color:#f92672">h1</span>&gt;<span style="color:#a6e22e">I</span> <span style="color:#a6e22e">am</span> <span style="color:#a6e22e">a</span> <span style="color:#a6e22e">render</span> <span style="color:#a6e22e">prop</span><span style="color:#f92672">!</span>&lt;/<span style="color:#f92672">h1</span>&gt;} /&gt;
+</span></span></code></pre></div><p><code>렌더 프롭스 패턴</code>이란 <code>컴포넌트 재사용성</code>을 높이기 위한 방법 중 하나로, <code>JSX 요소</code>를 반환하는 <code>함수</code>를 <code>render</code> 라는 <code>prop</code>으로 전달하고 컴포넌트에서 이를 사용하는 방식을 말합니다.<br>
+컴포넌트는 <code>render</code> prop으로 전달된 것 외에는 렌더링하지 않습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Component</span>(<span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> { ... }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">props</span>.<span style="color:#a6e22e">render</span>(<span style="color:#a6e22e">data</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">Component</span> <span style="color:#a6e22e">render</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">data</span> =&gt; &lt;<span style="color:#f92672">ChildComponent</span> <span style="color:#a6e22e">data</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">data</span>} /&gt;}
+</span></span></code></pre></div><p>대신 <code>render</code>에게 전달할 특정할 데이터를 불러오거나 만들어내는 로직을 주로 수행합니다.<br>
+참고로 <code>render</code>라는 prop 이름을 사용하는 것은 일종의 <code>관례상 사용</code>하는 것으로, 다른 이름으로 전달해도 동일한 동작을 수행할 수 있습니다.</p>
+<h3 id="상태-끌어올리기" >상태 끌어올리기
+<span>
+    <a href="#%ec%83%81%ed%83%9c-%eb%81%8c%ec%96%b4%ec%98%ac%eb%a6%ac%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span>&lt;<span style="color:#f92672">Parent</span>&gt;
+</span></span><span style="display:flex;"><span>	&lt;<span style="color:#f92672">SiblingInput</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">value</span>} <span style="color:#a6e22e">handleChange</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">handleChange</span>} /&gt;
+</span></span><span style="display:flex;"><span>	&lt;<span style="color:#f92672">SiblingView</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">value</span>} /&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">Parent</span>&gt;
+</span></span></code></pre></div><p>위처럼 형제 컴포넌트간 상태값을 공유해야하는 경우, 위처럼 구현할 수도 있지만 <code>render</code> prop을 사용해 아래와 같이 구현할 수도 있습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Input</span>(<span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">input</span>, <span style="color:#a6e22e">setInput</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>();
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>		&lt;&gt;
+</span></span><span style="display:flex;"><span>			&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">value</span>} <span style="color:#a6e22e">onChange</span><span style="color:#f92672">=</span>{(<span style="color:#a6e22e">e</span>)=&gt;<span style="color:#a6e22e">setInput</span>(<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">target</span>.<span style="color:#a6e22e">value</span>)} /&gt;
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// render로 전달될 JSX 함수에게 value를 인자로 전달
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			{<span style="color:#a6e22e">props</span>.<span style="color:#a6e22e">render</span>(<span style="color:#a6e22e">value</span>)}
+</span></span><span style="display:flex;"><span>		&lt;/&gt;
+</span></span><span style="display:flex;"><span>	);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Parent</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 인자로 전달받은 value 값을 하위 SiblingView 컴포넌트들에게 전달하는 render JSX 함수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">Input</span> <span style="color:#a6e22e">render</span><span style="color:#f92672">=</span>{(<span style="color:#a6e22e">value</span>) =&gt; (
+</span></span><span style="display:flex;"><span>			&lt;&gt;
+</span></span><span style="display:flex;"><span>				&lt;<span style="color:#f92672">SiblingView</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">value</span>} /&gt;
+</span></span><span style="display:flex;"><span>				&lt;<span style="color:#f92672">SiblingView2</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">value</span>} /&gt;
+</span></span><span style="display:flex;"><span>			&lt;/&gt;
+</span></span><span style="display:flex;"><span>		)} 
+</span></span><span style="display:flex;"><span>	/&gt;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="propschildren을-함수로-활용하기" >props.children을 함수로 활용하기
+<span>
+    <a href="#propschildren%ec%9d%84-%ed%95%a8%ec%88%98%eb%a1%9c-%ed%99%9c%ec%9a%a9%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Parent</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>	  &lt;<span style="color:#f92672">Input</span>&gt;
+</span></span><span style="display:flex;"><span>		{(<span style="color:#a6e22e">value</span>) =&gt; (
+</span></span><span style="display:flex;"><span>		  &lt;&gt;
+</span></span><span style="display:flex;"><span>			&lt;<span style="color:#f92672">Kelvin</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">value</span>} /&gt;
+</span></span><span style="display:flex;"><span>			&lt;<span style="color:#f92672">Fahrenheit</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">value</span>} /&gt;
+</span></span><span style="display:flex;"><span>		  &lt;/&gt;
+</span></span><span style="display:flex;"><span>		)}
+</span></span><span style="display:flex;"><span>	  &lt;/<span style="color:#f92672">Input</span>&gt;
+</span></span><span style="display:flex;"><span>  );
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Input</span>(<span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">input</span>, <span style="color:#a6e22e">setInput</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>();
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>		&lt;&gt;
+</span></span><span style="display:flex;"><span>			&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">value</span>} <span style="color:#a6e22e">onChange</span><span style="color:#f92672">=</span>{(<span style="color:#a6e22e">e</span>)=&gt;<span style="color:#a6e22e">setInput</span>(<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">target</span>.<span style="color:#a6e22e">value</span>)} /&gt;
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// Input의 자식 컴포넌트로 전달될 JSX 함수에게 value를 인자로 전달
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			{<span style="color:#a6e22e">props</span>.<span style="color:#a6e22e">children</span>(<span style="color:#a6e22e">value</span>)}
+</span></span><span style="display:flex;"><span>		&lt;/&gt;
+</span></span><span style="display:flex;"><span>	);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>render</code> prop으로 JSX 함수를 전달할 수도 있지만, 컴포넌트의 자식으로 JSX 함수를 전달할 수도 있습니다.<br>
+이는 <code>children</code> prop이 사실상 <code>render prop</code>과 유사하게 동작하기 때문에 가능합니다.</p>
+<ul>
+<li><a href="https://react.dev/learn/passing-props-to-a-component#passing-jsx-as-children">Passing Props to a Component – React</a></li>
+</ul>
+<h3 id="훅으로-대체하기" >훅으로 대체하기
+<span>
+    <a href="#%ed%9b%85%ec%9c%bc%eb%a1%9c-%eb%8c%80%ec%b2%b4%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Parent</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">input</span>, <span style="color:#a6e22e">setInput</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>();
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>		&lt;&gt;
+</span></span><span style="display:flex;"><span>			&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">input</span>} <span style="color:#a6e22e">onChange</span><span style="color:#f92672">=</span>{(<span style="color:#a6e22e">e</span>) =&gt; <span style="color:#a6e22e">setInput</span>(<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">target</span>.<span style="color:#a6e22e">value</span>)} /&gt;
+</span></span><span style="display:flex;"><span>			&lt;<span style="color:#f92672">Kelvin</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">value</span>} /&gt;
+</span></span><span style="display:flex;"><span>			&lt;<span style="color:#f92672">Fahrenheit</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">value</span>} /&gt;
+</span></span><span style="display:flex;"><span>		&lt;/&gt;
+</span></span><span style="display:flex;"><span>	);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>Render Props</code> 패턴 역시 <code>React Hook</code>을 통해 대체할 수 있습니다.<br>
+<code>render</code> 함수 인자로 값을 전달하는 대신, 위처럼 상태와 로직을 부모 컴포넌트에서 관리하면 됩니다.<br>
+다만 이 경우 <code>Parent</code>에서 상태가 관리되므로 이를 사용하지 않는 자식 컴포넌트들까지 재렌더링 될 수 있기 때문에 <code>React.memo</code>와 같은 기능을 통해 불필요한 재렌더링을 방지해주어야 합니다.</p>
+<h3 id="장점-2" >장점
+<span>
+    <a href="#%ec%9e%a5%ec%a0%90-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>여러 컴포넌트 간 로직 및 데이터 공유가 쉬워진다.
+<ul>
+<li>이는 <code>HOC 패턴</code>과도 비슷하지만, <code>렌더 프롭스 패턴</code>은 <code>HOC 패턴</code>의 몇 가지 단점을 보완함.
+<ul>
+<li><code>props</code>를 자동 병합하지 않으므로, <code>HOC 패턴</code>에서 발생하던 <code>이름 충돌 문제</code>가 발생하 않음.</li>
+<li><code>props</code>를 <code>명시적</code>으로 전달하므로, <code>HOC 패턴</code>의 <code>암시적 props</code> 문제가 발생하지 않음.
+<ul>
+<li>요소에 전달 될 <code>props</code>는 모두 <code>render prop</code>의 인수 목록에 명시됨.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>렌더링 컴포넌트로부터 로직을 분리해낼 수 있다.
+<ul>
+<li>하나의 컴포넌트를 <code>Stateful 컴포넌트</code>와, <code>Stateful 컴포넌트</code>로 부터 데이터를 전달받아 렌더링하는 <code>Stateless 컴포넌트</code>로 분리할 수 있음.</li>
+</ul>
+</li>
+</ul>
+<h2 id="react-hooks-패턴" >React Hooks 패턴
+<span>
+    <a href="#react-hooks-%ed%8c%a8%ed%84%b4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><code>React Hooks 패턴</code>이란, <a href="https://legacy.reactjs.org/docs/hooks-intro.html">React 16.8에 추가된 Hooks 기능</a>을 활용해 <em><strong><code>상태</code></strong> 를 필요로 하는</em> <code>로직</code>을 <code>여러 컴포넌트에서 재사용</code>하는 패턴을 말합니다.</p>
+<h3 id="hooks-등장-이전" >Hooks 등장 이전
+<span>
+    <a href="#hooks-%eb%93%b1%ec%9e%a5-%ec%9d%b4%ec%a0%84">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Component</span> <span style="color:#66d9ef">extends</span> <span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">Component</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">constructor</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">super</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 상태 선언
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">=</span> { ... }
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 클래스 컴포넌트에 사용자 정의 함수를 추가하는 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 해당 함수에 this를 바인딩해주어야 함.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 그러지 않으면 해당 함수 내부에서 호출하는 this는 undefined가 되거나
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 해당 함수를 사용하는 HTML 요소 등이 this로 지정될 수 있다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">customMethod</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">customMethodOne</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">this</span>)
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* 렌더링 생명주기 관련 메서드 */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">componentDidMount</span>() { ...}
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">componentWillUnmount</span>() { ... }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">/* 사용자 정의 함수 */</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">customMethod</span>() { ... }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">render</span>() { <span style="color:#66d9ef">return</span> { ... }}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>React</code>에 훅이 도입되기 전에는 상태, 렌더링 생명 주기 함수를 사용하려면 <strong>반드시</strong> <code>클래스 컴포넌트</code>를 사용해야 했습니다.<br>
+<code>클래스 컴포넌트</code>는 <em>로직을 추가해 나갈 수록</em> <code>컴포넌트 크기가 증가</code>하고, <code>로직끼리 엉키고 구조화 불가능</code>해지면서 어떤 로직이 <code>어디서 호출</code>되는지 <code>추적</code>하기 <code>힘들어질 수</code> 있습니다.</p>
+<h3 id="hooks" >Hooks
+<span>
+    <a href="#hooks">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>앞선 클래스 컴포넌트의 단점들을 해결하고자, <code>React Hooks</code>가 추가되었습니다.<br>
+<code>React Hooks</code>는 <code>함수형 컴포넌트</code>가 상태를 다룰 수 있도록, <em>렌더링 생명주기 메서드 없이도</em> 렌더링 생명주기를 관리할 수 있도록, <code>상태를 필요로 하는 로직</code>을 <code>재사용</code>할 수 있도록 해줍니다.</p>
+<h4 id="상태-다루기---usestate" >상태 다루기 -&gt; <code>useState()</code>
+<span>
+    <a href="#%ec%83%81%ed%83%9c-%eb%8b%a4%eb%a3%a8%ea%b8%b0---usestate">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span>	<span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">stateSnapshot</span>, <span style="color:#a6e22e">setState</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>(<span style="color:#a6e22e">initialValue</span>);
+</span></span></code></pre></div><p><code>React</code>에서 제공하는 <code>useState(초기값)</code>훅을 통해 <code>상태의 현재 스냅샷</code>, <code>상태를 업데이트하는 함수</code>를 얻어낼 수 있으며 이를 통해 함수형 컴포넌트 내부에서 상태를 관리할 수 있습니다.</p>
+<h4 id="렌더링-생명주기-다루기---useeffect" >렌더링 생명주기 다루기 -&gt; <code>useEffect()</code>
+<span>
+    <a href="#%eb%a0%8c%eb%8d%94%eb%a7%81-%ec%83%9d%eb%aa%85%ec%a3%bc%ea%b8%b0-%eb%8b%a4%eb%a3%a8%ea%b8%b0---useeffect">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#75715e">// 컴포넌트가 마운트 되었을 때
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">componentDidMount</span>() { ... }
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">useEffect</span>(() =&gt; { ... }, [])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 컴포넌트가 업데이트 되었을 때
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">componentDidUpdate</span>() { ... }
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">useEffect</span>(() =&gt; { ... })
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 컴포넌트가 마운트 해제 되었을 때
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">componentWillUnmount</span>() { ... }
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">useEffect</span>(() =&gt; { <span style="color:#66d9ef">return</span> () =&gt; { ... } }, [])
+</span></span></code></pre></div><p><code>useEffect()</code> 훅을 사용해 컴포넌트가 마운트 되었을 때(<code>componentDidMount()</code>), 컴포넌트가 업데이트 되었을 때(<code>componentDidUpdate()</code>), 컴포넌트가 마운트 해제되었을 때(<code>componentWillUnmount()</code>) 수행할 동작을 지정할 수 있습니다.</p>
+<h4 id="상태를-필요로-하는-로직-분리하기---custom-hooks" >상태를 필요로 하는 로직 분리하기 -&gt; Custom Hooks
+<span>
+    <a href="#%ec%83%81%ed%83%9c%eb%a5%bc-%ed%95%84%ec%9a%94%eb%a1%9c-%ed%95%98%eb%8a%94-%eb%a1%9c%ec%a7%81-%eb%b6%84%eb%a6%ac%ed%95%98%ea%b8%b0---custom-hooks">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#75715e">// 예시
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 인자로 넘어온 targetKey가 눌린 경우,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 상태 값인 keyPressed를 true로 만들고, 키를 떼면 false로 만드는 훅이다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">useKeyPress</span>(<span style="color:#a6e22e">targetKey</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">keyPressed</span>, <span style="color:#a6e22e">setKeyPressed</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">useState</span>(<span style="color:#66d9ef">false</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">handleDown</span>({ <span style="color:#a6e22e">key</span> }) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">key</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">targetKey</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">setKeyPressed</span>(<span style="color:#66d9ef">true</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">handleUp</span>({ <span style="color:#a6e22e">key</span> }) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">key</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">targetKey</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">setKeyPressed</span>(<span style="color:#66d9ef">false</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">useEffect</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>    window.<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#39;keydown&#39;</span>, <span style="color:#a6e22e">handleDown</span>)
+</span></span><span style="display:flex;"><span>    window.<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#39;keyup&#39;</span>, <span style="color:#a6e22e">handleUp</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> () =&gt; {
+</span></span><span style="display:flex;"><span>      window.<span style="color:#a6e22e">removeEventListener</span>(<span style="color:#e6db74">&#39;keydown&#39;</span>, <span style="color:#a6e22e">handleDown</span>)
+</span></span><span style="display:flex;"><span>      window.<span style="color:#a6e22e">removeEventListener</span>(<span style="color:#e6db74">&#39;keyup&#39;</span>, <span style="color:#a6e22e">handleUp</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }, [])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">keyPressed</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>React</code>에서 제공하는 여러 <code>빌트-인 훅</code>을 사용해 <code>사용자 정의 훅</code>을 만들 수 있습니다.<br>
+모든 훅은 <a href="https://react.dev/reference/rules/rules-of-hooks">Hooks의 규칙</a>에 따라 <code>use</code>로 시작하는 이름을 가져야 합니다.</p>
+<h4 id="이외의-훅" >이외의 훅
+<span>
+    <a href="#%ec%9d%b4%ec%99%b8%ec%9d%98-%ed%9b%85">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>위에서 다룬 훅 이외에도, <code>React</code>에는 다음과 같은 <code>빌트-인 훅</code>이 있습니다.</p>
+<h5 id="usecontext" >useContext
+<span>
+    <a href="#usecontext">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><code>context 객체(React.createcontext의 반환값)</code>를 받아, 해당 컨텍스트의 <code>현재 컨텍스트 값을 반환</code>하는 훅입니다.<br>
+<code>useContext(컨텍스트 객체)</code>만 호출하면 어느 컴포넌트에서든 해당 값에 접근할 수 있습니다.</p>
+<h5 id="usereducer" >useReducer
+<span>
+    <a href="#usereducer">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#75715e">// 리듀서 함수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">reducer</span>(<span style="color:#a6e22e">state</span>, <span style="color:#a6e22e">action</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">switch</span> (<span style="color:#a6e22e">action</span>.<span style="color:#a6e22e">type</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;incremented_age&#39;</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">name</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">age</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">age</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>      };
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;changed_name&#39;</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">action</span>.<span style="color:#a6e22e">nextName</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">age</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">age</span>
+</span></span><span style="display:flex;"><span>      };
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">throw</span> Error(<span style="color:#e6db74">&#39;Unknown action: &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">action</span>.<span style="color:#a6e22e">type</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 컴포넌트 내부에서 dispatch 호출
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>...
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">state</span>, <span style="color:#a6e22e">dispatch</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useReducer</span>(<span style="color:#a6e22e">reducer</span>, { <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Taylor&#39;</span>, <span style="color:#a6e22e">age</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">42</span> });
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 디스패치 함수의 인자로 넘긴 객체는 리듀서 함수의 action으로 넘겨진다
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">dispatch</span>({
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;changed_name&#39;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">nextName</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">target</span>.<span style="color:#a6e22e">value</span>
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div><p><code>setState()</code> 함수의 대안으로 다음 상태값이 <code>이전 상태값에 의존</code>하거나, 여러 다른 값을 포함해 계산 해야하는 복잡한 로직이 있는 경우 주로 사용됩니다.<br>
+<code>useReducer</code> 훅은 <code>리듀서 함수</code>와 <code>초기 상태 값</code>을 입력받아, <code>현재 상태 값</code>과 <code>dispatch 함수</code>를 반환합니다.<br>
+<code>리듀서 함수</code>는 입력받은 <code>action</code>에 따라 <code>상태 값</code>을 변화시키며, <code>dispatch 함수</code>는 리듀서 함수의 <code>어떤 action</code>을 호출할건지, 어떤 값을 넘길건지 지정해 호출합니다.</p>
+<h2 id="컴파운드-패턴" >컴파운드 패턴
+<span>
+    <a href="#%ec%bb%b4%ed%8c%8c%ec%9a%b4%eb%93%9c-%ed%8c%a8%ed%84%b4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#75715e">// 예제 (출처: [Compound Pattern (patterns.dev)](https://www.patterns.dev/react/compound-pattern))
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 이미지에 마우스를 hover하면 나타나는 ... 버튼과
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 이를 클릭시 나타나는 Flyout 메뉴의 Edit, Delete 버튼을 보여주기 위한 메뉴
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Flyout.jsx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">FlyOutContext</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">createContext</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">FlyOut</span>(<span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">open</span>, <span style="color:#a6e22e">toggle</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span>(<span style="color:#66d9ef">false</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">FlyOutContext.Provider</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span>{{ <span style="color:#a6e22e">open</span>, <span style="color:#a6e22e">toggle</span> }}&gt;
+</span></span><span style="display:flex;"><span>      {<span style="color:#a6e22e">props</span>.<span style="color:#a6e22e">children</span>}
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">FlyOutContext.Provider</span>&gt;
+</span></span><span style="display:flex;"><span>  );
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Toggle</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">open</span>, <span style="color:#a6e22e">toggle</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">useContext</span>(<span style="color:#a6e22e">FlyOutContext</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">onClick</span><span style="color:#f92672">=</span>{() =&gt; <span style="color:#a6e22e">toggle</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">open</span>)}&gt;
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#f92672">Icon</span> /&gt;
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>  );
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">List</span>({ <span style="color:#a6e22e">children</span> }) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">open</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">useContext</span>(<span style="color:#a6e22e">FlyOutContext</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">open</span> <span style="color:#f92672">&amp;&amp;</span> &lt;<span style="color:#f92672">ul</span>&gt;{<span style="color:#a6e22e">children</span>}&lt;/<span style="color:#f92672">ul</span>&gt;;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Item</span>({ <span style="color:#a6e22e">children</span> }) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> &lt;<span style="color:#f92672">li</span>&gt;{<span style="color:#a6e22e">children</span>}&lt;/<span style="color:#f92672">li</span>&gt;;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 아래와 같이 선언할 경우, Toggle, List, Item은 FlyOut의 Static Property가 된다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 따라서, 이들을 사용하는 쪽에서는 FlyOut만 Import해도 이들을 사용할 수 있다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">FlyOut</span>.<span style="color:#a6e22e">Toggle</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Toggle</span>;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">FlyOut</span>.<span style="color:#a6e22e">List</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">List</span>;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">FlyOut</span>.<span style="color:#a6e22e">Item</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Item</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// FlyoutMenu.jsx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">React</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#34;react&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">import</span> { <span style="color:#a6e22e">FlyOut</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#34;./FlyOut&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// FlyoutMenu에는 아무런 상태를 추가하지 않고,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// FlyOut 메뉴를 구현할 수 있다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">FlyoutMenu</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">FlyOut</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#f92672">FlyOut.Toggle</span> /&gt;
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#f92672">FlyOut.List</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">FlyOut.Item</span>&gt;<span style="color:#a6e22e">Edit</span>&lt;/<span style="color:#f92672">FlyOut.Item</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">FlyOut.Item</span>&gt;<span style="color:#a6e22e">Delete</span>&lt;/<span style="color:#f92672">FlyOut.Item</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;/<span style="color:#f92672">FlyOut.List</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">FlyOut</span>&gt;
+</span></span><span style="display:flex;"><span>  );
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>컴파운드(Compound) 패턴</code>이란, 하나의 작업을 위해 여러 컴포넌트들을 만들어 역할을 분담시키는 패턴을 말합니다.<br>
+이들은 상태를 공유하며 서로에게 의존하고 로직을 공유하는데, 예시로 <code>select</code> 입력창, 드롭다운 메뉴과 같은 것을 들 수 있습니다.</p>
+<h3 id="context-api" >Context API
+<span>
+    <a href="#context-api">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>이들은 서로의 상태에 의존하며 동작을 수행하므로, <code>Context API</code>와 같이 값을 공유할 수 있는 매개체가 필요합니다.</p>
+<h3 id="reactchildrenmap" ><code>React.Children.map</code>
+<span>
+    <a href="#reactchildrenmap">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">FlyOut</span>(<span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">open</span>, <span style="color:#a6e22e">toggle</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">useState</span>(<span style="color:#66d9ef">false</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>      {<span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">Children</span>.<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">props</span>.<span style="color:#a6e22e">children</span>, (<span style="color:#a6e22e">child</span>) =&gt;
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">cloneElement</span>(<span style="color:#a6e22e">child</span>, { <span style="color:#a6e22e">open</span>, <span style="color:#a6e22e">toggle</span> })
+</span></span><span style="display:flex;"><span>      )}
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>  );
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>컴파운드 패턴</code>은 컴포넌트의 자식들을 <code>순회 처리(mapping)</code>하면서도 사용할 수 있다.<br>
+위 예시에서는 <code>open</code>, <code>toggle</code> 프로퍼티를 자식 에게 추가하기 위해, 자식들을 추가 prop과 함께 복제한다.<br>
+즉, <em><code>Context API</code>를 사용한 이전 예제</em>와 달리, 이 예제는 <code>props</code>를 통해 자식들에게 <code>open</code>, <code>toggle</code>을 전달한다.</p>
+<h3 id="장점-3" >장점
+<span>
+    <a href="#%ec%9e%a5%ec%a0%90-3">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>컴파운드 컴포넌트</code>를 <code>구현(implement)</code>시, 별도로 <code>상태 관리</code>에 대해 <code>걱정할 필요가 없음</code>.
+<ul>
+<li>이들은 자체적으로 내부 상태를 관리하며, 자식 컴포넌트들과 공유하기 때문</li>
+</ul>
+</li>
+<li><code>컴파운드 컴포넌트</code>를 이루는 <strong>하위 컴포넌트</strong>들을 <code>명시적으로 import</code>할 <code>필요 없음</code>
+<ul>
+<li>정적 프로퍼티로 하위 컴포넌트들을 지정해놓기 때문</li>
+</ul>
+</li>
+</ul>
+<h3 id="단점-2" >단점
+<span>
+    <a href="#%eb%8b%a8%ec%a0%90-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>React.Children.map</code> 관련 단점
+<ul>
+<li>컴포넌트의 깊이가 제한됨.
+<ul>
+<li><strong><code>직계 자식들</code></strong> 만 부모 컴포넌트의 <code>open</code>, <code>toggle</code>과 같은 <code>prop</code>을 <code>접근</code>할 수 있음.</li>
+<li>따라서 이들을 다른 컴포넌트로 더 감쌀 수 없음.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">FlyoutMenu</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>    &lt;<span style="color:#f92672">FlyOut</span>&gt;
+</span></span><span style="display:flex;"><span>      {<span style="color:#75715e">/* 부모-자식 관계 끊어짐 */</span>}
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">FlyOut.Toggle</span> /&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">FlyOut.List</span>&gt;
+</span></span><span style="display:flex;"><span>          &lt;<span style="color:#f92672">FlyOut.Item</span>&gt;<span style="color:#a6e22e">Edit</span>&lt;/<span style="color:#f92672">FlyOut.Item</span>&gt;
+</span></span><span style="display:flex;"><span>          &lt;<span style="color:#f92672">FlyOut.Item</span>&gt;<span style="color:#a6e22e">Delete</span>&lt;/<span style="color:#f92672">FlyOut.Item</span>&gt;
+</span></span><span style="display:flex;"><span>        &lt;/<span style="color:#f92672">FlyOut.List</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>    &lt;/<span style="color:#f92672">FlyOut</span>&gt;
+</span></span><span style="display:flex;"><span>  );
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li><code>React.cloneElement</code> 관련 단점
+<ul>
+<li><code>props</code> 이름충돌이 발생할 수 있음.
+<ul>
+<li><code>React.cloneElement</code>로 요소 복사시, 얕은 병합이 이뤄짐</li>
+<li>따라서 이미 존재하는 프로퍼티가 <code>React.cloneElement</code>에 전달한 프로퍼티와 이름이 같으면, 전달하는 값으로 덮어씌워짐</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://www.patterns.dev/#patterns">Patterns.dev</a>
+<ul>
+<li><a href="https://www.patterns.dev/react">Overview of React.js (patterns.dev)</a></li>
+<li><a href="https://www.patterns.dev/react/presentational-container-pattern">Container/Presentational Pattern (patterns.dev)</a></li>
+<li><a href="https://www.patterns.dev/react/hoc-pattern">HOC Pattern (patterns.dev)</a></li>
+<li><a href="https://www.patterns.dev/react/render-props-pattern">Render Props Pattern (patterns.dev)</a></li>
+<li><a href="https://www.patterns.dev/react/hooks-pattern">Hooks Pattern (patterns.dev)</a></li>
+<li><a href="https://www.patterns.dev/react/compound-pattern">Compound Pattern (patterns.dev)</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/javascript/react/design-pattern/"><time datetime="2024-10-02">2024-10-02 18:32 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/react/design-pattern/">https://cloudsoswift.github.io/post/develop/javascript/react/design-pattern/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/react/">#React</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/design-pattern/">#Design Pattern</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/javascript/async-await/">[Javascript] async/await 알아보기 (w. V8 Engine, task, microtask)</a></li>
+                
+                <li><a href="/post/develop/javascript/generator/">[Javascript] 제너레이터 알아보기 (w. Iterator, 배열)</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/javascript/async-await/">[Javascript] async/await 알아보기 (w. V8 Engine, task, microtask)</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>
