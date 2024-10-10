@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Network] JWT 알아보기 (w. JWE, JWS) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 10월 8일 발표한 JWT에 대해 정리한 문서를 블로그에 공유하고자 한다.
+JWT 인증 방식이 무엇인가요?JWT 인증 방식이란, 두 당사자 간 전송할 클레임(claim) 을 나타내는 JWT(JSON 웹 토큰)을 통해 사용자를 인증하는 방식을 말합니다.
+JWT는 공간이 제약된 환경, 예를 들어 HTTP Authorization 헤더, URI 쿼리 매개변수와 같은 환경에서 클레임들을 주고 받을 수 있도록 간결화하는 것이 목적입니다.
+클레임: 키-값 쌍으로 이뤄진 데이터 JWT?JWT(JSON Web Token)는 당사자 간 정보를 JSON 객체로 안전하게 전송하기 위한 간결하고 독립적인 방법을 정의하는 개방형 표준(RFC 7519)입니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Network] JWT 알아보기 (w. JWE, JWS)" />
+<meta property="og:description" content="서론CS 스터디에서 10월 8일 발표한 JWT에 대해 정리한 문서를 블로그에 공유하고자 한다.
+JWT 인증 방식이 무엇인가요?JWT 인증 방식이란, 두 당사자 간 전송할 클레임(claim) 을 나타내는 JWT(JSON 웹 토큰)을 통해 사용자를 인증하는 방식을 말합니다.
+JWT는 공간이 제약된 환경, 예를 들어 HTTP Authorization 헤더, URI 쿼리 매개변수와 같은 환경에서 클레임들을 주고 받을 수 있도록 간결화하는 것이 목적입니다.
+클레임: 키-값 쌍으로 이뤄진 데이터 JWT?JWT(JSON Web Token)는 당사자 간 정보를 JSON 객체로 안전하게 전송하기 위한 간결하고 독립적인 방법을 정의하는 개방형 표준(RFC 7519)입니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/network/jwt/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-10-10T16:46:55+09:00" />
+<meta property="article:modified_time" content="2024-10-10T16:46:55+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Network] JWT 알아보기 (w. JWE, JWS)"/>
+<meta name="twitter:description" content="서론CS 스터디에서 10월 8일 발표한 JWT에 대해 정리한 문서를 블로그에 공유하고자 한다.
+JWT 인증 방식이 무엇인가요?JWT 인증 방식이란, 두 당사자 간 전송할 클레임(claim) 을 나타내는 JWT(JSON 웹 토큰)을 통해 사용자를 인증하는 방식을 말합니다.
+JWT는 공간이 제약된 환경, 예를 들어 HTTP Authorization 헤더, URI 쿼리 매개변수와 같은 환경에서 클레임들을 주고 받을 수 있도록 간결화하는 것이 목적입니다.
+클레임: 키-값 쌍으로 이뤄진 데이터 JWT?JWT(JSON Web Token)는 당사자 간 정보를 JSON 객체로 안전하게 전송하기 위한 간결하고 독립적인 방법을 정의하는 개방형 표준(RFC 7519)입니다."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Network] JWT 알아보기 (w. JWE, JWS)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#jwt-인증-방식이-무엇인가요">JWT 인증 방식이 무엇인가요?</a>
+      <ul>
+        <li><a href="#jwt">JWT?</a></li>
+        <li><a href="#jwt의-구조">JWT의 구조</a></li>
+        <li><a href="#jwt의-장점">JWT의 장점</a></li>
+      </ul>
+    </li>
+    <li><a href="#signature는-어떻게-만들어지나요">Signature는 어떻게 만들어지나요?</a></li>
+    <li><a href="#만약-access-token이-탈취되면-어떻게-대응할-수-있을까요--반대로-refresh-token이-탈취되면-어떻게-대응해야-할까요">만약 Access Token이 탈취되면, 어떻게 대응할 수 있을까요? / 반대로 Refresh Token이 탈취되면, 어떻게 대응해야 할까요?</a>
+      <ul>
+        <li><a href="#토큰-블랙리스트">토큰 블랙리스트</a></li>
+        <li><a href="#짧은-토큰-수명">짧은 토큰 수명</a></li>
+        <li><a href="#비밀-로테이션">비밀 로테이션</a></li>
+        <li><a href="#토큰-버전-관리">토큰 버전 관리</a></li>
+        <li><a href="#사용자-로그아웃-및-강제-토큰-무효화">사용자 로그아웃 및 강제 토큰 무효화</a></li>
+        <li><a href="#토큰-무효화-목록token-revocation-list-trl">토큰 무효화 목록(Token Revocation List, TRL)</a></li>
+        <li><a href="#토큰에-유저-컨텍스트-포함하기-httpscheatsheetseriesowasporgcheatsheetsjson_web_token_for_java_cheat_sheethtmltoken-sidejacking">토큰에 유저 컨텍스트 포함하기 <a href="https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html#token-sidejacking">#</a></a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 10월 8일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/05-ETC/13_JWT/Readme.md"><strong>JWT</strong></a>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h2 id="jwt-인증-방식이-무엇인가요" >JWT 인증 방식이 무엇인가요?
+<span>
+    <a href="#jwt-%ec%9d%b8%ec%a6%9d-%eb%b0%a9%ec%8b%9d%ec%9d%b4-%eb%ac%b4%ec%97%87%ec%9d%b8%ea%b0%80%ec%9a%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><code>JWT 인증 방식</code>이란, <em>두 당사자 간 전송할 <code>클레임(claim)</code></em> 을 나타내는 <code>JWT(JSON 웹 토큰)</code>을 통해 사용자를 <code>인증</code>하는 방식을 말합니다.<br>
+<code>JWT</code>는 공간이 제약된 환경, 예를 들어 <code>HTTP Authorization 헤더</code>, <code>URI 쿼리 매개변수</code>와 같은 환경에서 <code>클레임들</code>을 주고 받을 수 있도록 <code>간결화</code>하는 것이 목적입니다.</p>
+<ul>
+<li><code>클레임</code>: <code>키-값 쌍</code>으로 이뤄진 데이터</li>
+</ul>
+<h3 id="jwt" >JWT?
+<span>
+    <a href="#jwt">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>JWT(JSON Web Token)</code>는 당사자 간 정보를 <code>JSON 객체</code>로 안전하게 전송하기 위한 간결하고 독립적인 방법을 정의하는 개방형 표준(<a href="https://datatracker.ietf.org/doc/html/rfc7519">RFC 7519</a>)입니다.<br>
+<code>JWT</code>는 <code>정보(클레임 집합)</code>를 <code>선택적 서명(JWS 구조로 인코딩)/암호화(JWE 구조로 인코딩)</code>한 <code>JSON 객체</code>라고 할 수 있으며, 이 <code>JSON 객체</code>는 <code>0개 이상의 클레임</code>을 가질 수 있습니다.<br>
+<img src="JWT-workflow.png" alt="JWT-workflow.png"></p>
+<blockquote>
+<p>출처: <a href="https://www.freecodecamp.org/news/how-to-sign-and-validate-json-web-tokens/">How to Sign and Validate JSON Web Tokens – JWT Tutorial (freecodecamp.org)</a></p>
+</blockquote>
+<p>주로 인증 과정에서 사용자가 자격 증명을 통해 로그인에 성공하면 JWT가 반환되며, 사용자가 <code>보호된 경로/리소스</code>에 접근할 경우 <code>Bearer</code> 스키마를 통해 <code>Authorization</code> 헤더에 JWT를 첨부해 요청해야 합니다.<br>
+즉, 다음과 같은 형태를 띄어야 합니다.</p>
+<pre tabindex="0"><code>Authorization: Bearer &lt;token&gt;
+</code></pre><h4 id="jwejson-web-encryption-rfc-7516httpsdatatrackerietforgdochtmlrfc7516" >JWE(JSON Web Encryption) <a href="https://datatracker.ietf.org/doc/html/rfc7516">RFC 7516</a>
+<span>
+    <a href="#jwejson-web-encryption-rfc-7516httpsdatatrackerietforgdochtmlrfc7516">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="JWE.png" alt="JWE.png"></p>
+<blockquote>
+<p>출처: <a href="https://dzone.com/articles/using-json-web-encryption-jwe">Using JSON Web Encryption (JWE) - DZone</a></p>
+</blockquote>
+<ul>
+<li>JWT 내용을 디지털 방식으로 암호화 함.
+<ul>
+<li>따라서 <code>무결성 검증</code> 및 <code>콘텐츠 보호</code>에 사용할 수 있음.</li>
+<li>또한 <code>인증된 암호화(AUtehmticated Encryption)</code>를 통해 평문의 <code>기밀성</code>과 <code>무결성</code>, <code>JWE 보호 헤더(JWE Protected Header)</code>의 <code>무결성</code>을 보장.</li>
+</ul>
+</li>
+<li>본질적으로 콘텐츠를 암호화 하므로, `HTTP 상에서 사용할 수 있음.</li>
+<li>일반적인 구조</li>
+</ul>
+<pre tabindex="0"><code>&lt;Base64URL 인코딩 된 UTF8 인코딩 형태의 JWE Protected Header&gt;.&lt;Base64URL 인코딩 된 JWE Encrypted Key&gt;.&lt;Base64URL 인코딩 된 JWE Initialization Vector&gt;.&lt;Base64URL 인코딩 된 JWE Ciphertext&gt;.&lt;Base64URL 인코딩 된 JWE Authentication Tag&gt;
+</code></pre><ul>
+<li>과정
+<ul>
+<li><code>JWT Protected Header</code>를 선언한다.
+<ul>
+<li>헤더는 다음 두 가지를 갖고있다.</li>
+<li><code>alg</code>: <code>콘텐츠 암호화 키(Content Encryption Key)</code>를 어떤 알고리즘을 사용해 암호화할지 나타냄.</li>
+<li><code>enc</code>: 어떤 알고리즘을 사용해 <code>인증된 암호화(AUtehmticated Encryption)</code>를 수행할지 지 나타냄.
+<ul>
+<li><code>인증된 암호화</code>는 평문에 대해 수행되어, <code>암호화된 텍스트(ciphertext)</code>와 <code>인증 태그(Authentication Tag)</code>를 생성함.</li>
+</ul>
+</li>
+<li>이후 이를 <code>UTF-8</code>로 인코딩 한 뒤, <code>Base64URL</code>로 인코딩 한다.</li>
+</ul>
+</li>
+<li>랜덤한 <code>CEK(콘텐츠 암호화 키)</code>를 생성한다.</li>
+<li><code>CEK</code>를 <code>RSAES-OAEP</code> 알고리즘을 사용해 수신자의 <code>공개키</code>로 암호화하여, <code>JWE Encrypted Key</code>를 생성한 뒤, <code>Base64URL</code> 인코딩을 수행한다.</li>
+<li>랜덤한 <code>JWE Initialization Vector</code>를 생성한 뒤, Base64URL 인코딩을 수행한다.</li>
+<li>평문에 <code>AES GCM</code> 알고리즘을 사용해 <code>인증된 암호화</code>를 수행한다.
+<ul>
+<li><code>CEK</code>를 <code>암호화 키</code>로 사용하며, 추가로 <code>JWE Initialization Vector</code>, <code>AAD</code> 역시 사용한다.</li>
+<li>이를 통해 <code>Ciphertext(암호문)</code>와 128비트 <code>JWE Authentication Tag</code>를 만들어내고, 이들에 대해 Base64URL 인코딩을 수행한다.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="jwsjson-web-signature-rfc-7515httpsdatatrackerietforgdochtmlrfc7515" >JWS(JSON Web Signature) <a href="https://datatracker.ietf.org/doc/html/rfc7515">RFC 7515</a>
+<span>
+    <a href="#jwsjson-web-signature-rfc-7515httpsdatatrackerietforgdochtmlrfc7515">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="JWT.png" alt="JWT.png"></p>
+<blockquote>
+<p>출처: <a href="https://fusionauth.io/articles/tokens/jwt-components-explained">Components of JWTs Explained (fusionauth.io)</a></p>
+</blockquote>
+<ul>
+<li>디지털 서명을 통해 발신자-수신자 간 전송되는 JWT 내용이 <code>변조되지 않음</code>을 <code>보장</code>하는 <code>JWT</code></li>
+<li>일반적으로 <code>JWT 인증</code>에 사용되는 형태는 <code>JWS</code>라고 할 수 있음</li>
+<li>특징
+<ul>
+<li><code>내용(클레임)</code>은 타인도 읽을 수 있음.
+<ul>
+<li>따라서 비밀번호와 같은 <code>민감 데이터</code>를 <code>전송하는데 사용해서는 안 됨</code>.</li>
+</ul>
+</li>
+<li>본질적으로 타인이 데이터를 읽는 것을 방지하지 않으므로, <code>HTTPS</code> 또는 <code>SSL</code>를 통해 전송됨.</li>
+<li><code>비밀(secret)</code>(<code>HMAC</code> 알고리즘) 또는 <code>공개-개인 키 쌍</code>(<code>RSA</code>, <code>ECDSA</code> 알고리즘)을 사용해 <code>서명</code>할 수 있음.</li>
+</ul>
+</li>
+<li>일반적인 구조</li>
+</ul>
+<pre tabindex="0"><code>&lt;Base64URL 인코딩된 헤더&gt;.&lt;Base64URL 인코딩된 페이로드&gt;.&lt;Base64URL 인코딩된 시그니처&gt;
+</code></pre><h3 id="jwt의-구조" >JWT의 구조
+<span>
+    <a href="#jwt%ec%9d%98-%ea%b5%ac%ec%a1%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>JWT</code>는 점(<code>.</code>)으로 구분된 <code>세 가지 부분</code>으로 <code>구성</code>되어 있음
+즉, <code>&lt;header&gt;.&lt;payload&gt;.&lt;signature&gt;</code>와 같은 형태</p>
+<ul>
+<li><code>header</code>
+<ul>
+<li>일반적으로 두 부분을 갖는 <code>JSON 객체</code>로, Base64URL 인코딩을 거쳐 JWT의 첫 번째 부분을 맡음.
+<ul>
+<li><code>typ</code>: 토큰의 <code>유형</code></li>
+<li><code>alg</code>: 사용된 <code>서명 알고리즘</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>Payload</code>
+<ul>
+<li>0개 이상의 <code>클레임</code>을 포함하는 JSON 객체로, <code>엔티티</code>(주로 <code>사용자</code>)와 추가적인 데이터로 이뤄짐.</li>
+<li><code>클레임</code>은 <code>registered</code>, <code>public</code>, <code>private</code> 세 가지 종류가 있음.
+<ul>
+<li><code>registered</code>
+<ul>
+<li><strong>미리 정의된</strong> <code>클레임 셋</code>으로, 필수는 아니지만 권장되는 사항으로 유용하며 상호 운용 가능함.
+<ul>
+<li><code>iss</code>(issuer): JWT를 <code>발급한 주체</code>를 식별</li>
+<li><code>sub</code>(subject): JWT의 주제가 되는 <code>주체(인증가능한 엔티티)</code>.
+<ul>
+<li>JWT의 클레임은 일반적으로 <code>subject</code>에 대한 진술임.</li>
+<li>또한, 발행자의 컨텍스트상에서 또는 전역적으로 <code>subject</code>는 고유해야함.</li>
+</ul>
+</li>
+<li><code>aud</code>(Audience): JWT가 <code>의도하는 수신자</code>를 식별
+<ul>
+<li>즉, JWT를 처리하는 각 주체들은 <code>aud</code> 클레임 값으로 자신을 식별해야 함.</li>
+</ul>
+</li>
+<li><code>exp</code>(expiration time): JWT 처리가 허용되어서는 안되는 <code>만료 시간(또는 그 이후)</code></li>
+<li><code>nbf</code>(not before): JWT 처리가 허용되어서는 안되는 <code>이전 시간</code></li>
+<li><code>iat</code>(issued at): JWT가 <code>발행된 시점</code>을 식별</li>
+<li><code>jti</code>(jwt id): JWT의 <code>고유 식별자</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>public</code>
+<ul>
+<li>JWT를 <code>사용하는 측</code>에서 <code>마음대로 정의</code>할 수 있음</li>
+<li>다만 충돌 방지를 위해선 <code>IANA JSON Web Token Registry</code>에 정의되어 있거나, <code>충돌 방지 네임스페이스가 포함된 URI</code>로 정의해야 함.</li>
+</ul>
+</li>
+<li><code>private</code>
+<ul>
+<li><code>사용자 지정 클레임</code>으로, 사용에 동의한 당사자 간에 정보 공유하기 위해 만듦</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>signature</code>
+<ul>
+<li>Base64 인코딩된 <code>헤더</code>, <code>페이로드</code>, <code>비밀</code>을 가져와 <code>헤더에 지정된 알고리즘</code>으로 <code>서명</code>한 값
+<ul>
+<li>예를 들어, <code>HMAC SHA256</code> 알고리즘으로 서명하는 경우 다음과 같음
+<ul>
+<li><code>HMACSHA256(base64UrlEncode(header) + &quot;.&quot; + base64UrlEncode(payload), secret)</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>서명</code>은 메시지가 <code>도중에 변경되진 않았는지 확인</code>하는데 사용
+<ul>
+<li><code>개인 키로 서명된 토큰</code>은 JWT 발신자가 <code>본인이 맞는지 확인</code>할 수도 있음</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="jwt의-장점" >JWT의 장점
+<span>
+    <a href="#jwt%ec%9d%98-%ec%9e%a5%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>SSO</code>와 같은 시스템에서 주로 사용되는 또 다른 인증 포맷인 <code>SAML 토큰</code> 대비</p>
+<h4 id="더-간결하다" >더 간결하다
+<span>
+    <a href="#%eb%8d%94-%ea%b0%84%ea%b2%b0%ed%95%98%eb%8b%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>JSON</code>은 <code>XML</code>보다 장황하지 않아 웬만한 경우 <code>JWT</code>가 <code>SAML 토큰</code>보다 작음.
+<ul>
+<li><code>SAML(Security Assertion Markup Language)</code>: <code>SSO</code>와 같은 인증 방식에서 사용되는 포맷으로, XML을 기반으로 <code>인증 대상자가 누구인지</code> 알려주는 표준화된 방법
+<ul>
+<li><a href="https://www.okta.com/kr/blog/2020/09/what-is-saml/">SAML | Okta Identity Korea</a></li>
+<li><a href="https://www.cloudflare.com/ko-kr/learning/access-management/what-is-saml/">SAML이란? | SAML 인증이 작동하는 방식 | Cloudflare</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>따라서 <code>HTML</code> 및 <code>HTTP</code>환경에서 전달하기 용이함</li>
+</ul>
+<h4 id="더-안전하다" >더 안전하다
+<span>
+    <a href="#%eb%8d%94-%ec%95%88%ec%a0%84%ed%95%98%eb%8b%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>JWT는 서명을 위해 <code>X.509 인증서</code> 형식의 <code>공개-개인키 쌍</code>을 사용하거나, <code>HMAC 알고리즘</code>을 사용해 <code>공유된 비밀</code>로 대칭적 서명이 가능</li>
+<li><code>SAML 토큰</code>은 JWT와 같이 <code>공개-개인키 쌍</code>을 사용할 수 있지만, 취약점없이 <code>XML 디지털 서명</code>을 통해 XML에 서명하는것은 <code>JSON 서명</code>의 <strong><code>단순성</code></strong> 에 비하면 매우 어려움</li>
+</ul>
+<h4 id="더-대중적이다" >더 대중적이다
+<span>
+    <a href="#%eb%8d%94-%eb%8c%80%ec%a4%91%ec%a0%81%ec%9d%b4%eb%8b%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>JSON parser</code>는 <code>JSON</code>이 객체에 직접 매핑되므로 대부분의 프로그래밍 언어에서 <code>일반적</code>임</li>
+<li>반면 <code>XML</code>은 자연스러운 <code>문서-to-객체</code> 매핑이 없음
+<ul>
+<li>따라서 <code>SAML assertion</code> 대비 작업이 더 쉬움</li>
+</ul>
+</li>
+</ul>
+<h2 id="signature는-어떻게-만들어지나요" >Signature는 어떻게 만들어지나요?
+<span>
+    <a href="#signature%eb%8a%94-%ec%96%b4%eb%96%bb%ea%b2%8c-%eb%a7%8c%eb%93%a4%ec%96%b4%ec%a7%80%eb%82%98%ec%9a%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>Base64 인코딩된 <code>헤더</code>, <code>페이로드</code>, <code>비밀</code>을 가져와 <code>헤더에 지정된 알고리즘</code>으로 <code>signature</code>를 만듦
+<ul>
+<li>예를 들어, <code>HMAC SHA256</code> 알고리즘으로 서명하는 경우 다음과 같음
+<ul>
+<li><code>HMACSHA256(base64UrlEncode(header) + &quot;.&quot; + base64UrlEncode(payload), secret)</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="만약-access-token이-탈취되면-어떻게-대응할-수-있을까요--반대로-refresh-token이-탈취되면-어떻게-대응해야-할까요" >만약 Access Token이 탈취되면, 어떻게 대응할 수 있을까요? / 반대로 Refresh Token이 탈취되면, 어떻게 대응해야 할까요?
+<span>
+    <a href="#%eb%a7%8c%ec%95%bd-access-token%ec%9d%b4-%ed%83%88%ec%b7%a8%eb%90%98%eb%a9%b4-%ec%96%b4%eb%96%bb%ea%b2%8c-%eb%8c%80%ec%9d%91%ed%95%a0-%ec%88%98-%ec%9e%88%ec%9d%84%ea%b9%8c%ec%9a%94--%eb%b0%98%eb%8c%80%eb%a1%9c-refresh-token%ec%9d%b4-%ed%83%88%ec%b7%a8%eb%90%98%eb%a9%b4-%ec%96%b4%eb%96%bb%ea%b2%8c-%eb%8c%80%ec%9d%91%ed%95%b4%ec%95%bc-%ed%95%a0%ea%b9%8c%ec%9a%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>토큰이 탈취 당한 경우, 아래와 같은 방법들을 통해 <code>토큰을 무효화</code>해야합니다.</p>
+<h3 id="토큰-블랙리스트" >토큰 블랙리스트
+<span>
+    <a href="#%ed%86%a0%ed%81%b0-%eb%b8%94%eb%9e%99%eb%a6%ac%ec%8a%a4%ed%8a%b8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>유효하지 않은 것으로 간주되어야 할 토큰의 <code>jti</code> 클레임, 또는 <code>사용자 id</code>와 같은 <code>식별자</code>를 <code>서버측 블랙리스트</code>에서 관리하는 방법</li>
+<li>API 엔드포인트에 토큰이 제시되면, 서버는 블랙리스트에 포함되었는지 확인</li>
+<li>블랙리스트는 주로 <code>Redis</code>와 같이 접근 속도가 빠른 <code>인-메모리 저장소</code>에 저장하거나,  <code>DB</code>에 저장</li>
+<li>장점
+<ul>
+<li><code>세분화된 제어</code>: 다른 토큰들에 영향 없이 특정 토큰만 무효화 할 수 있음</li>
+<li><code>호환성</code>: 다양한 백엔드 환경에서 사용 가능함</li>
+</ul>
+</li>
+<li>단점
+<ul>
+<li><code>확장성</code>: 블랙리스트에 포함된 <code>토큰 수가 증가</code>하면 <code>블랙리스트 조회 성능이 저하</code>될 수 있음</li>
+<li><code>서비스가 Stateful해짐</code>: 블랙리스트를 계속 유지한다는 것은, <code>상태를 계속 유지</code>한다는 것과 사실상 동일. 이는 <code>JWT</code>의 <code>Stateless</code>한 특성과 상충됨</li>
+</ul>
+</li>
+</ul>
+<h3 id="짧은-토큰-수명" >짧은 토큰 수명
+<span>
+    <a href="#%ec%a7%a7%ec%9d%80-%ed%86%a0%ed%81%b0-%ec%88%98%eb%aa%85">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>토큰의 수명(<code>exp</code>)을 <code>매우 짧게 설정</code>해, 공격자가 액세스 토큰을 탈취해도 많이 사용할 수 없음.</li>
+<li>이는 공격자가 <code>리프레시 토큰</code>은 탈취하지 못한 경우 매우 유용</li>
+<li>장점
+<ul>
+<li><code>노출 감소</code>: 토큰이 탈취되어도 <code>공격에 노출되는 시간이 최소화</code>됨</li>
+<li><code>Stateless 유지</code>: 별도의 <code>서버 측 저장소가 필요하지 않음</code></li>
+</ul>
+</li>
+<li>단점
+<ul>
+<li><code>사용자 경험</code>: 사용자가 <code>더 자주 인증</code>해야 함</li>
+<li><code>즉각적인 해지 불가능</code>: 탈취당해도 해당 토큰이 <code>수명에 다다르길 기다려야 함</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="비밀-로테이션" >비밀 로테이션
+<span>
+    <a href="#%eb%b9%84%eb%b0%80-%eb%a1%9c%ed%85%8c%ec%9d%b4%ec%85%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>JWT</code> 서명에 사용되는 <code>비밀(secret) 키</code>를 주기적으로 교체하면, 이전 <code>비밀 키</code>로 서명된 <code>모든 기존 토큰들을 무효화</code> 할 수 있음
+<ul>
+<li>이는 보안 사고가 발생했거나, 인증 전략을 변경한 뒤 <code>많은 수의 토큰</code>을 <code>동시에 해지</code>해야할 때 특히 유용</li>
+</ul>
+</li>
+<li>장점
+<ul>
+<li><code>매우 안전</code>: 정기적으로 로테이션되는 <code>비밀</code>은 보안 계층을 추가하는 셈</li>
+<li><code>광범위한 영향</code>: 기존의 모든 토큰들을 <code>한 번에 무효화 해야하는 케이스</code>에 매우 효과적</li>
+</ul>
+</li>
+<li>단점
+<ul>
+<li><code>복잡한 키 관리</code>: 실수로 <code>합법적인 토큰</code>을 무효화하지 않도록 신중한 관리가 필요</li>
+<li><code>토큰 재생성</code>: <code>비밀 로테이션</code> 이후 클라이언트는 새로운 JWT를 획득해야 해 클라이언트-백엔드 간 <code>상호 작용 복잡</code>하게 만들 수 있음</li>
+</ul>
+</li>
+</ul>
+<h3 id="토큰-버전-관리" >토큰 버전 관리
+<span>
+    <a href="#%ed%86%a0%ed%81%b0-%eb%b2%84%ec%a0%84-%ea%b4%80%eb%a6%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>발행된 각 <code>JWT</code>에 <code>버전 번호</code>를 할당한 뒤, 사용자의 계정 정보와 함께 <code>DB에 저장</code></li>
+<li>만약 토큰을 무효화해야 할 경우, <code>DB</code>의 <code>버전 번호를 증가</code>시켜 <code>이전 토큰들을 무효화</code>
+<ul>
+<li>증가된 이후, 사용자가 인증을 시도할 경우 <code>업데이트된 버전이 포함된 토큰</code>을 제시해야 함</li>
+</ul>
+</li>
+<li>장점
+<ul>
+<li><code>선택적 무효화</code>: 사용자의 계정 상태나 기타 기준에 따라 <code>특정 대상만 무효화</code> 할 수 있음</li>
+<li><code>호환성</code>: 다양한 신원 제공자 및 인증 시스템과 <code>함께 사용</code>될 수 있음</li>
+</ul>
+</li>
+<li>단점
+<ul>
+<li><code>복잡성 증가</code>: 토큰 버전 역시 검증해야 하므로 <code>추가적인 로직</code>이 필요</li>
+<li><code>데이터베이스 종속성</code>: DB 검색을 통해 토큰 버전을 검증하므로, 검색하는데 <code>지연 시간</code>이 발생할 수 있음</li>
+</ul>
+</li>
+</ul>
+<h3 id="사용자-로그아웃-및-강제-토큰-무효화" >사용자 로그아웃 및 강제 토큰 무효화
+<span>
+    <a href="#%ec%82%ac%ec%9a%a9%ec%9e%90-%eb%a1%9c%ea%b7%b8%ec%95%84%ec%9b%83-%eb%b0%8f-%ea%b0%95%ec%a0%9c-%ed%86%a0%ed%81%b0-%eb%ac%b4%ed%9a%a8%ed%99%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>사용자가 <code>로그아웃</code> 할 때, <code>서버에서 마킹</code>하거나 <code>세션을 만료</code>시켜 <code>JWT 토큰</code>을 <code>무효화</code>
+<ul>
+<li>로그아웃 이후 탈취된 토큰을 사용하는 것을 방지</li>
+</ul>
+</li>
+<li>장점
+<ul>
+<li><code>즉시 발동</code>: 토큰이 <code>즉시 무효화</code> 됨</li>
+<li><code>사용자 제어</code>: 사용자는 로그아웃을 통해 <code>본인의 세션 보안을 제어</code>할 수 있음</li>
+</ul>
+</li>
+<li>단점
+<ul>
+<li><code>Stateful함</code>: 토큰 무효화를 위해 <code>서버측 상태를 유지</code>해야 함</li>
+<li><code>구현 복잡성</code>: <code>분산 환경</code>과 같이 여러 엔드포인트가 있는 경우 <code>구현하기 어려울 수</code> 있음</li>
+</ul>
+</li>
+</ul>
+<h3 id="토큰-무효화-목록token-revocation-list-trl" >토큰 무효화 목록(Token Revocation List, TRL)
+<span>
+    <a href="#%ed%86%a0%ed%81%b0-%eb%ac%b4%ed%9a%a8%ed%99%94-%eb%aa%a9%eb%a1%9dtoken-revocation-list-trl">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>토큰 블랙리스트</code>와 유사하지만, <code>토큰 취소 여부</code>를 확인하기 위한 <strong><code>쿼리</code></strong> 가 가능한 <code>중앙 집중/분산형 서비스</code>로 구현됨
+<ul>
+<li>이는 <code>여러 서비스, 엔드포인트</code>에서 취소 여부를 확인해야 하는 <code>대규모 분산 시스템</code>에 효과적</li>
+</ul>
+</li>
+<li>장점
+<ul>
+<li><code>확장성</code>:  분산 환경에서 높은 부하를 처리하도록 설계됨</li>
+<li><code>중앙 집중식 관리</code>: 토큰 무효화를 <code>중앙 집중화</code>해 토큰 무효화 정책의 관리를 간소화</li>
+</ul>
+</li>
+<li>단점
+<ul>
+<li><code>지연 시간</code>: <code>토큰 무효화 목록</code>이 인-메모리 DB에 저장되지 않거나 최적화가 되어있지 않은 경우 지연시간 발생 가능</li>
+<li><code>복잡성</code>: <code>TRL</code>의 구현 및 유지를 위한 신중한 설계 필요</li>
+</ul>
+</li>
+</ul>
+<h3 id="토큰에-유저-컨텍스트-포함하기-httpscheatsheetseriesowasporgcheatsheetsjson_web_token_for_java_cheat_sheethtmltoken-sidejacking" >토큰에 유저 컨텍스트 포함하기 <a href="https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html#token-sidejacking">#</a>
+<span>
+    <a href="#%ed%86%a0%ed%81%b0%ec%97%90-%ec%9c%a0%ec%a0%80-%ec%bb%a8%ed%85%8d%ec%8a%a4%ed%8a%b8-%ed%8f%ac%ed%95%a8%ed%95%98%ea%b8%b0-httpscheatsheetseriesowasporgcheatsheetsjson_web_token_for_java_cheat_sheethtmltoken-sidejacking">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>토큰에 <code>유저 컨텍스트</code>를 추가해 사용자인지 공격자인지 식별.</li>
+<li><code>유저 컨텍스트</code>는 다음과 같은 정보로 구성됨
+<ul>
+<li>인증 단계에서 <code>무작위 문자열</code>을 생성해, <code>굳어진 쿠키(hardend cookie)</code>로 클라이언트에게 전송
+<ul>
+<li><code>굳어진 쿠키</code>는 <code>HttpOnly</code> + <code>Secure</code> + <code>SameSite</code> + <code>Max-Age</code> + <code>cookie prefixes</code>와 같은 플래그가 설정된 쿠키</li>
+<li>이때, <code>쿠키의 수명(Max-Age)</code>은 <code>JWT 만료값(exp)</code>보다 작거나 같도록 설정해야 함</li>
+</ul>
+</li>
+<li>공격자가 이를 읽고 예상되는 쿠키를 설정하는 <code>XSS 문제</code>를 방지하기 위해, <code>무작위 문자열</code>의 <code>SHA256 해시</code>를 원본 값 대신 토큰에 저장</li>
+</ul>
+</li>
+<li>서버는 <code>토큰 검증</code> 중 <strong>올바른 컨텍스트가 포함되지 않은 경우</strong>, <code>토큰을 거부</code>해야 함.</li>
+</ul>
+<h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc7519">RFC 7519 - JSON Web Token (JWT) (ietf.org)</a></li>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc7515">RFC 7515 - JSON Web Signature (JWS) (ietf.org)</a></li>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc7516">RFC 7516 - JSON Web Encryption (JWE) (ietf.org)</a></li>
+<li><a href="https://www.ibm.com/docs/en/order-management?topic=users-jwt-authentication">JWT authentication - IBM Documentation</a></li>
+<li><a href="https://auth0.com/docs/secure/tokens/access-tokens/json-web-encryption">JSON Web Encryption (auth0.com)</a></li>
+<li><a href="https://www.scottbrady91.com/jose/json-web-encryption">Understanding JSON Web Encryption (JWE) (scottbrady91.com)</a></li>
+<li><a href="https://jwt.io/introduction">JSON Web Token Introduction - jwt.io</a></li>
+<li><a href="https://www.cloudflare.com/ko-kr/learning/access-management/what-is-saml/">SAML이란? | SAML 인증이 작동하는 방식 | Cloudflare</a></li>
+<li><a href="https://www.okta.com/kr/blog/2020/09/what-is-saml/">SAML | Okta Identity Korea</a></li>
+<li><a href="https://supertokens.com/blog/revoking-access-with-a-jwt-blacklist#">7 Ways To Revoke JWT Tokens - SuperTokens</a></li>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html">JSON Web Token for Java - OWASP Cheat Sheet Series</a></li>
+<li>추후 참고할 것
+<ul>
+<li><a href="https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html">Session Management - OWASP Cheat Sheet Series</a></li>
+<li><a href="https://openid.net/specs/draft-jones-json-web-encryption-02.html">JSON Web Encryption (JWE) (openid.net)</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/network/jwt/"><time datetime="2024-10-10">2024-10-10 16:46 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/network/jwt/">https://cloudsoswift.github.io/post/develop/network/jwt/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/network/">#Network</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/web/">#Web</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/xss/">#XSS</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/jwt/">#JWT</a></li>
+                
+                    
+                    <li><a href="">#인증</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/network/xss/">[웹, 네트워크] XSS 알아보기</a></li>
+                
+                <li><a href="/post/develop/network/sop/">[웹, 네트워크] SOP 알아보기</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/javascript/react/design-pattern/">[React] React의 디자인 패턴</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>

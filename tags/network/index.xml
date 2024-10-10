@@ -6,10 +6,475 @@
     <description>오늘도 개발을 한다. (Network)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Tue, 19 Mar 2024 19:51:00 +0900</lastBuildDate>
+    <lastBuildDate>Thu, 10 Oct 2024 16:46:55 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/tags/network/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[Network] JWT 알아보기 (w. JWE, JWS)</title>
+      <link>https://cloudsoswift.github.io/post/develop/network/jwt/</link>
+      <pubDate>Thu, 10 Oct 2024 16:46:55 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/network/jwt/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 10월 8일 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/05-ETC/13_JWT/Readme.md&#34;&gt;&lt;strong&gt;JWT&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;jwt-인증-방식이-무엇인가요&#34; &gt;JWT 인증 방식이 무엇인가요?
+&lt;span&gt;
+    &lt;a href=&#34;#jwt-%ec%9d%b8%ec%a6%9d-%eb%b0%a9%ec%8b%9d%ec%9d%b4-%eb%ac%b4%ec%97%87%ec%9d%b8%ea%b0%80%ec%9a%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;JWT 인증 방식&lt;/code&gt;이란, &lt;em&gt;두 당사자 간 전송할 &lt;code&gt;클레임(claim)&lt;/code&gt;&lt;/em&gt; 을 나타내는 &lt;code&gt;JWT(JSON 웹 토큰)&lt;/code&gt;을 통해 사용자를 &lt;code&gt;인증&lt;/code&gt;하는 방식을 말합니다.&lt;br&gt;
+&lt;code&gt;JWT&lt;/code&gt;는 공간이 제약된 환경, 예를 들어 &lt;code&gt;HTTP Authorization 헤더&lt;/code&gt;, &lt;code&gt;URI 쿼리 매개변수&lt;/code&gt;와 같은 환경에서 &lt;code&gt;클레임들&lt;/code&gt;을 주고 받을 수 있도록 &lt;code&gt;간결화&lt;/code&gt;하는 것이 목적입니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;클레임&lt;/code&gt;: &lt;code&gt;키-값 쌍&lt;/code&gt;으로 이뤄진 데이터&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;jwt&#34; &gt;JWT?
+&lt;span&gt;
+    &lt;a href=&#34;#jwt&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;JWT(JSON Web Token)&lt;/code&gt;는 당사자 간 정보를 &lt;code&gt;JSON 객체&lt;/code&gt;로 안전하게 전송하기 위한 간결하고 독립적인 방법을 정의하는 개방형 표준(&lt;a href=&#34;https://datatracker.ietf.org/doc/html/rfc7519&#34;&gt;RFC 7519&lt;/a&gt;)입니다.&lt;br&gt;
+&lt;code&gt;JWT&lt;/code&gt;는 &lt;code&gt;정보(클레임 집합)&lt;/code&gt;를 &lt;code&gt;선택적 서명(JWS 구조로 인코딩)/암호화(JWE 구조로 인코딩)&lt;/code&gt;한 &lt;code&gt;JSON 객체&lt;/code&gt;라고 할 수 있으며, 이 &lt;code&gt;JSON 객체&lt;/code&gt;는 &lt;code&gt;0개 이상의 클레임&lt;/code&gt;을 가질 수 있습니다.&lt;br&gt;
+&lt;img src=&#34;JWT-workflow.png&#34; alt=&#34;JWT-workflow.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처: &lt;a href=&#34;https://www.freecodecamp.org/news/how-to-sign-and-validate-json-web-tokens/&#34;&gt;How to Sign and Validate JSON Web Tokens – JWT Tutorial (freecodecamp.org)&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;주로 인증 과정에서 사용자가 자격 증명을 통해 로그인에 성공하면 JWT가 반환되며, 사용자가 &lt;code&gt;보호된 경로/리소스&lt;/code&gt;에 접근할 경우 &lt;code&gt;Bearer&lt;/code&gt; 스키마를 통해 &lt;code&gt;Authorization&lt;/code&gt; 헤더에 JWT를 첨부해 요청해야 합니다.&lt;br&gt;
+즉, 다음과 같은 형태를 띄어야 합니다.&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Authorization: Bearer &amp;lt;token&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;jwejson-web-encryption-rfc-7516httpsdatatrackerietforgdochtmlrfc7516&#34; &gt;JWE(JSON Web Encryption) &lt;a href=&#34;https://datatracker.ietf.org/doc/html/rfc7516&#34;&gt;RFC 7516&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#jwejson-web-encryption-rfc-7516httpsdatatrackerietforgdochtmlrfc7516&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;JWE.png&#34; alt=&#34;JWE.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처: &lt;a href=&#34;https://dzone.com/articles/using-json-web-encryption-jwe&#34;&gt;Using JSON Web Encryption (JWE) - DZone&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;JWT 내용을 디지털 방식으로 암호화 함.
+&lt;ul&gt;
+&lt;li&gt;따라서 &lt;code&gt;무결성 검증&lt;/code&gt; 및 &lt;code&gt;콘텐츠 보호&lt;/code&gt;에 사용할 수 있음.&lt;/li&gt;
+&lt;li&gt;또한 &lt;code&gt;인증된 암호화(AUtehmticated Encryption)&lt;/code&gt;를 통해 평문의 &lt;code&gt;기밀성&lt;/code&gt;과 &lt;code&gt;무결성&lt;/code&gt;, &lt;code&gt;JWE 보호 헤더(JWE Protected Header)&lt;/code&gt;의 &lt;code&gt;무결성&lt;/code&gt;을 보장.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;본질적으로 콘텐츠를 암호화 하므로, `HTTP 상에서 사용할 수 있음.&lt;/li&gt;
+&lt;li&gt;일반적인 구조&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;lt;Base64URL 인코딩 된 UTF8 인코딩 형태의 JWE Protected Header&amp;gt;.&amp;lt;Base64URL 인코딩 된 JWE Encrypted Key&amp;gt;.&amp;lt;Base64URL 인코딩 된 JWE Initialization Vector&amp;gt;.&amp;lt;Base64URL 인코딩 된 JWE Ciphertext&amp;gt;.&amp;lt;Base64URL 인코딩 된 JWE Authentication Tag&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;과정
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;JWT Protected Header&lt;/code&gt;를 선언한다.
+&lt;ul&gt;
+&lt;li&gt;헤더는 다음 두 가지를 갖고있다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;alg&lt;/code&gt;: &lt;code&gt;콘텐츠 암호화 키(Content Encryption Key)&lt;/code&gt;를 어떤 알고리즘을 사용해 암호화할지 나타냄.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;enc&lt;/code&gt;: 어떤 알고리즘을 사용해 &lt;code&gt;인증된 암호화(AUtehmticated Encryption)&lt;/code&gt;를 수행할지 지 나타냄.
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;인증된 암호화&lt;/code&gt;는 평문에 대해 수행되어, &lt;code&gt;암호화된 텍스트(ciphertext)&lt;/code&gt;와 &lt;code&gt;인증 태그(Authentication Tag)&lt;/code&gt;를 생성함.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이후 이를 &lt;code&gt;UTF-8&lt;/code&gt;로 인코딩 한 뒤, &lt;code&gt;Base64URL&lt;/code&gt;로 인코딩 한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;랜덤한 &lt;code&gt;CEK(콘텐츠 암호화 키)&lt;/code&gt;를 생성한다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;CEK&lt;/code&gt;를 &lt;code&gt;RSAES-OAEP&lt;/code&gt; 알고리즘을 사용해 수신자의 &lt;code&gt;공개키&lt;/code&gt;로 암호화하여, &lt;code&gt;JWE Encrypted Key&lt;/code&gt;를 생성한 뒤, &lt;code&gt;Base64URL&lt;/code&gt; 인코딩을 수행한다.&lt;/li&gt;
+&lt;li&gt;랜덤한 &lt;code&gt;JWE Initialization Vector&lt;/code&gt;를 생성한 뒤, Base64URL 인코딩을 수행한다.&lt;/li&gt;
+&lt;li&gt;평문에 &lt;code&gt;AES GCM&lt;/code&gt; 알고리즘을 사용해 &lt;code&gt;인증된 암호화&lt;/code&gt;를 수행한다.
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;CEK&lt;/code&gt;를 &lt;code&gt;암호화 키&lt;/code&gt;로 사용하며, 추가로 &lt;code&gt;JWE Initialization Vector&lt;/code&gt;, &lt;code&gt;AAD&lt;/code&gt; 역시 사용한다.&lt;/li&gt;
+&lt;li&gt;이를 통해 &lt;code&gt;Ciphertext(암호문)&lt;/code&gt;와 128비트 &lt;code&gt;JWE Authentication Tag&lt;/code&gt;를 만들어내고, 이들에 대해 Base64URL 인코딩을 수행한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;jwsjson-web-signature-rfc-7515httpsdatatrackerietforgdochtmlrfc7515&#34; &gt;JWS(JSON Web Signature) &lt;a href=&#34;https://datatracker.ietf.org/doc/html/rfc7515&#34;&gt;RFC 7515&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#jwsjson-web-signature-rfc-7515httpsdatatrackerietforgdochtmlrfc7515&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;JWT.png&#34; alt=&#34;JWT.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처: &lt;a href=&#34;https://fusionauth.io/articles/tokens/jwt-components-explained&#34;&gt;Components of JWTs Explained (fusionauth.io)&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;디지털 서명을 통해 발신자-수신자 간 전송되는 JWT 내용이 &lt;code&gt;변조되지 않음&lt;/code&gt;을 &lt;code&gt;보장&lt;/code&gt;하는 &lt;code&gt;JWT&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;일반적으로 &lt;code&gt;JWT 인증&lt;/code&gt;에 사용되는 형태는 &lt;code&gt;JWS&lt;/code&gt;라고 할 수 있음&lt;/li&gt;
+&lt;li&gt;특징
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;내용(클레임)&lt;/code&gt;은 타인도 읽을 수 있음.
+&lt;ul&gt;
+&lt;li&gt;따라서 비밀번호와 같은 &lt;code&gt;민감 데이터&lt;/code&gt;를 &lt;code&gt;전송하는데 사용해서는 안 됨&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;본질적으로 타인이 데이터를 읽는 것을 방지하지 않으므로, &lt;code&gt;HTTPS&lt;/code&gt; 또는 &lt;code&gt;SSL&lt;/code&gt;를 통해 전송됨.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;비밀(secret)&lt;/code&gt;(&lt;code&gt;HMAC&lt;/code&gt; 알고리즘) 또는 &lt;code&gt;공개-개인 키 쌍&lt;/code&gt;(&lt;code&gt;RSA&lt;/code&gt;, &lt;code&gt;ECDSA&lt;/code&gt; 알고리즘)을 사용해 &lt;code&gt;서명&lt;/code&gt;할 수 있음.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;일반적인 구조&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&amp;lt;Base64URL 인코딩된 헤더&amp;gt;.&amp;lt;Base64URL 인코딩된 페이로드&amp;gt;.&amp;lt;Base64URL 인코딩된 시그니처&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;jwt의-구조&#34; &gt;JWT의 구조
+&lt;span&gt;
+    &lt;a href=&#34;#jwt%ec%9d%98-%ea%b5%ac%ec%a1%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;JWT&lt;/code&gt;는 점(&lt;code&gt;.&lt;/code&gt;)으로 구분된 &lt;code&gt;세 가지 부분&lt;/code&gt;으로 &lt;code&gt;구성&lt;/code&gt;되어 있음
+즉, &lt;code&gt;&amp;lt;header&amp;gt;.&amp;lt;payload&amp;gt;.&amp;lt;signature&amp;gt;&lt;/code&gt;와 같은 형태&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;header&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;일반적으로 두 부분을 갖는 &lt;code&gt;JSON 객체&lt;/code&gt;로, Base64URL 인코딩을 거쳐 JWT의 첫 번째 부분을 맡음.
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;typ&lt;/code&gt;: 토큰의 &lt;code&gt;유형&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;alg&lt;/code&gt;: 사용된 &lt;code&gt;서명 알고리즘&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Payload&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;0개 이상의 &lt;code&gt;클레임&lt;/code&gt;을 포함하는 JSON 객체로, &lt;code&gt;엔티티&lt;/code&gt;(주로 &lt;code&gt;사용자&lt;/code&gt;)와 추가적인 데이터로 이뤄짐.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;클레임&lt;/code&gt;은 &lt;code&gt;registered&lt;/code&gt;, &lt;code&gt;public&lt;/code&gt;, &lt;code&gt;private&lt;/code&gt; 세 가지 종류가 있음.
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;registered&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;미리 정의된&lt;/strong&gt; &lt;code&gt;클레임 셋&lt;/code&gt;으로, 필수는 아니지만 권장되는 사항으로 유용하며 상호 운용 가능함.
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;iss&lt;/code&gt;(issuer): JWT를 &lt;code&gt;발급한 주체&lt;/code&gt;를 식별&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;sub&lt;/code&gt;(subject): JWT의 주제가 되는 &lt;code&gt;주체(인증가능한 엔티티)&lt;/code&gt;.
+&lt;ul&gt;
+&lt;li&gt;JWT의 클레임은 일반적으로 &lt;code&gt;subject&lt;/code&gt;에 대한 진술임.&lt;/li&gt;
+&lt;li&gt;또한, 발행자의 컨텍스트상에서 또는 전역적으로 &lt;code&gt;subject&lt;/code&gt;는 고유해야함.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;aud&lt;/code&gt;(Audience): JWT가 &lt;code&gt;의도하는 수신자&lt;/code&gt;를 식별
+&lt;ul&gt;
+&lt;li&gt;즉, JWT를 처리하는 각 주체들은 &lt;code&gt;aud&lt;/code&gt; 클레임 값으로 자신을 식별해야 함.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;exp&lt;/code&gt;(expiration time): JWT 처리가 허용되어서는 안되는 &lt;code&gt;만료 시간(또는 그 이후)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;nbf&lt;/code&gt;(not before): JWT 처리가 허용되어서는 안되는 &lt;code&gt;이전 시간&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;iat&lt;/code&gt;(issued at): JWT가 &lt;code&gt;발행된 시점&lt;/code&gt;을 식별&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;jti&lt;/code&gt;(jwt id): JWT의 &lt;code&gt;고유 식별자&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;public&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;JWT를 &lt;code&gt;사용하는 측&lt;/code&gt;에서 &lt;code&gt;마음대로 정의&lt;/code&gt;할 수 있음&lt;/li&gt;
+&lt;li&gt;다만 충돌 방지를 위해선 &lt;code&gt;IANA JSON Web Token Registry&lt;/code&gt;에 정의되어 있거나, &lt;code&gt;충돌 방지 네임스페이스가 포함된 URI&lt;/code&gt;로 정의해야 함.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;private&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;사용자 지정 클레임&lt;/code&gt;으로, 사용에 동의한 당사자 간에 정보 공유하기 위해 만듦&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;signature&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;Base64 인코딩된 &lt;code&gt;헤더&lt;/code&gt;, &lt;code&gt;페이로드&lt;/code&gt;, &lt;code&gt;비밀&lt;/code&gt;을 가져와 &lt;code&gt;헤더에 지정된 알고리즘&lt;/code&gt;으로 &lt;code&gt;서명&lt;/code&gt;한 값
+&lt;ul&gt;
+&lt;li&gt;예를 들어, &lt;code&gt;HMAC SHA256&lt;/code&gt; 알고리즘으로 서명하는 경우 다음과 같음
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;HMACSHA256(base64UrlEncode(header) + &amp;quot;.&amp;quot; + base64UrlEncode(payload), secret)&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;서명&lt;/code&gt;은 메시지가 &lt;code&gt;도중에 변경되진 않았는지 확인&lt;/code&gt;하는데 사용
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;개인 키로 서명된 토큰&lt;/code&gt;은 JWT 발신자가 &lt;code&gt;본인이 맞는지 확인&lt;/code&gt;할 수도 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;jwt의-장점&#34; &gt;JWT의 장점
+&lt;span&gt;
+    &lt;a href=&#34;#jwt%ec%9d%98-%ec%9e%a5%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;SSO&lt;/code&gt;와 같은 시스템에서 주로 사용되는 또 다른 인증 포맷인 &lt;code&gt;SAML 토큰&lt;/code&gt; 대비&lt;/p&gt;
+&lt;h4 id=&#34;더-간결하다&#34; &gt;더 간결하다
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8d%94-%ea%b0%84%ea%b2%b0%ed%95%98%eb%8b%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;JSON&lt;/code&gt;은 &lt;code&gt;XML&lt;/code&gt;보다 장황하지 않아 웬만한 경우 &lt;code&gt;JWT&lt;/code&gt;가 &lt;code&gt;SAML 토큰&lt;/code&gt;보다 작음.
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;SAML(Security Assertion Markup Language)&lt;/code&gt;: &lt;code&gt;SSO&lt;/code&gt;와 같은 인증 방식에서 사용되는 포맷으로, XML을 기반으로 &lt;code&gt;인증 대상자가 누구인지&lt;/code&gt; 알려주는 표준화된 방법
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.okta.com/kr/blog/2020/09/what-is-saml/&#34;&gt;SAML | Okta Identity Korea&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cloudflare.com/ko-kr/learning/access-management/what-is-saml/&#34;&gt;SAML이란? | SAML 인증이 작동하는 방식 | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;따라서 &lt;code&gt;HTML&lt;/code&gt; 및 &lt;code&gt;HTTP&lt;/code&gt;환경에서 전달하기 용이함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;더-안전하다&#34; &gt;더 안전하다
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8d%94-%ec%95%88%ec%a0%84%ed%95%98%eb%8b%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;JWT는 서명을 위해 &lt;code&gt;X.509 인증서&lt;/code&gt; 형식의 &lt;code&gt;공개-개인키 쌍&lt;/code&gt;을 사용하거나, &lt;code&gt;HMAC 알고리즘&lt;/code&gt;을 사용해 &lt;code&gt;공유된 비밀&lt;/code&gt;로 대칭적 서명이 가능&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;SAML 토큰&lt;/code&gt;은 JWT와 같이 &lt;code&gt;공개-개인키 쌍&lt;/code&gt;을 사용할 수 있지만, 취약점없이 &lt;code&gt;XML 디지털 서명&lt;/code&gt;을 통해 XML에 서명하는것은 &lt;code&gt;JSON 서명&lt;/code&gt;의 &lt;strong&gt;&lt;code&gt;단순성&lt;/code&gt;&lt;/strong&gt; 에 비하면 매우 어려움&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;더-대중적이다&#34; &gt;더 대중적이다
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8d%94-%eb%8c%80%ec%a4%91%ec%a0%81%ec%9d%b4%eb%8b%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;JSON parser&lt;/code&gt;는 &lt;code&gt;JSON&lt;/code&gt;이 객체에 직접 매핑되므로 대부분의 프로그래밍 언어에서 &lt;code&gt;일반적&lt;/code&gt;임&lt;/li&gt;
+&lt;li&gt;반면 &lt;code&gt;XML&lt;/code&gt;은 자연스러운 &lt;code&gt;문서-to-객체&lt;/code&gt; 매핑이 없음
+&lt;ul&gt;
+&lt;li&gt;따라서 &lt;code&gt;SAML assertion&lt;/code&gt; 대비 작업이 더 쉬움&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;signature는-어떻게-만들어지나요&#34; &gt;Signature는 어떻게 만들어지나요?
+&lt;span&gt;
+    &lt;a href=&#34;#signature%eb%8a%94-%ec%96%b4%eb%96%bb%ea%b2%8c-%eb%a7%8c%eb%93%a4%ec%96%b4%ec%a7%80%eb%82%98%ec%9a%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Base64 인코딩된 &lt;code&gt;헤더&lt;/code&gt;, &lt;code&gt;페이로드&lt;/code&gt;, &lt;code&gt;비밀&lt;/code&gt;을 가져와 &lt;code&gt;헤더에 지정된 알고리즘&lt;/code&gt;으로 &lt;code&gt;signature&lt;/code&gt;를 만듦
+&lt;ul&gt;
+&lt;li&gt;예를 들어, &lt;code&gt;HMAC SHA256&lt;/code&gt; 알고리즘으로 서명하는 경우 다음과 같음
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;HMACSHA256(base64UrlEncode(header) + &amp;quot;.&amp;quot; + base64UrlEncode(payload), secret)&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;만약-access-token이-탈취되면-어떻게-대응할-수-있을까요--반대로-refresh-token이-탈취되면-어떻게-대응해야-할까요&#34; &gt;만약 Access Token이 탈취되면, 어떻게 대응할 수 있을까요? / 반대로 Refresh Token이 탈취되면, 어떻게 대응해야 할까요?
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a7%8c%ec%95%bd-access-token%ec%9d%b4-%ed%83%88%ec%b7%a8%eb%90%98%eb%a9%b4-%ec%96%b4%eb%96%bb%ea%b2%8c-%eb%8c%80%ec%9d%91%ed%95%a0-%ec%88%98-%ec%9e%88%ec%9d%84%ea%b9%8c%ec%9a%94--%eb%b0%98%eb%8c%80%eb%a1%9c-refresh-token%ec%9d%b4-%ed%83%88%ec%b7%a8%eb%90%98%eb%a9%b4-%ec%96%b4%eb%96%bb%ea%b2%8c-%eb%8c%80%ec%9d%91%ed%95%b4%ec%95%bc-%ed%95%a0%ea%b9%8c%ec%9a%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;토큰이 탈취 당한 경우, 아래와 같은 방법들을 통해 &lt;code&gt;토큰을 무효화&lt;/code&gt;해야합니다.&lt;/p&gt;
+&lt;h3 id=&#34;토큰-블랙리스트&#34; &gt;토큰 블랙리스트
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%86%a0%ed%81%b0-%eb%b8%94%eb%9e%99%eb%a6%ac%ec%8a%a4%ed%8a%b8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;유효하지 않은 것으로 간주되어야 할 토큰의 &lt;code&gt;jti&lt;/code&gt; 클레임, 또는 &lt;code&gt;사용자 id&lt;/code&gt;와 같은 &lt;code&gt;식별자&lt;/code&gt;를 &lt;code&gt;서버측 블랙리스트&lt;/code&gt;에서 관리하는 방법&lt;/li&gt;
+&lt;li&gt;API 엔드포인트에 토큰이 제시되면, 서버는 블랙리스트에 포함되었는지 확인&lt;/li&gt;
+&lt;li&gt;블랙리스트는 주로 &lt;code&gt;Redis&lt;/code&gt;와 같이 접근 속도가 빠른 &lt;code&gt;인-메모리 저장소&lt;/code&gt;에 저장하거나,  &lt;code&gt;DB&lt;/code&gt;에 저장&lt;/li&gt;
+&lt;li&gt;장점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;세분화된 제어&lt;/code&gt;: 다른 토큰들에 영향 없이 특정 토큰만 무효화 할 수 있음&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;호환성&lt;/code&gt;: 다양한 백엔드 환경에서 사용 가능함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;단점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;확장성&lt;/code&gt;: 블랙리스트에 포함된 &lt;code&gt;토큰 수가 증가&lt;/code&gt;하면 &lt;code&gt;블랙리스트 조회 성능이 저하&lt;/code&gt;될 수 있음&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;서비스가 Stateful해짐&lt;/code&gt;: 블랙리스트를 계속 유지한다는 것은, &lt;code&gt;상태를 계속 유지&lt;/code&gt;한다는 것과 사실상 동일. 이는 &lt;code&gt;JWT&lt;/code&gt;의 &lt;code&gt;Stateless&lt;/code&gt;한 특성과 상충됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;짧은-토큰-수명&#34; &gt;짧은 토큰 수명
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a7%a7%ec%9d%80-%ed%86%a0%ed%81%b0-%ec%88%98%eb%aa%85&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;토큰의 수명(&lt;code&gt;exp&lt;/code&gt;)을 &lt;code&gt;매우 짧게 설정&lt;/code&gt;해, 공격자가 액세스 토큰을 탈취해도 많이 사용할 수 없음.&lt;/li&gt;
+&lt;li&gt;이는 공격자가 &lt;code&gt;리프레시 토큰&lt;/code&gt;은 탈취하지 못한 경우 매우 유용&lt;/li&gt;
+&lt;li&gt;장점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;노출 감소&lt;/code&gt;: 토큰이 탈취되어도 &lt;code&gt;공격에 노출되는 시간이 최소화&lt;/code&gt;됨&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Stateless 유지&lt;/code&gt;: 별도의 &lt;code&gt;서버 측 저장소가 필요하지 않음&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;단점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;사용자 경험&lt;/code&gt;: 사용자가 &lt;code&gt;더 자주 인증&lt;/code&gt;해야 함&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;즉각적인 해지 불가능&lt;/code&gt;: 탈취당해도 해당 토큰이 &lt;code&gt;수명에 다다르길 기다려야 함&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;비밀-로테이션&#34; &gt;비밀 로테이션
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b9%84%eb%b0%80-%eb%a1%9c%ed%85%8c%ec%9d%b4%ec%85%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;JWT&lt;/code&gt; 서명에 사용되는 &lt;code&gt;비밀(secret) 키&lt;/code&gt;를 주기적으로 교체하면, 이전 &lt;code&gt;비밀 키&lt;/code&gt;로 서명된 &lt;code&gt;모든 기존 토큰들을 무효화&lt;/code&gt; 할 수 있음
+&lt;ul&gt;
+&lt;li&gt;이는 보안 사고가 발생했거나, 인증 전략을 변경한 뒤 &lt;code&gt;많은 수의 토큰&lt;/code&gt;을 &lt;code&gt;동시에 해지&lt;/code&gt;해야할 때 특히 유용&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;장점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;매우 안전&lt;/code&gt;: 정기적으로 로테이션되는 &lt;code&gt;비밀&lt;/code&gt;은 보안 계층을 추가하는 셈&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;광범위한 영향&lt;/code&gt;: 기존의 모든 토큰들을 &lt;code&gt;한 번에 무효화 해야하는 케이스&lt;/code&gt;에 매우 효과적&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;단점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;복잡한 키 관리&lt;/code&gt;: 실수로 &lt;code&gt;합법적인 토큰&lt;/code&gt;을 무효화하지 않도록 신중한 관리가 필요&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;토큰 재생성&lt;/code&gt;: &lt;code&gt;비밀 로테이션&lt;/code&gt; 이후 클라이언트는 새로운 JWT를 획득해야 해 클라이언트-백엔드 간 &lt;code&gt;상호 작용 복잡&lt;/code&gt;하게 만들 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;토큰-버전-관리&#34; &gt;토큰 버전 관리
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%86%a0%ed%81%b0-%eb%b2%84%ec%a0%84-%ea%b4%80%eb%a6%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;발행된 각 &lt;code&gt;JWT&lt;/code&gt;에 &lt;code&gt;버전 번호&lt;/code&gt;를 할당한 뒤, 사용자의 계정 정보와 함께 &lt;code&gt;DB에 저장&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;만약 토큰을 무효화해야 할 경우, &lt;code&gt;DB&lt;/code&gt;의 &lt;code&gt;버전 번호를 증가&lt;/code&gt;시켜 &lt;code&gt;이전 토큰들을 무효화&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;증가된 이후, 사용자가 인증을 시도할 경우 &lt;code&gt;업데이트된 버전이 포함된 토큰&lt;/code&gt;을 제시해야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;장점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;선택적 무효화&lt;/code&gt;: 사용자의 계정 상태나 기타 기준에 따라 &lt;code&gt;특정 대상만 무효화&lt;/code&gt; 할 수 있음&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;호환성&lt;/code&gt;: 다양한 신원 제공자 및 인증 시스템과 &lt;code&gt;함께 사용&lt;/code&gt;될 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;단점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;복잡성 증가&lt;/code&gt;: 토큰 버전 역시 검증해야 하므로 &lt;code&gt;추가적인 로직&lt;/code&gt;이 필요&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;데이터베이스 종속성&lt;/code&gt;: DB 검색을 통해 토큰 버전을 검증하므로, 검색하는데 &lt;code&gt;지연 시간&lt;/code&gt;이 발생할 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;사용자-로그아웃-및-강제-토큰-무효화&#34; &gt;사용자 로그아웃 및 강제 토큰 무효화
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%82%ac%ec%9a%a9%ec%9e%90-%eb%a1%9c%ea%b7%b8%ec%95%84%ec%9b%83-%eb%b0%8f-%ea%b0%95%ec%a0%9c-%ed%86%a0%ed%81%b0-%eb%ac%b4%ed%9a%a8%ed%99%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;사용자가 &lt;code&gt;로그아웃&lt;/code&gt; 할 때, &lt;code&gt;서버에서 마킹&lt;/code&gt;하거나 &lt;code&gt;세션을 만료&lt;/code&gt;시켜 &lt;code&gt;JWT 토큰&lt;/code&gt;을 &lt;code&gt;무효화&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;로그아웃 이후 탈취된 토큰을 사용하는 것을 방지&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;장점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;즉시 발동&lt;/code&gt;: 토큰이 &lt;code&gt;즉시 무효화&lt;/code&gt; 됨&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;사용자 제어&lt;/code&gt;: 사용자는 로그아웃을 통해 &lt;code&gt;본인의 세션 보안을 제어&lt;/code&gt;할 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;단점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Stateful함&lt;/code&gt;: 토큰 무효화를 위해 &lt;code&gt;서버측 상태를 유지&lt;/code&gt;해야 함&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;구현 복잡성&lt;/code&gt;: &lt;code&gt;분산 환경&lt;/code&gt;과 같이 여러 엔드포인트가 있는 경우 &lt;code&gt;구현하기 어려울 수&lt;/code&gt; 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;토큰-무효화-목록token-revocation-list-trl&#34; &gt;토큰 무효화 목록(Token Revocation List, TRL)
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%86%a0%ed%81%b0-%eb%ac%b4%ed%9a%a8%ed%99%94-%eb%aa%a9%eb%a1%9dtoken-revocation-list-trl&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;토큰 블랙리스트&lt;/code&gt;와 유사하지만, &lt;code&gt;토큰 취소 여부&lt;/code&gt;를 확인하기 위한 &lt;strong&gt;&lt;code&gt;쿼리&lt;/code&gt;&lt;/strong&gt; 가 가능한 &lt;code&gt;중앙 집중/분산형 서비스&lt;/code&gt;로 구현됨
+&lt;ul&gt;
+&lt;li&gt;이는 &lt;code&gt;여러 서비스, 엔드포인트&lt;/code&gt;에서 취소 여부를 확인해야 하는 &lt;code&gt;대규모 분산 시스템&lt;/code&gt;에 효과적&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;장점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;확장성&lt;/code&gt;:  분산 환경에서 높은 부하를 처리하도록 설계됨&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;중앙 집중식 관리&lt;/code&gt;: 토큰 무효화를 &lt;code&gt;중앙 집중화&lt;/code&gt;해 토큰 무효화 정책의 관리를 간소화&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;단점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;지연 시간&lt;/code&gt;: &lt;code&gt;토큰 무효화 목록&lt;/code&gt;이 인-메모리 DB에 저장되지 않거나 최적화가 되어있지 않은 경우 지연시간 발생 가능&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;복잡성&lt;/code&gt;: &lt;code&gt;TRL&lt;/code&gt;의 구현 및 유지를 위한 신중한 설계 필요&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;토큰에-유저-컨텍스트-포함하기-httpscheatsheetseriesowasporgcheatsheetsjson_web_token_for_java_cheat_sheethtmltoken-sidejacking&#34; &gt;토큰에 유저 컨텍스트 포함하기 &lt;a href=&#34;https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html#token-sidejacking&#34;&gt;#&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%86%a0%ed%81%b0%ec%97%90-%ec%9c%a0%ec%a0%80-%ec%bb%a8%ed%85%8d%ec%8a%a4%ed%8a%b8-%ed%8f%ac%ed%95%a8%ed%95%98%ea%b8%b0-httpscheatsheetseriesowasporgcheatsheetsjson_web_token_for_java_cheat_sheethtmltoken-sidejacking&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;토큰에 &lt;code&gt;유저 컨텍스트&lt;/code&gt;를 추가해 사용자인지 공격자인지 식별.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;유저 컨텍스트&lt;/code&gt;는 다음과 같은 정보로 구성됨
+&lt;ul&gt;
+&lt;li&gt;인증 단계에서 &lt;code&gt;무작위 문자열&lt;/code&gt;을 생성해, &lt;code&gt;굳어진 쿠키(hardend cookie)&lt;/code&gt;로 클라이언트에게 전송
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;굳어진 쿠키&lt;/code&gt;는 &lt;code&gt;HttpOnly&lt;/code&gt; + &lt;code&gt;Secure&lt;/code&gt; + &lt;code&gt;SameSite&lt;/code&gt; + &lt;code&gt;Max-Age&lt;/code&gt; + &lt;code&gt;cookie prefixes&lt;/code&gt;와 같은 플래그가 설정된 쿠키&lt;/li&gt;
+&lt;li&gt;이때, &lt;code&gt;쿠키의 수명(Max-Age)&lt;/code&gt;은 &lt;code&gt;JWT 만료값(exp)&lt;/code&gt;보다 작거나 같도록 설정해야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;공격자가 이를 읽고 예상되는 쿠키를 설정하는 &lt;code&gt;XSS 문제&lt;/code&gt;를 방지하기 위해, &lt;code&gt;무작위 문자열&lt;/code&gt;의 &lt;code&gt;SHA256 해시&lt;/code&gt;를 원본 값 대신 토큰에 저장&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;서버는 &lt;code&gt;토큰 검증&lt;/code&gt; 중 &lt;strong&gt;올바른 컨텍스트가 포함되지 않은 경우&lt;/strong&gt;, &lt;code&gt;토큰을 거부&lt;/code&gt;해야 함.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://datatracker.ietf.org/doc/html/rfc7519&#34;&gt;RFC 7519 - JSON Web Token (JWT) (ietf.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://datatracker.ietf.org/doc/html/rfc7515&#34;&gt;RFC 7515 - JSON Web Signature (JWS) (ietf.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://datatracker.ietf.org/doc/html/rfc7516&#34;&gt;RFC 7516 - JSON Web Encryption (JWE) (ietf.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.ibm.com/docs/en/order-management?topic=users-jwt-authentication&#34;&gt;JWT authentication - IBM Documentation&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://auth0.com/docs/secure/tokens/access-tokens/json-web-encryption&#34;&gt;JSON Web Encryption (auth0.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.scottbrady91.com/jose/json-web-encryption&#34;&gt;Understanding JSON Web Encryption (JWE) (scottbrady91.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://jwt.io/introduction&#34;&gt;JSON Web Token Introduction - jwt.io&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cloudflare.com/ko-kr/learning/access-management/what-is-saml/&#34;&gt;SAML이란? | SAML 인증이 작동하는 방식 | Cloudflare&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.okta.com/kr/blog/2020/09/what-is-saml/&#34;&gt;SAML | Okta Identity Korea&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://supertokens.com/blog/revoking-access-with-a-jwt-blacklist#&#34;&gt;7 Ways To Revoke JWT Tokens - SuperTokens&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html&#34;&gt;JSON Web Token for Java - OWASP Cheat Sheet Series&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;추후 참고할 것
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html&#34;&gt;Session Management - OWASP Cheat Sheet Series&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://openid.net/specs/draft-jones-json-web-encryption-02.html&#34;&gt;JSON Web Encryption (JWE) (openid.net)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>[웹, 네트워크] XSS 알아보기</title>
