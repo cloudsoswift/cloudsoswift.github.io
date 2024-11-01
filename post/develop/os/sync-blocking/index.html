@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[OS] 동기-비동기, 블로킹-논블로킹 알아보기 (w. I/O 멀티플렉싱) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 10월 22일 발표한 동기와 비동기, 블로킹과 논블로킹에 대해 정리한 문서를 블로그에 공유하고자 한다.
+동기와 비동기, 블로킹과 논블로킹의 차이에 대하여두 가지 모두 &ldquo;연관 되어있는 프로세스/함수간의 작업 순서&quot;에 대해 설명하는 유사한 개념으로 볼 수 있음. 하지만 어떠한 것을 중점으로 두는 개념인가는 다름. 동기 - 비동기 작업 순서, 호출 시점 에 중점 A 함수가 B 함수를 호출하고, 그 결과를 기다린 뒤 이를 활용해 다음 로직을 수행하는 함수라면, 동기적 블로킹 - 논블로킹 실행 제어권 에 중점 A 함수가 B 함수를 호출하고, 제어권을 넘겨준다면 블로킹 동기 - 비동기출처: Operating System Concepts, 9th Edition">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[OS] 동기-비동기, 블로킹-논블로킹 알아보기 (w. I/O 멀티플렉싱)" />
+<meta property="og:description" content="서론CS 스터디에서 10월 22일 발표한 동기와 비동기, 블로킹과 논블로킹에 대해 정리한 문서를 블로그에 공유하고자 한다.
+동기와 비동기, 블로킹과 논블로킹의 차이에 대하여두 가지 모두 &ldquo;연관 되어있는 프로세스/함수간의 작업 순서&quot;에 대해 설명하는 유사한 개념으로 볼 수 있음. 하지만 어떠한 것을 중점으로 두는 개념인가는 다름. 동기 - 비동기 작업 순서, 호출 시점 에 중점 A 함수가 B 함수를 호출하고, 그 결과를 기다린 뒤 이를 활용해 다음 로직을 수행하는 함수라면, 동기적 블로킹 - 논블로킹 실행 제어권 에 중점 A 함수가 B 함수를 호출하고, 제어권을 넘겨준다면 블로킹 동기 - 비동기출처: Operating System Concepts, 9th Edition" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/os/sync-blocking/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-11-01T16:43:45+09:00" />
+<meta property="article:modified_time" content="2024-11-01T16:43:45+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[OS] 동기-비동기, 블로킹-논블로킹 알아보기 (w. I/O 멀티플렉싱)"/>
+<meta name="twitter:description" content="서론CS 스터디에서 10월 22일 발표한 동기와 비동기, 블로킹과 논블로킹에 대해 정리한 문서를 블로그에 공유하고자 한다.
+동기와 비동기, 블로킹과 논블로킹의 차이에 대하여두 가지 모두 &ldquo;연관 되어있는 프로세스/함수간의 작업 순서&quot;에 대해 설명하는 유사한 개념으로 볼 수 있음. 하지만 어떠한 것을 중점으로 두는 개념인가는 다름. 동기 - 비동기 작업 순서, 호출 시점 에 중점 A 함수가 B 함수를 호출하고, 그 결과를 기다린 뒤 이를 활용해 다음 로직을 수행하는 함수라면, 동기적 블로킹 - 논블로킹 실행 제어권 에 중점 A 함수가 B 함수를 호출하고, 제어권을 넘겨준다면 블로킹 동기 - 비동기출처: Operating System Concepts, 9th Edition"/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[OS] 동기-비동기, 블로킹-논블로킹 알아보기 (w. I/O 멀티플렉싱)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#동기와-비동기-블로킹과-논블로킹의-차이에-대하여">동기와 비동기, 블로킹과 논블로킹의 차이에 대하여</a>
+      <ul>
+        <li><a href="#동기---비동기">동기 - 비동기</a></li>
+        <li><a href="#블로킹---논블로킹-io-작업을-예시로">블로킹 - 논블로킹 (I/O 작업을 예시로)</a></li>
+      </ul>
+    </li>
+    <li><a href="#동기이면서-논블로킹이고-비동기이면서-블로킹인-경우는-의미가-있다고-할-수-있는가">동기이면서 논블로킹이고, 비동기이면서 블로킹인 경우는 의미가 있다고 할 수 있는가?</a>
+      <ul>
+        <li><a href="#동기---논블로킹">동기 - 논블로킹</a></li>
+        <li><a href="#비동기---블로킹">비동기 - 블로킹</a></li>
+      </ul>
+    </li>
+    <li><a href="#io-멀티플렉싱이란">I/O 멀티플렉싱이란?</a>
+      <ul>
+        <li><a href="#io-멀티플렉싱의-여러-구현-방식">I/O 멀티플렉싱의 여러 구현 방식</a></li>
+      </ul>
+    </li>
+    <li><a href="#논블로킹-io에서-결과를-수신하는-방법">논블로킹 I/O에서 결과를 수신하는 방법?</a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 10월 22일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/02-OPERATING_SYSTEM/23_Blocking-NonBlocking/Readme.md"><strong>동기와 비동기, 블로킹과 논블로킹</strong></a>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h2 id="동기와-비동기-블로킹과-논블로킹의-차이에-대하여" >동기와 비동기, 블로킹과 논블로킹의 차이에 대하여
+<span>
+    <a href="#%eb%8f%99%ea%b8%b0%ec%99%80-%eb%b9%84%eb%8f%99%ea%b8%b0-%eb%b8%94%eb%a1%9c%ed%82%b9%ea%b3%bc-%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9%ec%9d%98-%ec%b0%a8%ec%9d%b4%ec%97%90-%eb%8c%80%ed%95%98%ec%97%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>두 가지 모두 &ldquo;연관 되어있는 프로세스/함수간의 작업 순서&quot;에 대해 설명하는 유사한 개념으로 볼 수 있음.
+<ul>
+<li>하지만 어떠한 것을 중점으로 두는 개념인가는 다름.
+<ul>
+<li><code>동기 - 비동기</code>
+<ul>
+<li><strong><code>작업 순서</code></strong>, <strong><code>호출 시점</code></strong> 에 중점
+<ul>
+<li><code>A 함수</code>가 <code>B 함수</code>를 호출하고, 그 <code>결과를 기다린 뒤</code> 이를 <code>활용</code>해 다음 로직을 수행하는 함수라면, <code>동기적</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>블로킹 - 논블로킹</code>
+<ul>
+<li><strong><code>실행 제어권</code></strong> 에 중점
+<ul>
+<li><code>A 함수</code>가 <code>B 함수</code>를 호출하고, 제어권을 넘겨준다면 <code>블로킹</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="동기---비동기" >동기 - 비동기
+<span>
+    <a href="#%eb%8f%99%ea%b8%b0---%eb%b9%84%eb%8f%99%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><img src="sync-async.png" alt="sync-async.png"></p>
+<blockquote>
+<p>출처: Operating System Concepts, 9th Edition</p>
+</blockquote>
+<h4 id="동기" >동기
+<span>
+    <a href="#%eb%8f%99%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>앞의 작업이 완료되어야 이후의 작업이 시작되는 순차적인 처리방식
+<ul>
+<li>즉, <code>작업의 순서</code>가 <code>보장</code>됨</li>
+</ul>
+</li>
+</ul>
+<h4 id="비동기" >비동기
+<span>
+    <a href="#%eb%b9%84%eb%8f%99%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>앞의 작업이 완료되길 기다리지 않고 다음 작업을 실행할 수 있는 방식
+<ul>
+<li>즉, <code>작업의 순서</code>가 <code>보장되지 않으며</code>, <code>병렬</code>로 작업이 실행 가능함
+<ul>
+<li>이는 각 작업이 <code>독립적</code>이거나, 작업 별 <code>지연시간이 긴 경우</code> 효율적</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>프로세스 실행 뿐만 아니라, <code>I/O 작업</code> 역시 <code>비동기적</code>으로 처리 가능
+<ul>
+<li>주로 미리 애플리케이션의 <code>일부 주소 공간에 변수를 설정</code>하거나, <em>애플리케이션 제어 흐름 외부에서 동작</em>하는 <code>신호(signal)</code>, <code>콜백의 트리거</code> 등을 통해 미래에 I/O 작업이 완료되면 애플리케이션 값을 전달</li>
+<li>즉, 결과 값을 기다리지 않고 일단 바로 반환함</li>
+</ul>
+</li>
+</ul>
+<h3 id="블로킹---논블로킹-io-작업을-예시로" >블로킹 - 논블로킹 (I/O 작업을 예시로)
+<span>
+    <a href="#%eb%b8%94%eb%a1%9c%ed%82%b9---%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9-io-%ec%9e%91%ec%97%85%ec%9d%84-%ec%98%88%ec%8b%9c%eb%a1%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><img src="blocking-nonblocking.png" alt="blocking-nonblocking.png"></p>
+<blockquote>
+<p>출처: <a href="https://docs.kii.com/en/guides/cloudsdk/android/guidelines/api/">Blocking vs. Non-Blocking API (kii.com)</a></p>
+</blockquote>
+<h4 id="블로킹" >블로킹
+<span>
+    <a href="#%eb%b8%94%eb%a1%9c%ed%82%b9">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>파일 읽기, 네트워크 요청 등의 <code>I/O 작업</code>을 수행하는 경우, <em>해당 작업이 <code>완료될 때까지</code></em> 프로그램 <code>실행 멈춤</code>
+<ul>
+<li>블로킹 I/O 작업이 호출되면 <code>작업(프로세스)</code>는 <code>실행 대기열(run queue)</code>에서 <code>대기 대기열(wait queue)</code>로 이동하며, <code>I/O 작업</code>이 완료되면 <code>작업</code>은 다시 <code>실행 대기열</code>로 이동함.
+<ul>
+<li>이때 실행이 재개되면서 <code>I/O 작업</code>으로 부터 <code>반환된 값</code>을 받음.</li>
+</ul>
+</li>
+<li>즉, <code>프로그램 실행 제어</code>를 <code>I/O 작업</code>에게 넘긴다고 볼 수 있음</li>
+</ul>
+</li>
+<li>대부분의 <code>애플리케이션 인터페이스</code>에서는 <code>블로킹 시스템 콜</code> 사용
+<ul>
+<li><code>블로킹</code> 방식이 <code>논블로킹</code> 방식보다 코드 이해가 쉽기 때문</li>
+</ul>
+</li>
+</ul>
+<h4 id="논블로킹" >논블로킹
+<span>
+    <a href="#%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>I/O 작업</code>을 수행하는 동안에도 프로그램 실행 <code>멈춤 없이</code> 계속 프로그램 작업 수행
+<ul>
+<li>주로 <code>이벤트 기반</code>이거나, <code>콜백 함수</code>를 사용하는 비동기 방식에서 사용됨.</li>
+<li>이외에도 <code>키보드-마우스 입력</code>을 받아 데이터 처리 및 표시하는 <code>UI</code>, <code>디스크 파일 읽어서</code> 디스플레이에 출력하는 <code>비디오 프로그램</code> 등이 대표적인 <code>논블로킹 I/O</code> 예시</li>
+</ul>
+</li>
+</ul>
+<h2 id="동기이면서-논블로킹이고-비동기이면서-블로킹인-경우는-의미가-있다고-할-수-있는가" >동기이면서 논블로킹이고, 비동기이면서 블로킹인 경우는 의미가 있다고 할 수 있는가?
+<span>
+    <a href="#%eb%8f%99%ea%b8%b0%ec%9d%b4%eb%a9%b4%ec%84%9c-%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9%ec%9d%b4%ea%b3%a0-%eb%b9%84%eb%8f%99%ea%b8%b0%ec%9d%b4%eb%a9%b4%ec%84%9c-%eb%b8%94%eb%a1%9c%ed%82%b9%ec%9d%b8-%ea%b2%bd%ec%9a%b0%eb%8a%94-%ec%9d%98%eb%af%b8%ea%b0%80-%ec%9e%88%eb%8b%a4%ea%b3%a0-%ed%95%a0-%ec%88%98-%ec%9e%88%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>두 경우 모두 결과적으로 <code>동기적</code>으로 동작하는, <code>각각의 특성을 살리지 못하는 방식</code>이라고 볼 수 있음</p>
+<h3 id="동기---논블로킹" >동기 - 논블로킹
+<span>
+    <a href="#%eb%8f%99%ea%b8%b0---%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>논블로킹</code> 방식이므로 <code>I/O 작업</code>을 수행하는 도중에도 원래 작업(프로세스)을 계속 실행할 수 있음
+<ul>
+<li><code>실행 제어권</code>을 넘기지 않기 때문</li>
+</ul>
+</li>
+<li>하지만 <code>동기</code> 방식이므로 <code>I/O 작업</code> 결과가 반환될 때 까지 다음 작업을 수행할 수 없음
+<ul>
+<li>계속 <code>Polling(프로세스가 실행 가능한 상태를 유지하며 이벤트를 기다리는 것)</code>하며 결과 값을 기다림</li>
+</ul>
+</li>
+<li>결과가 반환될 때까지, 결과가 필요한 이후 작업들을 수행하지 못하므로 <code>사실상 블로킹</code> 형태로 동작
+<ul>
+<li>다만, 결과가 필요하지 않은 작업들을 수행할 수 있는 경우 유의미</li>
+</ul>
+</li>
+</ul>
+<h3 id="비동기---블로킹" >비동기 - 블로킹
+<span>
+    <a href="#%eb%b9%84%eb%8f%99%ea%b8%b0---%eb%b8%94%eb%a1%9c%ed%82%b9">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>비동기</code> 방식이므로 현재 프로세스가 끝나지 않았어도 다른 작업을 수행할 수 있음</li>
+<li>하지만 <code>블로킹</code> 방식이므로, <code>I/O 작업</code>을 수행하는 경 현재 프로세스의 실행 제어권을 <code>I/O 작업</code>에게 넘기므로 해당 작업이 끝나기를 기다려야 함
+<ul>
+<li><code>I/O 작업이 잦은</code> 경우 <code>사실상 동기</code> 형태로 동작</li>
+</ul>
+</li>
+</ul>
+<h2 id="io-멀티플렉싱이란" >I/O 멀티플렉싱이란?
+<span>
+    <a href="#io-%eb%a9%80%ed%8b%b0%ed%94%8c%eb%a0%89%ec%8b%b1%ec%9d%b4%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><img src="IO-Multiplexing.png" alt="IO-Multiplexing.png"></p>
+<blockquote>
+<p>출처: <a href="https://www.cs.toronto.edu/~krueger/csc209h/f05/lectures/Week11-Select.pdf">Week11-Select.pdf</a></p>
+</blockquote>
+<p><img src="IO-Multiplexing_IBM.png" alt="IO-Multiplexing_IBM.png"></p>
+<blockquote>
+<p>출처 : <a href="developer.ibm.com">developer.ibm.com</a></p>
+</blockquote>
+<ul>
+<li><code>멀티플렉싱</code>
+<ul>
+<li><code>통신</code>에서 여러 <code>시그널</code> 또는 <code>정보 스트림</code>을 하나의 복잡한 신호로 동시에 전송하는 것</li>
+</ul>
+</li>
+<li><code>I/O 멀티 플렉싱?</code>
+<ul>
+<li><code>비동기 블로킹 I/O</code>를 부르는 또 다른 말로, <code>하나의 프로세스</code>가 <code>여러 파일을 관리</code>할 수 있도록 해주는 기법
+<ul>
+<li>프로세스에서 파일에 접근할 때 <code>파일 디스크립터(File Descripter, FD)</code>라는 추상적인 값을 사용
+<ul>
+<li>이 <code>파일</code>이라는 것엔 클라이언트와의 연결에 사용되는 <code>소켓</code> 같은 것도 포함됨
+<ul>
+<li><code>소켓</code> 역시 <code>IP/Port를 가진 파일</code>이기 때문</li>
+</ul>
+</li>
+<li>이러한 점에서 <code>다중 클라이언트 연결</code>을 지원하기 위한 <code>대안적인 접근 방식</code>이라고도 불림</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>FD를 어떻게 감시하는지, 어떤 상태로 대기하느냐에 따라 <code>select</code>, <code>poll</code>, <code>epoll(linux)</code>, <code>kqueue(bsd)</code>, <code>iocp(windows)</code>와 같은 기법들이 존재
+<ul>
+<li>메인 서버 루프는 <code>select</code>, <code>poll</code> 시스템 콜을 통해 <code>어떤 FD가 준비되었는지</code> 확인
+<ul>
+<li>즉, <code>read</code> 또는 <code>write</code> 작업은 <code>block 없이 바로 수행</code> 됨</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>동시성</code>을 위해 <code>프로세스/스레드를 사용하는 것에 비해</code> 다음과 같은 장/단점이 존재
+<ul>
+<li>장점: 프로세스/스레드 보다 클라이언트 연결 당 <code>오버헤드(CPU, 메모리)가 적음</code></li>
+<li>단점: <code>코드 복잡성이 증가</code>함</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>I/O 멀티 플렉싱</code>의 일반적인 흐름
+<ol>
+<li><code>애플리케이션</code>에서 <code>read</code> 요청</li>
+<li><code>커널</code>은 <code>read I/O</code>처리를 시작함과 동시에, <code>애플리케이션</code>에게 <code>미완료상태</code>(<code>EAGAIN</code>, 리소스를 일시적으로 사용할 수 없음)임을 반환</li>
+<li><code>애플리케이션</code>은 데이터가 준비되었다는 알람이 올 때 까지 기다림(<code>select()</code>)</li>
+<li><code>커널</code>에서 결과 값이 준비되었다는 callback 신호를 보냄</li>
+<li><code>애플리케이션</code>은 데이터를 <code>커널 공간</code>에서 <code>사용자 공간(buffer)</code>으로 복사해옴
+<ul>
+<li>실제 구현에서는 <code>select</code> 호출의 유의미한 값이 나올때 까지 애플리케이션은 loop를 돌며 대기</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h3 id="io-멀티플렉싱의-여러-구현-방식" >I/O 멀티플렉싱의 여러 구현 방식
+<span>
+    <a href="#io-%eb%a9%80%ed%8b%b0%ed%94%8c%eb%a0%89%ec%8b%b1%ec%9d%98-%ec%97%ac%eb%9f%ac-%ea%b5%ac%ed%98%84-%eb%b0%a9%ec%8b%9d">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="select" >select()
+<span>
+    <a href="#select">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/select.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">select</span>(<span style="color:#66d9ef">int</span> nfds, fd_set <span style="color:#f92672">*</span>readfds, fd_set <span style="color:#f92672">*</span>writefds, fd_set <span style="color:#f92672">*</span>exceptfds, <span style="color:#66d9ef">struct</span> timeval <span style="color:#f92672">*</span>timeout);
+</span></span></code></pre></div><ul>
+<li>대상 <code>FD</code>를 <code>배열</code>에 집어넣고 <code>하나하나 순차 검색</code>하는 방식
+<ul>
+<li><code>O(n)</code>의 시간복잡도를 가짐(대상 FD가 늘어날수록 오래 걸림)</li>
+</ul>
+</li>
+<li>이 <code>배열형태의 구조체</code>를 <code>fd_set</code>이라고 부르며, 각 <code>n번째 비트</code>는 <code>n-1 FD</code>에 대응됨
+<ul>
+<li>해당 비트가 <code>1</code>이면, <code>대응되는 파일에 변경이 감지되었음</code>을 의미</li>
+<li>변경을 감지하려면, 매 번 <code>최대 FD 개수</code>만큼 loop를 돌며 비트 값 하나하나를 검사해야 함</li>
+</ul>
+</li>
+<li><code>고정된 단일 bit table</code>을 사용하므로 관리할 수 있는 최대 FD 수가 1024개로 제한됨</li>
+</ul>
+<h4 id="pselect" >pselect()
+<span>
+    <a href="#pselect">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">pselect</span>(<span style="color:#66d9ef">int</span> nfds, fd_set <span style="color:#f92672">*</span> readfds, fd_set <span style="color:#f92672">*</span> writefds, fd_set <span style="color:#f92672">*</span> exceptfds, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> timespec <span style="color:#f92672">*</span> timeout, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">sigset_t</span> <span style="color:#f92672">*</span> sigmask);
+</span></span></code></pre></div><ul>
+<li><code>select</code>에서 <code>timeout</code>과 <code>signal 처리 로직을 개선</code>한 함수
+<ul>
+<li><code>timespec</code> 구조체를 사용해 나노초까지 정밀한 컨트롤 가능</li>
+<li><code>sigmask</code> 인자를 활용해 <code>signal에 의한 인터럽트</code> 발생시 block 시킬 수 있음</li>
+</ul>
+</li>
+</ul>
+<h4 id="poll" >poll()
+<span>
+    <a href="#poll">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;poll.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">poll</span>(<span style="color:#66d9ef">struct</span> pollfd <span style="color:#f92672">*</span> fds, <span style="color:#66d9ef">nfds_t</span> nfds, <span style="color:#66d9ef">int</span> timeout);
+</span></span></code></pre></div><ul>
+<li><code>하나 이상의 FD</code>에서 이벤트 발생시, <code>Blocking 해제</code>한 뒤 <code>해당 FD</code>로 들어온 데이터에 대한 <code>I/O 작업</code>을 수행하는 방식
+<ul>
+<li><code>관리 가능 FD 수</code>에 제한이 있던 <code>select</code>와 달리 <code>무한 개의 FD</code>를 검사할 수 있는 함수</li>
+</ul>
+</li>
+<li><code>실제 FD 개수(nfds)</code> 만큼만 loop를 돌아, FD 갯수가 <code>적은 경우</code> <code>select</code>대비 효율적일 수 있음
+<ul>
+<li>다만 <code>이벤트 전달</code>에 사용되는 <code>메모리가 커</code>(64bit, <code>select</code>는 3bit) <code>FD 수에 따라</code> 성능이 안좋아 질 수 있음</li>
+</ul>
+</li>
+</ul>
+<h4 id="epoll-linux" >epoll (linux)
+<span>
+    <a href="#epoll-linux">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/epoll.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// create
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">epoll_create</span>(<span style="color:#66d9ef">int</span> size);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// wait
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">epoll_wait</span>(<span style="color:#66d9ef">int</span> epfd, <span style="color:#66d9ef">struct</span> epoll_event <span style="color:#f92672">*</span> events,
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int</span> maxevents, <span style="color:#66d9ef">int</span> timeout);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// control
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">epoll_ctl</span>(<span style="color:#66d9ef">int</span> epfd, <span style="color:#66d9ef">int</span> op, <span style="color:#66d9ef">int</span> fd, <span style="color:#66d9ef">struct</span> epoll_event <span style="color:#f92672">*</span> event);
+</span></span></code></pre></div><ul>
+<li><code>poll()</code>과 유사하지만, <code>FD의 상태</code>를 <code>커널</code>에서 관리해 상태가 바뀐 것을 직접 통지해 주는 방식
+<ul>
+<li>애플리케이션에서 <code>루프를 돌 필요도 없고</code>, <code>변화가 감지된 FD의 목록을 반환</code>받으므로, <code>대상 파일을 추가 탐색할 필요도 없음</code></li>
+</ul>
+</li>
+<li><code>Edge Trigger</code>, <code>Level Trigger</code> 두 가지 방식이 존재
+<ul>
+<li><code>Level Trigger</code>
+<ul>
+<li>특정 상태가 <code>유지되는 동안</code> 감지</li>
+<li><code>입력 buffer</code>에 <code>데이터 남아있는 동안</code> 계속 이벤트 등록</li>
+</ul>
+</li>
+<li><code>Edge Trigger</code>
+<ul>
+<li>특정 상태가 <code>변화하는 시점</code>에만 감지</li>
+<li><code>입력 buffer</code>로 데이터 <code>수신된 그 상황</code>에 한 번만 이벤트 등록</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="kqueue-bsd" >kqueue (bsd)
+<span>
+    <a href="#kqueue-bsd">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/event.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// event를 저장할 새 Queue 커널에 요청
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">kqueue</span>(<span style="color:#66d9ef">void</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// kqueue에 특정한 이벤트를 등록하고, 보류중인 이벤트를 등록하거나 사용자한테 반환
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">kevent</span>(<span style="color:#66d9ef">int</span> kq,
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> kevent <span style="color:#f92672">*</span> changelist, <span style="color:#66d9ef">int</span> nchanges,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">struct</span> kevent <span style="color:#f92672">*</span> eventlist, <span style="color:#66d9ef">int</span> nevents,
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">struct</span> timespec <span style="color:#f92672">*</span> timeout);
+</span></span></code></pre></div><ul>
+<li>커널에 이벤트를 저장할 <code>queue</code>를 생성하면, <code>I/O 이벤트</code>가 <code>queue에 쌓이고</code> 사용자가 직접 <code>polling</code>하는 방식
+<ul>
+<li><code>select</code>, <code>poll</code> 처럼 발생한 <code>FD를 찾는 추가 작업 필요 X</code></li>
+</ul>
+</li>
+</ul>
+<h4 id="iocp-windows" >iocp (windows)
+<span>
+    <a href="#iocp-windows">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="IOCP.png" alt="IOCP.png"></p>
+<ul>
+<li>윈도우에서 지원하는 I/O 다중화 모델
+<ul>
+<li><code>여러 소켓</code>을 하나의 <code>IOCP 객체</code>로 처리
+<ul>
+<li>해당 객체 하위에서 동작하는 <code>thread 여러 개</code>가 <code>동시 대기</code></li>
+<li><em>커널로부터 받는 결과에 따라</em> <code>thread를 깨우거나 대기</code></li>
+</ul>
+</li>
+<li><code>완료 루틴(Completion Routine)</code>으로 I/O 작업 완료 통지를 받는 형태로 설계됨
+<ul>
+<li><code>완료 루틴</code>은 <code>콜백 함수</code>와 비슷한 역할로, <code>WSASend</code>/<code>WSARecv</code> 함수를 호출해 <code>I/O 작업이 완료된 시점</code>에 호출됨</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="논블로킹-io에서-결과를-수신하는-방법" >논블로킹 I/O에서 결과를 수신하는 방법?
+<span>
+    <a href="#%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9-io%ec%97%90%ec%84%9c-%ea%b2%b0%ea%b3%bc%eb%a5%bc-%ec%88%98%ec%8b%a0%ed%95%98%eb%8a%94-%eb%b0%a9%eb%b2%95">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><img src="nonblocking-IO.png" alt="nonblocking-IO.png"></p>
+<p>대부분의 <code>논블로킹 프레임워크</code>에서는 논블로킹 I/O의 결과를 수신하기 위해 지속적으로 <code>polling</code>하는 무한 루프, 흔히 <code>이벤트 루프</code>라고 부르는 것을 사용합니다.<br>
+<code>애플리케이션</code>에서는 지속적으로 커널에게 <code>read</code> 요청을 보내고, 커널에서는 아직 데이터가 준비되지 않은 경우 <code>EAGAIN/EWOULDBLOCK</code> 오류 코드(&lsquo;리소스를 일시적으로 사용할 수 없음&rsquo;을 의미)를 반환합니다.<br>
+만약 데이터가 준비된 경우, <code>애플리케이션</code>은 커널로부터 데이터를 <code>사용자 공간(buffer)</code>으로 복사해옵니다.<br>
+<code>오류 코드를 수신한 시점</code>에 <code>애플리케이션</code>은 <code>read</code> 요청을 <em>또 보낼 지</em> <code>선택</code>할 수 있어 <code>애플리케이션</code>은 <code>Block</code>되지 않습니다.<br>
+이외에도 I/O 작업이 완료된 경우 수행되는 <code>콜백 함수를 설정</code>하거나, I/O 작업이 완료되었다는 <code>signal</code>이 수신되는지 감지하는 방법 등 다양한 방법이 존재합니다.</p>
+<h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://jhucsf.github.io/spring2023/lectures/lecture33-public.pdf">Lecture 33: I/O multiplexing - David Hovemeyer</a></li>
+<li><a href="https://blog.naver.com/n_cloudplatform/222189669084">[네이버클라우드 기술&amp;경험] IO Multiplexing (IO 멀티플렉싱) 기본 개념부터 심화까지 -1부- : 네이버블로그</a></li>
+<li><a href="https://blog.naver.com/n_cloudplatform/222255261317">[네이버클라우드 기술&amp;경험] IO Multiplexing (IO 멀티플렉싱) 기본 개념부터 심화까지 -2부- : 네이버블로그</a></li>
+<li><a href="https://medium.com/ing-blog/how-does-non-blocking-io-work-under-the-hood-6299d2953c74">How does non-blocking IO work under the hood? | by Hielke de Vries | ING Blog | Medium</a></li>
+<li><a href="https://www.cs.toronto.edu/~krueger/csc209h/f05/lectures/Week11-Select.pdf">CSC 209H: Software Tools and Systems Programming - Summer 2006 - Week11-Select.pdf</a></li>
+<li><a href="https://man7.org/linux/man-pages/man3/errno.3.html">errno(3) - Linux manual page</a></li>
+<li>추가로 볼만한 자료
+<ul>
+<li><a href="https://www.cs.rutgers.edu/courses/416/classes/fall_2009_ganapathy/slides/io.pdf">CS 519: Operating System Theory</a></li>
+<li><a href="https://web.stanford.edu/class/archive/cs/cs110/cs110.1202/static/lectures/20-non-blocking-io.pdf">Lecture 20: Slow System Calls and Non-Blocking I/O</a></li>
+<li><a href="https://courses.cs.washington.edu/courses/cse333/12su/lectures/lec21.pdf">CSE 333 Lecture 21 &ndash; non-blocking I/O and select</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/os/sync-blocking/"><time datetime="2024-11-01">2024-11-01 16:43 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/os/sync-blocking/">https://cloudsoswift.github.io/post/develop/os/sync-blocking/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/os/">#OS</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/i/o/">#I/O</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/blocking/">#Blocking</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/synchronous/">#Synchronous</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/asynchronous/">#Asynchronous</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/blocking/">#Blocking</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/non-blocking/">#Non-Blocking</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/os/ipc/">[OS] IPC 알아보기</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item ">
+            
+                <a href="/post/develop/network/tcp-udp/">[Network] TCP와 UDP 알아보기 (w. 흐름 제어, 혼잡 제어, CongWin, HTTP/3)</a>
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/network/jwt/">[Network] JWT 알아보기 (w. JWE, JWS)</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>

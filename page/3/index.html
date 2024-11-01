@@ -225,6 +225,139 @@
             <article class="post-list h-feed">
     <div class="post-header">
         <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/database/db-locking/">[DB] DB Locking 알아보기</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            서론CS 스터디에서 2월 20일에 발표한 DB Locking에 대해 정리한 문서를 블로그에 공유하고자 한다.
+DB Locking이란?병행 트랜잭션이 가능한 환경에서, 변경중인 record를 다른 transaction들이 접근하지 못하도록 막음으로써, 병행 수행 문제를 해결하려는 접근 방법입니다.
+이러한 Locking을 위한 규약(Protocol)으로는 Shared Locking Protocol, 2PLP(2-Phase Locking Protocol), Multiple Granularity Locking Protocol 이 있습니다.
+병행 트랜잭션(Concurrent Transaction) 이란?동시에 실행되고 있는 둘 이상의 트랜잭션을 의미합니다.
+병행 트랜잭션의 장점DB의 공용도(Sharability) 제고응답시간(Response Time) 단축시스템 활용도(System Utilization) 증대병행 트랜잭션의 동시성 문제병행 트랜잭션의 병행 수행률이 상승할수록, 아래와 같은 병행 문제들의 발생률도 상승합니다.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/database/db-locking/"><time datetime="2024-02-26">2024-02-26 01:13 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/database/db-locking/">https://cloudsoswift.github.io/post/develop/database/db-locking/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/db/">#DB</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/locking/">#Locking</a></li>
+                
+                    
+                    <li><a href="">#동시성</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/database/b-tree-b&#43;tree/">[자료구조] B Tree와 B+tree 알아보기</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            서론CS 스터디에서 2월 13일에 발표한(정확히는 나는 2일 뒤인 15일에 발표했다.) B 트리와 B+ 트리에 대해 정리한 문서를 블로그에 공유하고자 한다.
+B-Tree와 B+Tree는 무엇일까B 트리 (B-Tree)이진 트리를 확장해 한 노드가 가질 수 있는 자식 노드의 갯수가 2개 이상인 자가 균형 이진 검색 트리(Self Balancing Binary Search Tree)의 일종이며, 각 노드가 갖고있는 키 들은 정렬되어 있습니다.
+다른 자체 균형 이진 검색 트리와 달리, B 트리는 DB, File System과 같이 큰 데이터 블록을 읽고 써야하는 스토리지 시스템에 적합합니다.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/database/b-tree-b&#43;tree/"><time datetime="2024-02-18">2024-02-18 09:58 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/database/b-tree-b&#43;tree/">https://cloudsoswift.github.io/post/develop/database/b-tree-b&#43;tree/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/db/">#DB</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/b-tree/">#B-Tree</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/b&#43;tree/">#B&#43;Tree</a></li>
+                
+                    
+                    <li><a href="">#자료구조</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+        
+            <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
             <h1 class="p-name post-title"><a class="u-url" href="/post/develop/java/reflection/">[Java] Reflection에 대해 알아보기</a></h1>
         </header>
         
@@ -645,124 +778,6 @@ JVMJVM이란?JVM(Java Virtual Machine, 자바 가상 머신) 은 Java Applicat
                 
             </ul>
         
-        
-        
-    </div>
-</div>
-
-</article>
-        
-            <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/algorithm/2023_october_fourth_week/">[알고리즘 주간 기록] 2023/10/4주차</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            2023년 10월 넷째 주 풀었던 알고리즘 문제들을 기록합니다.
-회고가 필요하다고 생각하는 문제(시간이 많이 걸렸거나, 모르는 알고리즘을 사용해야 했던 문제)만 별도로 문서를 작성해 정리합니다.
-일자 푼 문제 비고 10월 23일 17140. 이차원 배열과 연산 - 코드 10월 24일 10942. 팰린드롬? - 코드 10월 25일 11049. 행렬 곱셈 순서 - 코드 10월 26일 17144. 미세먼지 안녕! - 코드 10월 27일 16724. 피리 부는 사나이 - 코드 10월 28일 17404. RGB거리 2 - 코드 10월 29일 11404.
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/algorithm/2023_october_fourth_week/"><time datetime="2023-10-30">2023-10-30 21:18 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/algorithm/2023_october_fourth_week/">https://cloudsoswift.github.io/post/algorithm/2023_october_fourth_week/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/algorithm/">algorithm</a></li>
-                
-            </ul>
-        
-        
-        
-    </div>
-</div>
-
-</article>
-        
-            <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/java/builder-pattern/">빌더 패턴</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            디자인 패턴에서의 빌더 패턴과, Java에서의 빌더 패턴에 대해 알아보고자 한다.
-디자인 패턴에서의 빌더 패턴빌더 패턴은 복잡한 객체의 &lsquo;구성&rsquo;과 &lsquo;표현&rsquo;을 분리하여, 동일한 생성 절차가 다른 표현을 생성할 수 있도록 하는 패턴이다.
-한 마디로, 복잡한 객체의 생성을 단계적이고, 관리 가능하며, 상호 교환 가능한 작업들로 분해하는 것이다.
-구성 요소디렉터(Director)빌더 인터페이스를 사용해 객체의 생성을 조절하는 요소. 객체 생성의 순서를 명시함.
-빌더 인터페이스(Builder Interface)생성 단계에 대해 개략적으로 설명하는 요소.
-콘크리트 빌더(Concrete Builder)빌더 인터페이스를 구현하여, 각 생성 단계별 세부 사항을 제공하며 조합을 관리함.
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/java/builder-pattern/"><time datetime="2023-10-26">2023-10-26 02:22 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/builder-pattern/">https://cloudsoswift.github.io/post/develop/java/builder-pattern/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
-                
-            </ul>
-        
-        
-            <ul class="post-tags">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/effective-java/">#Effective Java</a></li>
-                
-                    
-                    <li><a href="">#빌더</a></li>
-                
-            </ul>
         
         
     </div>

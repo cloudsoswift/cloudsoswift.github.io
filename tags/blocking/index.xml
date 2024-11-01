@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Blocking on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/blocking/</link>
+    <description>오늘도 개발을 한다. (Blocking)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Fri, 01 Nov 2024 16:43:45 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/blocking/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[OS] 동기-비동기, 블로킹-논블로킹 알아보기 (w. I/O 멀티플렉싱)</title>
+      <link>https://cloudsoswift.github.io/post/develop/os/sync-blocking/</link>
+      <pubDate>Fri, 01 Nov 2024 16:43:45 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/os/sync-blocking/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 10월 22일 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/02-OPERATING_SYSTEM/23_Blocking-NonBlocking/Readme.md&#34;&gt;&lt;strong&gt;동기와 비동기, 블로킹과 논블로킹&lt;/strong&gt;&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;동기와-비동기-블로킹과-논블로킹의-차이에-대하여&#34; &gt;동기와 비동기, 블로킹과 논블로킹의 차이에 대하여
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8f%99%ea%b8%b0%ec%99%80-%eb%b9%84%eb%8f%99%ea%b8%b0-%eb%b8%94%eb%a1%9c%ed%82%b9%ea%b3%bc-%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9%ec%9d%98-%ec%b0%a8%ec%9d%b4%ec%97%90-%eb%8c%80%ed%95%98%ec%97%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;두 가지 모두 &amp;ldquo;연관 되어있는 프로세스/함수간의 작업 순서&amp;quot;에 대해 설명하는 유사한 개념으로 볼 수 있음.
+&lt;ul&gt;
+&lt;li&gt;하지만 어떠한 것을 중점으로 두는 개념인가는 다름.
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;동기 - 비동기&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;작업 순서&lt;/code&gt;&lt;/strong&gt;, &lt;strong&gt;&lt;code&gt;호출 시점&lt;/code&gt;&lt;/strong&gt; 에 중점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;A 함수&lt;/code&gt;가 &lt;code&gt;B 함수&lt;/code&gt;를 호출하고, 그 &lt;code&gt;결과를 기다린 뒤&lt;/code&gt; 이를 &lt;code&gt;활용&lt;/code&gt;해 다음 로직을 수행하는 함수라면, &lt;code&gt;동기적&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;블로킹 - 논블로킹&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;실행 제어권&lt;/code&gt;&lt;/strong&gt; 에 중점
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;A 함수&lt;/code&gt;가 &lt;code&gt;B 함수&lt;/code&gt;를 호출하고, 제어권을 넘겨준다면 &lt;code&gt;블로킹&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;동기---비동기&#34; &gt;동기 - 비동기
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8f%99%ea%b8%b0---%eb%b9%84%eb%8f%99%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img src=&#34;sync-async.png&#34; alt=&#34;sync-async.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처: Operating System Concepts, 9th Edition&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h4 id=&#34;동기&#34; &gt;동기
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8f%99%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;앞의 작업이 완료되어야 이후의 작업이 시작되는 순차적인 처리방식
+&lt;ul&gt;
+&lt;li&gt;즉, &lt;code&gt;작업의 순서&lt;/code&gt;가 &lt;code&gt;보장&lt;/code&gt;됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;비동기&#34; &gt;비동기
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b9%84%eb%8f%99%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;앞의 작업이 완료되길 기다리지 않고 다음 작업을 실행할 수 있는 방식
+&lt;ul&gt;
+&lt;li&gt;즉, &lt;code&gt;작업의 순서&lt;/code&gt;가 &lt;code&gt;보장되지 않으며&lt;/code&gt;, &lt;code&gt;병렬&lt;/code&gt;로 작업이 실행 가능함
+&lt;ul&gt;
+&lt;li&gt;이는 각 작업이 &lt;code&gt;독립적&lt;/code&gt;이거나, 작업 별 &lt;code&gt;지연시간이 긴 경우&lt;/code&gt; 효율적&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;프로세스 실행 뿐만 아니라, &lt;code&gt;I/O 작업&lt;/code&gt; 역시 &lt;code&gt;비동기적&lt;/code&gt;으로 처리 가능
+&lt;ul&gt;
+&lt;li&gt;주로 미리 애플리케이션의 &lt;code&gt;일부 주소 공간에 변수를 설정&lt;/code&gt;하거나, &lt;em&gt;애플리케이션 제어 흐름 외부에서 동작&lt;/em&gt;하는 &lt;code&gt;신호(signal)&lt;/code&gt;, &lt;code&gt;콜백의 트리거&lt;/code&gt; 등을 통해 미래에 I/O 작업이 완료되면 애플리케이션 값을 전달&lt;/li&gt;
+&lt;li&gt;즉, 결과 값을 기다리지 않고 일단 바로 반환함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;블로킹---논블로킹-io-작업을-예시로&#34; &gt;블로킹 - 논블로킹 (I/O 작업을 예시로)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b8%94%eb%a1%9c%ed%82%b9---%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9-io-%ec%9e%91%ec%97%85%ec%9d%84-%ec%98%88%ec%8b%9c%eb%a1%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img src=&#34;blocking-nonblocking.png&#34; alt=&#34;blocking-nonblocking.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처: &lt;a href=&#34;https://docs.kii.com/en/guides/cloudsdk/android/guidelines/api/&#34;&gt;Blocking vs. Non-Blocking API (kii.com)&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h4 id=&#34;블로킹&#34; &gt;블로킹
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b8%94%eb%a1%9c%ed%82%b9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;파일 읽기, 네트워크 요청 등의 &lt;code&gt;I/O 작업&lt;/code&gt;을 수행하는 경우, &lt;em&gt;해당 작업이 &lt;code&gt;완료될 때까지&lt;/code&gt;&lt;/em&gt; 프로그램 &lt;code&gt;실행 멈춤&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;블로킹 I/O 작업이 호출되면 &lt;code&gt;작업(프로세스)&lt;/code&gt;는 &lt;code&gt;실행 대기열(run queue)&lt;/code&gt;에서 &lt;code&gt;대기 대기열(wait queue)&lt;/code&gt;로 이동하며, &lt;code&gt;I/O 작업&lt;/code&gt;이 완료되면 &lt;code&gt;작업&lt;/code&gt;은 다시 &lt;code&gt;실행 대기열&lt;/code&gt;로 이동함.
+&lt;ul&gt;
+&lt;li&gt;이때 실행이 재개되면서 &lt;code&gt;I/O 작업&lt;/code&gt;으로 부터 &lt;code&gt;반환된 값&lt;/code&gt;을 받음.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;즉, &lt;code&gt;프로그램 실행 제어&lt;/code&gt;를 &lt;code&gt;I/O 작업&lt;/code&gt;에게 넘긴다고 볼 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;대부분의 &lt;code&gt;애플리케이션 인터페이스&lt;/code&gt;에서는 &lt;code&gt;블로킹 시스템 콜&lt;/code&gt; 사용
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;블로킹&lt;/code&gt; 방식이 &lt;code&gt;논블로킹&lt;/code&gt; 방식보다 코드 이해가 쉽기 때문&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;논블로킹&#34; &gt;논블로킹
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;I/O 작업&lt;/code&gt;을 수행하는 동안에도 프로그램 실행 &lt;code&gt;멈춤 없이&lt;/code&gt; 계속 프로그램 작업 수행
+&lt;ul&gt;
+&lt;li&gt;주로 &lt;code&gt;이벤트 기반&lt;/code&gt;이거나, &lt;code&gt;콜백 함수&lt;/code&gt;를 사용하는 비동기 방식에서 사용됨.&lt;/li&gt;
+&lt;li&gt;이외에도 &lt;code&gt;키보드-마우스 입력&lt;/code&gt;을 받아 데이터 처리 및 표시하는 &lt;code&gt;UI&lt;/code&gt;, &lt;code&gt;디스크 파일 읽어서&lt;/code&gt; 디스플레이에 출력하는 &lt;code&gt;비디오 프로그램&lt;/code&gt; 등이 대표적인 &lt;code&gt;논블로킹 I/O&lt;/code&gt; 예시&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;동기이면서-논블로킹이고-비동기이면서-블로킹인-경우는-의미가-있다고-할-수-있는가&#34; &gt;동기이면서 논블로킹이고, 비동기이면서 블로킹인 경우는 의미가 있다고 할 수 있는가?
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8f%99%ea%b8%b0%ec%9d%b4%eb%a9%b4%ec%84%9c-%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9%ec%9d%b4%ea%b3%a0-%eb%b9%84%eb%8f%99%ea%b8%b0%ec%9d%b4%eb%a9%b4%ec%84%9c-%eb%b8%94%eb%a1%9c%ed%82%b9%ec%9d%b8-%ea%b2%bd%ec%9a%b0%eb%8a%94-%ec%9d%98%eb%af%b8%ea%b0%80-%ec%9e%88%eb%8b%a4%ea%b3%a0-%ed%95%a0-%ec%88%98-%ec%9e%88%eb%8a%94%ea%b0%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;두 경우 모두 결과적으로 &lt;code&gt;동기적&lt;/code&gt;으로 동작하는, &lt;code&gt;각각의 특성을 살리지 못하는 방식&lt;/code&gt;이라고 볼 수 있음&lt;/p&gt;
+&lt;h3 id=&#34;동기---논블로킹&#34; &gt;동기 - 논블로킹
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8f%99%ea%b8%b0---%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;논블로킹&lt;/code&gt; 방식이므로 &lt;code&gt;I/O 작업&lt;/code&gt;을 수행하는 도중에도 원래 작업(프로세스)을 계속 실행할 수 있음
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;실행 제어권&lt;/code&gt;을 넘기지 않기 때문&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;하지만 &lt;code&gt;동기&lt;/code&gt; 방식이므로 &lt;code&gt;I/O 작업&lt;/code&gt; 결과가 반환될 때 까지 다음 작업을 수행할 수 없음
+&lt;ul&gt;
+&lt;li&gt;계속 &lt;code&gt;Polling(프로세스가 실행 가능한 상태를 유지하며 이벤트를 기다리는 것)&lt;/code&gt;하며 결과 값을 기다림&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;결과가 반환될 때까지, 결과가 필요한 이후 작업들을 수행하지 못하므로 &lt;code&gt;사실상 블로킹&lt;/code&gt; 형태로 동작
+&lt;ul&gt;
+&lt;li&gt;다만, 결과가 필요하지 않은 작업들을 수행할 수 있는 경우 유의미&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;비동기---블로킹&#34; &gt;비동기 - 블로킹
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b9%84%eb%8f%99%ea%b8%b0---%eb%b8%94%eb%a1%9c%ed%82%b9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;비동기&lt;/code&gt; 방식이므로 현재 프로세스가 끝나지 않았어도 다른 작업을 수행할 수 있음&lt;/li&gt;
+&lt;li&gt;하지만 &lt;code&gt;블로킹&lt;/code&gt; 방식이므로, &lt;code&gt;I/O 작업&lt;/code&gt;을 수행하는 경 현재 프로세스의 실행 제어권을 &lt;code&gt;I/O 작업&lt;/code&gt;에게 넘기므로 해당 작업이 끝나기를 기다려야 함
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;I/O 작업이 잦은&lt;/code&gt; 경우 &lt;code&gt;사실상 동기&lt;/code&gt; 형태로 동작&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;io-멀티플렉싱이란&#34; &gt;I/O 멀티플렉싱이란?
+&lt;span&gt;
+    &lt;a href=&#34;#io-%eb%a9%80%ed%8b%b0%ed%94%8c%eb%a0%89%ec%8b%b1%ec%9d%b4%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;img src=&#34;IO-Multiplexing.png&#34; alt=&#34;IO-Multiplexing.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처: &lt;a href=&#34;https://www.cs.toronto.edu/~krueger/csc209h/f05/lectures/Week11-Select.pdf&#34;&gt;Week11-Select.pdf&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;IO-Multiplexing_IBM.png&#34; alt=&#34;IO-Multiplexing_IBM.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처 : &lt;a href=&#34;developer.ibm.com&#34;&gt;developer.ibm.com&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;멀티플렉싱&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;통신&lt;/code&gt;에서 여러 &lt;code&gt;시그널&lt;/code&gt; 또는 &lt;code&gt;정보 스트림&lt;/code&gt;을 하나의 복잡한 신호로 동시에 전송하는 것&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;I/O 멀티 플렉싱?&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;비동기 블로킹 I/O&lt;/code&gt;를 부르는 또 다른 말로, &lt;code&gt;하나의 프로세스&lt;/code&gt;가 &lt;code&gt;여러 파일을 관리&lt;/code&gt;할 수 있도록 해주는 기법
+&lt;ul&gt;
+&lt;li&gt;프로세스에서 파일에 접근할 때 &lt;code&gt;파일 디스크립터(File Descripter, FD)&lt;/code&gt;라는 추상적인 값을 사용
+&lt;ul&gt;
+&lt;li&gt;이 &lt;code&gt;파일&lt;/code&gt;이라는 것엔 클라이언트와의 연결에 사용되는 &lt;code&gt;소켓&lt;/code&gt; 같은 것도 포함됨
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;소켓&lt;/code&gt; 역시 &lt;code&gt;IP/Port를 가진 파일&lt;/code&gt;이기 때문&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이러한 점에서 &lt;code&gt;다중 클라이언트 연결&lt;/code&gt;을 지원하기 위한 &lt;code&gt;대안적인 접근 방식&lt;/code&gt;이라고도 불림&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;FD를 어떻게 감시하는지, 어떤 상태로 대기하느냐에 따라 &lt;code&gt;select&lt;/code&gt;, &lt;code&gt;poll&lt;/code&gt;, &lt;code&gt;epoll(linux)&lt;/code&gt;, &lt;code&gt;kqueue(bsd)&lt;/code&gt;, &lt;code&gt;iocp(windows)&lt;/code&gt;와 같은 기법들이 존재
+&lt;ul&gt;
+&lt;li&gt;메인 서버 루프는 &lt;code&gt;select&lt;/code&gt;, &lt;code&gt;poll&lt;/code&gt; 시스템 콜을 통해 &lt;code&gt;어떤 FD가 준비되었는지&lt;/code&gt; 확인
+&lt;ul&gt;
+&lt;li&gt;즉, &lt;code&gt;read&lt;/code&gt; 또는 &lt;code&gt;write&lt;/code&gt; 작업은 &lt;code&gt;block 없이 바로 수행&lt;/code&gt; 됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;동시성&lt;/code&gt;을 위해 &lt;code&gt;프로세스/스레드를 사용하는 것에 비해&lt;/code&gt; 다음과 같은 장/단점이 존재
+&lt;ul&gt;
+&lt;li&gt;장점: 프로세스/스레드 보다 클라이언트 연결 당 &lt;code&gt;오버헤드(CPU, 메모리)가 적음&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;단점: &lt;code&gt;코드 복잡성이 증가&lt;/code&gt;함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;I/O 멀티 플렉싱&lt;/code&gt;의 일반적인 흐름
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;애플리케이션&lt;/code&gt;에서 &lt;code&gt;read&lt;/code&gt; 요청&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;커널&lt;/code&gt;은 &lt;code&gt;read I/O&lt;/code&gt;처리를 시작함과 동시에, &lt;code&gt;애플리케이션&lt;/code&gt;에게 &lt;code&gt;미완료상태&lt;/code&gt;(&lt;code&gt;EAGAIN&lt;/code&gt;, 리소스를 일시적으로 사용할 수 없음)임을 반환&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;애플리케이션&lt;/code&gt;은 데이터가 준비되었다는 알람이 올 때 까지 기다림(&lt;code&gt;select()&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;커널&lt;/code&gt;에서 결과 값이 준비되었다는 callback 신호를 보냄&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;애플리케이션&lt;/code&gt;은 데이터를 &lt;code&gt;커널 공간&lt;/code&gt;에서 &lt;code&gt;사용자 공간(buffer)&lt;/code&gt;으로 복사해옴
+&lt;ul&gt;
+&lt;li&gt;실제 구현에서는 &lt;code&gt;select&lt;/code&gt; 호출의 유의미한 값이 나올때 까지 애플리케이션은 loop를 돌며 대기&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;io-멀티플렉싱의-여러-구현-방식&#34; &gt;I/O 멀티플렉싱의 여러 구현 방식
+&lt;span&gt;
+    &lt;a href=&#34;#io-%eb%a9%80%ed%8b%b0%ed%94%8c%eb%a0%89%ec%8b%b1%ec%9d%98-%ec%97%ac%eb%9f%ac-%ea%b5%ac%ed%98%84-%eb%b0%a9%ec%8b%9d&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;select&#34; &gt;select()
+&lt;span&gt;
+    &lt;a href=&#34;#select&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;sys/select.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;select&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; nfds, fd_set &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;readfds, fd_set &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;writefds, fd_set &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;exceptfds, &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; timeval &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;timeout);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;대상 &lt;code&gt;FD&lt;/code&gt;를 &lt;code&gt;배열&lt;/code&gt;에 집어넣고 &lt;code&gt;하나하나 순차 검색&lt;/code&gt;하는 방식
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;O(n)&lt;/code&gt;의 시간복잡도를 가짐(대상 FD가 늘어날수록 오래 걸림)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이 &lt;code&gt;배열형태의 구조체&lt;/code&gt;를 &lt;code&gt;fd_set&lt;/code&gt;이라고 부르며, 각 &lt;code&gt;n번째 비트&lt;/code&gt;는 &lt;code&gt;n-1 FD&lt;/code&gt;에 대응됨
+&lt;ul&gt;
+&lt;li&gt;해당 비트가 &lt;code&gt;1&lt;/code&gt;이면, &lt;code&gt;대응되는 파일에 변경이 감지되었음&lt;/code&gt;을 의미&lt;/li&gt;
+&lt;li&gt;변경을 감지하려면, 매 번 &lt;code&gt;최대 FD 개수&lt;/code&gt;만큼 loop를 돌며 비트 값 하나하나를 검사해야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;고정된 단일 bit table&lt;/code&gt;을 사용하므로 관리할 수 있는 최대 FD 수가 1024개로 제한됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;pselect&#34; &gt;pselect()
+&lt;span&gt;
+    &lt;a href=&#34;#pselect&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;pselect&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; nfds, fd_set &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; readfds, fd_set &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; writefds, fd_set &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; exceptfds, &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; timespec &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; timeout, &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;sigset_t&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; sigmask);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;select&lt;/code&gt;에서 &lt;code&gt;timeout&lt;/code&gt;과 &lt;code&gt;signal 처리 로직을 개선&lt;/code&gt;한 함수
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;timespec&lt;/code&gt; 구조체를 사용해 나노초까지 정밀한 컨트롤 가능&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;sigmask&lt;/code&gt; 인자를 활용해 &lt;code&gt;signal에 의한 인터럽트&lt;/code&gt; 발생시 block 시킬 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;poll&#34; &gt;poll()
+&lt;span&gt;
+    &lt;a href=&#34;#poll&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;poll.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;poll&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; pollfd &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; fds, &lt;span style=&#34;color:#66d9ef&#34;&gt;nfds_t&lt;/span&gt; nfds, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; timeout);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;하나 이상의 FD&lt;/code&gt;에서 이벤트 발생시, &lt;code&gt;Blocking 해제&lt;/code&gt;한 뒤 &lt;code&gt;해당 FD&lt;/code&gt;로 들어온 데이터에 대한 &lt;code&gt;I/O 작업&lt;/code&gt;을 수행하는 방식
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;관리 가능 FD 수&lt;/code&gt;에 제한이 있던 &lt;code&gt;select&lt;/code&gt;와 달리 &lt;code&gt;무한 개의 FD&lt;/code&gt;를 검사할 수 있는 함수&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;실제 FD 개수(nfds)&lt;/code&gt; 만큼만 loop를 돌아, FD 갯수가 &lt;code&gt;적은 경우&lt;/code&gt; &lt;code&gt;select&lt;/code&gt;대비 효율적일 수 있음
+&lt;ul&gt;
+&lt;li&gt;다만 &lt;code&gt;이벤트 전달&lt;/code&gt;에 사용되는 &lt;code&gt;메모리가 커&lt;/code&gt;(64bit, &lt;code&gt;select&lt;/code&gt;는 3bit) &lt;code&gt;FD 수에 따라&lt;/code&gt; 성능이 안좋아 질 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;epoll-linux&#34; &gt;epoll (linux)
+&lt;span&gt;
+    &lt;a href=&#34;#epoll-linux&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;sys/epoll.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// create
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;epoll_create&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; size);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// wait
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;epoll_wait&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; epfd, &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; epoll_event &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; events,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; maxevents, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; timeout);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// control
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;epoll_ctl&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; epfd, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; op, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; fd, &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; epoll_event &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; event);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;poll()&lt;/code&gt;과 유사하지만, &lt;code&gt;FD의 상태&lt;/code&gt;를 &lt;code&gt;커널&lt;/code&gt;에서 관리해 상태가 바뀐 것을 직접 통지해 주는 방식
+&lt;ul&gt;
+&lt;li&gt;애플리케이션에서 &lt;code&gt;루프를 돌 필요도 없고&lt;/code&gt;, &lt;code&gt;변화가 감지된 FD의 목록을 반환&lt;/code&gt;받으므로, &lt;code&gt;대상 파일을 추가 탐색할 필요도 없음&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Edge Trigger&lt;/code&gt;, &lt;code&gt;Level Trigger&lt;/code&gt; 두 가지 방식이 존재
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Level Trigger&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;특정 상태가 &lt;code&gt;유지되는 동안&lt;/code&gt; 감지&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;입력 buffer&lt;/code&gt;에 &lt;code&gt;데이터 남아있는 동안&lt;/code&gt; 계속 이벤트 등록&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Edge Trigger&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;특정 상태가 &lt;code&gt;변화하는 시점&lt;/code&gt;에만 감지&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;입력 buffer&lt;/code&gt;로 데이터 &lt;code&gt;수신된 그 상황&lt;/code&gt;에 한 번만 이벤트 등록&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;kqueue-bsd&#34; &gt;kqueue (bsd)
+&lt;span&gt;
+    &lt;a href=&#34;#kqueue-bsd&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-c&#34; data-lang=&#34;c&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;#include&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;sys/event.h&amp;gt;&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// event를 저장할 새 Queue 커널에 요청
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;kqueue&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// kqueue에 특정한 이벤트를 등록하고, 보류중인 이벤트를 등록하거나 사용자한테 반환
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;kevent&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; kq,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; kevent &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; changelist, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; nchanges,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; kevent &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; eventlist, &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; nevents,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;struct&lt;/span&gt; timespec &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; timeout);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;커널에 이벤트를 저장할 &lt;code&gt;queue&lt;/code&gt;를 생성하면, &lt;code&gt;I/O 이벤트&lt;/code&gt;가 &lt;code&gt;queue에 쌓이고&lt;/code&gt; 사용자가 직접 &lt;code&gt;polling&lt;/code&gt;하는 방식
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;select&lt;/code&gt;, &lt;code&gt;poll&lt;/code&gt; 처럼 발생한 &lt;code&gt;FD를 찾는 추가 작업 필요 X&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;iocp-windows&#34; &gt;iocp (windows)
+&lt;span&gt;
+    &lt;a href=&#34;#iocp-windows&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;IOCP.png&#34; alt=&#34;IOCP.png&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;윈도우에서 지원하는 I/O 다중화 모델
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;여러 소켓&lt;/code&gt;을 하나의 &lt;code&gt;IOCP 객체&lt;/code&gt;로 처리
+&lt;ul&gt;
+&lt;li&gt;해당 객체 하위에서 동작하는 &lt;code&gt;thread 여러 개&lt;/code&gt;가 &lt;code&gt;동시 대기&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;커널로부터 받는 결과에 따라&lt;/em&gt; &lt;code&gt;thread를 깨우거나 대기&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;완료 루틴(Completion Routine)&lt;/code&gt;으로 I/O 작업 완료 통지를 받는 형태로 설계됨
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;완료 루틴&lt;/code&gt;은 &lt;code&gt;콜백 함수&lt;/code&gt;와 비슷한 역할로, &lt;code&gt;WSASend&lt;/code&gt;/&lt;code&gt;WSARecv&lt;/code&gt; 함수를 호출해 &lt;code&gt;I/O 작업이 완료된 시점&lt;/code&gt;에 호출됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;논블로킹-io에서-결과를-수신하는-방법&#34; &gt;논블로킹 I/O에서 결과를 수신하는 방법?
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9-io%ec%97%90%ec%84%9c-%ea%b2%b0%ea%b3%bc%eb%a5%bc-%ec%88%98%ec%8b%a0%ed%95%98%eb%8a%94-%eb%b0%a9%eb%b2%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;img src=&#34;nonblocking-IO.png&#34; alt=&#34;nonblocking-IO.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;대부분의 &lt;code&gt;논블로킹 프레임워크&lt;/code&gt;에서는 논블로킹 I/O의 결과를 수신하기 위해 지속적으로 &lt;code&gt;polling&lt;/code&gt;하는 무한 루프, 흔히 &lt;code&gt;이벤트 루프&lt;/code&gt;라고 부르는 것을 사용합니다.&lt;br&gt;
+&lt;code&gt;애플리케이션&lt;/code&gt;에서는 지속적으로 커널에게 &lt;code&gt;read&lt;/code&gt; 요청을 보내고, 커널에서는 아직 데이터가 준비되지 않은 경우 &lt;code&gt;EAGAIN/EWOULDBLOCK&lt;/code&gt; 오류 코드(&amp;lsquo;리소스를 일시적으로 사용할 수 없음&amp;rsquo;을 의미)를 반환합니다.&lt;br&gt;
+만약 데이터가 준비된 경우, &lt;code&gt;애플리케이션&lt;/code&gt;은 커널로부터 데이터를 &lt;code&gt;사용자 공간(buffer)&lt;/code&gt;으로 복사해옵니다.&lt;br&gt;
+&lt;code&gt;오류 코드를 수신한 시점&lt;/code&gt;에 &lt;code&gt;애플리케이션&lt;/code&gt;은 &lt;code&gt;read&lt;/code&gt; 요청을 &lt;em&gt;또 보낼 지&lt;/em&gt; &lt;code&gt;선택&lt;/code&gt;할 수 있어 &lt;code&gt;애플리케이션&lt;/code&gt;은 &lt;code&gt;Block&lt;/code&gt;되지 않습니다.&lt;br&gt;
+이외에도 I/O 작업이 완료된 경우 수행되는 &lt;code&gt;콜백 함수를 설정&lt;/code&gt;하거나, I/O 작업이 완료되었다는 &lt;code&gt;signal&lt;/code&gt;이 수신되는지 감지하는 방법 등 다양한 방법이 존재합니다.&lt;/p&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://jhucsf.github.io/spring2023/lectures/lecture33-public.pdf&#34;&gt;Lecture 33: I/O multiplexing - David Hovemeyer&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.naver.com/n_cloudplatform/222189669084&#34;&gt;[네이버클라우드 기술&amp;amp;경험] IO Multiplexing (IO 멀티플렉싱) 기본 개념부터 심화까지 -1부- : 네이버블로그&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.naver.com/n_cloudplatform/222255261317&#34;&gt;[네이버클라우드 기술&amp;amp;경험] IO Multiplexing (IO 멀티플렉싱) 기본 개념부터 심화까지 -2부- : 네이버블로그&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://medium.com/ing-blog/how-does-non-blocking-io-work-under-the-hood-6299d2953c74&#34;&gt;How does non-blocking IO work under the hood? | by Hielke de Vries | ING Blog | Medium&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cs.toronto.edu/~krueger/csc209h/f05/lectures/Week11-Select.pdf&#34;&gt;CSC 209H: Software Tools and Systems Programming - Summer 2006 - Week11-Select.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://man7.org/linux/man-pages/man3/errno.3.html&#34;&gt;errno(3) - Linux manual page&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;추가로 볼만한 자료
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cs.rutgers.edu/courses/416/classes/fall_2009_ganapathy/slides/io.pdf&#34;&gt;CS 519: Operating System Theory&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://web.stanford.edu/class/archive/cs/cs110/cs110.1202/static/lectures/20-non-blocking-io.pdf&#34;&gt;Lecture 20: Slow System Calls and Non-Blocking I/O&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://courses.cs.washington.edu/courses/cse333/12su/lectures/lec21.pdf&#34;&gt;CSE 333 Lecture 21 &amp;ndash; non-blocking I/O and select&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Network] TCP와 UDP 알아보기 (w. 흐름 제어, 혼잡 제어, CongWin, HTTP/3) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 10월 28일 발표한 TCP &amp; UDP에 대해 정리한 문서를 블로그에 공유하고자 한다.
+TCP와 UDP에 대하여TCP와 UDP는 네트워크 계층 중 전송 계층(transport-layer)에서 사용되는 프로토콜 전송 계층 프로세스 간 논리적 통신(logical communication)이 이뤄지는 계층 네트워크 계층의 서비스들에 의존하고, 이들을 강화시키는 계층 보내려는 메시지를 전송 계층의 규격에 맞게 분할 후, 해야할 일을 헤더로 부착해 보내는 과정을 거침 TCP요약신뢰성(reliable) 순서에 맞게 전송하고자 함(in-order) 혼잡 제어, 흐름 제어, 연결 설정과 같은 기능 제공 주요 특징1대1 통신(unicast) 신뢰할 수 있고, 순차적인 바이트스트림 메시지 바운더리 없음 (전송되는 두 메시지 사이의 구분 이 없음) 송신 번호, ACK 번호를 사용 파이프라인 사용 TCP 혼잡, 흐름 제어를 위한 window size를 설정 전이중 데이터 동일한 연결 상에서 양방향 통신 최대 세그먼트 크기(MSS) 연결지향적 통신 데이터 교환 전, 핸드셰이킹(제어 메시지 교환)으로 송신자-수신자 상태 초기화 흐름 제어 송신자가 수신자를 압도(overwhelm)하지 않음 RTT(Round Trip Time, 왕복 시간)TCP의 효율적인 통신을 위해, 지정된 시간 내에 ACK 신호나 세그먼트를 수신하지 못한 경우, 연결 시간 초과(timeout)로 처리하고 연결을 종료해야 함.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Network] TCP와 UDP 알아보기 (w. 흐름 제어, 혼잡 제어, CongWin, HTTP/3)" />
+<meta property="og:description" content="서론CS 스터디에서 10월 28일 발표한 TCP &amp; UDP에 대해 정리한 문서를 블로그에 공유하고자 한다.
+TCP와 UDP에 대하여TCP와 UDP는 네트워크 계층 중 전송 계층(transport-layer)에서 사용되는 프로토콜 전송 계층 프로세스 간 논리적 통신(logical communication)이 이뤄지는 계층 네트워크 계층의 서비스들에 의존하고, 이들을 강화시키는 계층 보내려는 메시지를 전송 계층의 규격에 맞게 분할 후, 해야할 일을 헤더로 부착해 보내는 과정을 거침 TCP요약신뢰성(reliable) 순서에 맞게 전송하고자 함(in-order) 혼잡 제어, 흐름 제어, 연결 설정과 같은 기능 제공 주요 특징1대1 통신(unicast) 신뢰할 수 있고, 순차적인 바이트스트림 메시지 바운더리 없음 (전송되는 두 메시지 사이의 구분 이 없음) 송신 번호, ACK 번호를 사용 파이프라인 사용 TCP 혼잡, 흐름 제어를 위한 window size를 설정 전이중 데이터 동일한 연결 상에서 양방향 통신 최대 세그먼트 크기(MSS) 연결지향적 통신 데이터 교환 전, 핸드셰이킹(제어 메시지 교환)으로 송신자-수신자 상태 초기화 흐름 제어 송신자가 수신자를 압도(overwhelm)하지 않음 RTT(Round Trip Time, 왕복 시간)TCP의 효율적인 통신을 위해, 지정된 시간 내에 ACK 신호나 세그먼트를 수신하지 못한 경우, 연결 시간 초과(timeout)로 처리하고 연결을 종료해야 함." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/network/tcp-udp/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-11-01T18:18:16+09:00" />
+<meta property="article:modified_time" content="2024-11-01T18:18:16+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Network] TCP와 UDP 알아보기 (w. 흐름 제어, 혼잡 제어, CongWin, HTTP/3)"/>
+<meta name="twitter:description" content="서론CS 스터디에서 10월 28일 발표한 TCP &amp; UDP에 대해 정리한 문서를 블로그에 공유하고자 한다.
+TCP와 UDP에 대하여TCP와 UDP는 네트워크 계층 중 전송 계층(transport-layer)에서 사용되는 프로토콜 전송 계층 프로세스 간 논리적 통신(logical communication)이 이뤄지는 계층 네트워크 계층의 서비스들에 의존하고, 이들을 강화시키는 계층 보내려는 메시지를 전송 계층의 규격에 맞게 분할 후, 해야할 일을 헤더로 부착해 보내는 과정을 거침 TCP요약신뢰성(reliable) 순서에 맞게 전송하고자 함(in-order) 혼잡 제어, 흐름 제어, 연결 설정과 같은 기능 제공 주요 특징1대1 통신(unicast) 신뢰할 수 있고, 순차적인 바이트스트림 메시지 바운더리 없음 (전송되는 두 메시지 사이의 구분 이 없음) 송신 번호, ACK 번호를 사용 파이프라인 사용 TCP 혼잡, 흐름 제어를 위한 window size를 설정 전이중 데이터 동일한 연결 상에서 양방향 통신 최대 세그먼트 크기(MSS) 연결지향적 통신 데이터 교환 전, 핸드셰이킹(제어 메시지 교환)으로 송신자-수신자 상태 초기화 흐름 제어 송신자가 수신자를 압도(overwhelm)하지 않음 RTT(Round Trip Time, 왕복 시간)TCP의 효율적인 통신을 위해, 지정된 시간 내에 ACK 신호나 세그먼트를 수신하지 못한 경우, 연결 시간 초과(timeout)로 처리하고 연결을 종료해야 함."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Network] TCP와 UDP 알아보기 (w. 흐름 제어, 혼잡 제어, CongWin, HTTP/3)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#tcp와-udp에-대하여">TCP와 UDP에 대하여</a>
+      <ul>
+        <li><a href="#tcp">TCP</a></li>
+        <li><a href="#udp">UDP</a></li>
+      </ul>
+    </li>
+    <li><a href="#checksum이란">Checksum이란?</a></li>
+    <li><a href="#tcp와-udp-중-어느-프로토콜이-checksum을-수행하는가">TCP와 UDP 중 어느 프로토콜이 Checksum을 수행하는가?</a></li>
+    <li><a href="#checksum을-통해-오류를-정정할-수-있는가">Checksum을 통해 오류를 정정할 수 있는가?</a></li>
+    <li><a href="#tcp가-신뢰성을-보장하는-방법">TCP가 신뢰성을 보장하는 방법</a></li>
+    <li><a href="#tcp의-혼잡-제어-처리-방법">TCP의 혼잡 제어 처리 방법</a>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+    <li><a href="#왜-http는-tcp를-사용하는가">왜 HTTP는 TCP를 사용하는가?</a></li>
+    <li><a href="#왜-http3-에서는-udp를-사용하는가">왜 HTTP/3 에서는 UDP를 사용하는가?</a></li>
+    <li><a href="#브라우저는-어떤-서버가-tcp를-쓰는지-udp를-쓰는지-어떻게-알-수-있는가">브라우저는 어떤 서버가 TCP를 쓰는지 UDP를 쓰는지 어떻게 알 수 있는가?</a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 10월 28일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/03-NETWORK/7_TCP-UDP/Readme.md"><strong>TCP &amp; UDP</strong></a>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h2 id="tcp와-udp에-대하여" >TCP와 UDP에 대하여
+<span>
+    <a href="#tcp%ec%99%80-udp%ec%97%90-%eb%8c%80%ed%95%98%ec%97%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><code>TCP</code>와 <code>UDP</code>는 네트워크 계층 중 <code>전송 계층(transport-layer)</code>에서 사용되는 프로토콜
+<ul>
+<li><code>전송 계층</code>
+<ul>
+<li>프로세스 간 <code>논리적 통신(logical communication)</code>이 이뤄지는 계층</li>
+<li><code>네트워크 계층</code>의 서비스들에 의존하고, 이들을 강화시키는 계층</li>
+<li>보내려는 메시지를 <code>전송 계층</code>의 규격에 맞게 분할 후, 해야할 일을 헤더로 부착해 보내는 과정을 거침</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="tcp" >TCP
+<span>
+    <a href="#tcp">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="요약" >요약
+<span>
+    <a href="#%ec%9a%94%ec%95%bd">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>신뢰성</code>(<code>reliable</code>)</li>
+<li><code>순서</code>에 맞게 전송하고자 함(<code>in-order</code>)</li>
+<li><code>혼잡 제어</code>, <code>흐름 제어</code>, <code>연결 설정</code>과 같은 기능 제공</li>
+</ul>
+<h4 id="주요-특징" >주요 특징
+<span>
+    <a href="#%ec%a3%bc%ec%9a%94-%ed%8a%b9%ec%a7%95">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><strong><code>1대1 통신</code></strong>(<code>unicast</code>)</li>
+<li><strong><code>신뢰할 수 있고, 순차적인 바이트스트림</code></strong>
+<ul>
+<li><code>메시지 바운더리</code> 없음 (전송되는 두 <strong><code>메시지 사이의 구분</code></strong> 이 <strong>없음</strong>)
+<img src="sequence-number_ACK-number.png" alt="sequence-number_ACK-number.png"></li>
+<li><code>송신 번호</code>, <code>ACK 번호</code>를 사용</li>
+</ul>
+</li>
+<li><strong><code>파이프라인</code> 사용</strong>
+<ul>
+<li>TCP <code>혼잡, 흐름 제어</code>를 위한 <code>window size</code>를 설정</li>
+</ul>
+</li>
+<li><strong><code>전이중 데이터</code></strong>
+<ul>
+<li>동일한 연결 상에서 양방향 통신</li>
+<li>최대 세그먼트 크기(<code>MSS</code>)</li>
+</ul>
+</li>
+<li><strong><code>연결지향적 통신</code></strong>
+<ul>
+<li>데이터 교환 전, <code>핸드셰이킹(제어 메시지 교환)</code>으로 송신자-수신자 <code>상태 초기화</code></li>
+</ul>
+</li>
+<li><strong><code>흐름 제어</code></strong>
+<ul>
+<li>송신자가 수신자를 <code>압도(overwhelm)</code>하지 않음</li>
+</ul>
+</li>
+</ul>
+<h5 id="rttround-trip-time-왕복-시간" >RTT(Round Trip Time, 왕복 시간)
+<span>
+    <a href="#rttround-trip-time-%ec%99%95%eb%b3%b5-%ec%8b%9c%ea%b0%84">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><em>TCP의 효율적인 통신을 위해</em>, 지정된 시간 내에 <code>ACK 신호</code>나 <code>세그먼트</code>를 수신하지 못한 경우, <code>연결 시간 초과(timeout)</code>로 처리하고 연결을 종료해야 함.</p>
+<ul>
+<li>이때, <code>TCP timeout 시간</code>은 RTT보다 길어야 함
+<ul>
+<li>하지만, RTT는 편차가 있을 수 있음</li>
+<li>너무 짧게 잡는다면, 재전송이 자주 발생함</li>
+<li>너무 길게 잡는다면, <code>세그먼트 손실</code>에 대해 느리게 반응하게 됨</li>
+</ul>
+</li>
+<li>이때, <code>RTT의 편차</code> 등을 어떻게 측정해야 할까?
+<ul>
+<li><code>SampleRTT</code>
+<ul>
+<li>세그먼트 전송 후, <code>ACK 수신</code>까지 측정된 시간 (재전송 무시)</li>
+<li>다만 <code>SampleRTT</code> 역시 다양할 수 있으므로, 이들의 여러 최근 측정값을 평균내어 사용</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>RTT의 기준?<img src="TCP-RTT.png" alt="TCP-RTT.png">
+<ul>
+<li>만약 ACK 수신 이전, <code>여러 번의 세그먼트 전송</code>이 발생한 경우 <code>가장 처음 보낸 세그먼트를 기준</code>으로 함</li>
+<li>만약 <code>동일한 세그먼트가 재전송</code> 된 경우, <code>RTT 측정에 포함하지 않음</code>
+<ul>
+<li>처음 보낸 세그먼트에 대한 ACK 인지, 재전송된 세그먼트에 대한 ACK인지 <code>구분할 수 없기 때문</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="신뢰할-수-있는-데이터-전송" >신뢰할 수 있는 데이터 전송
+<span>
+    <a href="#%ec%8b%a0%eb%a2%b0%ed%95%a0-%ec%88%98-%ec%9e%88%eb%8a%94-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%a0%84%ec%86%a1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><img src="rdt-transport-to-app.png" alt="rdt-transport-to-app.png"></p>
+<ul>
+<li>응용, 전송, 링크 계층에서 <code>신뢰성</code>은 매우 중요한 개념으로, 각 계층마다 신뢰성 유지를 위해 데이터를 체크
+<ul>
+<li><strong><code>신뢰성</code></strong>: <code>비트 에러</code>, <code>패킷 손실</code> 없이 한 번만 전송하는 것</li>
+</ul>
+</li>
+</ul>
+<h6 id="tcp에서의-rdt" >TCP에서의 RDT
+<span>
+    <a href="#tcp%ec%97%90%ec%84%9c%ec%9d%98-rdt">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><ul>
+<li>TCP는 <code>RDT(Reliable Data Transfer, 신뢰성 있는 데이터 전송) 서비스</code>를 IP의 신뢰성 없는 서비스 위에 구축함
+<ul>
+<li><code>파이프라인화된 세그먼트</code> (연속으로 전송할 수 있음)</li>
+<li><code>누적 ACK</code> (GoBackN과 유사)</li>
+<li><code>단일 재전송 타이머</code> (데이터 보낸 시간 != timeout 시간 일 수 있음)</li>
+</ul>
+</li>
+<li><code>재전송</code>은 다음 두 경우 발생
+<ul>
+<li><code>timeout 이벤트</code>
+<ul>
+<li>timeout이 발생한 경우, 이를 일으킨 세그먼트를 재전송</li>
+<li>타이머 재시작</li>
+</ul>
+</li>
+<li><code>중복된 ACK</code>
+<ul>
+<li>이전에 ACK되지 않은 세그먼트를 ACK하는 경우</li>
+<li>어떤 패킷이 ACK되었다고 알려져있는지 갱신</li>
+<li>ACK되지 않은 세그먼트 아직 있으면 타이머 시작</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="흐름-제어" >흐름 제어
+<span>
+    <a href="#%ed%9d%90%eb%a6%84-%ec%a0%9c%ec%96%b4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><img src="flow-control.png" alt="flow-control.png"></p>
+<ul>
+<li><code>흐름 제어</code>: 빠른 발신자가 너무 많이, 너무 빨리 전송해 느린 수신자 버퍼가 넘치지 않도록(압도하지 않도록) 함</li>
+<li>수신자는 TCP 헤더에 <code>윈도우 크기(rwnd)</code>를 포함시켜, 사용 가능한 버퍼 공간을 명시함 <img src="rcvBuffer.png" alt="rcvBuffer.png">
+<ul>
+<li>소켓 옵션을 통해 설정된 <code>수신자 버퍼(RcvBuffer)</code>크기 값으로, 보통 4096 byte가 디폴트</li>
+<li>대부분의 운영체제에서 이 크기를 <code>자동 조정</code>함</li>
+</ul>
+</li>
+<li>발신자는 <code>수신자의 윈도우 크기</code> 만큼만 <code>ACK되지 않은(in-flight) 데이터</code>를 보낼 수 있음
+<ul>
+<li>이는 수신자 버퍼가 넘치지 않도록 보장</li>
+</ul>
+</li>
+</ul>
+<h6 id="stop-and-wait" >Stop-and-wait
+<span>
+    <a href="#stop-and-wait">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><ul>
+<li>가장 간단한 형태의 흐름 제어 기법</li>
+<li>발신자가 하나의 패킷을 보낸 뒤, 수신자의 응답이 올 때까지 기다림
+<ul>
+<li><code>ACK</code> 를 수신하거나, 타임아웃이 발생하면 다시 패킷 전송</li>
+</ul>
+</li>
+</ul>
+<h6 id="go-back-n" >Go-back-N
+<span>
+    <a href="#go-back-n">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p><img src="go-back-n.png" alt="go-back-n.png"></p>
+<blockquote>
+<p>send_base: 보낸 패킷
+nextseqnum: 보낼 예정인 패킷</p>
+</blockquote>
+<ul>
+<li>N개의 <code>ACK되지 않은 패킷</code>을 파이프라인을 통해 전송</li>
+<li>수신자는 <code>누적 ACK(cumulative ACK)</code>만 전송</li>
+<li>발신자는 가장 <strong>오래된</strong> <code>ACK되지 않은 패킷</code>에 대한 타이머 갖고 있음
+<ul>
+<li>타임아웃 발생시, <code>모든 ACK되지 않은 패킷들</code>을 재전송
+<ul>
+<li>즉, <code>가장 마지막으로 ACK 받은</code> 시퀀스 번호로 돌아가 재전송</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h6 id="selective-repeat" >Selective Repeat
+<span>
+    <a href="#selective-repeat">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p><img src="selective-repeat.png" alt="selective-repeat.png"></p>
+<ul>
+<li>N개의 <code>ACK되지 않은 패킷</code>을 파이프라인을 통해 전송</li>
+<li>수신자는 <code>각각의 패킷에 대한 ACK</code>를 전송</li>
+<li>발신자는 각 패킷에 대한 타이머를 갖고있음
+<ul>
+<li>타임아웃 발생시, <code>해당 패킷만</code> 재전송</li>
+</ul>
+</li>
+<li>수신자는 <code>순서를 지켜(in-order)</code> 상위 계층에 패킷들을 전달하기 위해, <code>버퍼</code> 사용
+<ul>
+<li><em>문제 생긴 패킷</em> <code>다음의 패킷들</code>을 버퍼에 저장, 또는 <code>순서에 맞지않는 패킷들</code> 저장</li>
+<li>이후, 문제 생긴 패킷을 재전송받고, <code>일정 갯수의 패킷</code>이 모이면 <code>상위 계층으로 전달</code></li>
+</ul>
+</li>
+<li><strong>참고</strong>
+<ul>
+<li><a href="https://computerscience.unicam.it/marcantoni/reti/applet/SelectiveRepeatProtocol/selRepProt.html">Selective Repeat Protocol</a> : Selective Repeat 흐름을 테스트해볼 수 있는 사이트</li>
+</ul>
+</li>
+</ul>
+<h5 id="혼잡-제어" >혼잡 제어
+<span>
+    <a href="#%ed%98%bc%ec%9e%a1-%ec%a0%9c%ec%96%b4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>발신자가 혼잡함을 인식하는 기준
+<ul>
+<li><code>손실 이벤트(loss event)</code>: <code>타임아웃</code> 또는 <code>3번</code>의 <code>중복된 ACK</code></li>
+</ul>
+</li>
+<li>TCP 발신자는 <code>손실 이벤트</code> 발생시, 혼잡에 대응하기 위해 <code>혼잡 윈도우(Congestion Window, CongWin)</code>의 크기를 조절해 대응</li>
+<li><code>혼잡 제어</code>를 위해 <code>AIMD</code>, <code>slow start</code>, <code>conservative after timeout events</code> 3가지 메커니즘 존재</li>
+</ul>
+<h6 id="aimd" >AIMD
+<span>
+    <a href="#aimd">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p><img src="AIMD.png" alt="AIMD.png"></p>
+<ul>
+<li><code>Additive Increase Multiplicative Decrease</code>의 약어</li>
+<li><code>혼잡 윈도우</code>를 <em>혼잡이 감지되지 않을때</em>는 <code>선형적으로 증가</code>시키다, <em>혼잡이 감지되면</em> <code>기하급수적으로 감소</code>시키는 방식
+<ul>
+<li><em>손실이 감지될 때까지</em>, 매 <code>RTT</code>마다 <code>cwnd</code>를 1 MSS씩 증가</li>
+<li><em>손실이 발생하면</em>, <code>cwnd</code>를 절반으로 줄임</li>
+</ul>
+</li>
+<li>즉, <code>cwnd</code>는 인식된 네트워크 혼잡 정도를 나타내는 함수라고 할 수 있음</li>
+<li>TCP 전송 속도 $rate \approx {cwnd \over RTT} bytes/sec$</li>
+</ul>
+<h6 id="slow-start" >Slow Start
+<span>
+    <a href="#slow-start">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p><img src="Slow-Start.png" alt="Slow-Start.png"></p>
+<ul>
+<li>연결 시작 이후, <code>손실 이벤트</code> 발생 전까지 속도를 기하급수적으로 증가시키는 방식
+<ul>
+<li>초기 <code>cwnd</code> = 1 MSS</li>
+<li>매 RTT마다 <code>cwnd</code>는 2배씩 증가
+<ul>
+<li>정확히는 모든 <code>ACK 수신</code>마다 <code>cwnd</code>를 2배로 증가시킴</li>
+</ul>
+</li>
+<li>시작 값이 1이라 <code>Slow Start</code>라는 이름이 붙었으며, 증가 속도는 빠름</li>
+</ul>
+</li>
+</ul>
+<h6 id="conservative-after-timeout-events타임아웃-발생-후-보수적으로" >Conservative after timeout events(타임아웃 발생 후 보수적으로)
+<span>
+    <a href="#conservative-after-timeout-events%ed%83%80%ec%9e%84%ec%95%84%ec%9b%83-%eb%b0%9c%ec%83%9d-%ed%9b%84-%eb%b3%b4%ec%88%98%ec%a0%81%ec%9c%bc%eb%a1%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><ul>
+<li><code>타임아웃</code>으로 손실을 인식
+<ul>
+<li><code>cwnd</code>는 1로 세팅됨</li>
+<li>이후 <code>cwnd</code>가 기하급수적으로 <code>임계값(threshold)</code>까지 증가한 뒤, <code>선형적</code>으로 증가</li>
+</ul>
+</li>
+<li><code>3개의 중복 ACK</code>로 손실을 인식 : <code>TCP RENO</code>
+<ul>
+<li><code>중복 ACK</code>는 네트워크가 아직 <code>세그먼트들을 전달할 수 있음</code>을 나타냄</li>
+<li><code>cwnd</code>를 <code>절반</code>으로 줄인 뒤, <code>선형적</code>으로 증가</li>
+</ul>
+</li>
+<li><code>타임아웃</code> 또는 <code>3개의 중복 ACK</code> 발생시 손실 인식 : <code>TCP Tahoe</code>
+<ul>
+<li>인식시 <code>cwnd</code>를 1로 설정</li>
+</ul>
+</li>
+</ul>
+<h6 id="요약-1" >요약
+<span>
+    <a href="#%ec%9a%94%ec%95%bd-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p><img src="congestion-control-summary.png" alt="congestion-control-summary.png"></p>
+<ul>
+<li><code>cwnd</code>가 임계값보다 낮을때, 발신자는 <code>Slow Start 단계</code>로, 윈도우가 기하급수적으로 증가</li>
+<li><code>cwnd</code>가 임계값 이상이면, 발신자는 <code>혼잡 회피 단계</code>로, 윈도우는 선형적으로 증가</li>
+<li><code>3개의 중복 ACK</code> 발생시, 임계값은 <code>cwnd/2</code>로 설정되고, <code>cwnd</code>는 임계값으로 설정됨</li>
+<li><code>타임아웃</code> 발생시, 임계값은 <code>cwnd/2</code>로 설정되고, <code>cwnd</code>는 <code>1 MSS</code>로 설정됨</li>
+</ul>
+<h4 id="tcp-세그먼트-구조" >TCP 세그먼트 구조
+<span>
+    <a href="#tcp-%ec%84%b8%ea%b7%b8%eb%a8%bc%ed%8a%b8-%ea%b5%ac%ec%a1%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="TCP-Segment.png" alt="TCP-Segment.png"></p>
+<ul>
+<li><code>TCP 세그먼트</code>는 다음으로 이뤄져있음
+<ul>
+<li><code>송신 포트</code></li>
+<li><code>수신 포트</code></li>
+<li><code>순서 번호</code> (Sequence Number, 현재 세그먼트의 가장 앞 바이트 번호)</li>
+<li><code>ACK 번호</code> (마지막으로 수신한 데이터 바이트 다음의 번호)</li>
+<li><code>헤더 길이</code>(4 bits)</li>
+<li><code>예약된 공간</code>(6 bits)</li>
+<li><code>TCP 제어 플래그</code> <a href="http://www.ktword.co.kr/test/view/view.php?no=2437">참고 - TCP 제어 플래그</a>
+<ul>
+<li><code>URG</code> : <code>Urgent Pointer</code>필드에 값이 채워져있음을 알림</li>
+<li><code>ACK</code>: <code>ACK 번호</code> 필드에 값이 세팅되어있음을 알림
+<ul>
+<li><code>SYN 세그먼트</code> 전송 이후 모든 세그먼트에 항상 이 비트가 1로 설정됨</li>
+</ul>
+</li>
+<li><code>PSH</code>: <code>Push the Data</code>, <code>버퍼링된 데이터</code>를 가능한 <code>빨리</code> 상위 계층 <code>응용프로그램에 전달할 것</code>
+<ul>
+<li>수신 측은 버퍼가 차기를 기다리지 않고 버퍼링된 데이터들 응용프로그램에전달</li>
+</ul>
+</li>
+<li><code>PST</code>: <code>연결확립(ESTABLISHED)</code>된 회선에 <code>강제 리셋 요청</code>
+<ul>
+<li><code>LISTEN</code>,<code>SYN_RCVD</code> 상태라면 <code>LISTEN</code> 상태로, 그외의 경우 연결 끊고 <code>CLOSED</code> 상태로</li>
+</ul>
+</li>
+<li><code>SYN</code>: 연결설정을 위해 <code>순서 번호</code>를 동기화
+<ul>
+<li><code>SYN=1, ACK=0</code> -&gt; SYN 세그먼트(<code>연결 요청</code>)</li>
+<li><code>SYN=1, ACK=1</code> -&gt; SYN+ACK 세그먼트(<code>연결 허락</code>)</li>
+<li><code>ACK=1</code> -&gt; ACK 세그먼트(<code>연결 설정</code>)</li>
+</ul>
+</li>
+<li><code>FIN</code>: 연결 종료
+<ul>
+<li><code>FIN=1</code> -&gt; FIN 세그먼트 (<code>종결 요청</code>)</li>
+<li><code>FIN=1, ACK=1</code> -&gt; FIN+ACK 세그먼트 (<code>종결 응답</code>)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>윈도우</code> (수신자가 수락할 의향이 있는 바이트 수)</li>
+<li><code>체크섬</code> (헤더+텍스트를 16비트 word들로 분할해, 이를 16비트 1의 보수합으로 누계한 다음, 최종 결과 값의 1의 보수를 구한 것)</li>
+<li><code>긴급 포인터(Urgent Pointer)</code>(긴급 포인터의 현재 값을 <code>순서 번호</code>의 <code>오프셋</code>으로 전달하는 값. 긴급 포인터는 긴급 데이터 <code>다음 바이트의 순서 번호</code>를 가리킴)</li>
+<li><code>옵션</code> (MSS 옵션 협상, 윈도우 크기 확장, 선택확인응답(SACK) 등의 옵션 데이터를 포함할 수 있음)</li>
+</ul>
+</li>
+</ul>
+<h3 id="udp" >UDP
+<span>
+    <a href="#udp">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="요약-2" >요약
+<span>
+    <a href="#%ec%9a%94%ec%95%bd-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><strong>신뢰할 수 없음</strong>(<code>unreliable</code>)</li>
+<li><strong>순서 지키지 않음</strong>(<code>unordered</code>)</li>
+<li><strong>어떤것도 보장하지 않는(<code>best-effort</code>) IP의 기본적인(<code>bare bones</code>) 확장</strong>
+<ul>
+<li>즉, 어떠한 기능도 지원하지 않음</li>
+</ul>
+</li>
+<li><strong><code>지연 보장</code>, <code>대역폭 보장</code>과 같은 서비스 <code>지원되지 않음</code></strong>
+<ul>
+<li><code>모든 데이터들이 동급</code>이라는 전제가 있어, &lsquo;어떤 파일을 빨리 보내야 한다&rsquo; 이런 개념이 존재하지 않음</li>
+</ul>
+</li>
+</ul>
+<h4 id="주요-특징-1" >주요 특징
+<span>
+    <a href="#%ec%a3%bc%ec%9a%94-%ed%8a%b9%ec%a7%95-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h5 id="best-effort한-서비스-제공" >&ldquo;best effort&quot;한 서비스 제공
+<span>
+    <a href="#best-effort%ed%95%9c-%ec%84%9c%eb%b9%84%ec%8a%a4-%ec%a0%9c%ea%b3%b5">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>따라서 <code>UDP Segment</code>는</p>
+<ul>
+<li><code>손실 가능</code>(송신자는 전송 이후 신경쓰지 않음)</li>
+<li><code>비순차적</code>으로 전달됨</li>
+</ul>
+<h5 id="connectionless" ><code>connectionless</code>
+<span>
+    <a href="#connectionless">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>UDP 송신자-수신자 간 <code>핸드셰이킹</code> 없음</li>
+<li>각 <code>UDP Segment</code>는 다른 <code>Segmeent</code>들과는 독립적으로 처리됨</li>
+</ul>
+<h5 id="신뢰성-없음" >신뢰성 없음
+<span>
+    <a href="#%ec%8b%a0%eb%a2%b0%ec%84%b1-%ec%97%86%ec%9d%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>따라서 UDP 상에서 신뢰성 있는 전송이 필요하다면, <code>응용 계층</code>에서 이를 <code>구현</code>해야 함</li>
+</ul>
+<h4 id="장점" >장점
+<span>
+    <a href="#%ec%9e%a5%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><strong><code>연결 조율 과정이 없음</code></strong>
+<ul>
+<li>따라서 이로인한 <code>딜레이 X</code></li>
+</ul>
+</li>
+<li><strong><code>단순함</code></strong>
+<ul>
+<li>송-수신자 간 연결 상태가 존재하지 않음</li>
+</ul>
+</li>
+<li><strong><code>작은 헤더 사이즈</code></strong></li>
+<li><strong><code>혼잡 제어 없음</code></strong>
+<ul>
+<li>원하는 만큼 빠르게 전송할 수 있음</li>
+</ul>
+</li>
+</ul>
+<h4 id="udp-세그먼트-구조" >UDP 세그먼트 구조
+<span>
+    <a href="#udp-%ec%84%b8%ea%b7%b8%eb%a8%bc%ed%8a%b8-%ea%b5%ac%ec%a1%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="UDP-Segment.png" alt="UDP-Segment.png"></p>
+<ul>
+<li><code>UDP 헤더</code>는 <code>출발 포트</code>, <code>도착 포트</code>, <code>길이</code>(헤더와 세그먼트를 포함한), <code>체크섬</code>으로 이뤄짐</li>
+</ul>
+<h6 id="udp-체크섬" >UDP 체크섬
+<span>
+    <a href="#udp-%ec%b2%b4%ed%81%ac%ec%84%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><ul>
+<li>전송된 세그먼트에서 <code>에러</code>(ex. <code>반전된 비트(flipped bits)</code>)를 감지하기 위해 사용되는 데이터 블록</li>
+<li><code>송신자</code>
+<ul>
+<li><em>헤더 필드를 포함한</em> <code>세그먼트 내용</code>을 <code>16 bit 정수 시퀀스</code>로 처리</li>
+<li><code>체크섬</code>: <code>세그먼트 내용</code>의 <code>1의 보수(모든 비트를 반전시킨 값)</code></li>
+<li>송신자는 체크섬 값을 <code>UDP 체크섬 필드</code>로 전달</li>
+</ul>
+</li>
+<li><code>수신자</code>
+<ul>
+<li>수신한 세그먼트의 <code>체크섬을 계산</code></li>
+<li>만약 <code>계산한 값</code>이 <code>체크섬 필드의 값</code>과
+<ul>
+<li>같다면, 에러가 검출되지 않은 것</li>
+<li>다르면, 에러가 검출된 것</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="사용처" >사용처
+<span>
+    <a href="#%ec%82%ac%ec%9a%a9%ec%b2%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>UDP</code>는 위와 같은 특징 때문에 주로 다음의 용도로 사용됨</p>
+<ul>
+<li><code>멀티미디어 스트리밍 애플리케이션</code>
+<ul>
+<li>손실을 허용하고, 속도에 민감함</li>
+</ul>
+</li>
+<li><code>DNS</code></li>
+<li><code>SNMP</code></li>
+</ul>
+<h2 id="checksum이란" >Checksum이란?
+<span>
+    <a href="#checksum%ec%9d%b4%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><code>체크섬</code>?
+<ul>
+<li>전송된 세그먼트에서 <code>에러</code>(ex. <code>반전된 비트(flipped bits)</code>)를 <strong><code>감지</code></strong> 하기 위해 사용되는 데이터 블록
+<ul>
+<li><em>헤더 필드를 포함한</em> <code>세그먼트 내용</code>을 <code>16 bit 정수 시퀀스</code>로 분해한 뒤, 1의 보수로 합을 누적하여 구함</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="tcp와-udp-중-어느-프로토콜이-checksum을-수행하는가" >TCP와 UDP 중 어느 프로토콜이 Checksum을 수행하는가?
+<span>
+    <a href="#tcp%ec%99%80-udp-%ec%a4%91-%ec%96%b4%eb%8a%90-%ed%94%84%eb%a1%9c%ed%86%a0%ec%bd%9c%ec%9d%b4-checksum%ec%9d%84-%ec%88%98%ed%96%89%ed%95%98%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><code>TCP</code>, <code>UDP</code> 모두 Checksum을 수행할 수 있다
+<ul>
+<li>다만, <code>UDP</code>의 경우 <em>IPv4에서는 선택적</em>이고 <code>IPv6</code>에서는 <code>필수</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="checksum을-통해-오류를-정정할-수-있는가" >Checksum을 통해 오류를 정정할 수 있는가?
+<span>
+    <a href="#checksum%ec%9d%84-%ed%86%b5%ed%95%b4-%ec%98%a4%eb%a5%98%eb%a5%bc-%ec%a0%95%ec%a0%95%ed%95%a0-%ec%88%98-%ec%9e%88%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>checksum을 이용한 <code>오류 정정</code>은 <strong>불가능</strong>
+<ul>
+<li>단순히 <code>각 16비트 word들의 1의 보수 합</code>이기 때문에 원래 값이 무엇이었는지 유추하기 힘듦</li>
+<li>따라서 <code>자동반복요청(ARQ)</code> 기법을 사용하거나, <code>Hamming Code</code>, <code>Reed–Solomon code</code>등 <code>오류 정정 코드</code>를 사용하는 <code>전진오류수정(FEC)</code> 기법을 사용해 오류를 정정해야 함
+<ul>
+<li>이러한 기법들은 <code>데이터링크 계층</code>에서 수행됨</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="tcp가-신뢰성을-보장하는-방법" >TCP가 신뢰성을 보장하는 방법
+<span>
+    <a href="#tcp%ea%b0%80-%ec%8b%a0%eb%a2%b0%ec%84%b1%ec%9d%84-%eb%b3%b4%ec%9e%a5%ed%95%98%eb%8a%94-%eb%b0%a9%eb%b2%95">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><code>TCP</code>에서는 신뢰성을 보장하기 위해 다음과 같은 서비스 제공
+<ul>
+<li><code>파이프라인화된 세그먼트</code> (연속으로 전송할 수 있음)</li>
+<li><code>누적 ACK</code> (Go-Back-N과 유사)</li>
+<li><code>단일 재전송 타이머</code> (데이터 보낸 시간 != timeout 시간 일 수 있어 타이머 사용)</li>
+</ul>
+</li>
+<li>위 서비스를 통해 <code>비트 에러</code>, <code>패킷 손실</code>이 일어난 데이터를 감지하고 재전송을 요청함.</li>
+<li>이때, <code>재전송</code>은 다음 두 경우 발생
+<ul>
+<li><code>timeout 이벤트</code>
+<ul>
+<li>timeout이 발생한 경우, 이를 일으킨 세그먼트를 재전송</li>
+<li>타이머 재시작</li>
+</ul>
+</li>
+<li><code>중복된 ACK</code>
+<ul>
+<li>이전에 ACK되지 않은 세그먼트를 ACK하는 경우</li>
+<li>무엇이 ACK되었다고 알려져있는지 갱신</li>
+<li>ACK되지 않은 세그먼트 아직 있으면 타이머 시작</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="tcp의-혼잡-제어-처리-방법" >TCP의 혼잡 제어 처리 방법
+<span>
+    <a href="#tcp%ec%9d%98-%ed%98%bc%ec%9e%a1-%ec%a0%9c%ec%96%b4-%ec%b2%98%eb%a6%ac-%eb%b0%a9%eb%b2%95">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>TCP에서는 <code>혼잡 제어</code>를 위해
+<code>AIMD</code>, <code>slow start</code>, <code>conservative after timeout events</code> 3가지 메커니즘 존재
+<ul>
+<li>발신자가 혼잡함을 인식하는 기준
+<ul>
+<li><code>손실 이벤트(loss event)</code>: <code>타임아웃</code> 또는 <code>3번</code>의 <code>중복된 ACK</code></li>
+</ul>
+</li>
+<li>TCP 발신자는 <code>손실 이벤트</code> 발생시, 혼잡에 대응하기 위해 <code>혼잡 윈도우(Congestion Window, CongWin)</code>의 크기를 조절해 대응</li>
+</ul>
+</li>
+</ul>
+<h6 id="aimd-1" >AIMD
+<span>
+    <a href="#aimd-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p><img src="AIMD.png" alt="AIMD.png"></p>
+<ul>
+<li><code>Additive Increase Multiplicative Decrease</code>의 약어</li>
+<li><code>혼잡 윈도우</code>를 <em>혼잡이 감지되지 않을때</em>는 <code>선형적으로 증가</code>시키다, <em>혼잡이 감지되면</em> <code>기하급수적으로 감소</code>시키는 방식
+<ul>
+<li><em>손실이 감지될 때까지</em>, 매 <code>RTT</code>마다 <code>cwnd</code>를 1 MSS씩 증가</li>
+<li><em>손실이 발생하면</em>, <code>cwnd</code>를 절반으로 줄임</li>
+</ul>
+</li>
+<li>즉, <code>cwnd</code>는 인식된 네트워크 혼잡 정도를 나타내는 함수라고 할 수 있음</li>
+<li>TCP 전송 속도 $rate \approx {cwnd \over RTT} bytes/sec$</li>
+</ul>
+<h6 id="slow-start-1" >Slow Start
+<span>
+    <a href="#slow-start-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><p><img src="Slow-Start.png" alt="Slow-Start.png"></p>
+<ul>
+<li>연결 시작 이후, <code>손실 이벤트</code> 발생 전까지 속도를 기하급수적으로 증가시키는 방식
+<ul>
+<li>초기 <code>cwnd</code> = 1 MSS</li>
+<li>매 RTT마다 <code>cwnd</code>는 2배씩 증가
+<ul>
+<li>정확히는 모든 <code>ACK 수신</code>마다 <code>cwnd</code>를 2배로 증가시킴</li>
+</ul>
+</li>
+<li>시작 값이 1이라 <code>Slow Start</code>라는 이름이 붙었으며, 증가 속도는 빠름</li>
+</ul>
+</li>
+</ul>
+<h6 id="conservative-after-timeout-events타임아웃-발생-후-보수적으로-1" >Conservative after timeout events(타임아웃 발생 후 보수적으로)
+<span>
+    <a href="#conservative-after-timeout-events%ed%83%80%ec%9e%84%ec%95%84%ec%9b%83-%eb%b0%9c%ec%83%9d-%ed%9b%84-%eb%b3%b4%ec%88%98%ec%a0%81%ec%9c%bc%eb%a1%9c-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h6><ul>
+<li><code>타임아웃</code>으로 손실을 인식
+<ul>
+<li><code>cwnd</code>는 1로 세팅됨</li>
+<li>이후 <code>cwnd</code>가 기하급수적으로 <code>임계값(threshold)</code>까지 증가한 뒤, <code>선형적</code>으로 증가</li>
+</ul>
+</li>
+<li><code>3개의 중복 ACK</code>로 손실을 인식 : <code>TCP RENO</code>
+<ul>
+<li><code>중복 ACK</code>는 네트워크가 아직 <code>세그먼트들을 전달할 수 있음</code>을 나타냄</li>
+<li><code>cwnd</code>를 <code>절반</code>으로 줄인 뒤, <code>선형적</code>으로 증가</li>
+</ul>
+</li>
+<li><code>타임아웃</code> 또는 <code>3개의 중복 ACK</code> 발생시 손실 인식 : <code>TCP Tahoe</code>
+<ul>
+<li>인식시 <code>cwnd</code>를 1로 설정</li>
+</ul>
+</li>
+</ul>
+<h2 id="왜-http는-tcp를-사용하는가" >왜 HTTP는 TCP를 사용하는가?
+<span>
+    <a href="#%ec%99%9c-http%eb%8a%94-tcp%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%98%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><code>TCP</code>가 <strong><code>신뢰성</code></strong> 을 제공하기 때문
+<ul>
+<li><code>HTTP</code>는 <code>신뢰할 수 있는 전송(reliable transport)</code>을 전제로하는 프로토콜임</li>
+<li>따라서 이를 기본적으로 제공하는 <code>TCP</code>를 선택
+<ul>
+<li>만약 <code>신뢰성</code>이 제공되지 않아 패킷들의 순서가 뒤죽박죽이 되거나, 누락될 경우 웹사이트를 이루는 요소들이 올바르게 배치되지 않거나 텍스트, 이미지 등의 정보가 누락될 수 있음</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="왜-http3-에서는-udp를-사용하는가" >왜 HTTP/3 에서는 UDP를 사용하는가?
+<span>
+    <a href="#%ec%99%9c-http3-%ec%97%90%ec%84%9c%eb%8a%94-udp%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%98%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><code>HTTP/3</code>는 <code>TCP의 고질적인 문제점</code>을 해결하고자 <code>UDP</code>를 채용
+<ul>
+<li><code>TCP</code>로 인해 발생하는 문제
+<ul>
+<li><code>HOL Blocking</code>
+<ul>
+<li>TCP의 신뢰성때문에, 한 스트림에서 데이터 손실 발생시, 다른 데이터 스트림들은 손실된 데이터 재전송될 때까지 차단됨</li>
+</ul>
+</li>
+<li><code>연결 설정</code>으로 인한 <code>지연</code>
+<ul>
+<li>TCP가 연결 설정할 때 거치는 <code>3-way handshake</code> 과정과 보안을 위한 <code>TLS Handshake</code> 때문에 두 번의 지연 발생
+<ul>
+<li>반면 UDP(정확히는 <code>QUIC</code>)는 최초 연결 설정시 <code>연결에 필요한 정보</code> + <code>데이터</code>를 함께 전송해 1-RTT로 지연을 줄임</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>패킷 <code>암호화 불가능</code>
+<ul>
+<li><code>TCP 프로토콜 헤더</code>는 암호화 및 인증되지 않아, 중개자에 의한 변조/인젝션/도청에 취약
+<ul>
+<li>반면 <code>QUIC</code>은 <em>일부 메시지를 제외한</em> <code>모든 패킷 헤더</code>와 <code>메시지 본문</code>이 암호화 됨</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>연결 요소 변경시 연결 재설정
+<ul>
+<li><code>TCP</code> 연결은 <code>출발지 IP</code>, <code>출발지 포트</code>, <code>도착지 IP</code>, <code>도착지 포트</code> 4가지를 기반
+<ul>
+<li>하나라도 변경될 경우 연결 다시 설정해야 함</li>
+</ul>
+</li>
+<li>반면 <code>QUIC</code>은 <code>연결 ID</code>를 기반으로해, 이 값이 변경되지 않는 이상 연결 계속 유지</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="브라우저는-어떤-서버가-tcp를-쓰는지-udp를-쓰는지-어떻게-알-수-있는가" >브라우저는 어떤 서버가 TCP를 쓰는지 UDP를 쓰는지 어떻게 알 수 있는가?
+<span>
+    <a href="#%eb%b8%8c%eb%9d%bc%ec%9a%b0%ec%a0%80%eb%8a%94-%ec%96%b4%eb%96%a4-%ec%84%9c%eb%b2%84%ea%b0%80-tcp%eb%a5%bc-%ec%93%b0%eb%8a%94%ec%a7%80-udp%eb%a5%bc-%ec%93%b0%eb%8a%94%ec%a7%80-%ec%96%b4%eb%96%bb%ea%b2%8c-%ec%95%8c-%ec%88%98-%ec%9e%88%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><code>연결 시도 과정</code>에서 알 수 있음
+<ul>
+<li>먼저 브라우저는 <code>TCP</code>로 <code>443</code>번(<code>HTTPS</code>), 또는 <code>80</code>번(<code>HTTP</code>) 포트로 연결 시도
+<ul>
+<li><code>HTTP/1.1</code> 또는 <code>HTTP/2</code>로 연결을 설정하기 위함</li>
+</ul>
+</li>
+<li>만약 서버가 <code>HTTP/3</code>를 지원하는 경우, <code>h3</code> ALPN 토큰을 사용해 <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Alt-Svc#example"><code>Alt-Svc</code> HTTP 응답 헤더 필드</a>를 사용하거나, <code>HTTP/2 ALTSVC 프레임</code>을 통해 동등한 <code>HTTP/3</code> 엔드포인트를 지원함을 알림
+<ul>
+<li><code>Alt-Svc</code> : 향후 요청에 대해 <code>다른 네트워크 위치(대체 서비스)</code>역시 현재 요청의 오리진처럼 정당한 응답을 받을 수 있음을 알림.</li>
+</ul>
+</li>
+<li><code>Alt-Svc</code> 필드의 값을 활용해 <code>h3</code> 키에 해당하는 값의 UDP 포트로 연결 시도
+<ul>
+<li>만약 <code>h3=&quot;:443&quot;</code>인 경우, UDP 443 포트로 <code>QUIC</code> 연결 시도</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li>전공 강의 자료
+<ul>
+<li>&ldquo;Computer Networking: A Top Down Approach - 7th Edition&rdquo;, Jim Kurose, Keith RossPearson. April 2016</li>
+</ul>
+</li>
+<li><a href="https://ocw.snu.ac.kr/sites/default/files/NOTE/W6.Transport_Layer.pdf">W6.Transport_Layer.pdf - SNU</a></li>
+<li><a href="https://www.ietf.org/rfc/rfc793.txt">TRANSMISSION CONTROL PROTOCOL - ietf.org/rfc/rfc793.txt</a></li>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc9293#name-header-format">RFC 9293 - Transmission Control Protocol (TCP)</a></li>
+<li><a href="https://coursys.sfu.ca/2022fa-cmpt-471-d1/pages/Prj2/view">Reliable Data Transfer over UDP - Simon Fraser University</a></li>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc7838">RFC 7838 - HTTP Alternative Services</a></li>
+<li><a href="http://www.ktword.co.kr/test/view/view.php?no=2437">TCP 제어 플래그 - ktworld</a></li>
+<li><a href="http://www.ktword.co.kr/test/view/view.php?no=1889">TCP Header- ktworld</a></li>
+<li><a href="http://www.ktword.co.kr/test/view/view.php?no=5536">TCP 혼잡제어 - ktworld</a></li>
+<li><a href="https://os.korea.ac.kr/wp-content/uploads/2020/11/10_TCP-in-Linux.pdf">Fall ’20 COSE322-00  System Programming  TCP in Linux - korea univ</a></li>
+<li><a href="https://www.slashroot.in/how-is-tcp-and-udp-checksum-calculated">How is TCP &amp; UDP Checksum Calculated?</a></li>
+<li><a href="http://www.tcpipguide.com/free/t_TCPChecksumCalculationandtheTCPPseudoHeader-2.htm">The TCP/IP Guide - TCP Checksum Calculation and the TCP &ldquo;Pseudo Header&rdquo;</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/network/tcp-udp/"><time datetime="2024-11-01">2024-11-01 18:18 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/network/tcp-udp/">https://cloudsoswift.github.io/post/develop/network/tcp-udp/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/os/sync-blocking/">[OS] 동기-비동기, 블로킹-논블로킹 알아보기 (w. I/O 멀티플렉싱)</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>
