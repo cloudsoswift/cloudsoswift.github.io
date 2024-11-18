@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Javascript]가상 DOM 알아보기(w. Diffing Algorithm, React Fiber, Compiler-Informed Virtual DOM) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 11월 8일 발표한 가상 DOM에 대해 정리한 문서를 블로그에 공유하고자 한다.
+다만, 현재 문서 내용에는 React Fiber의 실제 내부 동작이라든가, React나 Vue.js를 제외한 다른 VDOM을 채택한 라이브러리들에 대한 내용이 빠져있다.
+또한, React 18 이후 Concurrent Rendering을 통해 개선된 성능에 대한 얘기도 많이 부족하다고 생각하여, 추후 내용을 수정하여 보완하거나, 이를 보충할만한 또 다른 포스트를 등록할 예정이다.
+가상 DOM?가상 DOM(Virtual DOM, VDOM)이란, UI의 가상 표현이 메모리상에 저장되고, ReactDOM과 같은 라이브러리를 통해 실제 DOM과 동기화되는 프로그래밍 개념 이렇게 실제 DOM과 가상 DOM을 동기화하는 과정을 재조정(Reconciliation)이라고 함 이러한 형태는 React의 선언적 API 구조의 기반이 됨 사용자가 UI가 어떤 상태가 되길 원하는지 React에게 알려주면, React는 DOM이 해당 상태와 일치하는지 확인하고 갱신 이를 통해 어트리뷰트 조작, 이벤트 핸들링, 수동 DOM 조작과 같은 작업들을 추상화할 수 있음 개발자가 직접 해당 조작들을 하나하나 수행하지 않아도 됨을 의미 따라서 개발자는 한 상태에서 다른 상태로의 전환을 효율적으로 수행할 방안에 대해 고민하지 않아도 됨 .">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Javascript]가상 DOM 알아보기(w. Diffing Algorithm, React Fiber, Compiler-Informed Virtual DOM)" />
+<meta property="og:description" content="서론CS 스터디에서 11월 8일 발표한 가상 DOM에 대해 정리한 문서를 블로그에 공유하고자 한다.
+다만, 현재 문서 내용에는 React Fiber의 실제 내부 동작이라든가, React나 Vue.js를 제외한 다른 VDOM을 채택한 라이브러리들에 대한 내용이 빠져있다.
+또한, React 18 이후 Concurrent Rendering을 통해 개선된 성능에 대한 얘기도 많이 부족하다고 생각하여, 추후 내용을 수정하여 보완하거나, 이를 보충할만한 또 다른 포스트를 등록할 예정이다.
+가상 DOM?가상 DOM(Virtual DOM, VDOM)이란, UI의 가상 표현이 메모리상에 저장되고, ReactDOM과 같은 라이브러리를 통해 실제 DOM과 동기화되는 프로그래밍 개념 이렇게 실제 DOM과 가상 DOM을 동기화하는 과정을 재조정(Reconciliation)이라고 함 이러한 형태는 React의 선언적 API 구조의 기반이 됨 사용자가 UI가 어떤 상태가 되길 원하는지 React에게 알려주면, React는 DOM이 해당 상태와 일치하는지 확인하고 갱신 이를 통해 어트리뷰트 조작, 이벤트 핸들링, 수동 DOM 조작과 같은 작업들을 추상화할 수 있음 개발자가 직접 해당 조작들을 하나하나 수행하지 않아도 됨을 의미 따라서 개발자는 한 상태에서 다른 상태로의 전환을 효율적으로 수행할 방안에 대해 고민하지 않아도 됨 ." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/javascript/virtual-dom/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-11-18T10:37:02+09:00" />
+<meta property="article:modified_time" content="2024-11-18T10:37:02+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Javascript]가상 DOM 알아보기(w. Diffing Algorithm, React Fiber, Compiler-Informed Virtual DOM)"/>
+<meta name="twitter:description" content="서론CS 스터디에서 11월 8일 발표한 가상 DOM에 대해 정리한 문서를 블로그에 공유하고자 한다.
+다만, 현재 문서 내용에는 React Fiber의 실제 내부 동작이라든가, React나 Vue.js를 제외한 다른 VDOM을 채택한 라이브러리들에 대한 내용이 빠져있다.
+또한, React 18 이후 Concurrent Rendering을 통해 개선된 성능에 대한 얘기도 많이 부족하다고 생각하여, 추후 내용을 수정하여 보완하거나, 이를 보충할만한 또 다른 포스트를 등록할 예정이다.
+가상 DOM?가상 DOM(Virtual DOM, VDOM)이란, UI의 가상 표현이 메모리상에 저장되고, ReactDOM과 같은 라이브러리를 통해 실제 DOM과 동기화되는 프로그래밍 개념 이렇게 실제 DOM과 가상 DOM을 동기화하는 과정을 재조정(Reconciliation)이라고 함 이러한 형태는 React의 선언적 API 구조의 기반이 됨 사용자가 UI가 어떤 상태가 되길 원하는지 React에게 알려주면, React는 DOM이 해당 상태와 일치하는지 확인하고 갱신 이를 통해 어트리뷰트 조작, 이벤트 핸들링, 수동 DOM 조작과 같은 작업들을 추상화할 수 있음 개발자가 직접 해당 조작들을 하나하나 수행하지 않아도 됨을 의미 따라서 개발자는 한 상태에서 다른 상태로의 전환을 효율적으로 수행할 방안에 대해 고민하지 않아도 됨 ."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Javascript]가상 DOM 알아보기(w. Diffing Algorithm, React Fiber, Compiler-Informed Virtual DOM)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#가상-dom">가상 DOM?</a>
+      <ul>
+        <li><a href="#주의-사항">주의 사항</a></li>
+        <li><a href="#재조정reconciliation">재조정(Reconciliation)?</a></li>
+        <li><a href="#react의-디자인-원칙">React의 디자인 원칙</a></li>
+        <li><a href="#react-fiber--참고-문서httpsgithubcomacdlitereact-fiber-architecture">React Fiber <a href="https://github.com/acdlite/react-fiber-architecture"># 참고 문서</a></a></li>
+        <li><a href="#react-18-이후의-가상-dom">React 18 이후의 가상 DOM</a></li>
+        <li><a href="#vuejs의-가상-dom--참고-문서httpsvuejsorgguideextrasrendering-mechanism">Vue.js의 가상 DOM <a href="https://vuejs.org/guide/extras/rendering-mechanism"># 참고 문서</a></a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 11월 8일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/13_Virtual-DOM/Readme.md">가상 DOM</a>에 대해 정리한 문서를 블로그에 공유하고자 한다.<br>
+다만, 현재 문서 내용에는 <code>React Fiber의 실제 내부 동작</code>이라든가, <code>React나 Vue.js를 제외한 다른 VDOM을 채택한 라이브러리들</code>에 대한 내용이 빠져있다.<br>
+또한, React 18 이후 <code>Concurrent Rendering을 통해 개선된 성능</code>에 대한 얘기도 많이 부족하다고 생각하여, 추후 <strong>내용을 수정하여 보완</strong>하거나, 이를 <strong>보충할만한 또 다른 포스트를 등록할 예정</strong>이다.</p>
+<h2 id="가상-dom" >가상 DOM?
+<span>
+    <a href="#%ea%b0%80%ec%83%81-dom">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><code>가상 DOM(Virtual DOM, VDOM)</code>이란, <code>UI의 가상 표현</code>이 <code>메모리상에 저장</code>되고, <code>ReactDOM</code>과 같은 라이브러리를 통해 <code>실제 DOM과 동기화</code>되는 <strong><code>프로그래밍 개념</code></strong></li>
+<li>이렇게 실제 DOM과 가상 DOM을 <code>동기화</code>하는 과정을 <code>재조정(Reconciliation)</code>이라고 함</li>
+<li>이러한 형태는 React의 <code>선언적 API 구조</code>의 기반이 됨
+<ul>
+<li>사용자가 <em>UI가 어떤 상태가 되길 원하는지</em> React에게 알려주면, React는 DOM이 해당 상태와 일치하는지 확인하고 갱신
+<ul>
+<li>이를 통해 <code>어트리뷰트 조작</code>, <code>이벤트 핸들링</code>, <code>수동 DOM 조작</code>과 같은 작업들을 <strong>추상화</strong>할 수 있음
+<ul>
+<li>개발자가 직접 해당 조작들을 <strong>하나하나 수행하지 않아도 됨</strong>을 의미</li>
+</ul>
+</li>
+<li>따라서 개발자는 한 상태에서 다른 상태로의 전환을 <code>효율적으로 수행할 방안</code>에 대해 <strong><code>고민하지 않아도 됨</code></strong> .</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>이러한 재조정 과정에 활용할 <em>컴포넌트 트리와 관련된 추가 정보들</em>을 저장하기 위해 <strong><code>Fiber</code></strong> 라는 내부 객체를 사용</li>
+</ul>
+<h3 id="주의-사항" >주의 사항
+<span>
+    <a href="#%ec%a3%bc%ec%9d%98-%ec%82%ac%ed%95%ad">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>React 내부에서 <code>재조정</code>과 <code>렌더링</code>은 별도의 단계로 설계되어 있음
+<ul>
+<li><code>재조정</code>: <code>재조정자(reconciler)</code>가 트리의 어느 부분이 변경되었는지 계산</li>
+<li><code>렌더링</code>: <code>렌더러</code>가 계산된 트리를 사용해 실제로 렌더링 된 애플리케이션을 업데이트</li>
+</ul>
+</li>
+<li>이러한 구조를 통해, <code>ReactDOM</code>과 <code>React Native</code>는 동일한 <code>재조정자</code>를 공유하되, 각각 <code>자체 렌더러</code>를 사용
+<ul>
+<li>즉, DOM은 React 가 <code>렌더링할 수 있는 환경</code> 중 하나에 불과함</li>
+</ul>
+</li>
+</ul>
+<h3 id="재조정reconciliation" >재조정(Reconciliation)?
+<span>
+    <a href="#%ec%9e%ac%ec%a1%b0%ec%a0%95reconciliation">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>DOM을 <code>React Element 트리</code>의 <code>가장 최근 상태</code>와 일치하도록 <strong><code>효율적으로 업데이트하는 방법</code></strong> 을 결정하는 과정
+<ul>
+<li>React의 <code>render()</code> 함수는 항상 최신 상태의 <code>React Element 트리</code>를 반환하고자 함.
+<ul>
+<li>즉, <code>state</code> 또는 <code>props</code>가 업데이트될 때 마다 다른 <code>React Element 트리</code>를 반환해야 함.</li>
+<li>이를 위해서는 React가 DOM을 가장 최근의 트리와 일치하도록 효율적으로 업데이트 할 수 있어야 함.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>즉, 한 트리에서 다른 트리로 변환하기 위한 <strong><code>최소한의 연산 횟수</code></strong> 가 발생하는 알고리즘이 필요
+<ul>
+<li>일반적인 알고리즘으로는 $O(n^3)$의 시간이 소요됨 <a href="https://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf">#</a></li>
+</ul>
+</li>
+<li>이를 위해 React에서는 아래 <code>두 가지 가정을 기반</code>으로 한 휴리스틱 $O(n)$ 알고리즘을 사용
+<ol>
+<li>두 <code>다른 타입</code>의 엘리먼트들은 <code>서로 다른 트리</code>를 만든다.</li>
+<li>개발자는 <code>key</code> prop을 통해 어떤 하위 엘리먼트가 여러 렌더링에 대해 안정적인지(동일한 형태를 띄는지) 힌트를 줄 수 있음</li>
+</ol>
+</li>
+</ul>
+<h4 id="디핑-알고리즘diffing-algorithm" >디핑 알고리즘(Diffing Algorithm)
+<span>
+    <a href="#%eb%94%94%ed%95%91-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98diffing-algorithm">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>두 트리의 차이를 비교하는 <code>디핑 알고리즘</code>에서는 먼저 <code>루트 엘리먼트</code>를 비교하고, <code>루트 엘리먼트</code>의 타입에 따라 다른 동작을 수행</p>
+<h5 id="다른-타입의-엘리먼트" >다른 타입의 엘리먼트
+<span>
+    <a href="#%eb%8b%a4%eb%a5%b8-%ed%83%80%ec%9e%85%ec%9d%98-%ec%97%98%eb%a6%ac%eb%a8%bc%ed%8a%b8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li><code>루트 엘리먼트</code>가 다른 타입을 가질때마다, React는 이전 트리를 허물고 새로운 트리를 처음부터 구축
+<ul>
+<li>ex) 루트 엘리먼트가 <code>&lt;a&gt;</code> 에서 <code>&lt;img&gt;</code>로 바뀌거나, <code>&lt;Article&gt;</code>에서 <code>&lt;Comment&gt;</code>로 바뀌는 등의 경우</li>
+</ul>
+</li>
+<li>이전 트리를 허물때, 이전 <code>DOM Node</code>들도 파괴됨
+<ul>
+<li>이때, 해당 <code>DOM Node</code>들의 컴포넌트 인스턴스들은 <code>componentWillUnmount()</code>를 수신</li>
+<li>루트 아래 모든 컴포넌트들은 마운트 해제되고 상태가 파괴됨</li>
+</ul>
+</li>
+<li>이후 새로운 트리를 만들 때, 새로운 <code>DOM Node</code>들이 DOM에 삽입됨
+<ul>
+<li>이때, 해당 <code>DOM Node</code>들의 컴포넌트 인스턴스들은 <code>UNSAFE_componentWillMount()</code>를 수신한 뒤 <code>componentDidMount()</code>를 수신</li>
+</ul>
+</li>
+<li>이전 트리와 관련된 상태들은 모두 파괴됨</li>
+</ul>
+<h5 id="동일한-타입의-dom-엘리먼트" >동일한 타입의 DOM 엘리먼트
+<span>
+    <a href="#%eb%8f%99%ec%9d%bc%ed%95%9c-%ed%83%80%ec%9e%85%ec%9d%98-dom-%ec%97%98%eb%a6%ac%eb%a8%bc%ed%8a%b8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>같은 타입의 두 <code>React DOM 엘리먼트</code>에 대해, React는 <code>DOM Node</code>는 유지하되, <code>어트리뷰트</code>를 살펴보고 <code>변경된 값</code>만 갱신함</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span># 변경 전
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;before&#34;</span> <span style="color:#a6e22e">title</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;stuff&#34;</span> /&gt;
+</span></span><span style="display:flex;"><span># 변경 후, React는 비교 후 바뀐 className만 반영
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;after&#34;</span> <span style="color:#a6e22e">title</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;stuff&#34;</span> /&gt;
+</span></span></code></pre></div><h5 id="동일한-타입의-컴포넌트-엘리먼트" >동일한 타입의 컴포넌트 엘리먼트
+<span>
+    <a href="#%eb%8f%99%ec%9d%bc%ed%95%9c-%ed%83%80%ec%9e%85%ec%9d%98-%ec%bb%b4%ed%8f%ac%eb%84%8c%ed%8a%b8-%ec%97%98%eb%a6%ac%eb%a8%bc%ed%8a%b8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>컴포넌트가 갱신된 경우, 인스턴스는 동일하게 유지되므로 상태는 렌더링간에 변화가 발생하지 않음</li>
+<li>React는 기존 컴포넌트의 props를 새 엘리먼트와 일치하도록 갱신</li>
+<li>이후 <code>UNSAFE_componentWillReceiveProps()</code>와 <code>UNSAFE_componentWillUpdate()</code>, 그리고 <code>componentDidUpdate()</code>를 호출</li>
+<li>이어서 <code>render()</code>가 호출된 뒤 재귀적으로 디핑 알고리즘이 호출됨</li>
+</ul>
+<h5 id="자식에-대한-디핑-알고리즘-재귀" >자식에 대한 디핑 알고리즘 재귀
+<span>
+    <a href="#%ec%9e%90%ec%8b%9d%ec%97%90-%eb%8c%80%ed%95%9c-%eb%94%94%ed%95%91-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98-%ec%9e%ac%ea%b7%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>기본적으로 React는 <code>DOM Node</code>의 자식 노드들을 한 번에 순회하고, 차이가 있을 경우 갱신</li>
+</ul>
+<h5 id="key-prop" ><code>key</code> prop
+<span>
+    <a href="#key-prop">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>상기한 자식 노드간 비교를 나이브하게 구현할 경우, 아래와 같은 케이스에서 비효율적으로 렌더링이 이뤄짐</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span># 전
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">ul</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">li</span>&gt;Duke&lt;/<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">li</span>&gt;Villanova&lt;/<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">ul</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span># 후
+</span></span><span style="display:flex;"><span># 만약 요소를 1대1로 비교할 경우, 위의 Duke는 Connecticut과, Villanova는 Duke와 비교하게 됨
+</span></span><span style="display:flex;"><span># 따라서 이미 렌더링된 Duke와 Villanova를 재활용하지 못함
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">ul</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">li</span>&gt;Connecticut&lt;/<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">li</span>&gt;Duke&lt;/<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">li</span>&gt;Villanova&lt;/<span style="color:#f92672">li</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">ul</span>&gt;
+</span></span></code></pre></div><ul>
+<li>이를 방지하고자, React에서는 <code>key</code> prop을 사용해 이전 트리에서 같은 <code>key</code>를 가지는 자식과 비교하도록 함.</li>
+<li><code>key</code>는 주로 데이터에서 발견할 수 있는 <code>고유한 ID</code>나, 데이터를 해시한 값을 사용
+<ul>
+<li>배열에서의 항목의 <code>인덱스</code> 값을 <code>key</code>로 쓸 수도 있지만, 이는 배열의 재정렬이나 항목 간 이동 발생시 인덱스가 바뀌므로 원치않는 방식으로 갱신이 이뤄질 수 있음
+<ul>
+<li><a href="https://legacy.reactjs.org/redirect-to-codepen/reconciliation/index-used-as-key">키를 index로 사용해 문제가 발생하는 케이스</a></li>
+<li><a href="https://legacy.reactjs.org/redirect-to-codepen/reconciliation/no-index-used-as-key">위 경우를 보완한 케이스</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>key</code>는 <code>형제(sibling)</code>사이에서만 고유하면 되며, 전역적으로 고유할 필요는 없음</li>
+</ul>
+<h3 id="react의-디자인-원칙" >React의 디자인 원칙
+<span>
+    <a href="#react%ec%9d%98-%eb%94%94%ec%9e%90%ec%9d%b8-%ec%9b%90%ec%b9%99">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><a href="https://legacy.reactjs.org/docs/design-principles.html">React의 디자인 원칙</a>의 핵심은 다음과 같음
+<ul>
+<li>UI에 모든 업데이트가 <strong><code>즉시 반영되어야 할 필요는 없음</code></strong>
+<ul>
+<li>React는 하나의 틱 동안 트리를 재귀적으로 순회하며 렌더링 함수 호출해 업데이트된 트리를 계산해야 함</li>
+<li>따라서 이들을 <em>즉시 반영하려다</em> <strong>프레임이 떨어지거나</strong>, <strong>UX가 불편해질 수</strong> 있음</li>
+<li>따라서, <strong>일부 업데이트를 지연</strong>시킬 수 있으며, 경우에 따라 <strong>데이터들을 통합해 일괄 업데이트</strong> 할 수 있음(데이터가 프레임 속도보다 빠르게 도착한 경우)</li>
+</ul>
+</li>
+<li><code>다른 유형의 업데이트들</code>은 <strong><code>다른 우선순위를 가져야 함</code></strong>
+<ul>
+<li>근본적으로 React는 <code>UI 구축</code>을 위한 라이브러리이므로, <em>화면에서 벗어난 것이 있다면</em> 이와 관련된 모든 로직들을 <code>지연</code>시킬 수 있음</li>
+<li>예를 들어, 애니메이션 업데이트는 데이터 저장소의 값 업데이트보다 더 빨리 완료되어야 함</li>
+<li>이를 통해 프레임 저하를 방지할 수 있음</li>
+</ul>
+</li>
+<li><code>풀(pull) 기반 접근 방식*</code>에서는 <code>작업 스케줄링*</code> 방법을 <code>프레임워크(React)</code>가 대신 결정해줌
+<ul>
+<li>이는 <code>푸시(push) 기반 접근방식*</code>에서 <code>앱(프로그래머)</code>가 직접 결정해야하는 것과 대조적</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<ul>
+<li><code>풀 기반 접근 방식</code>: 필요할 때까지 계산을 지연시킬 수 있는 접근 방식</li>
+<li><code>푸시 기반 접근방식</code>: 새 데이터를 사용할 수 있을 때마다, 계산이 이뤄지는 방식</li>
+<li><code>작업 스케줄링</code>: <code>작업*</code>이 수행될 <strong>시점</strong>을  결정하는 일련의 과정</li>
+<li><code>작업(work)</code>: 수행되어야 하는 연산. 주로 업데이트(<code>setState</code>와 같은)의 결과임</li>
+</ul>
+<h3 id="react-fiber--참고-문서httpsgithubcomacdlitereact-fiber-architecture" >React Fiber <a href="https://github.com/acdlite/react-fiber-architecture"># 참고 문서</a>
+<span>
+    <a href="#react-fiber--%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9chttpsgithubcomacdlitereact-fiber-architecture">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>React Fiber</code>란 React 16에 등장한 새로운 <code>재조정 엔진</code></li>
+<li>이를 통해 가상 DOM의 <code>점진적 렌더링(incremental rendering)</code>을 가능케 하는 것이 목표.
+<ul>
+<li><code>점진적 렌더링</code>: 렌더링 작업을 청크로 분할하여, 여러 프레임에 걸쳐 분산하는 기능
+<ul>
+<li>우선순위가 높은 업데이트 사항부터 먼저 처리해나가는 렌더링 방식</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>이외에도 새로운 업데이트 발생시 기존의 작업을 <code>일시 중지(pause)</code>, <code>중단(abort)</code>,  <code>재사용(reuse)</code> 할 수 있는 기능, 여러 유형의 업데이트에 <code>우선순위를 지정</code>하는 기능, 동시성 프로그래밍을 위한 기본 기능 등의 주요기능이 존재</li>
+</ul>
+<h4 id="등장-배경" >등장 배경
+<span>
+    <a href="#%eb%93%b1%ec%9e%a5-%eb%b0%b0%ea%b2%bd">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>Fiber 이전의 React는 <code>작업 스케줄링</code>을 활용하지 않아, 업데이트가 발생하면 모든 하위 트리가 즉시 재렌더링 됨</li>
+<li>이를 방지하고자, React의 핵심 알고리즘을 개편하는 것이 Fiber의 목표</li>
+</ul>
+<h4 id="기능" >기능
+<span>
+    <a href="#%ea%b8%b0%eb%8a%a5">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h5 id="작업-스케줄링" >작업 스케줄링
+<span>
+    <a href="#%ec%9e%91%ec%97%85-%ec%8a%a4%ec%bc%80%ec%a4%84%eb%a7%81">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>React에서 스케줄링을 활용할 수 있도록 해야 하므로, 다음의 기능이 구현되어야 함
+<ul>
+<li>작업의 <code>중지 및 재개</code>가 가능해야 함</li>
+<li><code>다양한 유형의 작업들</code>에게 <code>우선순위를 할당</code>할 수 있어야 함</li>
+<li><code>이전에 완료한 작업의 값</code>을 <code>재사용</code>할 수 있어야 함</li>
+<li>더 이상 <code>필요하지 않은 작업</code>은 <code>중단할 수 있어야 함</code></li>
+</ul>
+</li>
+<li>이를 위해, 먼저 작업을 작은 단위인 <code>Fiber</code>로 세분화 함
+<ul>
+<li>React 컴포넌트를 <code>v = f(d)</code>의 꼴로 표현할 때, React 앱을 렌더링 하는건 <em>또 다른 함수에 대한 호출</em>이 포함된 함수를 호출하는 것과 유사</li>
+</ul>
+</li>
+<li>UI를 다룰 때, 한 번에 많은 작업을 실행하려하면 애니메이션 프레임이 떨어지게 됨</li>
+<li>이를 해결하기 위해 <code>최신 브라우저</code>와 <code>React Native</code>는 다음 두 API를 구현하여 사용
+<ul>
+<li><code>requestIdleCallback</code>: 낮은 우선순위의 함수를 <code>유휴 기간(Idle Period)</code>동안 호출되도록 스케줄링</li>
+<li><code>requestAnimationFrame</code>: 높은 우선순위의 함수를 <code>다음 애니메이션 프레임</code>에 호출되도록 스케줄링</li>
+</ul>
+</li>
+<li>이러한 API의 구현은 렌더링 작업을 <code>증분 단위(Incremental Unit)</code>로 나눌 수 있을때 가능
+<ul>
+<li>일반적인 함수 호출 방식인 <code>콜 스택</code>에 의존하게 되면, 스택이 비워질 때까지 작업을 수행하므로 이러한 동작이 불가능</li>
+</ul>
+</li>
+<li><code>React Fiber</code>는 <code>React Component</code>에 특화된, 재구현된 <code>콜 스택</code>이라고 볼 수 있으며, <code>Fiber</code>는 하나의 가상 스택 프레임이라고 볼 수 있음</li>
+<li><code>React Fiber</code>의 구현을 통해 <code>스택 프레임</code>을 <code>메모리에 보관</code>해두었다, <code>다시 실행</code>하는 것이 <code>가능</code>해짐
+<ul>
+<li>이는 <code>React Fiber</code>의 목표인 <code>작업 스케줄링</code>을 가능케 하는것은 물론, <code>동시성</code>, <code>오류 경계(Error Boundary)</code>과 같은 기능도 사용할 수 있음</li>
+</ul>
+</li>
+</ul>
+<h4 id="fiber의-구조" >Fiber의 구조
+<span>
+    <a href="#fiber%ec%9d%98-%ea%b5%ac%ec%a1%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>Fiber</code>는 <code>컴포넌트</code>, <code>입력(input)</code>, <code>출력(output)</code>에 대한 정보를 포함하는 <code>JS 객체</code></li>
+<li><code>스택 프레임</code>이면서, <code>컴포넌트의 인스턴스</code>라고 할 수 있음</li>
+<li><code>Fiber</code>의 <code>핵심 필드</code>
+<ul>
+<li><code>type</code>, <code>key</code>
+<ul>
+<li>React 엘리먼트로부터 복사해온 <code>type</code>, <code>key</code> 값</li>
+<li><code>type</code>은 <code>Fiber</code>에 대응되는 컴포넌트의 유형에 대해 설명</li>
+<li>두 필드 모두 <code>재조정</code>과정에서 재사용 가능 여부를 판별할 때 사용</li>
+</ul>
+</li>
+<li><code>child</code>, <code>sibling</code>
+<ul>
+<li>다른 <code>Fiber</code>를 가리키는 필드로, 재귀적 트리 구조를 묘사함</li>
+<li><code>child</code>: 컴포넌트의 <code>render</code> 메서드가 반환하는 값에 대응됨</li>
+<li><code>sibling</code>: 컴포넌트의 <code>render</code> 메서드가 여러 자식을 반환하는 경우, 자식 Fiber들을 단방향 링크드리스트 형태로 묶어놓은 값
+<ul>
+<li>이때, 첫 번째 자식이 링크드리스트의 head임</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>return</code>
+<ul>
+<li>프로그램이 현재 Fiber를 처리하고, 반환해야 할 Fiber 값
+<ul>
+<li>개념적으로, 스택 프레임의 <code>반환 주소(return address)</code>와 동일</li>
+<li>즉, 쉽게 <code>부모 Fiber</code>라고 보면 됨</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>pendingProps</code>, <code>memoizedProps</code>
+<ul>
+<li>개념적으로, <code>props</code>는 함수의 인자값</li>
+<li><code>pendingProps</code>는 실행 시작 시점에 설정되고, <code>memoizedProps</code>는 종료 시점에 설정됨</li>
+<li>만약 두 값이 같다면, Fiber의 이전 출력 값을 재사용할 수 있다는 뜻</li>
+</ul>
+</li>
+<li><code>pendingWorkPriority</code>
+<ul>
+<li>Fiber가 내포하고 있는 작업의 우선순위를 나타내는 숫자 값</li>
+<li>0인 <code>NoWork</code>를 제외하고, 값이 클수록 우선순위가 낮음을 의미</li>
+<li>스케줄러는 이 우선순위 값을 사용해, 다음으로 수행할 작업을 탐색함</li>
+</ul>
+</li>
+<li><code>alternate</code>
+<ul>
+<li>이 Fiber의 대체 Fiber를 의미하는 필드</li>
+<li>컴포넌트 인스턴스에는 대응되는 최대 2개의 Fiber가 존재
+<ul>
+<li>즉, <code>현재 Fiber(플러시* 된)</code>와 <code>작업 진행 중인 Fiber</code>가 존재
+<ul>
+<li><code>플러시</code>: <code>출력(output)</code>을 화면에 <code>렌더링</code>하는 것</li>
+</ul>
+</li>
+<li>둘은 각각 서로에게 대응됨</li>
+</ul>
+</li>
+<li>Fiber의 <code>alternate</code>는 <code>cloneFiber</code>라는 함수를 이용해 만들어지며, 이미 존재하는 경우 해당 값을 재사용함</li>
+</ul>
+</li>
+<li><code>output</code>
+<ul>
+<li>개념적으로 <code>함수의 반환값</code>에 대응되는 개념</li>
+<li>모든 <code>Fiber</code>는 <code>output</code>이 있지만, 오직 <code>리프 노드</code>에서만 <code>호스트 컴포넌트*</code>에 의해 생성됨
+<ul>
+<li>생성된 <code>output</code>은 트리 위로 전달 됨</li>
+<li><code>호스트 컴포넌트</code>: React 앱의 <code>리프 노드</code>. <code>렌더링 환경</code>에 따라 다르지만, 브라우저 환경에서는 보통 <code>div</code>, <code>span</code>같은 엘리먼트를 의미</li>
+</ul>
+</li>
+<li><code>output</code>은 렌더러가 <code>렌더링 환경</code>에게 <code>변경 사항을 플러시</code> 할 수 있도록 최종적으로 렌더러에게 전달되어야 함</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="react-18-이후의-가상-dom" >React 18 이후의 가상 DOM
+<span>
+    <a href="#react-18-%ec%9d%b4%ed%9b%84%ec%9d%98-%ea%b0%80%ec%83%81-dom">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>상기한 디핑 알고리즘 방식은 크고, 복잡한 컴포넌트 계층 구조에 대해서는 한계가 존재
+<ul>
+<li>Javascript의 <code>단일 스레드</code>라는 구조적 한계 때문에, UI 업데이트 관련 코드 동작이 오래 걸리면 화면이 충분히 빠르게 갱신되지 못하고 끊김이 발생</li>
+</ul>
+</li>
+<li>이를 보완하고자, <code>React 18</code>에서 <code>Concurrent Mode</code>의 이점을 활용한 개선된 <code>재조정(Reconciliation)</code> 알고리즘을 사용</li>
+<li><code>Concurrent Mode</code>를 통해 React는 메인 스레드가 블락되지 않고도 여러 작업들을 병렬적으로 수행할 수 있게 됨</li>
+<li>React 18의 <code>재조정 알고리즘</code>은 다음과 같음
+<ul>
+<li>먼저 <code>재조정 작업</code>을 <code>fiber</code>라고 부르는 작은 유닛들로 나누고, 이들의 중요도에 따라 <code>우선순위</code>를 메김</li>
+<li>이후 React는 <code>우선순위를 기반</code>으로 재조정 프로세스를 효율적으로 중단 및 재개함</li>
+</ul>
+</li>
+</ul>
+<h3 id="vuejs의-가상-dom--참고-문서httpsvuejsorgguideextrasrendering-mechanism" >Vue.js의 가상 DOM <a href="https://vuejs.org/guide/extras/rendering-mechanism"># 참고 문서</a>
+<span>
+    <a href="#vuejs%ec%9d%98-%ea%b0%80%ec%83%81-dom--%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9chttpsvuejsorgguideextrasrendering-mechanism">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>Vue.js 역시 <code>가상 DOM</code>을 사용
+<ul>
+<li>다만, React와 여타 다른 가상 DOM을 구현하는 라이브러리들과 다른점이 존재
+<ul>
+<li>바로 <code>컴파일 시간</code>에 템플릿을 <code>정적으로 분석</code>해, <code>가상 DOM</code>의 런타임 성능을 향상시키고자 몇가지 <code>최적화</code>를 진행한다는 점</li>
+<li>이를 Vue.js에서는 <code>컴파일러에 알려진 가상돔 최적화(Compiler-Informed Virtual DOM)</code> 라고 부름</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>최적화 기법</code>
+<ul>
+<li><code>정적 호이스팅 (Static Hoisting)</code>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>	<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>	  <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">foo</span><span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/div&gt; &lt;!-- 호이스팅 됨 --&gt;</span>
+</span></span><span style="display:flex;"><span>	  <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">bar</span><span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/div&gt; &lt;!-- 호이스팅 됨 --&gt;</span>
+</span></span><span style="display:flex;"><span>	  <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span><span style="color:#f92672">&gt;</span>{{ <span style="color:#a6e22e">dynamic</span> }}<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/div&gt;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/div&gt;</span>
+</span></span></code></pre></div><ul>
+<li>템플릿에서 동적 바인딩이 포함되지 않은 부분에 대한 비교를 건너 뜀</li>
+</ul>
+</li>
+<li><code>패치 플래그</code>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">vnode</span>.<span style="color:#a6e22e">patchFlag</span> <span style="color:#f92672">&amp;</span> <span style="color:#a6e22e">PatchFlags</span>.<span style="color:#a6e22e">CLASS</span> <span style="color:#75715e">/* 2 */</span>) {
+</span></span><span style="display:flex;"><span>	  <span style="color:#75715e">// 노드의 패치 플래그에서 클래스 변동에 대한 비트 값이 1인 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	  <span style="color:#75715e">// 클래스 값에 변동이 생겼음을 알 수 있음
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	}
+</span></span></code></pre></div><ul>
+<li>클래스, 텍스트, 스타일, props 등의 <code>요소</code>들에 대해 <code>변동이 있는지를 기록</code>하는 <code>플래그</code>인 <code>패치 플래그</code>를 통해 어떤 업데이트 작업이 필요한지 확인</li>
+</ul>
+</li>
+<li><code>트리 병합 (Tree Flattening)</code>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span>	&lt;<span style="color:#f92672">div</span>&gt; <span style="color:#75715e">&lt;!--</span> <span style="color:#a6e22e">루트</span> <span style="color:#a6e22e">블록</span> <span style="color:#f92672">--&gt;</span>
+</span></span><span style="display:flex;"><span>	  &lt;<span style="color:#f92672">div</span>&gt;...&lt;/<span style="color:#f92672">div</span>&gt;         <span style="color:#75715e">&lt;!--</span> <span style="color:#a6e22e">추적</span> <span style="color:#a6e22e">안</span> <span style="color:#a6e22e">됨</span> <span style="color:#f92672">--&gt;</span>
+</span></span><span style="display:flex;"><span>	  &lt;<span style="color:#f92672">div</span> <span style="color:#960050;background-color:#1e0010">:</span><span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;id&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;   <span style="color:#75715e">&lt;!--</span> <span style="color:#a6e22e">추적됨</span> <span style="color:#f92672">--&gt;</span>
+</span></span><span style="display:flex;"><span>	  &lt;<span style="color:#f92672">div</span>&gt;                  <span style="color:#75715e">&lt;!--</span> <span style="color:#a6e22e">추적</span> <span style="color:#a6e22e">안</span> <span style="color:#a6e22e">됨</span> <span style="color:#f92672">--&gt;</span>
+</span></span><span style="display:flex;"><span>	    &lt;<span style="color:#f92672">div</span>&gt;{{ <span style="color:#a6e22e">bar</span> }}&lt;/<span style="color:#f92672">div</span>&gt; <span style="color:#75715e">&lt;!--</span> <span style="color:#a6e22e">추적됨</span> <span style="color:#f92672">--&gt;</span>
+</span></span><span style="display:flex;"><span>	  &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>	&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">&lt;!--</span> <span style="color:#a6e22e">위</span> <span style="color:#a6e22e">경우</span>, <span style="color:#a6e22e">트리</span> <span style="color:#a6e22e">병합을</span> <span style="color:#a6e22e">통해</span> <span style="color:#a6e22e">아래와</span> <span style="color:#a6e22e">같이</span> <span style="color:#a6e22e">평탄화된</span> <span style="color:#a6e22e">형태로</span> <span style="color:#a6e22e">최적화</span> <span style="color:#a6e22e">할</span> <span style="color:#a6e22e">수</span> <span style="color:#a6e22e">있음</span> <span style="color:#f92672">--&gt;</span>
+</span></span><span style="display:flex;"><span>	&lt;<span style="color:#f92672">div</span>&gt; (<span style="color:#a6e22e">루트</span> <span style="color:#a6e22e">블록</span>)
+</span></span><span style="display:flex;"><span>		&lt;<span style="color:#f92672">div</span> <span style="color:#960050;background-color:#1e0010">:</span><span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;id&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>		&lt;<span style="color:#f92672">div</span>&gt;{{ <span style="color:#a6e22e">bar</span> }}&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>	&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span></code></pre></div><ul>
+<li>트리에서 <code>정적인 자식 노드들(동적 바인딩이 포함되지 않은)은 제외</code>하고, <code>동적 하위 노드</code>들만 <code>포함</code>하는 <code>트리 병합</code>을 수행해, 가상 DOM 재조정 중에 통과해야 하는 노드의 수를 크게 줄임</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://legacy.reactjs.org/docs/faq-internals.html">Virtual DOM and Internals – React</a></li>
+<li><a href="https://legacy.reactjs.org/docs/reconciliation.html">Reconciliation – React</a></li>
+<li><a href="https://github.com/acdlite/react-fiber-architecture">acdlite/react-fiber-architecture: A description of React&rsquo;s new core algorithm, React Fiber</a></li>
+<li><a href="https://vuejs.org/guide/extras/rendering-mechanism">Rendering Mechanism | Vue.js</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/javascript/virtual-dom/"><time datetime="2024-11-18">2024-11-18 10:37 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/virtual-dom/">https://cloudsoswift.github.io/post/develop/javascript/virtual-dom/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/react/">#React</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/vue.js/">#Vue.js</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/vdom/">#VDOM</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/javascript/react/design-pattern/">[React] React의 디자인 패턴</a></li>
+                
+                <li><a href="/post/develop/javascript/async-await/">[Javascript] async/await 알아보기 (w. V8 Engine, task, microtask)</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item ">
+            
+                <a href="/post/develop/javascript/virtual-dom-implementation/">[Javascript]가상 DOM 구현 해보기(w. Babel, Diffing Algorithm)</a>
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/network/tcp-udp/">[Network] TCP와 UDP 알아보기 (w. 흐름 제어, 혼잡 제어, CongWin, HTTP/3)</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>

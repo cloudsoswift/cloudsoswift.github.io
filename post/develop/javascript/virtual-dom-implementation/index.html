@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Javascript]가상 DOM 구현 해보기(w. Babel, Diffing Algorithm) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="CS 스터디에서 11월 14일 발표한 가상 DOM 구현 해보기에 대해 정리한 문서를 블로그에 공유하고자 한다.
+이 문서는 Medium의 @deathmood의 글들을 번역하는 수준으로 참고했으며, 해당 문서의 내용처럼 나이브한 수준으로 VDOM을 구현하는 방법에 대해 설명한다.
+참고 문서How to write your own Virtual DOM | by deathmood | Medium Write your Virtual DOM 2: Props &amp; Events | by deathmood | Medium DOM 트리 Node를 객체로 표현하기DOM을 이루는 HTML Element는 다음과 같은 구조의 객체로 표현할 수 있음 { type: &#39;.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Javascript]가상 DOM 구현 해보기(w. Babel, Diffing Algorithm)" />
+<meta property="og:description" content="CS 스터디에서 11월 14일 발표한 가상 DOM 구현 해보기에 대해 정리한 문서를 블로그에 공유하고자 한다.
+이 문서는 Medium의 @deathmood의 글들을 번역하는 수준으로 참고했으며, 해당 문서의 내용처럼 나이브한 수준으로 VDOM을 구현하는 방법에 대해 설명한다.
+참고 문서How to write your own Virtual DOM | by deathmood | Medium Write your Virtual DOM 2: Props &amp; Events | by deathmood | Medium DOM 트리 Node를 객체로 표현하기DOM을 이루는 HTML Element는 다음과 같은 구조의 객체로 표현할 수 있음 { type: &#39;." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/javascript/virtual-dom-implementation/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-11-18T10:37:23+09:00" />
+<meta property="article:modified_time" content="2024-11-18T10:37:23+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Javascript]가상 DOM 구현 해보기(w. Babel, Diffing Algorithm)"/>
+<meta name="twitter:description" content="CS 스터디에서 11월 14일 발표한 가상 DOM 구현 해보기에 대해 정리한 문서를 블로그에 공유하고자 한다.
+이 문서는 Medium의 @deathmood의 글들을 번역하는 수준으로 참고했으며, 해당 문서의 내용처럼 나이브한 수준으로 VDOM을 구현하는 방법에 대해 설명한다.
+참고 문서How to write your own Virtual DOM | by deathmood | Medium Write your Virtual DOM 2: Props &amp; Events | by deathmood | Medium DOM 트리 Node를 객체로 표현하기DOM을 이루는 HTML Element는 다음과 같은 구조의 객체로 표현할 수 있음 { type: &#39;."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Javascript]가상 DOM 구현 해보기(w. Babel, Diffing Algorithm)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#참고-문서">참고 문서</a></li>
+      </ul>
+    </li>
+    <li><a href="#dom-트리-node를-객체로-표현하기">DOM 트리 Node를 객체로 표현하기</a></li>
+    <li><a href="#가상-dom-표현을-실제-dom에-적용하기">가상 DOM 표현을 실제 DOM에 적용하기</a></li>
+    <li><a href="#가상-dom-트리-비교하기디핑-알고리즘">가상 DOM 트리 비교하기(디핑 알고리즘)</a>
+      <ul>
+        <li><a href="#updateprops-구현하기">updateProps(&hellip;) 구현하기</a></li>
+        <li><a href="#updateelement-구현하기">updateElement(&hellip;) 구현하기</a></li>
+      </ul>
+    </li>
+    <li><a href="#결과물">결과물</a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 11월 14일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/14_Virtual-DOM-Implementation/Readme.md">가상 DOM 구현 해보기</a>에 대해 정리한 문서를 블로그에 공유하고자 한다.<br>
+이 문서는 <a href="https://medium.com/@deathmood">Medium의 @deathmood</a>의 글들을 번역하는 수준으로   참고했으며, 해당 문서의 내용처럼 나이브한 수준으로 VDOM을 구현하는 방법에 대해 설명한다.</p>
+<h3 id="참고-문서" >참고 문서
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><a href="https://medium.com/@deathmood/how-to-write-your-own-virtual-dom-ee74acc13060">How to write your own Virtual DOM | by deathmood | Medium</a></li>
+<li><a href="https://medium.com/@deathmood/write-your-virtual-dom-2-props-events-a957608f5c76">Write your Virtual DOM 2: Props &amp; Events | by deathmood | Medium</a></li>
+</ul>
+<h2 id="dom-트리-node를-객체로-표현하기" >DOM 트리 Node를 객체로 표현하기
+<span>
+    <a href="#dom-%ed%8a%b8%eb%a6%ac-node%eb%a5%bc-%ea%b0%9d%ec%b2%b4%eb%a1%9c-%ed%91%9c%ed%98%84%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>DOM을 이루는 HTML Element는 다음과 같은 구조의 객체로 표현할 수 있음</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span>{ 
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;...&#39;</span>, 
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">props</span><span style="color:#f92672">:</span> { <span style="color:#e6db74">&#39;...&#39;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;...&#39;</span>,	...},
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">children</span><span style="color:#f92672">:</span> [{...}, ...]
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 예시
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// &lt;ul class=&#34;list&#34;&gt; 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//	 &lt;li&gt; item &lt;/li&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// &lt;/ul&gt; 은 다음과 같이 표현 가능함
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>{ 
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;ul&#39;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">props</span><span style="color:#f92672">:</span> { <span style="color:#e6db74">&#39;class&#39;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;list&#39;</span> },
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">children</span><span style="color:#f92672">:</span> [{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;li&#39;</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">props</span><span style="color:#f92672">:</span> {},
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">children</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#39;item&#39;</span>]
+</span></span><span style="display:flex;"><span>	}]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>그리고 이러한 구조의 JS 객체를 생성하기 위해, 다음과 같은 헬퍼 함수를 사용</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">createNode</span>(<span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">props</span>, ...<span style="color:#a6e22e">children</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> {<span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">props</span>, <span style="color:#a6e22e">children</span>};
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>이를 통해, DOM 트리를 다음과 같은 형태로 작성할 수 있음</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">createNode</span>(<span style="color:#e6db74">&#39;ul&#39;</span>, {<span style="color:#e6db74">&#39;class&#39;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;list&#39;</span>}, 
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">createNode</span>(<span style="color:#e6db74">&#39;li&#39;</span>, {}, <span style="color:#e6db74">&#39;item&#39;</span>),
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><ul>
+<li>위와 같은 형태는, 실제로 JSX 문법을 트랜스파일 해주는 <code>Babel</code>의 방식(v7 이전)과도 유사함</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#75715e">// 변환 전 JSX
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">profile</span> <span style="color:#f92672">=</span> (  
+</span></span><span style="display:flex;"><span>	&lt;<span style="color:#f92672">div</span>&gt;  
+</span></span><span style="display:flex;"><span>		&lt;<span style="color:#f92672">img</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;avatar.png&#34;</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;profile&#34;</span> /&gt;  
+</span></span><span style="display:flex;"><span>		&lt;<span style="color:#f92672">h3</span>&gt;{[<span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">firstName</span>, <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">lastName</span>].<span style="color:#a6e22e">join</span>(<span style="color:#e6db74">&#34; &#34;</span>)}&lt;/<span style="color:#f92672">h3</span>&gt;  
+</span></span><span style="display:flex;"><span>	&lt;/<span style="color:#f92672">div</span>&gt;  
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 변환 후
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">profile</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">createElement</span>(  
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;div&#34;</span>,  
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">null</span>,  
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">createElement</span>(<span style="color:#e6db74">&#34;img&#34;</span>, { <span style="color:#a6e22e">src</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;avatar.png&#34;</span>, <span style="color:#a6e22e">className</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;profile&#34;</span> }),  
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">React</span>.<span style="color:#a6e22e">createElement</span>(<span style="color:#e6db74">&#34;h3&#34;</span>, <span style="color:#66d9ef">null</span>, [<span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">firstName</span>, <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">lastName</span>].<span style="color:#a6e22e">join</span>(<span style="color:#e6db74">&#34; &#34;</span>))  
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><ul>
+<li>실제로, <code>/** @jsx createNode */</code> 라는 주석을 통해, <code>Babel</code>에게 우리가 작성한 함수(<code>node</code>)를 사용하게 할 수도 있음</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">/** @jsx createNode */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">a</span> <span style="color:#f92672">=</span> (
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">ul</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;list&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">li</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">item</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/li&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">li</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">item</span> <span style="color:#ae81ff">2</span><span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/li&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/ul&gt;</span>
+</span></span><span style="display:flex;"><span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 위 코드를, babel이 아래와 같이 트랜스파일해줌
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">a</span> <span style="color:#f92672">=</span> (
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">createNode</span>(<span style="color:#e6db74">&#39;ul&#39;</span>, { <span style="color:#a6e22e">className</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;list&#39;</span> },
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">createNode</span>(<span style="color:#e6db74">&#39;li&#39;</span>, {}, <span style="color:#e6db74">&#39;item 1&#39;</span>),
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">createNode</span>(<span style="color:#e6db74">&#39;li&#39;</span>, {}, <span style="color:#e6db74">&#39;item 2&#39;</span>),
+</span></span><span style="display:flex;"><span>  );
+</span></span><span style="display:flex;"><span>);
+</span></span></code></pre></div><ul>
+<li>다만, Babel과 함께 사용할 경우, <code>createNode</code> 함수에 약간의 수정이 필요</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// prop이 없는 &lt;div&gt;&lt;/div&gt; 와 같은 형태인 경우, Babel은 props를 null로 세팅해버림
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 따라서 이를 방지하고자, `props || {}`를 대입하도록 수정해, 추후 props를 iterate할 때 생기는 에러를 방지
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">createNode</span>(<span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">props</span>, <span style="color:#960050;background-color:#1e0010">…</span><span style="color:#a6e22e">children</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> { <span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">props</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">props</span> <span style="color:#f92672">||</span> {}, <span style="color:#a6e22e">children</span> };
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="가상-dom-표현을-실제-dom에-적용하기" >가상 DOM 표현을 실제 DOM에 적용하기
+<span>
+    <a href="#%ea%b0%80%ec%83%81-dom-%ed%91%9c%ed%98%84%ec%9d%84-%ec%8b%a4%ec%a0%9c-dom%ec%97%90-%ec%a0%81%ec%9a%a9%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>위에서 작성한 표현들을 실제 DOM에 반영하기 위해, <strong><code>몇 가지 가정</code></strong> 을 수립
+<ol>
+<li>실제 DOM Node를 가리키는 변수는 <code>$</code>로 시작함. 예를 들어 <code>$parent</code>와 같은 이름의 변수는 실제 DOM 엘리먼트 일것.</li>
+<li>가상 DOM 표현은 <code>node</code> 라는 이름의 변수로 존재</li>
+<li><em>React에서처럼</em>, 오직 하나의 루트 노드만 존재할 수 있음</li>
+</ol>
+</li>
+<li>위 가정을 바탕으로, 다음과 같은 가상 DOM 노드 -&gt; 실제 DOM 노드 변환 함수를 작성할 수 있음</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">node</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;string&#39;</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// node 객체가 문자만 존재하는 경우, `Text` 노드를 생성
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> document.<span style="color:#a6e22e">createTextNode</span>(<span style="color:#a6e22e">node</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 이외의 경우, node 객체의 type 명을 바탕으로 DOM 노드 객체를 생성
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">return</span> document.<span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">type</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>위 함수에서 자식들(<code>children</code>)을 고려하면, 이전에 작성한 <code>createNode</code> 함수처럼 재귀 형태로 구현할 수 있음
+<ul>
+<li>다시 말해, 자식들 배열에 대해 <code>createElement</code> 함수를 호출하는 형태로 작성할 수 있음</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">node</span>) {  
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;string&#39;</span>) {  
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> document.<span style="color:#a6e22e">createTextNode</span>(<span style="color:#a6e22e">node</span>);  
+</span></span><span style="display:flex;"><span>	}  
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">$el</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">type</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// node 객체의 children 배열에 포함된 자식 node 객체들에게 createElement 함수를 적용 한 뒤,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 각 결과물들을 부모($el)의 자식으로 추가
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">children</span>  
+</span></span><span style="display:flex;"><span>		.<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">createElement</span>)  
+</span></span><span style="display:flex;"><span>		.<span style="color:#a6e22e">forEach</span>(<span style="color:#a6e22e">$el</span>.<span style="color:#a6e22e">appendChild</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">$el</span>));  
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">$el</span>;  
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>이때, <code>props</code>도 반영하기 위해 별도의 함수인 <code>setProp</code>과 <code>setProps</code>를 선언
+<ul>
+<li>이때, 다음 3가지 케이스를 고려해야 함
+<ol>
+<li>VDOM에서 사용되는 <code>className</code> 프로퍼티를 HTML 엘리먼트의 <code>class</code> 어트리뷰트로 변환할 것
+<ul>
+<li><code>className</code>은 JS에서 <code>class</code>가 예약어이기 때문에, 이를 대신해 사용되는 키워드</li>
+</ul>
+</li>
+<li><code>부울 DOM 어트리뷰트</code> 제대로 설정하기
+<ul>
+<li>실제 <code>부울 DOM 어트리뷰트</code>는 <code>값이 *존재*만 해도 설정</code>이 됨</li>
+<li>즉, <code>checked={false}</code>와 같이 설정해도, <code>false</code>라는 값이 존재하므로 해당 옵션이 <code>설정이 된 것으로 동작</code>함</li>
+<li>따라서, 어트리뷰트뿐만 아니라 프로퍼티도 설정하도록 해야 함</li>
+</ul>
+</li>
+<li><code>사용자 지정 prop</code> 설정하기
+<ul>
+<li>만약 사용자가 VDOM 상에서만 처리하는 prop을 사용하는 경우, 이는 실제 DOM에서는 표시되지 말아야 함</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">setBooleanProp</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">value</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 부울 DOM 어트리뷰트를 설정하는 함수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">value</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 값이 true인 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#75715e">// 해당 어트리뷰트 값을 true로 설정하고
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">$target</span>.<span style="color:#a6e22e">setAttribute</span>(<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">value</span>);
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 해당 프로퍼티를 true로 설정
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">$target</span>[<span style="color:#a6e22e">name</span>] <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 값이 false인 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#75715e">// 해당 프로퍼티를 false로 설정
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">$target</span>[<span style="color:#a6e22e">name</span>] <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">isCustomProp</span>(<span style="color:#a6e22e">name</span>) { 
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// name이 사용자 지정 prop 이름인지 T/F로 반환
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;  
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">setProp</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">value</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 실제 DOM 엘리먼트인 $target에 어트리뷰트를 적용
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">isCustomProp</span>(<span style="color:#a6e22e">name</span>)) {  
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 사용자 지정 prop인 경우, 실제 DOM에 반영 X
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">return</span>;  
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">name</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;className&#39;</span>) {  
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// className 프로퍼티는 실제 DOM 엘리먼트의 class 어트리뷰트에 해당됨
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">$target</span>.<span style="color:#a6e22e">setAttribute</span>(<span style="color:#e6db74">&#39;class&#39;</span>, <span style="color:#a6e22e">value</span>);  
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;boolean&#39;</span>) {  
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 부울 DOM 어트리뷰트는 별도의 함수로 처리
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">setBooleanProp</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">value</span>);  
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> {  
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 이외의 경우는 Element의 setAttribute 함스를 통해 어트리뷰트 설정
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">$target</span>.<span style="color:#a6e22e">setAttribute</span>(<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">value</span>);  
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">setProps</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 주어진 props들을 순회하며, 실제 DOM 엘리먼트인 $target에 이들을 적용
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Object.<span style="color:#a6e22e">keys</span>(<span style="color:#a6e22e">props</span>).<span style="color:#a6e22e">forEach</span>(<span style="color:#a6e22e">name</span> =&gt; {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">setProp</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">props</span>[<span style="color:#a6e22e">name</span>]);
+</span></span><span style="display:flex;"><span>	});
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>이후, 이를 createElement에도 적용</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">node</span>) {  
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;string&#39;</span>) {  
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> document.<span style="color:#a6e22e">createTextNode</span>(<span style="color:#a6e22e">node</span>);  
+</span></span><span style="display:flex;"><span>	}  
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">$el</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">type</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">setProps</span>(<span style="color:#a6e22e">$el</span>, <span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">props</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">children</span>  
+</span></span><span style="display:flex;"><span>		.<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">createElement</span>)  
+</span></span><span style="display:flex;"><span>		.<span style="color:#a6e22e">forEach</span>(<span style="color:#a6e22e">$el</span>.<span style="color:#a6e22e">appendChild</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">$el</span>));  
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">$el</span>;  
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="가상-dom-트리-비교하기디핑-알고리즘" >가상 DOM 트리 비교하기(디핑 알고리즘)
+<span>
+    <a href="#%ea%b0%80%ec%83%81-dom-%ed%8a%b8%eb%a6%ac-%eb%b9%84%ea%b5%90%ed%95%98%ea%b8%b0%eb%94%94%ed%95%91-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>가상 DOM을 구현하기 위해, 이전 트리와 새 트리의 차이를 비교하는 <code>디핑 알고리즘</code>을 구현해야 함</li>
+<li>이때, 디핑 알고리즘에서 처리해야 할 케이스는 대략 다음과 같음
+<ol>
+<li>이전 트리에 없던 노드가 새롭게 생겨난 경우
+<ul>
+<li><code>appendChild(...)</code>를 통해 추가해주어야 함</li>
+</ul>
+</li>
+<li>이전 트리에 있던 노드가 없어진 경우
+<ul>
+<li><code>removeChild(...)</code>를 통해 삭제해주어야 함</li>
+</ul>
+</li>
+<li>이전 트리에 있던 노드가 다른 타입의 노드로 변경된 경우
+<ul>
+<li><code>replaceChild(...)</code>를 통해 해당 노드를 대체해야 함</li>
+</ul>
+</li>
+<li>노드가 동일한 경우
+<ul>
+<li>자식들에 대해 디핑 알고리즘을 진행</li>
+</ul>
+</li>
+</ol>
+</li>
+<li>위 케이스들을 처리하기 위해, <code>$parent</code>, <code>oldNode</code>, <code>newNode</code> 세 가지 인자를 받는 <code>updateElement()</code> 함수를 구현해야 함</li>
+<li>또한, 각 노드의 <code>props</code>를 비교하고 업데이트하는 <code>updateProps</code> 역시 구현해야 함</li>
+</ul>
+<h3 id="updateprops-구현하기" >updateProps(&hellip;) 구현하기
+<span>
+    <a href="#updateprops-%ea%b5%ac%ed%98%84%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>앞서, <code>prop</code> 값을 세팅하는 함수인 <code>setProp</code>은 구현해두었으니, <code>prop</code> 값을 지우는 함수인 <code>removeProp</code>을 구현해야 함</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">removeBooleanProp</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">name</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 부울 DOM 어트리뷰트의 경우,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 어트리뷰트를 삭제하고 프로퍼티를 false로 설정한다
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">$target</span>.<span style="color:#a6e22e">removeAttribute</span>(<span style="color:#a6e22e">name</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">$target</span>[<span style="color:#a6e22e">name</span>] <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">removeProp</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">value</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">isCustomProp</span>(<span style="color:#a6e22e">name</span>)) {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 커스텀 Prop은 DOM에 반영되어있지 않을 것이므로 아무런 동작도 수행하지 않아야 함
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">name</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;className&#39;</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">$target</span>.<span style="color:#a6e22e">removeAttribute</span>(<span style="color:#e6db74">&#39;class&#39;</span>);
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;boolean&#39;</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">removeBooleanProp</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">name</span>);
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">$target</span>.<span style="color:#a6e22e">removeAttribute</span>(<span style="color:#a6e22e">name</span>);
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>그리고 이들을 바탕으로 이전 값과 최신 값을 비교해 <code>prop</code>을 업데이트하는 <code>updateProp</code> 함수를 구현함</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">updateProp</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">newVal</span>, <span style="color:#a6e22e">oldVal</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">newVal</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// newNode에 oldNode에 있던 prop이 없는 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#75715e">// DOM 엘리먼트에서 해당 prop을 삭제함
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">removeProp</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">oldVal</span>);
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">oldVal</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">newVal</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">oldVal</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// oldNode에 없던 prop이 newNode에 있거나,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#75715e">// newNode의 prop 값이 oldNode의 prop 값과 다른 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#75715e">// DOM 엘리먼트에 newNode의 prop 값을 세팅함
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">setProp</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">newVal</span>);
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">updateProps</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">newProps</span>, <span style="color:#a6e22e">oldProps</span> <span style="color:#f92672">=</span> {}) {  
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// oldNode의 props와 newNode의 props를 모두 props라는 한 객체에 합침
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 이렇게 하면 `props` 객체는 이전 노드에 있던 props와 현재 노드에 있는 props에 존재하는 모든 key를 가지게 됨
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 즉, 이전에 존재한 prop 또는 새롭게 생겨난 prop 모두 처리할 수 있음
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">props</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">assign</span>({}, <span style="color:#a6e22e">newProps</span>, <span style="color:#a6e22e">oldProps</span>);  
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 그리고 `props`의 key들을 순회하며, updateProp 함수 호출
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Object.<span style="color:#a6e22e">keys</span>(<span style="color:#a6e22e">props</span>).<span style="color:#a6e22e">forEach</span>(<span style="color:#a6e22e">name</span> =&gt; {  
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">updateProp</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">newProps</span>[<span style="color:#a6e22e">name</span>], <span style="color:#a6e22e">oldProps</span>[<span style="color:#a6e22e">name</span>]);  
+</span></span><span style="display:flex;"><span>	});  
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="이벤트-핸들러" >이벤트 핸들러?
+<span>
+    <a href="#%ec%9d%b4%eb%b2%a4%ed%8a%b8-%ed%95%b8%eb%93%a4%eb%9f%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>주로 React와 같은 라이브러리에서 특정 이벤트에 대한 핸들러는 <code>onXXX</code>라는 이름의 prop으로 주어짐</li>
+<li>이들 역시 <code>updateProp</code>처럼 전 후를 비교하여 처리하고 싶지만, 함수간 비교는 사실상 불가능
+<ul>
+<li><code>toString()</code>으로 문자열로 변환한대도, 내부에 네이티브 코드가 있는 경우 비교 불가능</li>
+</ul>
+</li>
+<li>이를 해결할 수 있는 방안은 두 가지가 있음
+<ul>
+<li>루트 엘리먼트에서 트리 내부에서 발생하는 모든 이벤트를 처리하는 이벤트 관리자를 둔다</li>
+<li>엘리먼트 생성 시 한 번만 <code>addEventListener</code>를 호출한다
+<ul>
+<li>대부분의 경우 이벤트 핸들러 내용이 바뀌지 않기 때문</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>여기서는 두 번째 방안을 사용</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">isEventProp</span>(<span style="color:#a6e22e">name</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// prop key가 on으로 시작하는지 검사하는 함수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">return</span> <span style="color:#e6db74">/^on/</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">name</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">extractEventName</span>(<span style="color:#a6e22e">name</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// onXXX에서 XXX를 추출하는 함수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">name</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">2</span>).<span style="color:#a6e22e">toLowerCase</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">addEventListeners</span>(<span style="color:#a6e22e">$target</span>, <span style="color:#a6e22e">props</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// props의 각 key를 순회하며, onXXX라는 이름을 갖는 prop에 대해 addEventListener 호출
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	Object.<span style="color:#a6e22e">keys</span>(<span style="color:#a6e22e">props</span>).<span style="color:#a6e22e">forEach</span>(<span style="color:#a6e22e">name</span> =&gt; {
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">isEventProp</span>(<span style="color:#a6e22e">name</span>)) {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">$target</span>.<span style="color:#a6e22e">addEventListener</span>(
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">extractEventName</span>(<span style="color:#a6e22e">name</span>),
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">props</span>[<span style="color:#a6e22e">name</span>]
+</span></span><span style="display:flex;"><span>			);
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>	});
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="updateelement-구현하기" >updateElement(&hellip;) 구현하기
+<span>
+    <a href="#updateelement-%ea%b5%ac%ed%98%84%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="이전에-없던-노드가-생겨난-경우" >이전에 없던 노드가 생겨난 경우
+<span>
+    <a href="#%ec%9d%b4%ec%a0%84%ec%97%90-%ec%97%86%eb%8d%98-%eb%85%b8%eb%93%9c%ea%b0%80-%ec%83%9d%ea%b2%a8%eb%82%9c-%ea%b2%bd%ec%9a%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="new-node-added.png" alt="new-node-added.png"></p>
+<ul>
+<li>새롭게 생겨난 노드를 추가해야 하는 경우, 다음과 같이 구현 가능</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">oldNode</span>) {  
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">appendChild</span>(  
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">newNode</span>)  
+</span></span><span style="display:flex;"><span>	);  
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="이전에-있던-노드가-없어진-경우" >이전에 있던 노드가 없어진 경우
+<span>
+    <a href="#%ec%9d%b4%ec%a0%84%ec%97%90-%ec%9e%88%eb%8d%98-%eb%85%b8%eb%93%9c%ea%b0%80-%ec%97%86%ec%96%b4%ec%a7%84-%ea%b2%bd%ec%9a%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="old-node-removed.png" alt="old-node-removed.png"></p>
+<ul>
+<li>이전 VDOM 트리에 존재하던 노드가 없어진 경우, 실제 DOM에서 노드를 제거해야 함</li>
+<li>이를 위해서는, 인자로 주어진 <code>$parent</code>를 활용해 <code>$parent.removeChild(실제DOM참조)</code>를 호출해야 함
+<ul>
+<li>이때, 인자로 넘겨줄 삭제될 노드에 대한 <code>실제 DOM 참조</code>를 구해야 함</li>
+</ul>
+</li>
+<li>이를 위해 부모 노드(<code>$parent</code>)에서 해당 노드가 몇 번째 index를 갖는지를 추가 인자로 받아야 함</li>
+<li>따라서 함수의 형태는 다음과 같이 변경됨</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">updateElement</span>(<span style="color:#a6e22e">$parent</span>, <span style="color:#a6e22e">newNode</span>, <span style="color:#a6e22e">oldNode</span>, <span style="color:#a6e22e">index</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>) { 
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">oldNode</span>) {  
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 1. 이전에 없던 노드가 생겨난 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">appendChild</span>(  
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">newNode</span>)  
+</span></span><span style="display:flex;"><span>    );  
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">newNode</span>) {  
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 2. 이전에 있던 노드가 없어진 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">removeChild</span>(  
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">childNodes</span>[<span style="color:#a6e22e">index</span>]  
+</span></span><span style="display:flex;"><span>    );  
+</span></span><span style="display:flex;"><span>  }  
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="이전-트리에-있던-노드가-다른-타입의-노드로-변경된-경우" >이전 트리에 있던 노드가 다른 타입의 노드로 변경된 경우
+<span>
+    <a href="#%ec%9d%b4%ec%a0%84-%ed%8a%b8%eb%a6%ac%ec%97%90-%ec%9e%88%eb%8d%98-%eb%85%b8%eb%93%9c%ea%b0%80-%eb%8b%a4%eb%a5%b8-%ed%83%80%ec%9e%85%ec%9d%98-%eb%85%b8%eb%93%9c%eb%a1%9c-%eb%b3%80%ea%b2%bd%eb%90%9c-%ea%b2%bd%ec%9a%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="old-node-type-changed.png" alt="old-node-type-changed.png"></p>
+<ul>
+<li>변경된 노드를 반영하기 위해서는, 먼저 두 Node 객체를 비교하고 다른지 여부를 알려주는 함수를 작성해야 함</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">isNodeChanged</span>(<span style="color:#a6e22e">node1</span>, <span style="color:#a6e22e">node2</span>) {  
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 1. 두 Node의 유형을 비교한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 2. 첫 Node가 문자열인 경우, 두 번째 Node의 값과 동일한지 비교한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 3. 두 노드의 type 프로퍼티를 비교한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node1</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node2</span> <span style="color:#f92672">||</span>  
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node1</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;string&#39;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">node1</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">node2</span> <span style="color:#f92672">||</span>  
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">node1</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">node2</span>.<span style="color:#a6e22e">type</span>;  
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>그리고 이를 이용해 두 Node를 비교한 뒤, 다른 경우 <code>$parent.replaceChild()</code>를 통해 새 Node로 교체해야 함</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">isNodeChanged</span>(<span style="color:#a6e22e">newNode</span>, <span style="color:#a6e22e">oldNode</span>)) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// createElement(newNode)로 $parent.childNodes[index]를 대체한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">replaceChild</span>(
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">newNode</span>),
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">childNodes</span>[<span style="color:#a6e22e">index</span>]
+</span></span><span style="display:flex;"><span>	);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="노드가-동일한-경우" >노드가 동일한 경우
+<span>
+    <a href="#%eb%85%b8%eb%93%9c%ea%b0%80-%eb%8f%99%ec%9d%bc%ed%95%9c-%ea%b2%bd%ec%9a%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="nothing-changed.png" alt="nothing-changed.png"></p>
+<ul>
+<li>이전 트리와 현재 트리에서 노드에 별다른 변경사항이 존재하지 않는 경우, 두 트리에서 자식들에 대해 비교를 수행해야 함</li>
+<li>즉, 각 <code>newNode.children[i]</code>와 <code>oldNode.children[i]</code>에 대해 <code>updateElement()</code>를 재귀적으로 호출해야 함</li>
+<li>이때, 다음과 같은 사항을 유의해야 함
+<ul>
+<li>노드가 HTML 엘리먼트인 경우(즉, Node 객체의 type이 존재하는 경우)에만 자식들을 비교해야 함
+<ul>
+<li>텍스트 노드는 자식을 가질 수 없기 때문</li>
+</ul>
+</li>
+<li>모든 자식들을 하나 하나 비교해야 함</li>
+</ul>
+</li>
+<li>또한, 동일한 노드인 경우 <code>Props</code>들 역시 비교해주어야 하므로 <code>updateProps</code>를 호출함</li>
+<li>이를 코드로 작성하면, 다음과 같음</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">newNode</span>.<span style="color:#a6e22e">type</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">updateProps</span>(<span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">childNodes</span>[<span style="color:#a6e22e">index</span>], <span style="color:#a6e22e">newNode</span>.<span style="color:#a6e22e">props</span>, <span style="color:#a6e22e">oldNode</span>.<span style="color:#a6e22e">props</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">newLength</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">newNode</span>.<span style="color:#a6e22e">children</span>.<span style="color:#a6e22e">length</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">oldLength</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">oldNode</span>.<span style="color:#a6e22e">children</span>.<span style="color:#a6e22e">length</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">newLength</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">oldLength</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 두 트리에서 각 노드(newNode, oldNode)의 자식은 모두 현재 노드($parent.childNodes[index])가 부모이므로
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// updateElement 함수의 $parent 인자로 현재 노드($parent.childNodes[index])를 전달
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 또한, 두 노드 자식들의 길이가 다를 수 있으므로 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 이를 고려한 조건문(i &lt; newLength || i &lt; oldLength)을 사용
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">updateElement</span>(
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">childNodes</span>[<span style="color:#a6e22e">index</span>],
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">newNode</span>.<span style="color:#a6e22e">children</span>[<span style="color:#a6e22e">i</span>],
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">oldNode</span>.<span style="color:#a6e22e">children</span>[<span style="color:#a6e22e">i</span>],
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">i</span>
+</span></span><span style="display:flex;"><span>      );
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="결과물" >결과물
+<span>
+    <a href="#%ea%b2%b0%ea%b3%bc%eb%ac%bc">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>위에서 작성한 코드들을 합치면 다음과 같이 됨</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">createNode</span>(<span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">props</span>, ...<span style="color:#a6e22e">children</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> { <span style="color:#a6e22e">type</span>, <span style="color:#a6e22e">props</span>, <span style="color:#a6e22e">children</span> };
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">node</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;string&#39;</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// node 객체가 문자만 존재하는 경우, `Text` 노드를 생성
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span> document.<span style="color:#a6e22e">createTextNode</span>(<span style="color:#a6e22e">node</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 이외의 경우, node 객체의 type 명을 바탕으로 DOM 노드 객체를 생성
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">$el</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">type</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// node 객체의 children 배열에 포함된 자식 node 객체들에게 createElement 함수를 적용 한 뒤,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// 각 결과물들을 부모($el)의 자식으로 추가
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">node</span>.<span style="color:#a6e22e">children</span>
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">createElement</span>)
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">forEach</span>(<span style="color:#a6e22e">$el</span>.<span style="color:#a6e22e">appendChild</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">$el</span>));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">$el</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">isNodeChanged</span>(<span style="color:#a6e22e">node1</span>, <span style="color:#a6e22e">node2</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 1. 두 Node의 유형을 비교한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// 2. 첫 Node가 문자열인 경우, 두 번째 Node의 값과 동일한지 비교한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// 3. 두 노드의 type 프로퍼티를 비교한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node1</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node2</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>         <span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">node1</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;string&#39;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">node1</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">node2</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>         <span style="color:#a6e22e">node1</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">node2</span>.<span style="color:#a6e22e">type</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">updateElement</span>(<span style="color:#a6e22e">$parent</span>, <span style="color:#a6e22e">newNode</span>, <span style="color:#a6e22e">oldNode</span>, <span style="color:#a6e22e">index</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">oldNode</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 1. 이전에 없던 노드가 생겨난 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">appendChild</span>(
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">newNode</span>)
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">newNode</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 2. 이전에 있던 노드가 없어진 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">removeChild</span>(
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">childNodes</span>[<span style="color:#a6e22e">index</span>]
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">isNodeChanged</span>(<span style="color:#a6e22e">newNode</span>, <span style="color:#a6e22e">oldNode</span>)) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 3. 이전 트리에 있던 노드가 다른 타입의 노드로 변경된 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// createElement(newNode)로 $parent.childNodes[index]를 대체한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">replaceChild</span>(
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">createElement</span>(<span style="color:#a6e22e">newNode</span>),
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">childNodes</span>[<span style="color:#a6e22e">index</span>]
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">newNode</span>.<span style="color:#a6e22e">type</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 4. 이전 트리와 현재 트리에서 노드의 타입이 동일한 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">newLength</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">newNode</span>.<span style="color:#a6e22e">children</span>.<span style="color:#a6e22e">length</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">oldLength</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">oldNode</span>.<span style="color:#a6e22e">children</span>.<span style="color:#a6e22e">length</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">newLength</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">oldLength</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>	  <span style="color:#75715e">// 두 트리에서 각 노드(newNode, oldNode)의 자식은 모두 현재 노드($parent.childNodes[index])가 부모이므로
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	  <span style="color:#75715e">// updateElement 함수의 $parent 인자로 현재 노드($parent.childNodes[index])를 전달
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	  <span style="color:#75715e">// 또한, 두 노드 자식들의 길이가 다를 수 있으므로 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	  <span style="color:#75715e">// 이를 고려한 조건문(i &lt; newLength || i &lt; oldLength)을 사용
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">updateElement</span>(
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">$parent</span>.<span style="color:#a6e22e">childNodes</span>[<span style="color:#a6e22e">index</span>],
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">newNode</span>.<span style="color:#a6e22e">children</span>[<span style="color:#a6e22e">i</span>],
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">oldNode</span>.<span style="color:#a6e22e">children</span>[<span style="color:#a6e22e">i</span>],
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">i</span>
+</span></span><span style="display:flex;"><span>      );
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>이는 다음 사이트에서 테스트해볼 수 있음
+<ul>
+<li><a href="https://jsfiddle.net/deathmood/x09sL59r/">JS fiddle - JSFiddle - Code Playground</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/javascript/virtual-dom-implementation/"><time datetime="2024-11-18">2024-11-18 10:37 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/virtual-dom-implementation/">https://cloudsoswift.github.io/post/develop/javascript/virtual-dom-implementation/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/vdom/">#VDOM</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/javascript/virtual-dom/">[Javascript]가상 DOM 알아보기(w. Diffing Algorithm, React Fiber, Compiler-Informed Virtual DOM)</a></li>
+                
+                <li><a href="/post/develop/javascript/react/design-pattern/">[React] React의 디자인 패턴</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/javascript/virtual-dom/">[Javascript]가상 DOM 알아보기(w. Diffing Algorithm, React Fiber, Compiler-Informed Virtual DOM)</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>

@@ -223,6 +223,135 @@
         <article class="post-list h-feed">
     <div class="post-header">
         <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/javascript/virtual-dom-implementation/">[Javascript]가상 DOM 구현 해보기(w. Babel, Diffing Algorithm)</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            CS 스터디에서 11월 14일 발표한 가상 DOM 구현 해보기에 대해 정리한 문서를 블로그에 공유하고자 한다.
+이 문서는 Medium의 @deathmood의 글들을 번역하는 수준으로 참고했으며, 해당 문서의 내용처럼 나이브한 수준으로 VDOM을 구현하는 방법에 대해 설명한다.
+참고 문서How to write your own Virtual DOM | by deathmood | Medium Write your Virtual DOM 2: Props &amp; Events | by deathmood | Medium DOM 트리 Node를 객체로 표현하기DOM을 이루는 HTML Element는 다음과 같은 구조의 객체로 표현할 수 있음 { type: &#39;.
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/javascript/virtual-dom-implementation/"><time datetime="2024-11-18">2024-11-18 10:37 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/virtual-dom-implementation/">https://cloudsoswift.github.io/post/develop/javascript/virtual-dom-implementation/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/vdom/">#VDOM</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+    
+        <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/javascript/virtual-dom/">[Javascript]가상 DOM 알아보기(w. Diffing Algorithm, React Fiber, Compiler-Informed Virtual DOM)</a></h1>
+        </header>
+        
+    </div>
+
+    
+        <div class="content post-summary p-summary">
+            서론CS 스터디에서 11월 8일 발표한 가상 DOM에 대해 정리한 문서를 블로그에 공유하고자 한다.
+다만, 현재 문서 내용에는 React Fiber의 실제 내부 동작이라든가, React나 Vue.js를 제외한 다른 VDOM을 채택한 라이브러리들에 대한 내용이 빠져있다.
+또한, React 18 이후 Concurrent Rendering을 통해 개선된 성능에 대한 얘기도 많이 부족하다고 생각하여, 추후 내용을 수정하여 보완하거나, 이를 보충할만한 또 다른 포스트를 등록할 예정이다.
+가상 DOM?가상 DOM(Virtual DOM, VDOM)이란, UI의 가상 표현이 메모리상에 저장되고, ReactDOM과 같은 라이브러리를 통해 실제 DOM과 동기화되는 프로그래밍 개념 이렇게 실제 DOM과 가상 DOM을 동기화하는 과정을 재조정(Reconciliation)이라고 함 이러한 형태는 React의 선언적 API 구조의 기반이 됨 사용자가 UI가 어떤 상태가 되길 원하는지 React에게 알려주면, React는 DOM이 해당 상태와 일치하는지 확인하고 갱신 이를 통해 어트리뷰트 조작, 이벤트 핸들링, 수동 DOM 조작과 같은 작업들을 추상화할 수 있음 개발자가 직접 해당 조작들을 하나하나 수행하지 않아도 됨을 의미 따라서 개발자는 한 상태에서 다른 상태로의 전환을 효율적으로 수행할 방안에 대해 고민하지 않아도 됨 .
+        </div>
+    
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/javascript/virtual-dom/"><time datetime="2024-11-18">2024-11-18 10:37 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/virtual-dom/">https://cloudsoswift.github.io/post/develop/javascript/virtual-dom/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/react/">#React</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/vue.js/">#Vue.js</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/vdom/">#VDOM</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+    
+        <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
             <h1 class="p-name post-title"><a class="u-url" href="/post/develop/javascript/react/design-pattern/">[React] React의 디자인 패턴</a></h1>
         </header>
         
@@ -754,136 +883,6 @@ Module in JavascriptJavascript에서 모듈이란, 다른 프로그래밍 언�
                 
                     
                     <li><a href="https://cloudsoswift.github.io/tags/event/">#Event</a></li>
-                
-            </ul>
-        
-        
-    </div>
-</div>
-
-</article>
-    
-        <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/javascript/map-vs-object/">[Javascript] Map과 Object, 뭘 써야 할까?</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            서론최근 한 기업의 코딩 테스트를 푸는데, 중첩된 구조의 객체를 필요로 하는 문제를 맞닥들이게 되었다.
-나는 &lsquo;Object가 Map보다 있는 기능이 별로 없으니까, 혹시 몰라서 메모리 터질 수 있는 Map 보단 Object가 낫지 않을까?&rsquo; 라는 생각으로 Object를 활용해 해당 문제를 풀었다.
-그리고 그 이후 내 생각이 맞을까? 라는 생각을 갖게 되었고 이를 직접 테스트 한 뒤 내용을 정리해보고 싶어졌다.
-따라서 여러 글을 찾아 보았고, 직접 문제와 유사한 상황을 가정하고 코드를 작성해 시간과 메모리 사용량을 측정해보았다.
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/javascript/map-vs-object/"><time datetime="2024-04-21">2024-04-21 06:13 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/map-vs-object/">https://cloudsoswift.github.io/post/develop/javascript/map-vs-object/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
-                
-            </ul>
-        
-        
-            <ul class="post-tags">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/object/">#Object</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/map/">#Map</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/hashtable/">#HashTable</a></li>
-                
-            </ul>
-        
-        
-    </div>
-</div>
-
-</article>
-    
-        <article class="post-list h-feed">
-    <div class="post-header">
-        <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/nodejs/about-thread-of-node-js/">Node.js 스터디 1주차 - Node.js의 Thread에 대하여</a></h1>
-        </header>
-        
-    </div>
-
-    
-        <div class="content post-summary p-summary">
-            발단Node.js의 경우 Multi-Thread이지만 하나의 Thread만 유저가 사용가능하게 하고, 나머지는 내부적으로 사용 최근에는 worker_thread와 같은 기능으로 유저도 Multi-Thread 환경에서 개발할 수 있도록 하는것으로 알고있음. 여기서 Node.js의 Thread는 어떻게 구성되어 있고, 어떻게 작동하는지, 왜 하나의 Thread만 유저가 사용할 수 있게 한건지, worker_thread 기능은 또 뭔지 궁금해졌음. 궁금한 점Node.js의 Thread 구조는 어떻게 될 까? Node.js의 Thread는 어떻게 작동할까? 왜 Node.js는 하나의 Thread만 유저가 사용할 수 있게 한걸까?(왜 싱글스레드 모델을 선택했을까?) worker_threads 기능은 무엇일까?
-        </div>
-    
-    
-    
-    
-
-    
-
-
-
-<div class="post-info">
-    
-        <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/nodejs/about-thread-of-node-js/"><time datetime="2023-08-04">2023-08-04 05:16 KST</time></a>
-            
-        </div>
-    
-
-    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/nodejs/about-thread-of-node-js/">https://cloudsoswift.github.io/post/develop/nodejs/about-thread-of-node-js/</a>
-    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
-
-
-    <div class="post-taxonomies">
-        
-            <ul class="post-categories">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
-                
-            </ul>
-        
-        
-            <ul class="post-tags">
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/nodejs/">#nodejs</a></li>
-                
-                    
-                    <li><a href="https://cloudsoswift.github.io/tags/thread/">#thread</a></li>
                 
             </ul>
         

@@ -2,19 +2,55 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://cloudsoswift.github.io/post/develop/javascript/virtual-dom-implementation/</loc>
+    <lastmod>2024-11-18T10:37:23+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/categories/</loc>
+    <lastmod>2024-11-18T10:37:23+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/categories/develop/</loc>
+    <lastmod>2024-11-18T10:37:23+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/javascript/</loc>
+    <lastmod>2024-11-18T10:37:23+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/post/</loc>
+    <lastmod>2024-11-18T10:37:23+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/</loc>
+    <lastmod>2024-11-18T10:37:23+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/vdom/</loc>
+    <lastmod>2024-11-18T10:37:23+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/</loc>
+    <lastmod>2024-11-18T10:37:23+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/post/develop/javascript/virtual-dom/</loc>
+    <lastmod>2024-11-18T10:37:02+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/react/</loc>
+    <lastmod>2024-11-18T10:37:02+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/vue.js/</loc>
+    <lastmod>2024-11-18T10:37:02+09:00</lastmod>
+  </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/network/tcp-udp/</loc>
     <lastmod>2024-11-01T18:18:16+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/categories/</loc>
+    <loc>https://cloudsoswift.github.io/tags/http/</loc>
     <lastmod>2024-11-01T18:18:16+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/categories/develop/</loc>
+    <loc>https://cloudsoswift.github.io/tags/network/</loc>
     <lastmod>2024-11-01T18:18:16+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/post/</loc>
+    <loc>https://cloudsoswift.github.io/tags/tcp/</loc>
     <lastmod>2024-11-01T18:18:16+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/</loc>
+    <loc>https://cloudsoswift.github.io/tags/transport-layer/</loc>
+    <lastmod>2024-11-01T18:18:16+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/udp/</loc>
     <lastmod>2024-11-01T18:18:16+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/os/sync-blocking/</loc>
@@ -35,16 +71,10 @@
     <loc>https://cloudsoswift.github.io/tags/synchronous/</loc>
     <lastmod>2024-11-01T16:43:45+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/tags/</loc>
-    <lastmod>2024-11-01T16:43:45+09:00</lastmod>
-  </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/network/jwt/</loc>
     <lastmod>2024-10-10T16:46:55+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/jwt/</loc>
-    <lastmod>2024-10-10T16:46:55+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/network/</loc>
     <lastmod>2024-10-10T16:46:55+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/web/</loc>
@@ -60,12 +90,6 @@
     <lastmod>2024-10-02T18:32:05+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/design-pattern/</loc>
-    <lastmod>2024-10-02T18:32:05+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/javascript/</loc>
-    <lastmod>2024-10-02T18:32:05+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/react/</loc>
     <lastmod>2024-10-02T18:32:05+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/javascript/async-await/</loc>
