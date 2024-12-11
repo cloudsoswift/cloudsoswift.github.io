@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Network] 웹소켓 알아보기 (w. WebSocket API) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 11월 21일 발표한 WebSocket과 WebSocket API에 대해 정리한 문서를 블로그에 공유하고자 한다.
+웹소켓(WebSocket)이란?웹소켓(RFC 6455) 2011년 등장한 프로토콜 통제된 환경에서 신뢰할 수 없는 코드(untrusted code, 브라우저가 신뢰하지 않는 서드-파티나, 웹사이트로부터 읽어들인 코드)를 실행하는 클라이언트와, 해당 코드의 통신을 허용한 원격 호스트간의 양방향 통신 을 가능케하는 프로토콜 이를통해 궁극적으로 서버와 양방향 통신이 필요한 브라우저 기반 애플리케이션이 XMLHttpRequest, &lt;iframe&gt;과 같은 여러 HTTP 연결에 의존하지 않는 방법을 제공하는 것이 목표 웹 브라우저에서 일반적으로 사용되는 출처(Origin) 기반 보안 모델을 사용 TCP 위에 계층화 되어 있으며, 오프닝 핸드셰이크와 메시지 프레이밍으로 구성됨 등장 배경기존의 경우, 클라이언트 - 서버 양방향 통신이 필요한 경우 업스트림 알림(클라이언트에서 서버로 전송하는 알림)을 전송하는 동시에, 서버에 새로운 값을 폴링하는 요청을 보내야 했기 때문에, HTTP 통신이 남발 되었음 이는 다음과 같은 문제를 야기함 서버는 각 클라이언트에 대해 정보를 보내기 위한 연결, 정보를 받기 위한 연결을 포함하는 여러 TCP 연결을 설정해야 함 각 클라이언트-서버 메시지들은 HTTP 헤더를 가지므로 오버헤드가 발생 함 클라이언트 측 스크립트는 요청과 응답의 흐름을 추적하기 위해, 발신 연결(outgoing connections)에서 수신 연결(incoming connections)로의 매핑을 유지 해야 함 웹소켓은 양방향 트래픽을 위한 단일 TCP 연결을 사용해 이를 해결하고자 함 웹소켓 API(WSAPI)와 결합해 HTTP 폴링의 대안을 제공 기존에 존재하는 HTTP 환경의 맥락은 살리되, 처음부터 양방향 통신을 위해 고안되지 않은 HTTP를 대체할 수 있도록 설계됨 따라서 HTTP 포트인 80 및 443에서 동작하며 HTTP 프록시와 중개자(intermediaries)를 지원하도록 설계됨 구성웹소켓은 연결 수립을 위한 핸드셰이크와, 이후 이뤄지는 데이터 전송 두 가지로 이루어짐 주고받는 메시지는 하나 이상의 프레임으로 이루어짐 프레임에 포함될 수 있는 데이터는 여러 유형이 존재하며, 한 메시지에 속하는 각 프레임은 동일한 유형의 데이터를 지님 데이터 유형으로는 텍스트 데이터(UTF-8), 이진 데이터 , 제어 프레임(연결 닫기와 같은 신호를 전달하기 위해 프로토콜 수준에서 사용 됨) 등이 있음 핸드셰이크오프닝 핸드셰이크연결을 수립하기 위한 오프닝 핸드셰이크는 HTTP 기반 서버 SW, 중개자와 호환되도록 설계됨 즉, HTTP 클라이언트가 사용하는 포트와 동일한 포트 사용 먼저 클라이언트 측에서 연결 수립을 위해 요청을 전송함 이때, HTTP 버전이 1.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Network] 웹소켓 알아보기 (w. WebSocket API)" />
+<meta property="og:description" content="서론CS 스터디에서 11월 21일 발표한 WebSocket과 WebSocket API에 대해 정리한 문서를 블로그에 공유하고자 한다.
+웹소켓(WebSocket)이란?웹소켓(RFC 6455) 2011년 등장한 프로토콜 통제된 환경에서 신뢰할 수 없는 코드(untrusted code, 브라우저가 신뢰하지 않는 서드-파티나, 웹사이트로부터 읽어들인 코드)를 실행하는 클라이언트와, 해당 코드의 통신을 허용한 원격 호스트간의 양방향 통신 을 가능케하는 프로토콜 이를통해 궁극적으로 서버와 양방향 통신이 필요한 브라우저 기반 애플리케이션이 XMLHttpRequest, &lt;iframe&gt;과 같은 여러 HTTP 연결에 의존하지 않는 방법을 제공하는 것이 목표 웹 브라우저에서 일반적으로 사용되는 출처(Origin) 기반 보안 모델을 사용 TCP 위에 계층화 되어 있으며, 오프닝 핸드셰이크와 메시지 프레이밍으로 구성됨 등장 배경기존의 경우, 클라이언트 - 서버 양방향 통신이 필요한 경우 업스트림 알림(클라이언트에서 서버로 전송하는 알림)을 전송하는 동시에, 서버에 새로운 값을 폴링하는 요청을 보내야 했기 때문에, HTTP 통신이 남발 되었음 이는 다음과 같은 문제를 야기함 서버는 각 클라이언트에 대해 정보를 보내기 위한 연결, 정보를 받기 위한 연결을 포함하는 여러 TCP 연결을 설정해야 함 각 클라이언트-서버 메시지들은 HTTP 헤더를 가지므로 오버헤드가 발생 함 클라이언트 측 스크립트는 요청과 응답의 흐름을 추적하기 위해, 발신 연결(outgoing connections)에서 수신 연결(incoming connections)로의 매핑을 유지 해야 함 웹소켓은 양방향 트래픽을 위한 단일 TCP 연결을 사용해 이를 해결하고자 함 웹소켓 API(WSAPI)와 결합해 HTTP 폴링의 대안을 제공 기존에 존재하는 HTTP 환경의 맥락은 살리되, 처음부터 양방향 통신을 위해 고안되지 않은 HTTP를 대체할 수 있도록 설계됨 따라서 HTTP 포트인 80 및 443에서 동작하며 HTTP 프록시와 중개자(intermediaries)를 지원하도록 설계됨 구성웹소켓은 연결 수립을 위한 핸드셰이크와, 이후 이뤄지는 데이터 전송 두 가지로 이루어짐 주고받는 메시지는 하나 이상의 프레임으로 이루어짐 프레임에 포함될 수 있는 데이터는 여러 유형이 존재하며, 한 메시지에 속하는 각 프레임은 동일한 유형의 데이터를 지님 데이터 유형으로는 텍스트 데이터(UTF-8), 이진 데이터 , 제어 프레임(연결 닫기와 같은 신호를 전달하기 위해 프로토콜 수준에서 사용 됨) 등이 있음 핸드셰이크오프닝 핸드셰이크연결을 수립하기 위한 오프닝 핸드셰이크는 HTTP 기반 서버 SW, 중개자와 호환되도록 설계됨 즉, HTTP 클라이언트가 사용하는 포트와 동일한 포트 사용 먼저 클라이언트 측에서 연결 수립을 위해 요청을 전송함 이때, HTTP 버전이 1." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/network/websocket-common/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-12-11T07:54:11+09:00" />
+<meta property="article:modified_time" content="2024-12-11T07:54:11+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Network] 웹소켓 알아보기 (w. WebSocket API)"/>
+<meta name="twitter:description" content="서론CS 스터디에서 11월 21일 발표한 WebSocket과 WebSocket API에 대해 정리한 문서를 블로그에 공유하고자 한다.
+웹소켓(WebSocket)이란?웹소켓(RFC 6455) 2011년 등장한 프로토콜 통제된 환경에서 신뢰할 수 없는 코드(untrusted code, 브라우저가 신뢰하지 않는 서드-파티나, 웹사이트로부터 읽어들인 코드)를 실행하는 클라이언트와, 해당 코드의 통신을 허용한 원격 호스트간의 양방향 통신 을 가능케하는 프로토콜 이를통해 궁극적으로 서버와 양방향 통신이 필요한 브라우저 기반 애플리케이션이 XMLHttpRequest, &lt;iframe&gt;과 같은 여러 HTTP 연결에 의존하지 않는 방법을 제공하는 것이 목표 웹 브라우저에서 일반적으로 사용되는 출처(Origin) 기반 보안 모델을 사용 TCP 위에 계층화 되어 있으며, 오프닝 핸드셰이크와 메시지 프레이밍으로 구성됨 등장 배경기존의 경우, 클라이언트 - 서버 양방향 통신이 필요한 경우 업스트림 알림(클라이언트에서 서버로 전송하는 알림)을 전송하는 동시에, 서버에 새로운 값을 폴링하는 요청을 보내야 했기 때문에, HTTP 통신이 남발 되었음 이는 다음과 같은 문제를 야기함 서버는 각 클라이언트에 대해 정보를 보내기 위한 연결, 정보를 받기 위한 연결을 포함하는 여러 TCP 연결을 설정해야 함 각 클라이언트-서버 메시지들은 HTTP 헤더를 가지므로 오버헤드가 발생 함 클라이언트 측 스크립트는 요청과 응답의 흐름을 추적하기 위해, 발신 연결(outgoing connections)에서 수신 연결(incoming connections)로의 매핑을 유지 해야 함 웹소켓은 양방향 트래픽을 위한 단일 TCP 연결을 사용해 이를 해결하고자 함 웹소켓 API(WSAPI)와 결합해 HTTP 폴링의 대안을 제공 기존에 존재하는 HTTP 환경의 맥락은 살리되, 처음부터 양방향 통신을 위해 고안되지 않은 HTTP를 대체할 수 있도록 설계됨 따라서 HTTP 포트인 80 및 443에서 동작하며 HTTP 프록시와 중개자(intermediaries)를 지원하도록 설계됨 구성웹소켓은 연결 수립을 위한 핸드셰이크와, 이후 이뤄지는 데이터 전송 두 가지로 이루어짐 주고받는 메시지는 하나 이상의 프레임으로 이루어짐 프레임에 포함될 수 있는 데이터는 여러 유형이 존재하며, 한 메시지에 속하는 각 프레임은 동일한 유형의 데이터를 지님 데이터 유형으로는 텍스트 데이터(UTF-8), 이진 데이터 , 제어 프레임(연결 닫기와 같은 신호를 전달하기 위해 프로토콜 수준에서 사용 됨) 등이 있음 핸드셰이크오프닝 핸드셰이크연결을 수립하기 위한 오프닝 핸드셰이크는 HTTP 기반 서버 SW, 중개자와 호환되도록 설계됨 즉, HTTP 클라이언트가 사용하는 포트와 동일한 포트 사용 먼저 클라이언트 측에서 연결 수립을 위해 요청을 전송함 이때, HTTP 버전이 1."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Network] 웹소켓 알아보기 (w. WebSocket API)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#등장-배경">등장 배경</a></li>
+    <li><a href="#구성">구성</a>
+      <ul>
+        <li><a href="#핸드셰이크">핸드셰이크</a></li>
+        <li><a href="#기본-데이터-프레임-구조">기본 데이터 프레임 구조</a></li>
+      </ul>
+    </li>
+  </ul>
+
+  <ul>
+    <li><a href="#websocket-api">WebSocket API</a>
+      <ul>
+        <li><a href="#연결-생성하기">연결 생성하기</a></li>
+        <li><a href="#이벤트-처리하기">이벤트 처리하기</a></li>
+        <li><a href="#메시지-전송과-연결-닫기">메시지 전송과 연결 닫기</a></li>
+      </ul>
+    </li>
+    <li><a href="#예시">예시</a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 11월 21일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/15_WebSocket/Readme.md">WebSocket과 WebSocket API</a>에 대해 정리한 문서를 블로그에 공유하고자 한다.</p>
+<h1 id="웹소켓websocket이란" >웹소켓(WebSocket)이란?
+<span>
+    <a href="#%ec%9b%b9%ec%86%8c%ec%bc%93websocket%ec%9d%b4%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc6455">웹소켓(RFC 6455)</a>
+<ul>
+<li>2011년 등장한 프로토콜</li>
+<li>통제된 환경에서 <code>신뢰할 수 없는 코드(untrusted code, 브라우저가 신뢰하지 않는 서드-파티나, 웹사이트로부터 읽어들인 코드)</code>를 실행하는 <code>클라이언트</code>와, 해당 코드의 통신을 허용한 <code>원격 호스트</code>간의 <strong><code>양방향 통신</code></strong> 을 가능케하는 프로토콜
+<ul>
+<li>이를통해 궁극적으로 서버와 양방향 통신이 필요한 브라우저 기반 애플리케이션이 <code>XMLHttpRequest</code>, <code>&lt;iframe&gt;</code>과 같은 여러 HTTP 연결에 의존하지 않는 방법을 제공하는 것이 목표</li>
+</ul>
+</li>
+<li>웹 브라우저에서 일반적으로 사용되는 <code>출처(Origin) 기반 보안 모델</code>을 사용</li>
+<li>TCP 위에 계층화 되어 있으며, 오프닝 핸드셰이크와 메시지 프레이밍으로 구성됨</li>
+</ul>
+</li>
+</ul>
+<h2 id="등장-배경" >등장 배경
+<span>
+    <a href="#%eb%93%b1%ec%9e%a5-%eb%b0%b0%ea%b2%bd">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>기존의 경우, 클라이언트 - 서버 양방향 통신이 필요한 경우 <code>업스트림 알림(클라이언트에서 서버로 전송하는 알림)</code>을 전송하는 동시에, 서버에 <code>새로운 값을 폴링</code>하는 요청을 보내야 했기 때문에, <strong><code>HTTP 통신이 남발</code></strong> 되었음</li>
+<li>이는 다음과 같은 문제를 야기함
+<ol>
+<li>서버는 <strong>각 클라이언트에 대해</strong> <code>정보를 보내기 위한 연결</code>, <code>정보를 받기 위한 연결</code>을 포함하는 <code>여러 TCP 연결</code>을 설정해야 함</li>
+<li>각 <code>클라이언트-서버 메시지</code>들은 <code>HTTP 헤더</code>를 가지므로 <strong><code>오버헤드가 발생</code></strong> 함</li>
+<li><code>클라이언트 측 스크립트</code>는 <code>요청</code>과 <code>응답의 흐름을 추적</code>하기 위해, <code>발신 연결(outgoing connections)</code>에서 <code>수신 연결(incoming connections)</code>로의 <strong><code>매핑을 유지</code></strong> 해야 함</li>
+</ol>
+</li>
+<li>웹소켓은 양방향 트래픽을 위한 <code>단일 TCP 연결</code>을 사용해 이를 해결하고자 함
+<ul>
+<li><a href="https://websockets.spec.whatwg.org/">웹소켓 API(WSAPI)</a>와 결합해 <code>HTTP 폴링</code>의 대안을 제공</li>
+</ul>
+</li>
+<li>기존에 존재하는 <code>HTTP 환경</code>의 <code>맥락</code>은 살리되, 처음부터 양방향 통신을 위해 고안되지 않은 <code>HTTP를 대체</code>할 수 있도록 설계됨
+<ul>
+<li>따라서 HTTP 포트인 <code>80</code> 및 <code>443</code>에서 <code>동작</code>하며 <code>HTTP 프록시</code>와 <code>중개자(intermediaries)</code>를 지원하도록 설계됨</li>
+</ul>
+</li>
+</ul>
+<h2 id="구성" >구성
+<span>
+    <a href="#%ea%b5%ac%ec%84%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><code>웹소켓</code>은 연결 수립을 위한 <code>핸드셰이크</code>와, 이후 이뤄지는 <code>데이터 전송</code> 두 가지로 이루어짐</li>
+<li>주고받는 <code>메시지</code>는 하나 이상의 <code>프레임</code>으로 이루어짐
+<ul>
+<li><code>프레임</code>에 포함될 수 있는 데이터는 여러 유형이 존재하며, <code>한 메시지</code>에 속하는 <code>각 프레임</code>은 <code>동일한 유형의 데이터</code>를 지님</li>
+<li><code>데이터 유형</code>으로는 <code>텍스트 데이터(UTF-8)</code>, <code>이진 데이터</code>
+, <code>제어 프레임(연결 닫기와 같은 신호를 전달하기 위해 프로토콜 수준에서 사용 됨)</code> 등이 있음</li>
+</ul>
+</li>
+</ul>
+<h3 id="핸드셰이크" >핸드셰이크
+<span>
+    <a href="#%ed%95%b8%eb%93%9c%ec%85%b0%ec%9d%b4%ed%81%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="오프닝-핸드셰이크" >오프닝 핸드셰이크
+<span>
+    <a href="#%ec%98%a4%ed%94%84%eb%8b%9d-%ed%95%b8%eb%93%9c%ec%85%b0%ec%9d%b4%ed%81%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>연결을 수립하기 위한 <code>오프닝 핸드셰이크</code>는 <code>HTTP 기반 서버 SW, 중개자</code>와 호환되도록 설계됨
+<ul>
+<li>즉, <code>HTTP 클라이언트가 사용하는 포트</code>와 <code>동일한 포트</code> 사용</li>
+</ul>
+</li>
+<li>먼저 클라이언트 측에서 연결 수립을 위해 요청을 전송함</li>
+<li>이때, HTTP 버전이 <code>1.1</code>인지, <code>2</code>인지에 따라 방식이 다름
+<ul>
+<li><code>HTTP/1.1</code><img src="HTTP-1.1-Websocket.png" alt="HTTP-1.1-Websocket.png">
+<ul>
+<li>먼저 클라이언트 측에서 <code>GET</code> 메서드로 <code>HTTP Upgrade 요청</code>을 전송
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span><span style="color:#75715e">&lt;!-- 예시 요청 --&gt;</span>
+</span></span><span style="display:flex;"><span>GET /chat HTTP/1.1
+</span></span><span style="display:flex;"><span>Host: server.example.com
+</span></span><span style="display:flex;"><span>Upgrade: websocket
+</span></span><span style="display:flex;"><span>Connection: Upgrade
+</span></span><span style="display:flex;"><span>Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
+</span></span><span style="display:flex;"><span>Origin: http://example.com
+</span></span><span style="display:flex;"><span>Sec-WebSocket-Protocol: chat, superchat
+</span></span><span style="display:flex;"><span>Sec-WebSocket-Version: 13
+</span></span></code></pre></div><ul>
+<li>웹소켓이 나온 <strong>2011년도</strong>에는 아직 <code>HTTP/2(2015)</code>가 등장하지 않았기 때문에, <code>HTTP/1.1</code>에 사용되는 <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Upgrade"><code>Upgrade</code>헤더</a>를 사용</li>
+<li><code>Upgrade</code> 헤더는 <code>HTTP/1.1</code>에서 이미 설정된 <code>클라이언트/서버 연결</code>을 다른 프로토콜로 업그레이드 하기 위해 사용되며, 다음과 같은 형태로 작성됨
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>Connection: upgrade
+</span></span><span style="display:flex;"><span>Upgrade: protocol_name[/protocol_version]
+</span></span></code></pre></div><ul>
+<li>연결이 더 지속될 지 알아야 하므로 <code>Connection</code> 헤더도 함께 사용됨</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>서버는 핸드셰이크를 수신했음을 증명하기 위해, 두 가지 값을 가져와 합친 뒤 응답을 만들어 냄
+<ul>
+<li>먼저 클라이언트 핸드셰이크 요청의 <code>Sec-WebSocket-Key</code> 헤더 값을 가져옴</li>
+<li>이후 문자열 형식의 <code>GUID(전역 고유 식별자)</code>인 <code>258EAFA5-E914-47DA-95CA-C5AB0DC85B11</code> 와 연결함
+<ul>
+<li>해당 값은 웹소켓을 이해하지 못하는 서버에서도 사용될 가능성이 아주 낮은, 웬만해서는 고유한 값임</li>
+</ul>
+</li>
+<li>이후 연결한 문자열 값을 SHA-1 해시한 값을 서버 측 핸드셰이크로 전달함</li>
+<li>예시
+<ul>
+<li>위에서 사용된 <code>Sec-WebSocket-Key</code> 헤더 값인 <code>dGhlIHNhbXBsZSBub25jZQ==</code>에 <code>258EAFA5-E914-47DA-95CA-C5AB0DC85B11</code>을 연결해 <code>dGhlIHNhbXBsZSBub25jZQ==258EAFA5-E914-47DA-95CA- C5AB0DC85B11</code> 라는 문자열을 생성</li>
+<li>이후 이를 SHA-1 해싱해 <code>0xb3 0x7a 0x4f 0x2c 0xc0 0x62 0x4f 0x16 0x90 0xf6 0x46 0x06 0xcf 0x38 0x59 0x45 0xb2 0xbe 0xc4 0xea</code> 라는 값을 생성함</li>
+<li>이 값을 base64 인코딩하여 <code>s3pPLMBiTxaQ9kYGzzhZRbK+xOo=</code> 라는 값으로 변환한 뒤, <code>Sec-WebSocket-Accept</code> 필드로 전달</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>그리고 서버에서 핸드셰이크가 완료된 경우에는 <code>101</code>을, 완료되지 않은 경우 이외의 값을 상태코드로 갖는 다음과 같은 형태의 응답을 반환함
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>HTTP/1.1 101 Switching Protocols
+</span></span><span style="display:flex;"><span>Upgrade: websocket
+</span></span><span style="display:flex;"><span>Connection: Upgrade
+</span></span><span style="display:flex;"><span>Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
+</span></span></code></pre></div></li>
+<li><code>HTTP/2</code><img src="HTTP-2-Websocket.png" alt="HTTP-2-Websocket.png">
+<ul>
+<li><code>HTTP/2</code>의 멀티플렉싱 특성에 의해, <code>Upgrade</code>, <code>Connection</code>과 같은 헤더나 <code>101 응답코드</code>와 같이 연결-전반적으로 사용되는 헤더 및 상태 코드를 허용하지 않음</li>
+<li>따라서 <code>HTTP/2</code> 환경에서 <code>웹소켓</code>을 사용하기 위한 <code>부트스트랩</code>이 만들어짐
+<ul>
+<li>이는 <code>HTTP 메서드</code> 중 하나인 <code>CONNECT</code>를 <code>확장</code>해, 단일 <code>HTTP/2 스트림</code>에 <code>웹소켓용 데이터</code>를 전달할 수 있는 <code>터널</code>을 만듦</li>
+</ul>
+</li>
+<li><code>확장된 CONNECT 메서드</code>
+<ul>
+<li><code>CONNECT</code>를 통해 생성한 터널에서 어떤 프로토콜을 사용할 지 나타내는 새로운 <code>의사-헤더 필드</code>인 <code>:protocol</code>을 사용
+<ul>
+<li>해당 필드에 포함될 수 있는 값은 <a href="https://www.iana.org/assignments/http-upgrade-tokens/http-upgrade-tokens.xhtml">Hypertext Transfer Protocol (HTTP) Upgrade Token Registry</a>에 포함된 값</li>
+</ul>
+</li>
+<li><code>:protocol</code>을 포함한 요청에는 대항 URI의 <code>:scheme</code>, <code>:path</code> <code>의사-헤더 필드</code>도 반드시 포함되어야 함</li>
+<li><code>:protocol</code>을 포함한 요청에서는 <code>:authority</code> 필드가 기존과 다르게 해석 됨
+<ul>
+<li>연결한 호스트와 포트(<a href="https://datatracker.ietf.org/doc/html/rfc7540#section-8.3">RFC 7540 #8.3</a>)가 아닌, 대상 URI의 권한(<a href="https://datatracker.ietf.org/doc/html/rfc7540#section-8.1.2.3">RFC 7540 #8.1.2.3</a>)으로 해석됨</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>HTTP/1.1</code>의 GET 기반 요청처럼, 클라이언트 측에서 <code>CONNECT</code> 메서드 요청을 통해 연결 수립을 요청
+<ul>
+<li>해당 요청은 <code>:protocol</code> 필드를 반드시 포함해야 하며, <code>websocket</code> 값을 가져야 함</li>
+<li>목표 URI의 스키마의 맨 앞은 <code>wss(htttp)</code> 또는 <code>ws(http)</code>여야 하며, 나머지는 웹소켓 URI와 동일</li>
+<li><code>HTTP/1.1</code>과 달리 <code>Upgrade</code>, <code>Connection</code>, <code>Host</code> 헤더를 사용하지 않으며, <code>Host</code> 정보는 <code>:authority</code>의 일부로 전달됨
+<ul>
+<li>또한, <code>Sec-WebSocket-Key</code> 및 <code>Sec-WebSocket- Accept</code> 헤더에 대한 처리가 <code>:protocol</code> 필드로 대체되어 이뤄지지 않음</li>
+<li>반면 <code>Origin</code>,  <code>Sec-WebSocket-Version</code>, <code>Sec-WebSocket-Protocol</code>, <code>Sec-WebSocket-Extensions</code> 필드는 사용되나 <code>HTTP/1.1</code>과 달리 <code>HTTP/2</code>에서는 소문자로 작성되어야 함</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="클로징-핸드셰이크" >클로징 핸드셰이크
+<span>
+    <a href="#%ed%81%b4%eb%a1%9c%ec%a7%95-%ed%95%b8%eb%93%9c%ec%85%b0%ec%9d%b4%ed%81%ac">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>연결을 종료하기 위해서는 클라이언트, 서버 두 피어 중 한 측(A)에서 <code>제어 시퀀스(control sequence)</code>가 포함된 <code>제어 프레임</code>을 전송해 <code>클로징 핸드셰이크</code>를 시작할 수 있음</li>
+<li>이를 수신한 다른 피어(B)는 응답으로 <code>닫기 프레임(close frame)</code>을 전송함</li>
+<li>응답을 수신한 피어(A)는 연결을 닫으며, 서로는 더 이상 데이터를 보내지도, 수신하지도 않음</li>
+<li>이러한 별도의 <code>클로징 핸드셰이크</code>는, <code>TCP 클로징 핸드셰이크(FIN/ACK)</code>가 프록시 및 중개자에 의해 신뢰성이 낮아진다는 점을 보완하기 위해 사용됨</li>
+<li><code>HTTP/2</code>에서도 이와 유사한 형태로 스트림 클로저가 이뤄지며, TCP 수준 클로저는 <code>HTTP/2</code> 데이터 프레임의 <code>END_STREAM</code> 플래그로 표현됨</li>
+</ul>
+<h3 id="기본-데이터-프레임-구조" >기본 데이터 프레임 구조
+<span>
+    <a href="#%ea%b8%b0%eb%b3%b8-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ed%94%84%eb%a0%88%ec%9e%84-%ea%b5%ac%ec%a1%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><img src="WebSocket-Data-Frame.png" alt="WebSocket-Data-Frame.png"></p>
+<ul>
+<li>웹소켓 프로토콜에서 <code>데이터 전달</code>을 목적으로 사용되는 <code>프레임</code>은 위와 같은 구조로 이루어져 있음</li>
+<li>클라이언트에서 서버로 전송되는 모든 프레임은 <code>네트워크 중개자(ex. 프록시)</code>의 <code>가로채기</code>와 같은 행위를 차단하고, <code>보안 관련 이유</code>로 <strong><code>마스킹</code></strong> 이 필수적임
+<ul>
+<li>이는 웹소켓이 TLS와 함께 이뤄지는지 여부와 상관 없이 항상 수행</li>
+<li>서버는 마스킹되지 않은 프레임을 수신할 경우 연결을 닫아야 함</li>
+</ul>
+</li>
+<li>주요 필드
+<ul>
+<li><code>FIN</code>
+<ul>
+<li>현재 프레임이 메시지의 <code>마지막 조각(Fragment)</code>임을 나타내는 플래그</li>
+</ul>
+</li>
+<li><code>opcode</code>
+<ul>
+<li>페이로드 데이터의 유형을 나타내는 값
+<ul>
+<li><code>%x0</code>: 연속 프레임</li>
+<li><code>%x1</code>: 텍스트 프레임</li>
+<li><code>%x2</code>: 이진 프레임</li>
+<li><code>%x8</code>: 연결 종료</li>
+<li><code>%x9</code>: 핑 / <code>%xA</code>: 퐁</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>masking key</code>
+<ul>
+<li>클라이언트에서 서버로 전송되는 모든 프레임은 이 32비트 <code>마스킹 키</code>로 마스킹 됨</li>
+<li>클라이언트는 매 번 허용된 32비트 값 집합에서 새로운 마스킹 키를 선택해, 프레임을 마스킹해야 함</li>
+</ul>
+</li>
+<li><code>payload data</code>
+<ul>
+<li><code>애플리케이션 데이터</code>와, 그와 연결된 <code>확장 데이터</code>로 이뤄짐
+<ul>
+<li><code>확장 데이터</code>: 오프닝 핸드셰이크때 사전 협의된 길이와 방법대로 사용되는 추가 데이터</li>
+<li><code>애플리케이션 데이터</code>: <code>확장 데이터</code> 다음 프레임의 나머지 공간을 차지하는 데이터</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="javascript의-websocket" >Javascript의 WebSocket
+<span>
+    <a href="#javascript%ec%9d%98-websocket">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li>Javascript에서는 <code>Web API</code> 중 <code>브라우저 API</code>에서 제공되는 <code>WebSocket API</code>를 활용해 브라우저와 서버간 양방향 통신을 열 수 있음</li>
+<li><code>WebSocket API</code>는 웹소켓 연결 및 통신을 위한 두 가지 메커니즘인 <code>WebSocket</code> 인터페이스와 <code>WebSocketStream</code> 인터페이스를 제공
+<ul>
+<li><code>WebSocket</code>
+<ul>
+<li>안정적이며, 대부분의 브라우저 및 서버에서 지원됨</li>
+<li>다만, <code>배압(Backpressure)</code>을 지원하지 않기 때문에 <em>애플리케이션이 처리할 수 있는 속도보다 빠르게 메시지가 도착</em>할 경우 <code>메시지를 버퍼링</code>해 <code>메모리를 가득 채우거나</code>, <code>CPU 사용률이 100%</code>가 되어 애플리케이션이 정상 동작하지 않을 수 있음</li>
+</ul>
+</li>
+<li><code>WebSocketStream</code>
+<ul>
+<li><code>WebSocket</code>의 <code>Promise</code>기반 대안으로, <a href="https://developer.mozilla.org/en-US/docs/Web/API/Streams_API"><code>Stream API</code></a>를 사용해 메시지 수신 및 전송을 처리함
+<ul>
+<li>따라서 소켓 연결이 <code>Stream Backpressure</code> 자동으로 활용하여 읽기 및 쓰기 속도를 조절할 수 있고, 이를 통해 병목 현상을 방지할 수 있음</li>
+<li>그러나, <code>WebSocketStream</code>은 비표준으로, <code>크로미움 기반 브라우저</code>(ex. Chrome, Edge, &hellip;)을 제외한 나머지 브라우저들(Safari, Firefox)은 지원하지 않고 있음</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="websocket-api" >WebSocket API
+<span>
+    <a href="#websocket-api">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="연결-생성하기" >연결 생성하기
+<span>
+    <a href="#%ec%97%b0%ea%b2%b0-%ec%83%9d%ec%84%b1%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>웹소켓 연결을 생성하기 위해서는, <code>WebSocket</code> 생성자를 호출하면 됨</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// WebSocket 생성자는 url, 또는 url과 protocol을 인자로 받음
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 1. new WebSocket(url)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// url은 ws, wss, http, https 중 하나의 스키마를 사용해야 함
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 또한, Node.js나 Deno같은 JS 런타임에서는 http, https를 비롯해 상대 URL을 지원하지 않음
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">socket</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">WebSocket</span>(<span style="color:#e6db74">&#34;ws://somewhere.net&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 2. new WebSocket(url, protocols)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// protocols는 웹소켓의 서브 프로토콜을 나타내는 문자열(또는 문자열 배열)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 연결당 하나의 서브 프로토콜만 선택할 수 있으며, 허용되는 값은 `Sec-WebSocket-Protocol HTTP`에서 지정할 수 있는 값임
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">socket</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">WebSocket</span>(<span style="color:#e6db74">&#34;ws://somewhere.net&#34;</span>, [<span style="color:#e6db74">&#34;soap&#34;</span>]);
+</span></span></code></pre></div><ul>
+<li>생성된 <code>WebSocket</code> 객체의 프로퍼티를 통해 어떤 호스트와 통신하는지, 서브 프로토콜은 무엇인지를 알 수 있음
+<ul>
+<li>서브 프로토콜은 <a href="https://www.iana.org/assignments/websocket/websocket.xml#subprotocol-name">IANA의 WebSocket Subprotocol Name Registry</a>에 포함된 것으로 사용 가능</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">url</span>) <span style="color:#75715e">// &#39;ws://somewhere.net&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">protocol</span>) <span style="color:#75715e">// [&#39;soap&#39;]
+</span></span></span></code></pre></div><h3 id="이벤트-처리하기" >이벤트 처리하기
+<span>
+    <a href="#%ec%9d%b4%eb%b2%a4%ed%8a%b8-%ec%b2%98%eb%a6%ac%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>생성된 웹소켓 연결에서 발생하는 이벤트를 처리하기 위해, <code>addEventListener</code>를 사용하거나, <code>WebSocket</code>의 <code>on이벤트이름</code> 프로퍼티에 이벤트 리스너를 할당해줄 수 있음</li>
+</ul>
+<h4 id="open연결-생성" >open(연결 생성)
+<span>
+    <a href="#open%ec%97%b0%ea%b2%b0-%ec%83%9d%ec%84%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>onopen</code>: 웹소켓 연결이 열렸을 때, 발동되는 이벤트리스너</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">onopen</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">alert</span>(<span style="color:#e6db74">&#34;웹소켓 연결이 생성되었습니다. &#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">send</span>(<span style="color:#e6db74">&#34;Hello there!&#34;</span>);
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><ul>
+<li>이벤트리스너에게 전달되는 <code>Event</code>는 일반 <code>Event</code>임</li>
+</ul>
+<h4 id="message데이터-수신" >message(데이터 수신)
+<span>
+    <a href="#message%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%88%98%ec%8b%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>onmessage</code>: 웹소켓 연결을 통해 데이터가 수신될 때, 발동되는 이벤트리스너</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">onmessage</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">alert</span>(<span style="color:#e6db74">&#34;서버로부터 다음과 같은 메시지가 수신되었습니다.&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">alert</span>(<span style="color:#e6db74">`메시지: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">data</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><ul>
+<li><code>MessageEvent</code>:  <code>message</code> 이벤트리스너에게 전달되는 이벤트
+<ul>
+<li><code>data</code>: <code>메시지 발신자(emitter)</code>가 보내온 데이터. <code>WebSocket.binaryType</code>에 따라 <code>data</code>의 유형이 달라짐
+<ul>
+<li>메시지 유형이 <code>text</code>인 경우, <code>data</code>는 문자열 값</li>
+<li>메시지 유형이 <code>binary</code>인 경우, <code>data</code>의 유형은 <code>WebSocket.binaryType</code>에 따라 달라짐
+<ul>
+<li><code>binaryType</code>이 <code>arraybuffer</code>인 경우, <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer"><code>ArrayBuffer</code></a></li>
+<li><code>binaryType</code>이 <code>blob</code>인 경우, <a href="https://developer.mozilla.org/en-US/docs/Web/API/Blob"><code>Blob</code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>origin</code>: 메시지 <code>발신자의 출처</code>를 나타내는 문자열</li>
+</ul>
+</li>
+</ul>
+<h4 id="error에러-발생" >error(에러 발생)
+<span>
+    <a href="#error%ec%97%90%eb%9f%ac-%eb%b0%9c%ec%83%9d">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>onerror</code>: 데이터가 안보내진다거나 하는 오류로 웹소켓 연결이 닫힐 때, 발동되는 이벤트리스너</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">onerror</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">error</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">alert</span>(<span style="color:#e6db74">`다음과 같은 에러가 발생했습니다. </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">error</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><ul>
+<li>이벤트리스너에게 전달되는 <code>Event</code>는 일반 <code>Event</code>임</li>
+</ul>
+<h4 id="close연결-종료" >close(연결 종료)
+<span>
+    <a href="#close%ec%97%b0%ea%b2%b0-%ec%a2%85%eb%a3%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>onclose</code>: 웹소켓 연결이 닫힐 때, 발동되는 이벤트리스너</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">onclose</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">wasClean</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 연결이 정상적으로 종료된 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">alert</span>(<span style="color:#e6db74">`연결이 정상적으로 종료되었습니다(code=</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">code</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> reason=</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">event</span>.<span style="color:#a6e22e">reason</span><span style="color:#e6db74">}</span><span style="color:#e6db74">)`</span>);
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 프로세스가 죽거나, 네트워크 장애와 같은 이유로 연결이 닫힌 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">alert</span>(<span style="color:#e6db74">&#39;커넥션이 죽었습니다.&#39;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><ul>
+<li><code>CloseEvent</code>: <code>close</code> 이벤트리스너에게 전달되는 이벤트
+<ul>
+<li><code>code</code>: <code>1000~4999</code> 사이의 <a href="https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code">웹소켓 연결 종료 코드</a> 를 나타내는 <code>unsigned short</code> 값</li>
+<li><code>reason</code>: <code>서버가 연결을 종료한 이유</code>를 나타내는 문자열</li>
+<li><code>wasClean</code>: 연결이 정상적으로 닫혔는지 여부를 나타내는 부울 값</li>
+</ul>
+</li>
+</ul>
+<h3 id="메시지-전송과-연결-닫기" >메시지 전송과 연결 닫기
+<span>
+    <a href="#%eb%a9%94%ec%8b%9c%ec%a7%80-%ec%a0%84%ec%86%a1%ea%b3%bc-%ec%97%b0%ea%b2%b0-%eb%8b%ab%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>WebSocket</code> 객체에는 데이터를 전송할 수 있는 <code>send()</code> 메서드와 연결을 종료할 수 있는 <code>close</code> 메서드가 존재</li>
+</ul>
+<h4 id="메시지-전송httpsdevelopermozillaorgen-usdocswebapiwebsocketsend" ><a href="https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/send">메시지 전송</a>
+<span>
+    <a href="#%eb%a9%94%ec%8b%9c%ec%a7%80-%ec%a0%84%ec%86%a1httpsdevelopermozillaorgen-usdocswebapiwebsocketsend">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>WebSocket.send()</code> 메서드를 통해 사용자가 서버로 데이터를 전송할 수 있음
+<ul>
+<li>정확히는, 전송할 데이터를 <code>대기열</code>에 넣고, <code>bufferedAmount</code> 값을 늘림</li>
+<li>만약 데이터를 전송할 수 없는 경우, 소켓은 자동으로 닫힘</li>
+<li>연결이 <code>CONNECTING</code> 상태라면 브라우저가 예외를 던지고, <code>CLOSING</code> 또는 <code>CLOSED</code> 상태라면 데이터를 자동으로 삭제함</li>
+</ul>
+</li>
+<li><code>send()</code>는 <code>data</code>라는 하나의 인자만 받으며, <code>data</code>의 타입은 다음 중 하나여야 함
+<ul>
+<li><code>string</code>
+<ul>
+<li>UTF-8로 인코딩되어 버퍼에 추가되며, 이를 나타내는데 필요한 바이트 수만큼 <code>bufferedAmount</code>가 증가함</li>
+</ul>
+</li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer"><code>ArrayBuffer</code></a>
+<ul>
+<li><code>타입이 지정된 배열 객체(typed array object)</code>가 사용하는 <code>바이너리 데이터</code>를 전송할 수 있으며, 이는 버퍼에 추가되고 해당 바이너리 데이터 바이트 수 만큼 <code>bufferedAmount</code>가 증가함
+<ul>
+<li><code>ArrayBuffer</code>는 다른 언어에서 <code>Byte Array</code>라고 일컫는, byte들의 배열임
+<ul>
+<li>내용을 직접 조작할 순 없으나, 후술할 <code>typed Array</code> 객체나 <code>DataView</code> 객체를 통해 버퍼의 내용을 읽고 쓸 수 있음</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Blob"><code>Blob</code></a>
+<ul>
+<li><code>불변 로우 데이터</code>로 이뤄진, <code>파일</code>과 유사한 객체인 <code>Blob</code>의 <code>로우 데이터</code>가 버퍼에 추가되며(이때, <code>Blob.type</code>은 <code>무시</code>됨), <code>bufferedAmount</code>는 해당 로우 데이터의 바이트 크기만큼 증가함</li>
+</ul>
+</li>
+<li><code>TypedArray</code>/<code>DataView</code>
+<ul>
+<li><code>Javascript Typed Array(ex. Int8Array, Int16Array, ...)</code>가 가지고 있는 바이너리 데이터들이 버퍼에 추가되며, 필요한 바이트 수만큼 <code>bufferedAmount</code>가 증가함</li>
+<li>또는, <code>이진 ArrayBuffer</code>에서 여러 넘버 타입을 읽고 쓸 수 있게 해주는 저수준 인터페이스인 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView"><code>DataView</code></a>도 인자로 사용할 수 있음</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="연결-닫기" >연결 닫기
+<span>
+    <a href="#%ec%97%b0%ea%b2%b0-%eb%8b%ab%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>연결 피어 중 한 측에서 연결을 닫고 싶을때, <code>WebSocket.close()</code> 메서드를 통해 연결을 종료할 수 있음
+<ul>
+<li>만약 <code>클로징 핸드셰이크</code> 전에 메시지를 보내거나, 여전히 보내고 있다면 이러한 메시지들이 모두 전송된 뒤에 핸드셰이크가 시작됨</li>
+</ul>
+</li>
+<li><code>close()</code>는 옵셔널 인자인 <code>code</code>와 <code>reason</code> 인자를 받음
+<ul>
+<li><code>code</code>
+<ul>
+<li>종료 이유를 나타내는 <code>웹소켓 연결 종료 코드</code> 정수값</li>
+<li>값을 지정하지 않으면, 일반 종료의 경우 <code>1000</code>, 이외 연결 종료 사유가 있는 경우 그에 해당하는 <code>1001 ~ 1015</code> 범위의 코드 값으로 설정됨</li>
+<li><code>code</code> 값이 설정되면, <code>reason</code> 값도 설정되어야 함</li>
+</ul>
+</li>
+<li><code>reason</code>
+<ul>
+<li><code>사용자 지정 웹소켓 연결 종료 이유</code>를 제공하는 문자열로, UTF-8로 인코딩되어야 하고 123바이트를 넘지 않아야 함</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="예시" >예시
+<span>
+    <a href="#%ec%98%88%ec%8b%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><a href="https://jsfiddle.net/bmknight/RqbYB">WebSockets Example - JSFiddle - Code Playground</a>
+<ul>
+<li>해당 예제에서 주소를 <code>ws</code>에서 <code>wss</code>로 바꿔주면 정상 동작함</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/network/websocket-common/"><time datetime="2024-12-11">2024-12-11 07:54 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/network/websocket-common/">https://cloudsoswift.github.io/post/develop/network/websocket-common/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/network/">#Network</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/websocket/">#WebSocket</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/javascript/virtual-dom-implementation/">[Javascript]가상 DOM 구현 해보기(w. Babel, Diffing Algorithm)</a></li>
+                
+                <li><a href="/post/develop/javascript/virtual-dom/">[Javascript]가상 DOM 알아보기(w. Diffing Algorithm, React Fiber, Compiler-Informed Virtual DOM)</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item ">
+            
+                <a href="/post/develop/javascript/typescript-common/">[Javascript] Typescript 훑어보기</a>
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/javascript/virtual-dom-implementation/">[Javascript]가상 DOM 구현 해보기(w. Babel, Diffing Algorithm)</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>

@@ -223,16 +223,69 @@
         <article class="post-list h-feed">
     <div class="post-header">
         <header>
-            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/network/tcp-udp/">[Network] TCP와 UDP 알아보기 (w. 흐름 제어, 혼잡 제어, CongWin, HTTP/3)</a></h1>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/network/websocket-common/">[Network] 웹소켓 알아보기 (w. WebSocket API)</a></h1>
         </header>
         
     </div>
 
     
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 10월 28일 발표한 TCP &amp; UDP에 대해 정리한 문서를 블로그에 공유하고자 한다.
-TCP와 UDP에 대하여TCP와 UDP는 네트워크 계층 중 전송 계층(transport-layer)에서 사용되는 프로토콜 전송 계층 프로세스 간 논리적 통신(logical communication)이 이뤄지는 계층 네트워크 계층의 서비스들에 의존하고, 이들을 강화시키는 계층 보내려는 메시지를 전송 계층의 규격에 맞게 분할 후, 해야할 일을 헤더로 부착해 보내는 과정을 거침 TCP요약신뢰성(reliable) 순서에 맞게 전송하고자 함(in-order) 혼잡 제어, 흐름 제어, 연결 설정과 같은 기능 제공 주요 특징1대1 통신(unicast) 신뢰할 수 있고, 순차적인 바이트스트림 메시지 바운더리 없음 (전송되는 두 메시지 사이의 구분 이 없음) 송신 번호, ACK 번호를 사용 파이프라인 사용 TCP 혼잡, 흐름 제어를 위한 window size를 설정 전이중 데이터 동일한 연결 상에서 양방향 통신 최대 세그먼트 크기(MSS) 연결지향적 통신 데이터 교환 전, 핸드셰이킹(제어 메시지 교환)으로 송신자-수신자 상태 초기화 흐름 제어 송신자가 수신자를 압도(overwhelm)하지 않음 RTT(Round Trip Time, 왕복 시간)TCP의 효율적인 통신을 위해, 지정된 시간 내에 ACK 신호나 세그먼트를 수신하지 못한 경우, 연결 시간 초과(timeout)로 처리하고 연결을 종료해야 함.
+    
+    
+    
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/network/websocket-common/"><time datetime="2024-12-11">2024-12-11 07:54 KST</time></a>
+            
         </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/network/websocket-common/">https://cloudsoswift.github.io/post/develop/network/websocket-common/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/network/">#Network</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/websocket/">#WebSocket</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+</article>
+    
+        <article class="post-list h-feed">
+    <div class="post-header">
+        <header>
+            <h1 class="p-name post-title"><a class="u-url" href="/post/develop/network/tcp-udp/">[Network] TCP와 UDP 알아보기 (w. 흐름 제어, 혼잡 제어, CongWin, HTTP/3)</a></h1>
+        </header>
+        
+    </div>
+
     
     
     
@@ -298,13 +351,6 @@ TCP와 UDP에 대하여TCP와 UDP는 네트워크 계층 중 전송 계층(tran
     </div>
 
     
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 10월 8일 발표한 JWT에 대해 정리한 문서를 블로그에 공유하고자 한다.
-JWT 인증 방식이 무엇인가요?JWT 인증 방식이란, 두 당사자 간 전송할 클레임(claim) 을 나타내는 JWT(JSON 웹 토큰)을 통해 사용자를 인증하는 방식을 말합니다.
-JWT는 공간이 제약된 환경, 예를 들어 HTTP Authorization 헤더, URI 쿼리 매개변수와 같은 환경에서 클레임들을 주고 받을 수 있도록 간결화하는 것이 목적입니다.
-클레임: 키-값 쌍으로 이뤄진 데이터 JWT?JWT(JSON Web Token)는 당사자 간 정보를 JSON 객체로 안전하게 전송하기 위한 간결하고 독립적인 방법을 정의하는 개방형 표준(RFC 7519)입니다.
-        </div>
-    
     
     
     
@@ -369,14 +415,6 @@ JWT는 공간이 제약된 환경, 예를 들어 HTTP Authorization 헤더, URI 
     </div>
 
     
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 3월 12일 발표한 XSS에 대해 정리한 문서를 블로그에 공유하고자 한다.
-XSS란?신뢰할 수 있는 웹 사이트에 악성코드를 삽입하는 공격을 말합니다.
-공격자가 표적 웹사이트의 콘텐츠에 악성 스크립트를 삽입하고, 피해자의 브라우저에 전달되는 동적 콘텐츠에 이를 포함시키므로써 피해를 입게 됩니다.
-이때, 피해자의 브라우저는 해당 스크립트가 &lsquo;신뢰할 수 없는 스크립트&rsquo;라는 점을 알 수 없어 해당 스크립트를 실행하게 됩니다.
-악성 스크립트는 피해자의 브라우저가 보유한 해당 사이트에서 사용되는 모든 쿠키, 저장소에 저장된 민감 정보에 액세스할 수 있습니다.
-        </div>
-    
     
     
     
@@ -437,12 +475,6 @@ XSS란?신뢰할 수 있는 웹 사이트에 악성코드를 삽입하는 공�
         
     </div>
 
-    
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 3월 20일 발표예정인 SOP에 대해 정리한 문서를 블로그에 공유하고자 한다.
-SOP 정책이란?.동일 출처 정책(SOP, Same Origin Policy) 은 한 출처에서 불러온 문서 또는 스크립트가 다른 출처의 자원과 상호 작용하는 방식을 제한하는 보안 메커니즘입니다.
-다른 출처의 자원과의 상호 작용을 제한하므로써, 잠재적으로 악의적인 문서들로 부터 격리시켜 가능한 공격 경로를 줄일 수 있습니다. 이러한 격리를 통해 악성 웹사이트가 사용자가 로그인한 타 서비스의 데이터를 읽고 공격자에게 전달하는 것을 막을 수 있습니다.
-        </div>
     
     
     

@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>WebSocket on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/websocket/</link>
+    <description>오늘도 개발을 한다. (WebSocket)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Wed, 11 Dec 2024 07:54:11 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/websocket/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[Network] 웹소켓 알아보기 (w. WebSocket API)</title>
+      <link>https://cloudsoswift.github.io/post/develop/network/websocket-common/</link>
+      <pubDate>Wed, 11 Dec 2024 07:54:11 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/network/websocket-common/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 11월 21일 발표한 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/15_WebSocket/Readme.md&#34;&gt;WebSocket과 WebSocket API&lt;/a&gt;에 대해 정리한 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h1 id=&#34;웹소켓websocket이란&#34; &gt;웹소켓(WebSocket)이란?
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9b%b9%ec%86%8c%ec%bc%93websocket%ec%9d%b4%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://datatracker.ietf.org/doc/html/rfc6455&#34;&gt;웹소켓(RFC 6455)&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;2011년 등장한 프로토콜&lt;/li&gt;
+&lt;li&gt;통제된 환경에서 &lt;code&gt;신뢰할 수 없는 코드(untrusted code, 브라우저가 신뢰하지 않는 서드-파티나, 웹사이트로부터 읽어들인 코드)&lt;/code&gt;를 실행하는 &lt;code&gt;클라이언트&lt;/code&gt;와, 해당 코드의 통신을 허용한 &lt;code&gt;원격 호스트&lt;/code&gt;간의 &lt;strong&gt;&lt;code&gt;양방향 통신&lt;/code&gt;&lt;/strong&gt; 을 가능케하는 프로토콜
+&lt;ul&gt;
+&lt;li&gt;이를통해 궁극적으로 서버와 양방향 통신이 필요한 브라우저 기반 애플리케이션이 &lt;code&gt;XMLHttpRequest&lt;/code&gt;, &lt;code&gt;&amp;lt;iframe&amp;gt;&lt;/code&gt;과 같은 여러 HTTP 연결에 의존하지 않는 방법을 제공하는 것이 목표&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;웹 브라우저에서 일반적으로 사용되는 &lt;code&gt;출처(Origin) 기반 보안 모델&lt;/code&gt;을 사용&lt;/li&gt;
+&lt;li&gt;TCP 위에 계층화 되어 있으며, 오프닝 핸드셰이크와 메시지 프레이밍으로 구성됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;등장-배경&#34; &gt;등장 배경
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%93%b1%ec%9e%a5-%eb%b0%b0%ea%b2%bd&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;기존의 경우, 클라이언트 - 서버 양방향 통신이 필요한 경우 &lt;code&gt;업스트림 알림(클라이언트에서 서버로 전송하는 알림)&lt;/code&gt;을 전송하는 동시에, 서버에 &lt;code&gt;새로운 값을 폴링&lt;/code&gt;하는 요청을 보내야 했기 때문에, &lt;strong&gt;&lt;code&gt;HTTP 통신이 남발&lt;/code&gt;&lt;/strong&gt; 되었음&lt;/li&gt;
+&lt;li&gt;이는 다음과 같은 문제를 야기함
+&lt;ol&gt;
+&lt;li&gt;서버는 &lt;strong&gt;각 클라이언트에 대해&lt;/strong&gt; &lt;code&gt;정보를 보내기 위한 연결&lt;/code&gt;, &lt;code&gt;정보를 받기 위한 연결&lt;/code&gt;을 포함하는 &lt;code&gt;여러 TCP 연결&lt;/code&gt;을 설정해야 함&lt;/li&gt;
+&lt;li&gt;각 &lt;code&gt;클라이언트-서버 메시지&lt;/code&gt;들은 &lt;code&gt;HTTP 헤더&lt;/code&gt;를 가지므로 &lt;strong&gt;&lt;code&gt;오버헤드가 발생&lt;/code&gt;&lt;/strong&gt; 함&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;클라이언트 측 스크립트&lt;/code&gt;는 &lt;code&gt;요청&lt;/code&gt;과 &lt;code&gt;응답의 흐름을 추적&lt;/code&gt;하기 위해, &lt;code&gt;발신 연결(outgoing connections)&lt;/code&gt;에서 &lt;code&gt;수신 연결(incoming connections)&lt;/code&gt;로의 &lt;strong&gt;&lt;code&gt;매핑을 유지&lt;/code&gt;&lt;/strong&gt; 해야 함&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;웹소켓은 양방향 트래픽을 위한 &lt;code&gt;단일 TCP 연결&lt;/code&gt;을 사용해 이를 해결하고자 함
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://websockets.spec.whatwg.org/&#34;&gt;웹소켓 API(WSAPI)&lt;/a&gt;와 결합해 &lt;code&gt;HTTP 폴링&lt;/code&gt;의 대안을 제공&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;기존에 존재하는 &lt;code&gt;HTTP 환경&lt;/code&gt;의 &lt;code&gt;맥락&lt;/code&gt;은 살리되, 처음부터 양방향 통신을 위해 고안되지 않은 &lt;code&gt;HTTP를 대체&lt;/code&gt;할 수 있도록 설계됨
+&lt;ul&gt;
+&lt;li&gt;따라서 HTTP 포트인 &lt;code&gt;80&lt;/code&gt; 및 &lt;code&gt;443&lt;/code&gt;에서 &lt;code&gt;동작&lt;/code&gt;하며 &lt;code&gt;HTTP 프록시&lt;/code&gt;와 &lt;code&gt;중개자(intermediaries)&lt;/code&gt;를 지원하도록 설계됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;구성&#34; &gt;구성
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b5%ac%ec%84%b1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;웹소켓&lt;/code&gt;은 연결 수립을 위한 &lt;code&gt;핸드셰이크&lt;/code&gt;와, 이후 이뤄지는 &lt;code&gt;데이터 전송&lt;/code&gt; 두 가지로 이루어짐&lt;/li&gt;
+&lt;li&gt;주고받는 &lt;code&gt;메시지&lt;/code&gt;는 하나 이상의 &lt;code&gt;프레임&lt;/code&gt;으로 이루어짐
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;프레임&lt;/code&gt;에 포함될 수 있는 데이터는 여러 유형이 존재하며, &lt;code&gt;한 메시지&lt;/code&gt;에 속하는 &lt;code&gt;각 프레임&lt;/code&gt;은 &lt;code&gt;동일한 유형의 데이터&lt;/code&gt;를 지님&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;데이터 유형&lt;/code&gt;으로는 &lt;code&gt;텍스트 데이터(UTF-8)&lt;/code&gt;, &lt;code&gt;이진 데이터&lt;/code&gt;
+, &lt;code&gt;제어 프레임(연결 닫기와 같은 신호를 전달하기 위해 프로토콜 수준에서 사용 됨)&lt;/code&gt; 등이 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;핸드셰이크&#34; &gt;핸드셰이크
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%b8%eb%93%9c%ec%85%b0%ec%9d%b4%ed%81%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;오프닝-핸드셰이크&#34; &gt;오프닝 핸드셰이크
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%a4%ed%94%84%eb%8b%9d-%ed%95%b8%eb%93%9c%ec%85%b0%ec%9d%b4%ed%81%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;연결을 수립하기 위한 &lt;code&gt;오프닝 핸드셰이크&lt;/code&gt;는 &lt;code&gt;HTTP 기반 서버 SW, 중개자&lt;/code&gt;와 호환되도록 설계됨
+&lt;ul&gt;
+&lt;li&gt;즉, &lt;code&gt;HTTP 클라이언트가 사용하는 포트&lt;/code&gt;와 &lt;code&gt;동일한 포트&lt;/code&gt; 사용&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;먼저 클라이언트 측에서 연결 수립을 위해 요청을 전송함&lt;/li&gt;
+&lt;li&gt;이때, HTTP 버전이 &lt;code&gt;1.1&lt;/code&gt;인지, &lt;code&gt;2&lt;/code&gt;인지에 따라 방식이 다름
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;HTTP/1.1&lt;/code&gt;&lt;img src=&#34;HTTP-1.1-Websocket.png&#34; alt=&#34;HTTP-1.1-Websocket.png&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;먼저 클라이언트 측에서 &lt;code&gt;GET&lt;/code&gt; 메서드로 &lt;code&gt;HTTP Upgrade 요청&lt;/code&gt;을 전송
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-html&#34; data-lang=&#34;html&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;!-- 예시 요청 --&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;GET /chat HTTP/1.1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Host: server.example.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Upgrade: websocket
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Connection: Upgrade
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Origin: http://example.com
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Sec-WebSocket-Protocol: chat, superchat
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Sec-WebSocket-Version: 13
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;웹소켓이 나온 &lt;strong&gt;2011년도&lt;/strong&gt;에는 아직 &lt;code&gt;HTTP/2(2015)&lt;/code&gt;가 등장하지 않았기 때문에, &lt;code&gt;HTTP/1.1&lt;/code&gt;에 사용되는 &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Upgrade&#34;&gt;&lt;code&gt;Upgrade&lt;/code&gt;헤더&lt;/a&gt;를 사용&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Upgrade&lt;/code&gt; 헤더는 &lt;code&gt;HTTP/1.1&lt;/code&gt;에서 이미 설정된 &lt;code&gt;클라이언트/서버 연결&lt;/code&gt;을 다른 프로토콜로 업그레이드 하기 위해 사용되며, 다음과 같은 형태로 작성됨
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-html&#34; data-lang=&#34;html&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Connection: upgrade
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Upgrade: protocol_name[/protocol_version]
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;연결이 더 지속될 지 알아야 하므로 &lt;code&gt;Connection&lt;/code&gt; 헤더도 함께 사용됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;서버는 핸드셰이크를 수신했음을 증명하기 위해, 두 가지 값을 가져와 합친 뒤 응답을 만들어 냄
+&lt;ul&gt;
+&lt;li&gt;먼저 클라이언트 핸드셰이크 요청의 &lt;code&gt;Sec-WebSocket-Key&lt;/code&gt; 헤더 값을 가져옴&lt;/li&gt;
+&lt;li&gt;이후 문자열 형식의 &lt;code&gt;GUID(전역 고유 식별자)&lt;/code&gt;인 &lt;code&gt;258EAFA5-E914-47DA-95CA-C5AB0DC85B11&lt;/code&gt; 와 연결함
+&lt;ul&gt;
+&lt;li&gt;해당 값은 웹소켓을 이해하지 못하는 서버에서도 사용될 가능성이 아주 낮은, 웬만해서는 고유한 값임&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이후 연결한 문자열 값을 SHA-1 해시한 값을 서버 측 핸드셰이크로 전달함&lt;/li&gt;
+&lt;li&gt;예시
+&lt;ul&gt;
+&lt;li&gt;위에서 사용된 &lt;code&gt;Sec-WebSocket-Key&lt;/code&gt; 헤더 값인 &lt;code&gt;dGhlIHNhbXBsZSBub25jZQ==&lt;/code&gt;에 &lt;code&gt;258EAFA5-E914-47DA-95CA-C5AB0DC85B11&lt;/code&gt;을 연결해 &lt;code&gt;dGhlIHNhbXBsZSBub25jZQ==258EAFA5-E914-47DA-95CA- C5AB0DC85B11&lt;/code&gt; 라는 문자열을 생성&lt;/li&gt;
+&lt;li&gt;이후 이를 SHA-1 해싱해 &lt;code&gt;0xb3 0x7a 0x4f 0x2c 0xc0 0x62 0x4f 0x16 0x90 0xf6 0x46 0x06 0xcf 0x38 0x59 0x45 0xb2 0xbe 0xc4 0xea&lt;/code&gt; 라는 값을 생성함&lt;/li&gt;
+&lt;li&gt;이 값을 base64 인코딩하여 &lt;code&gt;s3pPLMBiTxaQ9kYGzzhZRbK+xOo=&lt;/code&gt; 라는 값으로 변환한 뒤, &lt;code&gt;Sec-WebSocket-Accept&lt;/code&gt; 필드로 전달&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;그리고 서버에서 핸드셰이크가 완료된 경우에는 &lt;code&gt;101&lt;/code&gt;을, 완료되지 않은 경우 이외의 값을 상태코드로 갖는 다음과 같은 형태의 응답을 반환함
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-html&#34; data-lang=&#34;html&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;HTTP/1.1 101 Switching Protocols
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Upgrade: websocket
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Connection: Upgrade
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;HTTP/2&lt;/code&gt;&lt;img src=&#34;HTTP-2-Websocket.png&#34; alt=&#34;HTTP-2-Websocket.png&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;HTTP/2&lt;/code&gt;의 멀티플렉싱 특성에 의해, &lt;code&gt;Upgrade&lt;/code&gt;, &lt;code&gt;Connection&lt;/code&gt;과 같은 헤더나 &lt;code&gt;101 응답코드&lt;/code&gt;와 같이 연결-전반적으로 사용되는 헤더 및 상태 코드를 허용하지 않음&lt;/li&gt;
+&lt;li&gt;따라서 &lt;code&gt;HTTP/2&lt;/code&gt; 환경에서 &lt;code&gt;웹소켓&lt;/code&gt;을 사용하기 위한 &lt;code&gt;부트스트랩&lt;/code&gt;이 만들어짐
+&lt;ul&gt;
+&lt;li&gt;이는 &lt;code&gt;HTTP 메서드&lt;/code&gt; 중 하나인 &lt;code&gt;CONNECT&lt;/code&gt;를 &lt;code&gt;확장&lt;/code&gt;해, 단일 &lt;code&gt;HTTP/2 스트림&lt;/code&gt;에 &lt;code&gt;웹소켓용 데이터&lt;/code&gt;를 전달할 수 있는 &lt;code&gt;터널&lt;/code&gt;을 만듦&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;확장된 CONNECT 메서드&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;CONNECT&lt;/code&gt;를 통해 생성한 터널에서 어떤 프로토콜을 사용할 지 나타내는 새로운 &lt;code&gt;의사-헤더 필드&lt;/code&gt;인 &lt;code&gt;:protocol&lt;/code&gt;을 사용
+&lt;ul&gt;
+&lt;li&gt;해당 필드에 포함될 수 있는 값은 &lt;a href=&#34;https://www.iana.org/assignments/http-upgrade-tokens/http-upgrade-tokens.xhtml&#34;&gt;Hypertext Transfer Protocol (HTTP) Upgrade Token Registry&lt;/a&gt;에 포함된 값&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;:protocol&lt;/code&gt;을 포함한 요청에는 대항 URI의 &lt;code&gt;:scheme&lt;/code&gt;, &lt;code&gt;:path&lt;/code&gt; &lt;code&gt;의사-헤더 필드&lt;/code&gt;도 반드시 포함되어야 함&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;:protocol&lt;/code&gt;을 포함한 요청에서는 &lt;code&gt;:authority&lt;/code&gt; 필드가 기존과 다르게 해석 됨
+&lt;ul&gt;
+&lt;li&gt;연결한 호스트와 포트(&lt;a href=&#34;https://datatracker.ietf.org/doc/html/rfc7540#section-8.3&#34;&gt;RFC 7540 #8.3&lt;/a&gt;)가 아닌, 대상 URI의 권한(&lt;a href=&#34;https://datatracker.ietf.org/doc/html/rfc7540#section-8.1.2.3&#34;&gt;RFC 7540 #8.1.2.3&lt;/a&gt;)으로 해석됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;HTTP/1.1&lt;/code&gt;의 GET 기반 요청처럼, 클라이언트 측에서 &lt;code&gt;CONNECT&lt;/code&gt; 메서드 요청을 통해 연결 수립을 요청
+&lt;ul&gt;
+&lt;li&gt;해당 요청은 &lt;code&gt;:protocol&lt;/code&gt; 필드를 반드시 포함해야 하며, &lt;code&gt;websocket&lt;/code&gt; 값을 가져야 함&lt;/li&gt;
+&lt;li&gt;목표 URI의 스키마의 맨 앞은 &lt;code&gt;wss(htttp)&lt;/code&gt; 또는 &lt;code&gt;ws(http)&lt;/code&gt;여야 하며, 나머지는 웹소켓 URI와 동일&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;HTTP/1.1&lt;/code&gt;과 달리 &lt;code&gt;Upgrade&lt;/code&gt;, &lt;code&gt;Connection&lt;/code&gt;, &lt;code&gt;Host&lt;/code&gt; 헤더를 사용하지 않으며, &lt;code&gt;Host&lt;/code&gt; 정보는 &lt;code&gt;:authority&lt;/code&gt;의 일부로 전달됨
+&lt;ul&gt;
+&lt;li&gt;또한, &lt;code&gt;Sec-WebSocket-Key&lt;/code&gt; 및 &lt;code&gt;Sec-WebSocket- Accept&lt;/code&gt; 헤더에 대한 처리가 &lt;code&gt;:protocol&lt;/code&gt; 필드로 대체되어 이뤄지지 않음&lt;/li&gt;
+&lt;li&gt;반면 &lt;code&gt;Origin&lt;/code&gt;,  &lt;code&gt;Sec-WebSocket-Version&lt;/code&gt;, &lt;code&gt;Sec-WebSocket-Protocol&lt;/code&gt;, &lt;code&gt;Sec-WebSocket-Extensions&lt;/code&gt; 필드는 사용되나 &lt;code&gt;HTTP/1.1&lt;/code&gt;과 달리 &lt;code&gt;HTTP/2&lt;/code&gt;에서는 소문자로 작성되어야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;클로징-핸드셰이크&#34; &gt;클로징 핸드셰이크
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%81%b4%eb%a1%9c%ec%a7%95-%ed%95%b8%eb%93%9c%ec%85%b0%ec%9d%b4%ed%81%ac&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;연결을 종료하기 위해서는 클라이언트, 서버 두 피어 중 한 측(A)에서 &lt;code&gt;제어 시퀀스(control sequence)&lt;/code&gt;가 포함된 &lt;code&gt;제어 프레임&lt;/code&gt;을 전송해 &lt;code&gt;클로징 핸드셰이크&lt;/code&gt;를 시작할 수 있음&lt;/li&gt;
+&lt;li&gt;이를 수신한 다른 피어(B)는 응답으로 &lt;code&gt;닫기 프레임(close frame)&lt;/code&gt;을 전송함&lt;/li&gt;
+&lt;li&gt;응답을 수신한 피어(A)는 연결을 닫으며, 서로는 더 이상 데이터를 보내지도, 수신하지도 않음&lt;/li&gt;
+&lt;li&gt;이러한 별도의 &lt;code&gt;클로징 핸드셰이크&lt;/code&gt;는, &lt;code&gt;TCP 클로징 핸드셰이크(FIN/ACK)&lt;/code&gt;가 프록시 및 중개자에 의해 신뢰성이 낮아진다는 점을 보완하기 위해 사용됨&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;HTTP/2&lt;/code&gt;에서도 이와 유사한 형태로 스트림 클로저가 이뤄지며, TCP 수준 클로저는 &lt;code&gt;HTTP/2&lt;/code&gt; 데이터 프레임의 &lt;code&gt;END_STREAM&lt;/code&gt; 플래그로 표현됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;기본-데이터-프레임-구조&#34; &gt;기본 데이터 프레임 구조
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b8%b0%eb%b3%b8-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ed%94%84%eb%a0%88%ec%9e%84-%ea%b5%ac%ec%a1%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img src=&#34;WebSocket-Data-Frame.png&#34; alt=&#34;WebSocket-Data-Frame.png&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;웹소켓 프로토콜에서 &lt;code&gt;데이터 전달&lt;/code&gt;을 목적으로 사용되는 &lt;code&gt;프레임&lt;/code&gt;은 위와 같은 구조로 이루어져 있음&lt;/li&gt;
+&lt;li&gt;클라이언트에서 서버로 전송되는 모든 프레임은 &lt;code&gt;네트워크 중개자(ex. 프록시)&lt;/code&gt;의 &lt;code&gt;가로채기&lt;/code&gt;와 같은 행위를 차단하고, &lt;code&gt;보안 관련 이유&lt;/code&gt;로 &lt;strong&gt;&lt;code&gt;마스킹&lt;/code&gt;&lt;/strong&gt; 이 필수적임
+&lt;ul&gt;
+&lt;li&gt;이는 웹소켓이 TLS와 함께 이뤄지는지 여부와 상관 없이 항상 수행&lt;/li&gt;
+&lt;li&gt;서버는 마스킹되지 않은 프레임을 수신할 경우 연결을 닫아야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;주요 필드
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;FIN&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;현재 프레임이 메시지의 &lt;code&gt;마지막 조각(Fragment)&lt;/code&gt;임을 나타내는 플래그&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;opcode&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;페이로드 데이터의 유형을 나타내는 값
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;%x0&lt;/code&gt;: 연속 프레임&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;%x1&lt;/code&gt;: 텍스트 프레임&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;%x2&lt;/code&gt;: 이진 프레임&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;%x8&lt;/code&gt;: 연결 종료&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;%x9&lt;/code&gt;: 핑 / &lt;code&gt;%xA&lt;/code&gt;: 퐁&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;masking key&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;클라이언트에서 서버로 전송되는 모든 프레임은 이 32비트 &lt;code&gt;마스킹 키&lt;/code&gt;로 마스킹 됨&lt;/li&gt;
+&lt;li&gt;클라이언트는 매 번 허용된 32비트 값 집합에서 새로운 마스킹 키를 선택해, 프레임을 마스킹해야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;payload data&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;애플리케이션 데이터&lt;/code&gt;와, 그와 연결된 &lt;code&gt;확장 데이터&lt;/code&gt;로 이뤄짐
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;확장 데이터&lt;/code&gt;: 오프닝 핸드셰이크때 사전 협의된 길이와 방법대로 사용되는 추가 데이터&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;애플리케이션 데이터&lt;/code&gt;: &lt;code&gt;확장 데이터&lt;/code&gt; 다음 프레임의 나머지 공간을 차지하는 데이터&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;javascript의-websocket&#34; &gt;Javascript의 WebSocket
+&lt;span&gt;
+    &lt;a href=&#34;#javascript%ec%9d%98-websocket&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;Javascript에서는 &lt;code&gt;Web API&lt;/code&gt; 중 &lt;code&gt;브라우저 API&lt;/code&gt;에서 제공되는 &lt;code&gt;WebSocket API&lt;/code&gt;를 활용해 브라우저와 서버간 양방향 통신을 열 수 있음&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;WebSocket API&lt;/code&gt;는 웹소켓 연결 및 통신을 위한 두 가지 메커니즘인 &lt;code&gt;WebSocket&lt;/code&gt; 인터페이스와 &lt;code&gt;WebSocketStream&lt;/code&gt; 인터페이스를 제공
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;WebSocket&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;안정적이며, 대부분의 브라우저 및 서버에서 지원됨&lt;/li&gt;
+&lt;li&gt;다만, &lt;code&gt;배압(Backpressure)&lt;/code&gt;을 지원하지 않기 때문에 &lt;em&gt;애플리케이션이 처리할 수 있는 속도보다 빠르게 메시지가 도착&lt;/em&gt;할 경우 &lt;code&gt;메시지를 버퍼링&lt;/code&gt;해 &lt;code&gt;메모리를 가득 채우거나&lt;/code&gt;, &lt;code&gt;CPU 사용률이 100%&lt;/code&gt;가 되어 애플리케이션이 정상 동작하지 않을 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;WebSocketStream&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;WebSocket&lt;/code&gt;의 &lt;code&gt;Promise&lt;/code&gt;기반 대안으로, &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/API/Streams_API&#34;&gt;&lt;code&gt;Stream API&lt;/code&gt;&lt;/a&gt;를 사용해 메시지 수신 및 전송을 처리함
+&lt;ul&gt;
+&lt;li&gt;따라서 소켓 연결이 &lt;code&gt;Stream Backpressure&lt;/code&gt; 자동으로 활용하여 읽기 및 쓰기 속도를 조절할 수 있고, 이를 통해 병목 현상을 방지할 수 있음&lt;/li&gt;
+&lt;li&gt;그러나, &lt;code&gt;WebSocketStream&lt;/code&gt;은 비표준으로, &lt;code&gt;크로미움 기반 브라우저&lt;/code&gt;(ex. Chrome, Edge, &amp;hellip;)을 제외한 나머지 브라우저들(Safari, Firefox)은 지원하지 않고 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;websocket-api&#34; &gt;WebSocket API
+&lt;span&gt;
+    &lt;a href=&#34;#websocket-api&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;h3 id=&#34;연결-생성하기&#34; &gt;연결 생성하기
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%97%b0%ea%b2%b0-%ec%83%9d%ec%84%b1%ed%95%98%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;웹소켓 연결을 생성하기 위해서는, &lt;code&gt;WebSocket&lt;/code&gt; 생성자를 호출하면 됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// WebSocket 생성자는 url, 또는 url과 protocol을 인자로 받음
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 1. new WebSocket(url)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// url은 ws, wss, http, https 중 하나의 스키마를 사용해야 함
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 또한, Node.js나 Deno같은 JS 런타임에서는 http, https를 비롯해 상대 URL을 지원하지 않음
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;WebSocket&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ws://somewhere.net&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 2. new WebSocket(url, protocols)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// protocols는 웹소켓의 서브 프로토콜을 나타내는 문자열(또는 문자열 배열)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 연결당 하나의 서브 프로토콜만 선택할 수 있으며, 허용되는 값은 `Sec-WebSocket-Protocol HTTP`에서 지정할 수 있는 값임
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;WebSocket&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;ws://somewhere.net&amp;#34;&lt;/span&gt;, [&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;soap&amp;#34;&lt;/span&gt;]);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;생성된 &lt;code&gt;WebSocket&lt;/code&gt; 객체의 프로퍼티를 통해 어떤 호스트와 통신하는지, 서브 프로토콜은 무엇인지를 알 수 있음
+&lt;ul&gt;
+&lt;li&gt;서브 프로토콜은 &lt;a href=&#34;https://www.iana.org/assignments/websocket/websocket.xml#subprotocol-name&#34;&gt;IANA의 WebSocket Subprotocol Name Registry&lt;/a&gt;에 포함된 것으로 사용 가능&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;// &amp;#39;ws://somewhere.net&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;console&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;log&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;protocol&lt;/span&gt;) &lt;span style=&#34;color:#75715e&#34;&gt;// [&amp;#39;soap&amp;#39;]
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;이벤트-처리하기&#34; &gt;이벤트 처리하기
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b4%eb%b2%a4%ed%8a%b8-%ec%b2%98%eb%a6%ac%ed%95%98%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;생성된 웹소켓 연결에서 발생하는 이벤트를 처리하기 위해, &lt;code&gt;addEventListener&lt;/code&gt;를 사용하거나, &lt;code&gt;WebSocket&lt;/code&gt;의 &lt;code&gt;on이벤트이름&lt;/code&gt; 프로퍼티에 이벤트 리스너를 할당해줄 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;open연결-생성&#34; &gt;open(연결 생성)
+&lt;span&gt;
+    &lt;a href=&#34;#open%ec%97%b0%ea%b2%b0-%ec%83%9d%ec%84%b1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;onopen&lt;/code&gt;: 웹소켓 연결이 열렸을 때, 발동되는 이벤트리스너&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;onopen&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;웹소켓 연결이 생성되었습니다. &amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;send&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello there!&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;이벤트리스너에게 전달되는 &lt;code&gt;Event&lt;/code&gt;는 일반 &lt;code&gt;Event&lt;/code&gt;임&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;message데이터-수신&#34; &gt;message(데이터 수신)
+&lt;span&gt;
+    &lt;a href=&#34;#message%eb%8d%b0%ec%9d%b4%ed%84%b0-%ec%88%98%ec%8b%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;onmessage&lt;/code&gt;: 웹소켓 연결을 통해 데이터가 수신될 때, 발동되는 이벤트리스너&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;onmessage&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;서버로부터 다음과 같은 메시지가 수신되었습니다.&amp;#34;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;`메시지: &lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;data&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;`&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;MessageEvent&lt;/code&gt;:  &lt;code&gt;message&lt;/code&gt; 이벤트리스너에게 전달되는 이벤트
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;data&lt;/code&gt;: &lt;code&gt;메시지 발신자(emitter)&lt;/code&gt;가 보내온 데이터. &lt;code&gt;WebSocket.binaryType&lt;/code&gt;에 따라 &lt;code&gt;data&lt;/code&gt;의 유형이 달라짐
+&lt;ul&gt;
+&lt;li&gt;메시지 유형이 &lt;code&gt;text&lt;/code&gt;인 경우, &lt;code&gt;data&lt;/code&gt;는 문자열 값&lt;/li&gt;
+&lt;li&gt;메시지 유형이 &lt;code&gt;binary&lt;/code&gt;인 경우, &lt;code&gt;data&lt;/code&gt;의 유형은 &lt;code&gt;WebSocket.binaryType&lt;/code&gt;에 따라 달라짐
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;binaryType&lt;/code&gt;이 &lt;code&gt;arraybuffer&lt;/code&gt;인 경우, &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer&#34;&gt;&lt;code&gt;ArrayBuffer&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;binaryType&lt;/code&gt;이 &lt;code&gt;blob&lt;/code&gt;인 경우, &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/API/Blob&#34;&gt;&lt;code&gt;Blob&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;origin&lt;/code&gt;: 메시지 &lt;code&gt;발신자의 출처&lt;/code&gt;를 나타내는 문자열&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;error에러-발생&#34; &gt;error(에러 발생)
+&lt;span&gt;
+    &lt;a href=&#34;#error%ec%97%90%eb%9f%ac-%eb%b0%9c%ec%83%9d&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;onerror&lt;/code&gt;: 데이터가 안보내진다거나 하는 오류로 웹소켓 연결이 닫힐 때, 발동되는 이벤트리스너&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;onerror&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;`다음과 같은 에러가 발생했습니다. &lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;error&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;`&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;이벤트리스너에게 전달되는 &lt;code&gt;Event&lt;/code&gt;는 일반 &lt;code&gt;Event&lt;/code&gt;임&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;close연결-종료&#34; &gt;close(연결 종료)
+&lt;span&gt;
+    &lt;a href=&#34;#close%ec%97%b0%ea%b2%b0-%ec%a2%85%eb%a3%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;onclose&lt;/code&gt;: 웹소켓 연결이 닫힐 때, 발동되는 이벤트리스너&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-js&#34; data-lang=&#34;js&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;socket&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;onclose&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;wasClean&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// 연결이 정상적으로 종료된 경우
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;`연결이 정상적으로 종료되었습니다(code=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;code&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt; reason=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;event&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;reason&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;)`&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  } &lt;span style=&#34;color:#66d9ef&#34;&gt;else&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// 프로세스가 죽거나, 네트워크 장애와 같은 이유로 연결이 닫힌 경우
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;alert&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;커넥션이 죽었습니다.&amp;#39;&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;CloseEvent&lt;/code&gt;: &lt;code&gt;close&lt;/code&gt; 이벤트리스너에게 전달되는 이벤트
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;code&lt;/code&gt;: &lt;code&gt;1000~4999&lt;/code&gt; 사이의 &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code&#34;&gt;웹소켓 연결 종료 코드&lt;/a&gt; 를 나타내는 &lt;code&gt;unsigned short&lt;/code&gt; 값&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;reason&lt;/code&gt;: &lt;code&gt;서버가 연결을 종료한 이유&lt;/code&gt;를 나타내는 문자열&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;wasClean&lt;/code&gt;: 연결이 정상적으로 닫혔는지 여부를 나타내는 부울 값&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;메시지-전송과-연결-닫기&#34; &gt;메시지 전송과 연결 닫기
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a9%94%ec%8b%9c%ec%a7%80-%ec%a0%84%ec%86%a1%ea%b3%bc-%ec%97%b0%ea%b2%b0-%eb%8b%ab%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;WebSocket&lt;/code&gt; 객체에는 데이터를 전송할 수 있는 &lt;code&gt;send()&lt;/code&gt; 메서드와 연결을 종료할 수 있는 &lt;code&gt;close&lt;/code&gt; 메서드가 존재&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;메시지-전송httpsdevelopermozillaorgen-usdocswebapiwebsocketsend&#34; &gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/send&#34;&gt;메시지 전송&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a9%94%ec%8b%9c%ec%a7%80-%ec%a0%84%ec%86%a1httpsdevelopermozillaorgen-usdocswebapiwebsocketsend&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;WebSocket.send()&lt;/code&gt; 메서드를 통해 사용자가 서버로 데이터를 전송할 수 있음
+&lt;ul&gt;
+&lt;li&gt;정확히는, 전송할 데이터를 &lt;code&gt;대기열&lt;/code&gt;에 넣고, &lt;code&gt;bufferedAmount&lt;/code&gt; 값을 늘림&lt;/li&gt;
+&lt;li&gt;만약 데이터를 전송할 수 없는 경우, 소켓은 자동으로 닫힘&lt;/li&gt;
+&lt;li&gt;연결이 &lt;code&gt;CONNECTING&lt;/code&gt; 상태라면 브라우저가 예외를 던지고, &lt;code&gt;CLOSING&lt;/code&gt; 또는 &lt;code&gt;CLOSED&lt;/code&gt; 상태라면 데이터를 자동으로 삭제함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;send()&lt;/code&gt;는 &lt;code&gt;data&lt;/code&gt;라는 하나의 인자만 받으며, &lt;code&gt;data&lt;/code&gt;의 타입은 다음 중 하나여야 함
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;string&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;UTF-8로 인코딩되어 버퍼에 추가되며, 이를 나타내는데 필요한 바이트 수만큼 &lt;code&gt;bufferedAmount&lt;/code&gt;가 증가함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer&#34;&gt;&lt;code&gt;ArrayBuffer&lt;/code&gt;&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;타입이 지정된 배열 객체(typed array object)&lt;/code&gt;가 사용하는 &lt;code&gt;바이너리 데이터&lt;/code&gt;를 전송할 수 있으며, 이는 버퍼에 추가되고 해당 바이너리 데이터 바이트 수 만큼 &lt;code&gt;bufferedAmount&lt;/code&gt;가 증가함
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ArrayBuffer&lt;/code&gt;는 다른 언어에서 &lt;code&gt;Byte Array&lt;/code&gt;라고 일컫는, byte들의 배열임
+&lt;ul&gt;
+&lt;li&gt;내용을 직접 조작할 순 없으나, 후술할 &lt;code&gt;typed Array&lt;/code&gt; 객체나 &lt;code&gt;DataView&lt;/code&gt; 객체를 통해 버퍼의 내용을 읽고 쓸 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/API/Blob&#34;&gt;&lt;code&gt;Blob&lt;/code&gt;&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;불변 로우 데이터&lt;/code&gt;로 이뤄진, &lt;code&gt;파일&lt;/code&gt;과 유사한 객체인 &lt;code&gt;Blob&lt;/code&gt;의 &lt;code&gt;로우 데이터&lt;/code&gt;가 버퍼에 추가되며(이때, &lt;code&gt;Blob.type&lt;/code&gt;은 &lt;code&gt;무시&lt;/code&gt;됨), &lt;code&gt;bufferedAmount&lt;/code&gt;는 해당 로우 데이터의 바이트 크기만큼 증가함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;TypedArray&lt;/code&gt;/&lt;code&gt;DataView&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Javascript Typed Array(ex. Int8Array, Int16Array, ...)&lt;/code&gt;가 가지고 있는 바이너리 데이터들이 버퍼에 추가되며, 필요한 바이트 수만큼 &lt;code&gt;bufferedAmount&lt;/code&gt;가 증가함&lt;/li&gt;
+&lt;li&gt;또는, &lt;code&gt;이진 ArrayBuffer&lt;/code&gt;에서 여러 넘버 타입을 읽고 쓸 수 있게 해주는 저수준 인터페이스인 &lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView&#34;&gt;&lt;code&gt;DataView&lt;/code&gt;&lt;/a&gt;도 인자로 사용할 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;연결-닫기&#34; &gt;연결 닫기
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%97%b0%ea%b2%b0-%eb%8b%ab%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;연결 피어 중 한 측에서 연결을 닫고 싶을때, &lt;code&gt;WebSocket.close()&lt;/code&gt; 메서드를 통해 연결을 종료할 수 있음
+&lt;ul&gt;
+&lt;li&gt;만약 &lt;code&gt;클로징 핸드셰이크&lt;/code&gt; 전에 메시지를 보내거나, 여전히 보내고 있다면 이러한 메시지들이 모두 전송된 뒤에 핸드셰이크가 시작됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;close()&lt;/code&gt;는 옵셔널 인자인 &lt;code&gt;code&lt;/code&gt;와 &lt;code&gt;reason&lt;/code&gt; 인자를 받음
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;code&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;종료 이유를 나타내는 &lt;code&gt;웹소켓 연결 종료 코드&lt;/code&gt; 정수값&lt;/li&gt;
+&lt;li&gt;값을 지정하지 않으면, 일반 종료의 경우 &lt;code&gt;1000&lt;/code&gt;, 이외 연결 종료 사유가 있는 경우 그에 해당하는 &lt;code&gt;1001 ~ 1015&lt;/code&gt; 범위의 코드 값으로 설정됨&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;code&lt;/code&gt; 값이 설정되면, &lt;code&gt;reason&lt;/code&gt; 값도 설정되어야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;reason&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;사용자 지정 웹소켓 연결 종료 이유&lt;/code&gt;를 제공하는 문자열로, UTF-8로 인코딩되어야 하고 123바이트를 넘지 않아야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;예시&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://jsfiddle.net/bmknight/RqbYB&#34;&gt;WebSockets Example - JSFiddle - Code Playground&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;해당 예제에서 주소를 &lt;code&gt;ws&lt;/code&gt;에서 &lt;code&gt;wss&lt;/code&gt;로 바꿔주면 정상 동작함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

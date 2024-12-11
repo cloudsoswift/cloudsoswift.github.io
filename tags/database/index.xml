@@ -1,0 +1,631 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Database on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/database/</link>
+    <description>오늘도 개발을 한다. (Database)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Wed, 11 Dec 2024 08:12:35 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/database/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[DB] 공간 인덱스 알아보기 &#43; 쿼리 성능 개선해보기 (w. SRS, EPSG, SRID)</title>
+      <link>https://cloudsoswift.github.io/post/develop/database/spatial-index/</link>
+      <pubDate>Wed, 11 Dec 2024 08:12:35 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/database/spatial-index/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 12월 12일 발표 예정인 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/16_Typescript/Readme.md&#34;&gt;공간 인덱스&lt;/a&gt;에 대해 정리하고, 이를 실습해본 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;h1 id=&#34;공간-인덱스spatial-index란&#34; &gt;&lt;code&gt;공간 인덱스(Spatial Index)&lt;/code&gt;란?
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4spatial-index%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;공간 데이터(Spatial Data)&lt;/code&gt;를 지원하는 데이터베이스에서 &lt;code&gt;공간 쿼리(Spatial Query)&lt;/code&gt;를 &lt;code&gt;최적화&lt;/code&gt;하기 위해 사용되는 &lt;code&gt;인덱스&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;기존의 &lt;code&gt;인덱스&lt;/code&gt;는 데이터들을 &lt;code&gt;선형 순서&lt;/code&gt;로 정렬해 조회 속도를 최적화하는 반면, &lt;code&gt;2차원/3차원 공간 상의 데이터&lt;/code&gt;들을 정렬하기 위해 &lt;code&gt;R-Tree&lt;/code&gt;와 같은 자료구조를 사용&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;공간-데이터spatial-data&#34; &gt;&lt;code&gt;공간 데이터(Spatial Data)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b0%84-%eb%8d%b0%ec%9d%b4%ed%84%b0spatial-data&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;2차원&lt;/code&gt; 또는 &lt;code&gt;3차원 공간&lt;/code&gt;에 위치할 수 있는 &lt;code&gt;공간&lt;/code&gt; 또는 &lt;code&gt;지리적 참조&lt;/code&gt; 형태의 데이터&lt;/li&gt;
+&lt;li&gt;주로 &lt;code&gt;점&lt;/code&gt;, &lt;code&gt;선&lt;/code&gt;, &lt;code&gt;다각형&lt;/code&gt;과 같은 기하학적 객체들을 말함&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;지리 공간 데이터&lt;/code&gt;, &lt;code&gt;위치 기반 서비스&lt;/code&gt; 등에 대한 표준을 개발 및 유지하는 기구인 &lt;a href=&#34;https://www.ogc.org/&#34;&gt;&lt;code&gt;개방형 공간 정보 컨소시엄(OGC)&lt;/code&gt;&lt;/a&gt;에서는 &lt;a href=&#34;https://portal.ogc.org/files/?artifact_id=829&#34;&gt;&lt;code&gt;Simple Feature&lt;/code&gt;&lt;/a&gt;와 2020년 이를 대체하기 위해 발표된 &lt;a href=&#34;https://docs.ogc.org/as/17-087r13/17-087r13.html&#34;&gt;&lt;code&gt;Feature Model&lt;/code&gt;&lt;/a&gt; 등을 꾸준히 개발 중
+&lt;ul&gt;
+&lt;li&gt;여러 DBMS는 이를 기반으로 한 &lt;code&gt;공간 기능&lt;/code&gt;을 제공 중&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;MySQL&lt;/code&gt;에서도 OGC의 &lt;code&gt;기하 도형 모델(OpenGIS Geometry Model)&lt;/code&gt;에 대응되는 &lt;code&gt;GEOMETRY&lt;/code&gt;, &lt;code&gt;POINT&lt;/code&gt;, &lt;code&gt;LINESTRING&lt;/code&gt; 등 다양한 타입을 제공&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;공간-참조-시스템srs-조사추가필요&#34; &gt;공간 참조 시스템(SRS) #조사추가필요
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b0%84-%ec%b0%b8%ec%a1%b0-%ec%8b%9c%ec%8a%a4%ed%85%9csrs-%ec%a1%b0%ec%82%ac%ec%b6%94%ea%b0%80%ed%95%84%ec%9a%94&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;POINT&lt;/code&gt;, &lt;code&gt;LINESTRING&lt;/code&gt;과 같은 모든 지오메트리 객체가 존재할 수 있는 공간&lt;/li&gt;
+&lt;li&gt;하나의 지오메트리 객체는 오직 하나의 &lt;code&gt;공간 참조 시스템&lt;/code&gt;에만 존재할 수 있음
+&lt;ul&gt;
+&lt;li&gt;이는 각 &lt;code&gt;공간 참조 시스템&lt;/code&gt;마다 좌표가 존재할 수 있는 표면이 다를 수 있기 때문&lt;/li&gt;
+&lt;li&gt;예를 들어, &lt;code&gt;A&lt;/code&gt; SRS는 &lt;code&gt;구형&lt;/code&gt;, &lt;code&gt;B&lt;/code&gt; SRS는 &lt;code&gt;평면&lt;/code&gt;이라고 하면 같은 좌표라도 각 SRS마다 다른 위치에 존재하게 됨&lt;/li&gt;
+&lt;li&gt;따라서 두 지오메트릭 객체가 동일하기 위해서는 좌표 뿐만 아니라 존재하는 SRS도 동일해야 함
+&lt;ul&gt;
+&lt;li&gt;이 때문에 보통 다른 &lt;code&gt;SIRD&lt;/code&gt;를 갖는 지오메트리 값 간에는 어떤 연산도 이뤄지지 않고 거부됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;각 &lt;code&gt;SRS&lt;/code&gt;는 고유한 &lt;code&gt;공간 참조 식별자(SRID)&lt;/code&gt;가 존재하며, 이를 통해 어떤 &lt;code&gt;SRS&lt;/code&gt;에 속해있는지 구분함&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;SRID&lt;/code&gt;와 이에 해당하는 &lt;code&gt;SRS&lt;/code&gt;는 &lt;code&gt;EPSG(유럽 석유 조사 그룹)&lt;/code&gt;에서 제작 및 운영하고 있는 &lt;a href=&#34;https://epsg.org/home.html&#34;&gt;&lt;code&gt;EPSG의 좌표계 식별 데이터셋&lt;/code&gt;&lt;/a&gt;라는 사실상 표준이 정해져 있음&lt;/li&gt;
+&lt;li&gt;주로 사용되는 &lt;code&gt;SRS&lt;/code&gt;는 &lt;code&gt;WGS 84(World Geodetic System 1984)&lt;/code&gt;라고 불리는 &lt;code&gt;SRID 4326&lt;/code&gt;, &lt;code&gt;WGS 84&lt;/code&gt;/&lt;code&gt;슈도 메르카토르&lt;/code&gt; 라고도 불리는 &lt;code&gt;SRID 3857&lt;/code&gt;가 주로 사용됨
+&lt;ul&gt;
+&lt;li&gt;둘의 가장 큰 차이는 &lt;code&gt;3차원 구체를 기반&lt;/code&gt;으로 하는지(&lt;code&gt;4326&lt;/code&gt;), &lt;code&gt;2차원 평면&lt;/code&gt;을 기반으로 하는지(&lt;code&gt;3857&lt;/code&gt;)가 차이&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;epsg4326---wgs-84httpsepsgio4326&#34; &gt;&lt;a href=&#34;https://epsg.io/4326&#34;&gt;&lt;code&gt;EPSG:4326 - WGS 84&lt;/code&gt;&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#epsg4326---wgs-84httpsepsgio4326&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;경도(longitude)&lt;/code&gt;, &lt;code&gt;위도(latitude)&lt;/code&gt;를 통해 &lt;code&gt;3차원 타원 표면&lt;/code&gt;에서의 좌표를 표현하는 좌표계&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;GPS&lt;/code&gt;, &lt;code&gt;Google Earth&lt;/code&gt; 등에서 사용됨&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;각도(Degree)&lt;/code&gt;를 &lt;code&gt;단위&lt;/code&gt;로 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;epsg3857---wgs-84--pseudo-mercator--spherical-mercatorhttpsepsgio3857&#34; &gt;&lt;a href=&#34;https://epsg.io/3857&#34;&gt;EPSG:3857 - WGS 84 / Pseudo-Mercator / Spherical Mercator&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#epsg3857---wgs-84--pseudo-mercator--spherical-mercatorhttpsepsgio3857&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;x&lt;/code&gt;, &lt;code&gt;y&lt;/code&gt; 좌표를 통해 &lt;code&gt;WGS 84&lt;/code&gt; 타원체 데이텀(좌표 축의 원점이 되는 기준점)에 &lt;code&gt;메르카토르 투영&lt;/code&gt;을 적용한 좌표계
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;메르카토르 투영&lt;/code&gt;의 일종이기 때문에, 고위도 지역으로 갈수록 왜곡이 심해진다는 특징이 여전히 존재&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Google Maps&lt;/code&gt;, &lt;code&gt;OpenStreeMap&lt;/code&gt; 등 웹 지도 도구들에서 사용됨&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;미터(metres)&lt;/code&gt;를 단위로 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;mysql의-공간-데이터-타입&#34; &gt;MySQL의 공간 데이터 타입
+&lt;span&gt;
+    &lt;a href=&#34;#mysql%ec%9d%98-%ea%b3%b5%ea%b0%84-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ed%83%80%ec%9e%85&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;MySQL&lt;/code&gt;에는 크게 &lt;code&gt;단일 지오메트리 값&lt;/code&gt;을 저장할 수 있는 자료형과 &lt;code&gt;지오메트리 값의 집합&lt;/code&gt;을 저장할 수 있는 자료형으로 나뉨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;wkb와-wkt&#34; &gt;WKB와 WKT
+&lt;span&gt;
+    &lt;a href=&#34;#wkb%ec%99%80-wkt&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;OpenGIS&lt;/code&gt;에서는 &lt;code&gt;기하학적 객체&lt;/code&gt;의 표현을 위해 &lt;code&gt;WKT(Well-Known Text)&lt;/code&gt; 포맷과 &lt;code&gt;WKB(Well-Known Binary)&lt;/code&gt; 포맷을 사용
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;MySQL&lt;/code&gt;에서는 내부적으로 지오메트리 값을 WKT, WKB가 아닌 다른 포맷을 사용해 저장
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;WKB&lt;/code&gt;와 유사하지만 앞의 4바이트가 &lt;code&gt;SRID&lt;/code&gt;를 나타냄
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;SRID(공간 참조 식별자)&lt;/code&gt;:  지오메트리 값이 어떤 &lt;code&gt;공간(공간 참조 시스템, SRS)&lt;/code&gt;을 기준으로 하는지 구분하는 식별자. 다른 &lt;code&gt;SIRD&lt;/code&gt;를 갖는 지오메트리 값 간에는 어떤 연산도 이뤄지지 않고 거부됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;wktwell-known-text&#34; &gt;WKT(Well-Known Text)
+&lt;span&gt;
+    &lt;a href=&#34;#wktwell-known-text&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;지오메트리 값을 &lt;code&gt;ASCII&lt;/code&gt; 형태로 교환하기 위해 설계됨&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;OpenGIS&lt;/code&gt; 사양에서는 &lt;code&gt;WKT&lt;/code&gt;값 작성을 위한 &lt;code&gt;배커스-나우르&lt;/code&gt; 문법을 제공&lt;/li&gt;
+&lt;li&gt;자료형에 따라 필요한 점의 갯수는 다르지만 X-Y 좌표 값을 &lt;code&gt;(X Y)&lt;/code&gt; 형태로, 즉 쉼표가 아닌 공백을 통해 구분하는 문법을 공통적으로 사용함
+&lt;ul&gt;
+&lt;li&gt;예시
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Point&lt;/code&gt; - &lt;code&gt;POINT(15 20)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;LINESTRING&lt;/code&gt; - &lt;code&gt;LINESTRING(0 0, 10 10, 20 25, 50 60)&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;MySQL에는 WKT 형태의 문자열로부터 지오메트리 값을 만들어내는 &lt;code&gt;ST_타입FromText&lt;/code&gt; 함수들이 존재 &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/gis-wkt-functions.html&#34;&gt;#&lt;/a&gt;
+&lt;ul&gt;
+&lt;li&gt;예시
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;POINT&lt;/code&gt; - &lt;code&gt;ST_PointFromText&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;GEOMERTY&lt;/code&gt; - &lt;code&gt;ST_GeomFromText&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;wkbwell-known-binary&#34; &gt;WKB(Well-Known Binary)
+&lt;span&gt;
+    &lt;a href=&#34;#wkbwell-known-binary&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;지오메트리 WKB 정보&lt;/code&gt;를 담고있는 &lt;code&gt;BLOB&lt;/code&gt; 형태의 &lt;code&gt;이진 스트림&lt;/code&gt; 형태로 지오메트리 값을 교환하기 위해 사용됨&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;WKB&lt;/code&gt;는 1바이트의 &lt;code&gt;unsigned Integer&lt;/code&gt;(&lt;code&gt;byte order&lt;/code&gt;), 4바이트의 &lt;code&gt;unsigned Integer&lt;/code&gt;(&lt;code&gt;WKB type&lt;/code&gt;), 8바이트의 &lt;code&gt;배정밀도(double precision) 숫자 값&lt;/code&gt;(&lt;code&gt;X, Y 좌표&lt;/code&gt;)들을 사용
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;byte order&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;0일 경우 &lt;code&gt;빅 엔디안&lt;/code&gt;(&lt;code&gt;작은 주소&lt;/code&gt;에서 데이터의 &lt;code&gt;높은 바이트(MSB)&lt;/code&gt;부터 저장하는 방법)
+&lt;ul&gt;
+&lt;li&gt;만약 &lt;code&gt;0x12345678&lt;/code&gt;을 저장한다면, 앞에서 부터 &lt;code&gt;0x12&lt;/code&gt; / &lt;code&gt;0x34&lt;/code&gt; / &lt;code&gt;0x56&lt;/code&gt; / &lt;code&gt;0x78&lt;/code&gt;을 저장&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;1일 경우 &lt;code&gt;리틀 엔디안&lt;/code&gt;(&lt;code&gt;작은 주소&lt;/code&gt;에서 데이터의 &lt;code&gt;낮은 바이트(LSB)&lt;/code&gt;부터 저장하는 방법)
+&lt;ul&gt;
+&lt;li&gt;만약 &lt;code&gt;0x12345678&lt;/code&gt;을 저장한다면, 앞에서 부터 &lt;code&gt;0x78&lt;/code&gt; / &lt;code&gt;0x56&lt;/code&gt; / &lt;code&gt;0x34&lt;/code&gt; / &lt;code&gt;0x12&lt;/code&gt;를 저장&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;WKB type&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;어떤 지오메트리 유형인지 나타내는 값&lt;/li&gt;
+&lt;li&gt;MySQL의 경우 1부터 7까지 각각 &lt;code&gt;Point&lt;/code&gt;, &lt;code&gt;LineString&lt;/code&gt;, &lt;code&gt;Polygon&lt;/code&gt;, &lt;code&gt;MultiPoint&lt;/code&gt;, &lt;code&gt;MultiLineString&lt;/code&gt;, &lt;code&gt;MultiPolygon&lt;/code&gt;, &lt;code&gt;GeometryCollection&lt;/code&gt; 에 대응 됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;예시
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;POINT(1 -1)&lt;/code&gt;에 대응되는 WKB는 다음 2개의 16진수로 표현되는 21바이트 시퀀스
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;0101000000000000000000F03F000000000000F0BF&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;이는 &lt;code&gt;01&lt;/code&gt; / &lt;code&gt;01000000&lt;/code&gt; / &lt;code&gt;000000000000F03F&lt;/code&gt; / &lt;code&gt;000000000000F0BF&lt;/code&gt;로 나누어 볼 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;단일-지오메트리-값-자료형&#34; &gt;단일 지오메트리 값 자료형
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8b%a8%ec%9d%bc-%ec%a7%80%ec%98%a4%eb%a9%94%ed%8a%b8%eb%a6%ac-%ea%b0%92-%ec%9e%90%eb%a3%8c%ed%98%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;GEOMETRY&lt;/code&gt;는 어떤 유형의 지오메트리 값이든 저장할 수 있으며, 나머지 단일 값 유형은 특정 도형의 유형으로 값을 제한함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;geometry&#34; &gt;GEOMETRY
+&lt;span&gt;
+    &lt;a href=&#34;#geometry&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;모든 지오메트리 클래스(타입)의 &lt;code&gt;루트 클래스&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;추상 클래스&lt;/code&gt;(인스턴스화 할 수 없음)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;GEOMETRY&lt;/code&gt;의 하위 클래스들은 &lt;code&gt;GEOMETRY&lt;/code&gt;가 갖는 여러 속성 값들을 갖고있으며, 특정 서브클래스에는 각각 고유한 프로퍼티가 있을 수 있음&lt;/li&gt;
+&lt;li&gt;속성 값
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;type&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;각 지오메트리 값은 지오메트리 클래스 중 &lt;code&gt;인스턴스화 가능한 클래스&lt;/code&gt; 중 하나에 속해야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;SRID&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;해당 지오메트리 값의 &lt;code&gt;공간 참조 식별자&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;지오메트리 값과 연관된 &lt;code&gt;공간 참조 시스템(SRS)&lt;/code&gt;을 식별&lt;/li&gt;
+&lt;li&gt;MySQL에서 SRID는 0부터 $2^{32} -1$ 사이이며, 지정되지 않을 경우 기본값은 0&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;coordinates&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;공간 참조 시스템&lt;/code&gt;상의 좌표 값으로, &lt;code&gt;배정밀도(8바이트)&lt;/code&gt; 숫자로 표현됨&lt;/li&gt;
+&lt;li&gt;비어있지 않은 지오메트리는 &lt;code&gt;적어도 한 쌍&lt;/code&gt;의 &lt;code&gt;(X, Y) 좌표가 포함&lt;/code&gt;되어야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;interior&lt;/code&gt;, &lt;code&gt;boundary&lt;/code&gt;, &lt;code&gt;exterior&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;interior&lt;/code&gt;는 지오메트리가 차지하는 공간, &lt;code&gt;exterior&lt;/code&gt;는 지오메트리가 차지하지 않는 모든 공간, &lt;code&gt;boundary&lt;/code&gt;는 &lt;code&gt;interior&lt;/code&gt;와 &lt;code&gt;exterior&lt;/code&gt; 사이의 경계&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;MBR(최소 경계 사각형, Minimum Bounding Rectangle)&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;최소 및 최대 (X, Y) 좌표로 구성된 경계 지오메트리&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;((MINX MINY, MAXX MINY, MAXX MAXY, MINX MAXY, MINX MINY))&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;simple&lt;/code&gt; / &lt;code&gt;nonsimple&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;LineString&lt;/code&gt;, &lt;code&gt;MultiPoint&lt;/code&gt;, &lt;code&gt;MultiLineString&lt;/code&gt;유형은 &lt;code&gt;simple&lt;/code&gt;이거나 &lt;code&gt;nonsimple&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;closed&lt;/code&gt; / &lt;code&gt;not closed&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;LineString&lt;/code&gt;, &lt;code&gt;MultiLineString&lt;/code&gt; 유형은 &lt;code&gt;closed&lt;/code&gt;이거나, &lt;code&gt;not closed&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;empty&lt;/code&gt; / &lt;code&gt;nonempty&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;지오메트리에 점이 하나도 존재하지 않는 경우 &lt;code&gt;empty&lt;/code&gt;, 그렇지 않은 경우 &lt;code&gt;nonempty&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;dimension&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;-1&lt;/code&gt;: 비어있는 지오메트리&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;0&lt;/code&gt;: 길이도, 면적도 없는 지오메트리&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;1&lt;/code&gt;: 길이가 0이 아니지만, 면적은 0인 지오메트리&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;2&lt;/code&gt;: 면적이 0이 아닌 지오메트리&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Point&lt;/code&gt;는 &lt;code&gt;0&lt;/code&gt;, &lt;code&gt;LineString&lt;/code&gt;은 &lt;code&gt;1&lt;/code&gt;, &lt;code&gt;Polygon&lt;/code&gt;은 2&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;MultiXXX&lt;/code&gt; 객체는 이를 이루는 요소들의 차원과 동일&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;point&#34; &gt;POINT
+&lt;span&gt;
+    &lt;a href=&#34;#point&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;좌표 공간에서 단일 지점을 나타내는 지오메트리&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;X, Y 좌표값&lt;/code&gt;을 가지며 &lt;code&gt;0차원&lt;/code&gt; 도형으로 정의되고 &lt;code&gt;boundary&lt;/code&gt;는 비어있는 집합임&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;linestring&#34; &gt;LINESTRING
+&lt;span&gt;
+    &lt;a href=&#34;#linestring&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;점 사이 &lt;code&gt;선형 보간(Linear Interpolation)&lt;/code&gt;을 사용하는 &lt;code&gt;Curve&lt;/code&gt; 지오메트리
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;선형 보간&lt;/code&gt;: 양 끝점의 값이 주어졌을 때, 그 사이에 위치한 값을 추정하기 위하여 선형 다항식을 사용해 계산하는 방법&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Curve&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;1차원&lt;/code&gt;이며, 시작점과 끝점이 같으면 &lt;code&gt;closed&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;동일한 점을 2번 지나지 않거나, 시작점과 끝점이 같은 경우 &lt;code&gt;simple&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;closed&lt;/code&gt;인 &lt;code&gt;Curve&lt;/code&gt;의 &lt;code&gt;boundary&lt;/code&gt;는 비어있으며, &lt;code&gt;not closed&lt;/code&gt;인 &lt;code&gt;Curve&lt;/code&gt;의 &lt;code&gt;boundary&lt;/code&gt;는 양 끝점&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;각 &lt;code&gt;점 쌍으로 구성&lt;/code&gt;된 &lt;code&gt;세그먼트의 좌표값&lt;/code&gt;을 가짐&lt;/li&gt;
+&lt;li&gt;정확히 두 점으로만 구성되면 &lt;code&gt;Line&lt;/code&gt;, &lt;code&gt;closed&lt;/code&gt; 이며 &lt;code&gt;simple&lt;/code&gt;인 경우 &lt;code&gt;LinearRing&lt;/code&gt;임&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;polygon&#34; &gt;POLYGON
+&lt;span&gt;
+    &lt;a href=&#34;#polygon&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;다면체&lt;/code&gt;를 나타내는 평면형 &lt;code&gt;Surface&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;하나의 &lt;code&gt;exterior boundary&lt;/code&gt;와 0개 이상의 &lt;code&gt;interior boundary&lt;/code&gt;로 구성되며 각 &lt;code&gt;interior boundary&lt;/code&gt;는 &lt;code&gt;Polygon&lt;/code&gt; 내부의 구멍의 경계를 정의함&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Polygon&lt;/code&gt;의 &lt;code&gt;Boundary&lt;/code&gt;는 &lt;code&gt;내/외부 경계&lt;/code&gt;를 구성하는 &lt;code&gt;LinearRing&lt;/code&gt; 객체 집합으로 구성됨&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Polygon&lt;/code&gt;은 교차하는 &lt;code&gt;Ring&lt;/code&gt;이 존재하지 않으며, &lt;code&gt;Boundary&lt;/code&gt;의 &lt;code&gt;Ring&lt;/code&gt;이 점과 교차할 수 있지만, 접선으로만 교차&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;interior&lt;/code&gt;로 &lt;code&gt;연결된 Point 집합&lt;/code&gt;을 가짐&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;지오메트리-값-집합-자료형&#34; &gt;지오메트리 값 집합 자료형
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a7%80%ec%98%a4%eb%a9%94%ed%8a%b8%eb%a6%ac-%ea%b0%92-%ec%a7%91%ed%95%a9-%ec%9e%90%eb%a3%8c%ed%98%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;GEOMETRYCOLLECTION&lt;/code&gt;은 모든 유형의 객체 집합을 저장할 수 있으며, 나머지 집합 자료형은 집합 멤버를 특정 도형 유형을 가진 멤버로 제한함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;multipoint&#34; &gt;MULTIPOINT
+&lt;span&gt;
+    &lt;a href=&#34;#multipoint&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;POINT&lt;/code&gt;로 구성된 지오메트리 집합으로, 각 &lt;code&gt;POINT&lt;/code&gt;들은 연결되거나 정렬되지 않음&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;0차원&lt;/code&gt; 지오메트리이며, 이를 구성하는 각 POINT 간의 좌표가 같지 않으면 &lt;code&gt;simple&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;boundary&lt;/code&gt;는 비어있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;multilinestring&#34; &gt;MULTILINESTRING
+&lt;span&gt;
+    &lt;a href=&#34;#multilinestring&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;LineString&lt;/code&gt;로 구성된 &lt;code&gt;MultiCurve&lt;/code&gt; 컬렉션&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;MultiCurve&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;1차원&lt;/code&gt; 지오메트리&lt;/li&gt;
+&lt;li&gt;이를 이루는 모든 요소들이 &lt;code&gt;simple&lt;/code&gt;할 때만 &lt;code&gt;simple&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;boundary&lt;/code&gt;는 &lt;code&gt;mod 2 union 규칙(홀수-짝수 규칙)&lt;/code&gt;으로 구할 수 있음
+&lt;ul&gt;
+&lt;li&gt;한 &lt;code&gt;Point&lt;/code&gt;가 홀수 개의 &lt;code&gt;Curve&lt;/code&gt;요소의 경계에 있는 경우 &lt;code&gt;MultiCurve&lt;/code&gt;의 경계에 있다고 할 수 있음&lt;/li&gt;
+&lt;li&gt;모든 요소가 &lt;code&gt;closed&lt;/code&gt;이면 &lt;code&gt;closed&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;boundary&lt;/code&gt;는 비어있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;multipolygon&#34; &gt;MULTIPOLYGON
+&lt;span&gt;
+    &lt;a href=&#34;#multipolygon&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Polygon&lt;/code&gt;으로 구성된 &lt;code&gt;MultiSurface&lt;/code&gt; 컬렉션&lt;/li&gt;
+&lt;li&gt;각 &lt;code&gt;Polygon&lt;/code&gt; 요소는 교차하는 &lt;code&gt;interior&lt;/code&gt;가 없어야 함&lt;/li&gt;
+&lt;li&gt;무한한 수의 점에 닿는 &lt;code&gt;Polygon&lt;/code&gt; 요소를 가질 수 없음&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;2차원&lt;/code&gt; 지오메트리이며, &lt;code&gt;boundary&lt;/code&gt;는 요소들의 경계들에 대응되는 &lt;code&gt;LineString&lt;/code&gt; 집합&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;MultiPolygon&lt;/code&gt;의 경계를 이루는 각 &lt;code&gt;Curve&lt;/code&gt;들은 각각 하나의 &lt;code&gt;Polygon&lt;/code&gt;요소의 경계에 존재해야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;geometrycollection&#34; &gt;GEOMETRYCOLLECTION
+&lt;span&gt;
+    &lt;a href=&#34;#geometrycollection&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;0개 이상의 &lt;code&gt;지오메트리&lt;/code&gt;로 이뤄진 컬렉션&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;GEOMETRYCOLLECTION&lt;/code&gt;의 모든 요소는 동일한 &lt;code&gt;좌표계(공간 참조 시스템)&lt;/code&gt;에 있어야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;공간-인덱스spatial-index&#34; &gt;&lt;code&gt;공간 인덱스(Spatial Index)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4spatial-index&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;h3 id=&#34;공간-인덱스와-비공간-인덱스&#34; &gt;공간 인덱스와 비공간 인덱스
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4%ec%99%80-%eb%b9%84%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;공간 인덱스&lt;/code&gt;는 &lt;code&gt;R-트리 인덱스&lt;/code&gt;를 생성하며, 이를 지원하지 않는 다른 엔진(즉, &lt;code&gt;비공간 인덱스&lt;/code&gt;를 지원하는)의 경우, &lt;code&gt;B-트리 인덱스&lt;/code&gt;를 생성
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;B-트리 인덱스&lt;/code&gt;는 &lt;code&gt;정확한 값을 조회&lt;/code&gt;하는데는 &lt;code&gt;유용&lt;/code&gt;하지만, &lt;code&gt;범위 스캔&lt;/code&gt;에 대해서는 &lt;code&gt;그렇지 않음&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;공간-인덱스&#34; &gt;공간 인덱스
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;MySQL&lt;/code&gt;의 &lt;code&gt;스토리지 엔진&lt;/code&gt; 중 &lt;code&gt;InnoDB&lt;/code&gt;와 &lt;code&gt;MyISAM&lt;/code&gt;에서만 &lt;code&gt;공간 인덱스&lt;/code&gt;를 지원&lt;/li&gt;
+&lt;li&gt;일반 인덱스를 생성할 때 처럼 &lt;code&gt;CREATE INDEX&lt;/code&gt;문을 사용하되, &lt;code&gt;SPATIAL&lt;/code&gt; 키워드를 사용
+&lt;ul&gt;
+&lt;li&gt;ex) &lt;code&gt;ALTER TABLE mytable ADD SPATIAL INDEX(geomcolumn);&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;단일 공간 열&lt;/code&gt;에 대해서만 인덱스를 생성할 수 있음&lt;/li&gt;
+&lt;li&gt;인덱스로 지정된 열은 &lt;code&gt;NOT NULL&lt;/code&gt;이어야 함&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;기본 키&lt;/code&gt;나 &lt;code&gt;유니크 인덱스&lt;/code&gt;에는 허용되지 않음&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;옵티마이저&lt;/code&gt;는 &lt;code&gt;SRID&lt;/code&gt;가 제한된 열에 정의된 &lt;code&gt;공간 인덱스&lt;/code&gt;를 사용할 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;비공간-인덱스&#34; &gt;비공간 인덱스
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b9%84%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/archive-storage-engine.html&#34; title=&#34;18.5 The ARCHIVE Storage Engine&#34;&gt;&lt;code&gt;ARCHIVE&lt;/code&gt;&lt;/a&gt;를 제외한 나머지 &lt;code&gt;공간 열&lt;/code&gt;을 지원하는 &lt;code&gt;스토리지 엔진&lt;/code&gt;에서 사용 가능&lt;/li&gt;
+&lt;li&gt;인덱스가 &lt;em&gt;기본키가 아닌 경우&lt;/em&gt; &lt;code&gt;NULL&lt;/code&gt;을 &lt;code&gt;허용&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/innodb-storage-engine.html&#34; title=&#34;Chapter 17 The InnoDB Storage Engine&#34;&gt;&lt;code&gt;InnoDB&lt;/code&gt;&lt;/a&gt;, &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/myisam-storage-engine.html&#34; title=&#34;18.2 The MyISAM Storage Engine&#34;&gt;&lt;code&gt;MyISAM&lt;/code&gt;&lt;/a&gt;, &lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/memory-storage-engine.html&#34; title=&#34;18.3 The MEMORY Storage Engine&#34;&gt;&lt;code&gt;MEMORY&lt;/code&gt;&lt;/a&gt;에서만&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;공간-인덱스-사용하기&#34; &gt;공간 인덱스 사용하기
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4-%ec%82%ac%ec%9a%a9%ed%95%98%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;옵티마이저&lt;/code&gt;는 &lt;code&gt;WHERE&lt;/code&gt;절에서 &lt;code&gt;MBRContains()&lt;/code&gt;, &lt;code&gt; MBRWithin()&lt;/code&gt;와 같은 함수를 사용하는 쿼리에 대해, 가용한 &lt;code&gt;공간 인덱스&lt;/code&gt;를 검색에 포함할 수 있는지 조사&lt;/li&gt;
+&lt;li&gt;따라서 &lt;code&gt;공간 인덱스&lt;/code&gt;를 사용하는 함수를 통해 탐색할 row의 범위를 줄이면 &lt;code&gt;최적화가 가능&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;예시
+&lt;ul&gt;
+&lt;li&gt;한 점으로 부터 5km 떨어진 점들 검색하기
+&lt;ul&gt;
+&lt;li&gt;약 237만개의 POINT가 기록된 테이블에서 이를 검색하고자 함&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ST_DISTANCE()&lt;/code&gt; 또는 &lt;code&gt;ST_DISTANCE_SPHERE()&lt;/code&gt;를 사용할 경우 &lt;code&gt;공간 인덱스&lt;/code&gt;를 &lt;code&gt;사용하지 않고&lt;/code&gt;, 한 점 한 점 모두 연산을 거치기 때문에 비효율적
+&lt;ul&gt;
+&lt;li&gt;이 경우 쿼리는 다음과 같음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;set&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;lat &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;35&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;865807&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;set&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;lng &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;128&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;593317&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;g1 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ST_GeomFromText(CONCAT(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;POINT(&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;lng, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;lat, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;)&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; geotesttable &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; ST_DISTANCE_SPHERE(&lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;g1, &lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5000&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;위 쿼리를 분석하면, &lt;code&gt;공간 인덱스&lt;/code&gt;가 &lt;code&gt;활용되지 않고&lt;/code&gt; 237만개의 row들을 &lt;code&gt;모두 불러옴&lt;/code&gt;을 알 수 있음
+&lt;ul&gt;
+&lt;li&gt;&lt;img src=&#34;query-not-using-spatial-index.png&#34; alt=&#34;query-not-using-spatial-index.png&#34;&gt;
+&lt;ul&gt;
+&lt;li&gt;참고로 &lt;code&gt;explain query&lt;/code&gt;문을 수행시, 실제 DB의 row 갯수와 다른 값이 불러와 질 수 있음
+&lt;ul&gt;
+&lt;li&gt;이는 &lt;code&gt;explain&lt;/code&gt;문이 &lt;code&gt;INFORMATION_SCHEMA&lt;/code&gt; 테이블에서 제공하는 러프한 추정치를 사용하기 때문&lt;/li&gt;
+&lt;li&gt;따라서 &lt;code&gt;ANALYZE TABLE table_name;&lt;/code&gt; 문을 수행해 이를 업데이트 해주면 올바른 값을 불러옴&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;해당 쿼리문을 실제로 수행하면, 데이터를 불러오는데 약 &lt;code&gt;20초&lt;/code&gt;가 소요됨
+&lt;ul&gt;
+&lt;li&gt;&lt;img src=&#34;time-taken-by-query-wihtout-spatial-index.png&#34; alt=&#34;time-taken-by-query-wihtout-spatial-index.png&#34;&gt;&lt;/li&gt;
+&lt;li&gt;&lt;img src=&#34;query-not-using-spatial-index-mapview.png&#34; alt=&#34;query-not-using-spatial-index-mapview.png&#34;&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이를 최적화하고자, 먼저 각 변이 한 점으로 부터 각각 5km씩 떨어진 정사각형 &lt;code&gt;Polygon&lt;/code&gt;을 만들고, &lt;code&gt;ST_CONTAINS(A, B)&lt;/code&gt; 함수를 사용해 이에 포함되는 점들만 검색
+&lt;ul&gt;
+&lt;li&gt;이를 위해 먼저 다음과 같은 형태의 &lt;code&gt;Polygon&lt;/code&gt;을 만듦
+&lt;ul&gt;
+&lt;li&gt;&lt;img src=&#34;5km-square.png&#34; alt=&#34;5km-square.png&#34;&gt;&lt;/li&gt;
+&lt;li&gt;각 변이 가운데 점으로부터 5km씩 떨어진 정사각형&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이후 &lt;code&gt;공간 인덱스&lt;/code&gt;를 사용하는 지오메트리 함수인 &lt;code&gt;ST_CONTAINS(A, B)&lt;/code&gt;를 사용해 각 점이 해당 &lt;code&gt;Polygon&lt;/code&gt; 내부에 존재하는지 확인
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ST_CONTAINS(A, B)&lt;/code&gt;는 B가 A 내부에 포함되는지 여부를 반환하는 함수&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이후 각 점들에 대해 &lt;code&gt;ST_DISTANCE_SPHERE(A, B) &amp;lt; 5000&lt;/code&gt; 조건을 수행해 기준점과의 거리가 5km 이내인 점들을 불러온다&lt;/li&gt;
+&lt;li&gt;이를 모두 반영한 쿼리는 다음과 같다&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;set&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;lat &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;35&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;865807&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;set&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;lng &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;128&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;593317&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;g1 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ST_GeomFromText(CONCAT(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;POINT(&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;lng, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;lat, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;)&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;위도&lt;/span&gt;(latitude) &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;도는&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;대략&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;111&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;km
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;따라서&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;km&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;당&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;위도는&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;0090009&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;~=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;0091&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;도&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;onelat &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;0091&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;경도&lt;/span&gt;(longitude) &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;도는&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;위도에&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;따라&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;달라지며&lt;/span&gt;, &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;적도에서&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;대략&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;111&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;km
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;계산식은&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;111&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; cos(theta &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; pi&lt;span style=&#34;color:#f92672&#34;&gt;/&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;180&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;한국은&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;북위&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;33&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;~&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;38&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;도&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;사이에&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;존재하며&lt;/span&gt;, &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;위에서&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;선언한&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;위도인&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;35&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;8658&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;도를&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;기준으로하면&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;경도&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;도는&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;대략&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;90&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;0345&lt;/span&gt;km
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;#&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;따라서&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;km&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;당&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;위도는&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;0111069&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;~=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;0111&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;도&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;onelng &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;.&lt;span style=&#34;color:#ae81ff&#34;&gt;0111&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;toplat &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;lat &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;onelat &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;bottomlat &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;lat &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;onelat &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;toplng &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;lng &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;onelng &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;bottomlng &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;lng &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;onelng &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;p1 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ST_GEOMFROMTEXT(CONCAT(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;POLYGON((&amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;bottomlng, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;bottomlat, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;, &amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;bottomlng, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;toplat, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;, &amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;toplng, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;toplat, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;, &amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;toplng, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;bottomlat, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;, &amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;bottomlng, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39; &amp;#39;&lt;/span&gt;, &lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;bottomlat, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;))&amp;#39;&lt;/span&gt;), &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;SELECT&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;FROM&lt;/span&gt; geotesttable &lt;span style=&#34;color:#66d9ef&#34;&gt;WHERE&lt;/span&gt; ST_CONTAINS(&lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;p1, &lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;and&lt;/span&gt; ST_DISTANCE_SPHERE(&lt;span style=&#34;color:#f92672&#34;&gt;@&lt;/span&gt;g1, &lt;span style=&#34;color:#66d9ef&#34;&gt;location&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5000&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;위 쿼리를 &lt;code&gt;explain&lt;/code&gt;문을 통해 분석하면, 설정해놓은 &lt;code&gt;공간 인덱스(idx_location)&lt;/code&gt;를 활용해 범위를 줄여 불러옴을 알 수 있음
+&lt;ul&gt;
+&lt;li&gt;&lt;img src=&#34;query-using-spatial-index.png&#34; alt=&#34;query-using-spatial-index.png&#34;&gt;&lt;/li&gt;
+&lt;li&gt;쿼리 수행에 걸리는 시간도 20초에서 5초로 확 단축됨
+&lt;ul&gt;
+&lt;li&gt;&lt;img src=&#34;time-taken-by-query-with-spatial-index.png&#34; alt=&#34;time-taken-by-query-with-spatial-index.png&#34;&gt;&lt;/li&gt;
+&lt;li&gt;&lt;img src=&#34;query-using-spatial-index-mapview.png&#34; alt=&#34;query-using-spatial-index-mapview.png&#34;&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;주의사항&#34; &gt;주의사항
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a3%bc%ec%9d%98%ec%82%ac%ed%95%ad&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;h3 id=&#34;지오메트리-컬럼-생성시-초기-srid를-신중히-정할-것&#34; &gt;지오메트리 컬럼 생성시 초기 SRID를 신중히 정할 것
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a7%80%ec%98%a4%eb%a9%94%ed%8a%b8%eb%a6%ac-%ec%bb%ac%eb%9f%bc-%ec%83%9d%ec%84%b1%ec%8b%9c-%ec%b4%88%ea%b8%b0-srid%eb%a5%bc-%ec%8b%a0%ec%a4%91%ed%9e%88-%ec%a0%95%ed%95%a0-%ea%b2%83&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;어떤 이유인지는 몰라도, 이미 존재하는 컬럼의 &lt;code&gt;SRID&lt;/code&gt;를 변경하려고 하면 변경이 이뤄지지 않음
+&lt;ul&gt;
+&lt;li&gt;시도해본 구문 목록 (예를 들기 위해 테이블 이름은 &lt;code&gt;table&lt;/code&gt;, 컬럼 이름은 &lt;code&gt;geom&lt;/code&gt;이라고 하겠음)
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;UPDATE table SET geom = ST_GeomFromText(ST_AsText(geom), SRID)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;UPDATE table SET geom = ST_Transform(geom, SRID)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;UPDATE table SET geom = ST_SRID(geom, SRID)&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;공통적으로 아래와 같은 오류가 발생함
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	ERROR &lt;span style=&#34;color:#ae81ff&#34;&gt;3643&lt;/span&gt; (HY000): The SRID &lt;span style=&#34;color:#66d9ef&#34;&gt;of&lt;/span&gt; the geometry does &lt;span style=&#34;color:#66d9ef&#34;&gt;not&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;match&lt;/span&gt; the SRID &lt;span style=&#34;color:#66d9ef&#34;&gt;of&lt;/span&gt; the &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;position&amp;#39;&lt;/span&gt;. The SRID &lt;span style=&#34;color:#66d9ef&#34;&gt;of&lt;/span&gt; the geometry &lt;span style=&#34;color:#66d9ef&#34;&gt;is&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;, but the SRID &lt;span style=&#34;color:#66d9ef&#34;&gt;of&lt;/span&gt; the &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;is&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4326&lt;/span&gt;. 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	Consider changing the SRID &lt;span style=&#34;color:#66d9ef&#34;&gt;of&lt;/span&gt; the geometry &lt;span style=&#34;color:#66d9ef&#34;&gt;or&lt;/span&gt; the SRID property &lt;span style=&#34;color:#66d9ef&#34;&gt;of&lt;/span&gt; the &lt;span style=&#34;color:#66d9ef&#34;&gt;column&lt;/span&gt;.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이미 존재하는 컬럼의 &lt;code&gt;SRID&lt;/code&gt;는 바꾸는게 불가능하다 판단
+&lt;ul&gt;
+&lt;li&gt;따라서 변경하고자 하는 &lt;code&gt;SRID&lt;/code&gt;를 갖는 컬럼을 새로 생성한 뒤, 기존 컬럼의 값들을 복사해오고 공간 인덱스도 재설정함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-sql&#34; data-lang=&#34;sql&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ALTER&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;ADD&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;geom4326 POINT SRID &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;4326&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;UPDATE&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;SET&lt;/span&gt; geom4326 &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; ST_GeomFromText(ST_AsText(geom), &lt;span style=&#34;color:#ae81ff&#34;&gt;4326&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;ALTER&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;TABLE&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;table&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;`&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;DROP&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;COLUMN&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt; &lt;/span&gt;geom;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Spatial_database&#34;&gt;Spatial database - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Minimum_bounding_rectangle&#34;&gt;Minimum bounding rectangle - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Web_Mercator_projection&#34;&gt;Web Mercator projection - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.ismll.uni-hildesheim.de/lehre/spatial-10w/script/ch1.pdf&#34;&gt;Introduction to Spatial Databases&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;MYSQL Reference Manual
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/spatial-index-optimization.html&#34;&gt;MySQL :: MySQL 8.4 Reference Manual :: 10.3.3 SPATIAL Index Optimization&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/explain-output.html&#34;&gt;MySQL :: MySQL 8.4 Reference Manual :: 10.8.2 EXPLAIN Output Format&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/spatial-types.html&#34;&gt;MySQL :: MySQL 8.4 Reference Manual :: 13.4 Spatial Data Types&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/opengis-geometry-model.html&#34;&gt;MySQL :: MySQL 8.4 Reference Manual :: 13.4.2 The OpenGIS Geometry Model&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/gis-data-formats.html&#34;&gt;MySQL :: MySQL 8.4 Reference Manual :: 13.4.3 Supported Spatial Data Formats&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/fetching-spatial-data.html&#34;&gt;MySQL :: MySQL 8.4 Reference Manual :: 13.4.8 Fetching Spatial Data&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/creating-spatial-indexes.html&#34;&gt;MySQL :: MySQL 8.4 Reference Manual :: 13.4.10 Creating Spatial Indexes&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/using-spatial-indexes.html&#34;&gt;MySQL :: MySQL 8.4 Reference Manual :: 13.4.11 Using Spatial Indexes&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/gis-format-conversion-functions.html&#34;&gt;MySQL :: MySQL 8.4 Reference Manual :: 14.16.6 Geometry Format Conversion Functions&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/doc/refman/8.4/en/spatial-relation-functions-object-shapes.html&#34;&gt;MySQL :: MySQL 8.4 Reference Manual :: 14.16.9.1 Spatial Relation Functions That Use Object Shapes&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dev.mysql.com/blog-archive/spatial-reference-systems-in-mysql-8-0/&#34;&gt;MySQL :: Spatial Reference Systems in MySQL 8.0&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.sco.wisc.edu/2022/01/21/how-big-is-a-degree/#:~:text=Therefore%20we%20can%20easily%20compute,69.4%20miles%20(111.1%20km).&#34;&gt;How Big is a Degree? – State Cartographer&amp;rsquo;s Office – UW–Madison&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://dbeaver.com/docs/dbeaver/Working-with-Spatial-GIS-data/#labels-on-a-map&#34;&gt;DBeaver Documentation - Working with Spatial GIS data&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://stackoverflow.com/questions/1037471/why-the-rows-returns-by-explain-is-not-equal-to-count&#34;&gt;mysql - Why the rows returns by &amp;ldquo;explain&amp;rdquo; is not equal to count()? - Stack Overflow&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://stackoverflow.com/questions/7477003/calculating-new-longitude-latitude-from-old-n-meters&#34;&gt;algorithm - Calculating new longitude, latitude from old + n meters - Stack Overflow&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://arthur-e.github.io/Wicket/sandbox-gmaps3.html&#34;&gt;Wicket - Lightweight Javascript for WKT [Sandbox]&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://m.blog.naver.com/ilsan_ilsan/221497823431&#34;&gt;[오픈소스GIS] WKB, WKT 이해 / postGIS에서의 변환, 입출력 : 네이버 블로그&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.ogc.org/as/17-087r13/17-087r13.html#_the_first_part_feature_models&#34;&gt;Features and geometry – Part 1: Feature models&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

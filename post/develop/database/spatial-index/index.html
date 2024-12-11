@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[DB] 공간 인덱스 알아보기 &#43; 쿼리 성능 개선해보기 (w. SRS, EPSG, SRID) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 12월 12일 발표 예정인 공간 인덱스에 대해 정리하고, 이를 실습해본 문서를 블로그에 공유하고자 한다.
+공간 인덱스(Spatial Index)란?공간 데이터(Spatial Data)를 지원하는 데이터베이스에서 공간 쿼리(Spatial Query)를 최적화하기 위해 사용되는 인덱스 기존의 인덱스는 데이터들을 선형 순서로 정렬해 조회 속도를 최적화하는 반면, 2차원/3차원 공간 상의 데이터들을 정렬하기 위해 R-Tree와 같은 자료구조를 사용 공간 데이터(Spatial Data)2차원 또는 3차원 공간에 위치할 수 있는 공간 또는 지리적 참조 형태의 데이터 주로 점, 선, 다각형과 같은 기하학적 객체들을 말함 지리 공간 데이터, 위치 기반 서비스 등에 대한 표준을 개발 및 유지하는 기구인 개방형 공간 정보 컨소시엄(OGC)에서는 Simple Feature와 2020년 이를 대체하기 위해 발표된 Feature Model 등을 꾸준히 개발 중 여러 DBMS는 이를 기반으로 한 공간 기능을 제공 중 MySQL에서도 OGC의 기하 도형 모델(OpenGIS Geometry Model)에 대응되는 GEOMETRY, POINT, LINESTRING 등 다양한 타입을 제공 공간 참조 시스템(SRS) #조사추가필요POINT, LINESTRING과 같은 모든 지오메트리 객체가 존재할 수 있는 공간 하나의 지오메트리 객체는 오직 하나의 공간 참조 시스템에만 존재할 수 있음 이는 각 공간 참조 시스템마다 좌표가 존재할 수 있는 표면이 다를 수 있기 때문 예를 들어, A SRS는 구형, B SRS는 평면이라고 하면 같은 좌표라도 각 SRS마다 다른 위치에 존재하게 됨 따라서 두 지오메트릭 객체가 동일하기 위해서는 좌표 뿐만 아니라 존재하는 SRS도 동일해야 함 이 때문에 보통 다른 SIRD를 갖는 지오메트리 값 간에는 어떤 연산도 이뤄지지 않고 거부됨 각 SRS는 고유한 공간 참조 식별자(SRID)가 존재하며, 이를 통해 어떤 SRS에 속해있는지 구분함 SRID와 이에 해당하는 SRS는 EPSG(유럽 석유 조사 그룹)에서 제작 및 운영하고 있는 EPSG의 좌표계 식별 데이터셋라는 사실상 표준이 정해져 있음 주로 사용되는 SRS는 WGS 84(World Geodetic System 1984)라고 불리는 SRID 4326, WGS 84/슈도 메르카토르 라고도 불리는 SRID 3857가 주로 사용됨 둘의 가장 큰 차이는 3차원 구체를 기반으로 하는지(4326), 2차원 평면을 기반으로 하는지(3857)가 차이 EPSG:4326 - WGS 84경도(longitude), 위도(latitude)를 통해 3차원 타원 표면에서의 좌표를 표현하는 좌표계 GPS, Google Earth 등에서 사용됨 각도(Degree)를 단위로 함 EPSG:3857 - WGS 84 / Pseudo-Mercator / Spherical Mercatorx, y 좌표를 통해 WGS 84 타원체 데이텀(좌표 축의 원점이 되는 기준점)에 메르카토르 투영을 적용한 좌표계 메르카토르 투영의 일종이기 때문에, 고위도 지역으로 갈수록 왜곡이 심해진다는 특징이 여전히 존재 Google Maps, OpenStreeMap 등 웹 지도 도구들에서 사용됨 미터(metres)를 단위로 함 MySQL의 공간 데이터 타입MySQL에는 크게 단일 지오메트리 값을 저장할 수 있는 자료형과 지오메트리 값의 집합을 저장할 수 있는 자료형으로 나뉨 WKB와 WKTOpenGIS에서는 기하학적 객체의 표현을 위해 WKT(Well-Known Text) 포맷과 WKB(Well-Known Binary) 포맷을 사용 MySQL에서는 내부적으로 지오메트리 값을 WKT, WKB가 아닌 다른 포맷을 사용해 저장 WKB와 유사하지만 앞의 4바이트가 SRID를 나타냄 SRID(공간 참조 식별자): 지오메트리 값이 어떤 공간(공간 참조 시스템, SRS)을 기준으로 하는지 구분하는 식별자.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[DB] 공간 인덱스 알아보기 &#43; 쿼리 성능 개선해보기 (w. SRS, EPSG, SRID)" />
+<meta property="og:description" content="서론CS 스터디에서 12월 12일 발표 예정인 공간 인덱스에 대해 정리하고, 이를 실습해본 문서를 블로그에 공유하고자 한다.
+공간 인덱스(Spatial Index)란?공간 데이터(Spatial Data)를 지원하는 데이터베이스에서 공간 쿼리(Spatial Query)를 최적화하기 위해 사용되는 인덱스 기존의 인덱스는 데이터들을 선형 순서로 정렬해 조회 속도를 최적화하는 반면, 2차원/3차원 공간 상의 데이터들을 정렬하기 위해 R-Tree와 같은 자료구조를 사용 공간 데이터(Spatial Data)2차원 또는 3차원 공간에 위치할 수 있는 공간 또는 지리적 참조 형태의 데이터 주로 점, 선, 다각형과 같은 기하학적 객체들을 말함 지리 공간 데이터, 위치 기반 서비스 등에 대한 표준을 개발 및 유지하는 기구인 개방형 공간 정보 컨소시엄(OGC)에서는 Simple Feature와 2020년 이를 대체하기 위해 발표된 Feature Model 등을 꾸준히 개발 중 여러 DBMS는 이를 기반으로 한 공간 기능을 제공 중 MySQL에서도 OGC의 기하 도형 모델(OpenGIS Geometry Model)에 대응되는 GEOMETRY, POINT, LINESTRING 등 다양한 타입을 제공 공간 참조 시스템(SRS) #조사추가필요POINT, LINESTRING과 같은 모든 지오메트리 객체가 존재할 수 있는 공간 하나의 지오메트리 객체는 오직 하나의 공간 참조 시스템에만 존재할 수 있음 이는 각 공간 참조 시스템마다 좌표가 존재할 수 있는 표면이 다를 수 있기 때문 예를 들어, A SRS는 구형, B SRS는 평면이라고 하면 같은 좌표라도 각 SRS마다 다른 위치에 존재하게 됨 따라서 두 지오메트릭 객체가 동일하기 위해서는 좌표 뿐만 아니라 존재하는 SRS도 동일해야 함 이 때문에 보통 다른 SIRD를 갖는 지오메트리 값 간에는 어떤 연산도 이뤄지지 않고 거부됨 각 SRS는 고유한 공간 참조 식별자(SRID)가 존재하며, 이를 통해 어떤 SRS에 속해있는지 구분함 SRID와 이에 해당하는 SRS는 EPSG(유럽 석유 조사 그룹)에서 제작 및 운영하고 있는 EPSG의 좌표계 식별 데이터셋라는 사실상 표준이 정해져 있음 주로 사용되는 SRS는 WGS 84(World Geodetic System 1984)라고 불리는 SRID 4326, WGS 84/슈도 메르카토르 라고도 불리는 SRID 3857가 주로 사용됨 둘의 가장 큰 차이는 3차원 구체를 기반으로 하는지(4326), 2차원 평면을 기반으로 하는지(3857)가 차이 EPSG:4326 - WGS 84경도(longitude), 위도(latitude)를 통해 3차원 타원 표면에서의 좌표를 표현하는 좌표계 GPS, Google Earth 등에서 사용됨 각도(Degree)를 단위로 함 EPSG:3857 - WGS 84 / Pseudo-Mercator / Spherical Mercatorx, y 좌표를 통해 WGS 84 타원체 데이텀(좌표 축의 원점이 되는 기준점)에 메르카토르 투영을 적용한 좌표계 메르카토르 투영의 일종이기 때문에, 고위도 지역으로 갈수록 왜곡이 심해진다는 특징이 여전히 존재 Google Maps, OpenStreeMap 등 웹 지도 도구들에서 사용됨 미터(metres)를 단위로 함 MySQL의 공간 데이터 타입MySQL에는 크게 단일 지오메트리 값을 저장할 수 있는 자료형과 지오메트리 값의 집합을 저장할 수 있는 자료형으로 나뉨 WKB와 WKTOpenGIS에서는 기하학적 객체의 표현을 위해 WKT(Well-Known Text) 포맷과 WKB(Well-Known Binary) 포맷을 사용 MySQL에서는 내부적으로 지오메트리 값을 WKT, WKB가 아닌 다른 포맷을 사용해 저장 WKB와 유사하지만 앞의 4바이트가 SRID를 나타냄 SRID(공간 참조 식별자): 지오메트리 값이 어떤 공간(공간 참조 시스템, SRS)을 기준으로 하는지 구분하는 식별자." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/database/spatial-index/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-12-11T08:12:35+09:00" />
+<meta property="article:modified_time" content="2024-12-11T08:12:35+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[DB] 공간 인덱스 알아보기 &#43; 쿼리 성능 개선해보기 (w. SRS, EPSG, SRID)"/>
+<meta name="twitter:description" content="서론CS 스터디에서 12월 12일 발표 예정인 공간 인덱스에 대해 정리하고, 이를 실습해본 문서를 블로그에 공유하고자 한다.
+공간 인덱스(Spatial Index)란?공간 데이터(Spatial Data)를 지원하는 데이터베이스에서 공간 쿼리(Spatial Query)를 최적화하기 위해 사용되는 인덱스 기존의 인덱스는 데이터들을 선형 순서로 정렬해 조회 속도를 최적화하는 반면, 2차원/3차원 공간 상의 데이터들을 정렬하기 위해 R-Tree와 같은 자료구조를 사용 공간 데이터(Spatial Data)2차원 또는 3차원 공간에 위치할 수 있는 공간 또는 지리적 참조 형태의 데이터 주로 점, 선, 다각형과 같은 기하학적 객체들을 말함 지리 공간 데이터, 위치 기반 서비스 등에 대한 표준을 개발 및 유지하는 기구인 개방형 공간 정보 컨소시엄(OGC)에서는 Simple Feature와 2020년 이를 대체하기 위해 발표된 Feature Model 등을 꾸준히 개발 중 여러 DBMS는 이를 기반으로 한 공간 기능을 제공 중 MySQL에서도 OGC의 기하 도형 모델(OpenGIS Geometry Model)에 대응되는 GEOMETRY, POINT, LINESTRING 등 다양한 타입을 제공 공간 참조 시스템(SRS) #조사추가필요POINT, LINESTRING과 같은 모든 지오메트리 객체가 존재할 수 있는 공간 하나의 지오메트리 객체는 오직 하나의 공간 참조 시스템에만 존재할 수 있음 이는 각 공간 참조 시스템마다 좌표가 존재할 수 있는 표면이 다를 수 있기 때문 예를 들어, A SRS는 구형, B SRS는 평면이라고 하면 같은 좌표라도 각 SRS마다 다른 위치에 존재하게 됨 따라서 두 지오메트릭 객체가 동일하기 위해서는 좌표 뿐만 아니라 존재하는 SRS도 동일해야 함 이 때문에 보통 다른 SIRD를 갖는 지오메트리 값 간에는 어떤 연산도 이뤄지지 않고 거부됨 각 SRS는 고유한 공간 참조 식별자(SRID)가 존재하며, 이를 통해 어떤 SRS에 속해있는지 구분함 SRID와 이에 해당하는 SRS는 EPSG(유럽 석유 조사 그룹)에서 제작 및 운영하고 있는 EPSG의 좌표계 식별 데이터셋라는 사실상 표준이 정해져 있음 주로 사용되는 SRS는 WGS 84(World Geodetic System 1984)라고 불리는 SRID 4326, WGS 84/슈도 메르카토르 라고도 불리는 SRID 3857가 주로 사용됨 둘의 가장 큰 차이는 3차원 구체를 기반으로 하는지(4326), 2차원 평면을 기반으로 하는지(3857)가 차이 EPSG:4326 - WGS 84경도(longitude), 위도(latitude)를 통해 3차원 타원 표면에서의 좌표를 표현하는 좌표계 GPS, Google Earth 등에서 사용됨 각도(Degree)를 단위로 함 EPSG:3857 - WGS 84 / Pseudo-Mercator / Spherical Mercatorx, y 좌표를 통해 WGS 84 타원체 데이텀(좌표 축의 원점이 되는 기준점)에 메르카토르 투영을 적용한 좌표계 메르카토르 투영의 일종이기 때문에, 고위도 지역으로 갈수록 왜곡이 심해진다는 특징이 여전히 존재 Google Maps, OpenStreeMap 등 웹 지도 도구들에서 사용됨 미터(metres)를 단위로 함 MySQL의 공간 데이터 타입MySQL에는 크게 단일 지오메트리 값을 저장할 수 있는 자료형과 지오메트리 값의 집합을 저장할 수 있는 자료형으로 나뉨 WKB와 WKTOpenGIS에서는 기하학적 객체의 표현을 위해 WKT(Well-Known Text) 포맷과 WKB(Well-Known Binary) 포맷을 사용 MySQL에서는 내부적으로 지오메트리 값을 WKT, WKB가 아닌 다른 포맷을 사용해 저장 WKB와 유사하지만 앞의 4바이트가 SRID를 나타냄 SRID(공간 참조 식별자): 지오메트리 값이 어떤 공간(공간 참조 시스템, SRS)을 기준으로 하는지 구분하는 식별자."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[DB] 공간 인덱스 알아보기 + 쿼리 성능 개선해보기 (w. SRS, EPSG, SRID)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#공간-데이터spatial-data"><code>공간 데이터(Spatial Data)</code></a>
+      <ul>
+        <li><a href="#공간-참조-시스템srs-조사추가필요">공간 참조 시스템(SRS) #조사추가필요</a></li>
+        <li><a href="#mysql의-공간-데이터-타입">MySQL의 공간 데이터 타입</a></li>
+        <li><a href="#wkb와-wkt">WKB와 WKT</a></li>
+      </ul>
+    </li>
+    <li><a href="#공간-인덱스spatial-index"><code>공간 인덱스(Spatial Index)</code></a>
+      <ul>
+        <li><a href="#공간-인덱스와-비공간-인덱스">공간 인덱스와 비공간 인덱스</a></li>
+        <li><a href="#공간-인덱스-사용하기">공간 인덱스 사용하기</a></li>
+      </ul>
+    </li>
+    <li><a href="#주의사항">주의사항</a>
+      <ul>
+        <li><a href="#지오메트리-컬럼-생성시-초기-srid를-신중히-정할-것">지오메트리 컬럼 생성시 초기 SRID를 신중히 정할 것</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 12월 12일 발표 예정인 <a href="https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/16_Typescript/Readme.md">공간 인덱스</a>에 대해 정리하고, 이를 실습해본 문서를 블로그에 공유하고자 한다.</p>
+<h1 id="공간-인덱스spatial-index란" ><code>공간 인덱스(Spatial Index)</code>란?
+<span>
+    <a href="#%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4spatial-index%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><code>공간 데이터(Spatial Data)</code>를 지원하는 데이터베이스에서 <code>공간 쿼리(Spatial Query)</code>를 <code>최적화</code>하기 위해 사용되는 <code>인덱스</code>
+<ul>
+<li>기존의 <code>인덱스</code>는 데이터들을 <code>선형 순서</code>로 정렬해 조회 속도를 최적화하는 반면, <code>2차원/3차원 공간 상의 데이터</code>들을 정렬하기 위해 <code>R-Tree</code>와 같은 자료구조를 사용</li>
+</ul>
+</li>
+</ul>
+<h2 id="공간-데이터spatial-data" ><code>공간 데이터(Spatial Data)</code>
+<span>
+    <a href="#%ea%b3%b5%ea%b0%84-%eb%8d%b0%ec%9d%b4%ed%84%b0spatial-data">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><code>2차원</code> 또는 <code>3차원 공간</code>에 위치할 수 있는 <code>공간</code> 또는 <code>지리적 참조</code> 형태의 데이터</li>
+<li>주로 <code>점</code>, <code>선</code>, <code>다각형</code>과 같은 기하학적 객체들을 말함</li>
+<li><code>지리 공간 데이터</code>, <code>위치 기반 서비스</code> 등에 대한 표준을 개발 및 유지하는 기구인 <a href="https://www.ogc.org/"><code>개방형 공간 정보 컨소시엄(OGC)</code></a>에서는 <a href="https://portal.ogc.org/files/?artifact_id=829"><code>Simple Feature</code></a>와 2020년 이를 대체하기 위해 발표된 <a href="https://docs.ogc.org/as/17-087r13/17-087r13.html"><code>Feature Model</code></a> 등을 꾸준히 개발 중
+<ul>
+<li>여러 DBMS는 이를 기반으로 한 <code>공간 기능</code>을 제공 중</li>
+<li><code>MySQL</code>에서도 OGC의 <code>기하 도형 모델(OpenGIS Geometry Model)</code>에 대응되는 <code>GEOMETRY</code>, <code>POINT</code>, <code>LINESTRING</code> 등 다양한 타입을 제공</li>
+</ul>
+</li>
+</ul>
+<h3 id="공간-참조-시스템srs-조사추가필요" >공간 참조 시스템(SRS) #조사추가필요
+<span>
+    <a href="#%ea%b3%b5%ea%b0%84-%ec%b0%b8%ec%a1%b0-%ec%8b%9c%ec%8a%a4%ed%85%9csrs-%ec%a1%b0%ec%82%ac%ec%b6%94%ea%b0%80%ed%95%84%ec%9a%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>POINT</code>, <code>LINESTRING</code>과 같은 모든 지오메트리 객체가 존재할 수 있는 공간</li>
+<li>하나의 지오메트리 객체는 오직 하나의 <code>공간 참조 시스템</code>에만 존재할 수 있음
+<ul>
+<li>이는 각 <code>공간 참조 시스템</code>마다 좌표가 존재할 수 있는 표면이 다를 수 있기 때문</li>
+<li>예를 들어, <code>A</code> SRS는 <code>구형</code>, <code>B</code> SRS는 <code>평면</code>이라고 하면 같은 좌표라도 각 SRS마다 다른 위치에 존재하게 됨</li>
+<li>따라서 두 지오메트릭 객체가 동일하기 위해서는 좌표 뿐만 아니라 존재하는 SRS도 동일해야 함
+<ul>
+<li>이 때문에 보통 다른 <code>SIRD</code>를 갖는 지오메트리 값 간에는 어떤 연산도 이뤄지지 않고 거부됨</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>각 <code>SRS</code>는 고유한 <code>공간 참조 식별자(SRID)</code>가 존재하며, 이를 통해 어떤 <code>SRS</code>에 속해있는지 구분함</li>
+<li><code>SRID</code>와 이에 해당하는 <code>SRS</code>는 <code>EPSG(유럽 석유 조사 그룹)</code>에서 제작 및 운영하고 있는 <a href="https://epsg.org/home.html"><code>EPSG의 좌표계 식별 데이터셋</code></a>라는 사실상 표준이 정해져 있음</li>
+<li>주로 사용되는 <code>SRS</code>는 <code>WGS 84(World Geodetic System 1984)</code>라고 불리는 <code>SRID 4326</code>, <code>WGS 84</code>/<code>슈도 메르카토르</code> 라고도 불리는 <code>SRID 3857</code>가 주로 사용됨
+<ul>
+<li>둘의 가장 큰 차이는 <code>3차원 구체를 기반</code>으로 하는지(<code>4326</code>), <code>2차원 평면</code>을 기반으로 하는지(<code>3857</code>)가 차이</li>
+</ul>
+</li>
+</ul>
+<h4 id="epsg4326---wgs-84httpsepsgio4326" ><a href="https://epsg.io/4326"><code>EPSG:4326 - WGS 84</code></a>
+<span>
+    <a href="#epsg4326---wgs-84httpsepsgio4326">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>경도(longitude)</code>, <code>위도(latitude)</code>를 통해 <code>3차원 타원 표면</code>에서의 좌표를 표현하는 좌표계</li>
+<li><code>GPS</code>, <code>Google Earth</code> 등에서 사용됨</li>
+<li><code>각도(Degree)</code>를 <code>단위</code>로 함</li>
+</ul>
+<h4 id="epsg3857---wgs-84--pseudo-mercator--spherical-mercatorhttpsepsgio3857" ><a href="https://epsg.io/3857">EPSG:3857 - WGS 84 / Pseudo-Mercator / Spherical Mercator</a>
+<span>
+    <a href="#epsg3857---wgs-84--pseudo-mercator--spherical-mercatorhttpsepsgio3857">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>x</code>, <code>y</code> 좌표를 통해 <code>WGS 84</code> 타원체 데이텀(좌표 축의 원점이 되는 기준점)에 <code>메르카토르 투영</code>을 적용한 좌표계
+<ul>
+<li><code>메르카토르 투영</code>의 일종이기 때문에, 고위도 지역으로 갈수록 왜곡이 심해진다는 특징이 여전히 존재</li>
+</ul>
+</li>
+<li><code>Google Maps</code>, <code>OpenStreeMap</code> 등 웹 지도 도구들에서 사용됨</li>
+<li><code>미터(metres)</code>를 단위로 함</li>
+</ul>
+<h3 id="mysql의-공간-데이터-타입" >MySQL의 공간 데이터 타입
+<span>
+    <a href="#mysql%ec%9d%98-%ea%b3%b5%ea%b0%84-%eb%8d%b0%ec%9d%b4%ed%84%b0-%ed%83%80%ec%9e%85">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>MySQL</code>에는 크게 <code>단일 지오메트리 값</code>을 저장할 수 있는 자료형과 <code>지오메트리 값의 집합</code>을 저장할 수 있는 자료형으로 나뉨</li>
+</ul>
+<h3 id="wkb와-wkt" >WKB와 WKT
+<span>
+    <a href="#wkb%ec%99%80-wkt">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>OpenGIS</code>에서는 <code>기하학적 객체</code>의 표현을 위해 <code>WKT(Well-Known Text)</code> 포맷과 <code>WKB(Well-Known Binary)</code> 포맷을 사용
+<ul>
+<li><code>MySQL</code>에서는 내부적으로 지오메트리 값을 WKT, WKB가 아닌 다른 포맷을 사용해 저장
+<ul>
+<li><code>WKB</code>와 유사하지만 앞의 4바이트가 <code>SRID</code>를 나타냄
+<ul>
+<li><code>SRID(공간 참조 식별자)</code>:  지오메트리 값이 어떤 <code>공간(공간 참조 시스템, SRS)</code>을 기준으로 하는지 구분하는 식별자. 다른 <code>SIRD</code>를 갖는 지오메트리 값 간에는 어떤 연산도 이뤄지지 않고 거부됨</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="wktwell-known-text" >WKT(Well-Known Text)
+<span>
+    <a href="#wktwell-known-text">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>지오메트리 값을 <code>ASCII</code> 형태로 교환하기 위해 설계됨</li>
+<li><code>OpenGIS</code> 사양에서는 <code>WKT</code>값 작성을 위한 <code>배커스-나우르</code> 문법을 제공</li>
+<li>자료형에 따라 필요한 점의 갯수는 다르지만 X-Y 좌표 값을 <code>(X Y)</code> 형태로, 즉 쉼표가 아닌 공백을 통해 구분하는 문법을 공통적으로 사용함
+<ul>
+<li>예시
+<ul>
+<li><code>Point</code> - <code>POINT(15 20)</code></li>
+<li><code>LINESTRING</code> - <code>LINESTRING(0 0, 10 10, 20 25, 50 60)</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>MySQL에는 WKT 형태의 문자열로부터 지오메트리 값을 만들어내는 <code>ST_타입FromText</code> 함수들이 존재 <a href="https://dev.mysql.com/doc/refman/8.4/en/gis-wkt-functions.html">#</a>
+<ul>
+<li>예시
+<ul>
+<li><code>POINT</code> - <code>ST_PointFromText</code></li>
+<li><code>GEOMERTY</code> - <code>ST_GeomFromText</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="wkbwell-known-binary" >WKB(Well-Known Binary)
+<span>
+    <a href="#wkbwell-known-binary">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>지오메트리 WKB 정보</code>를 담고있는 <code>BLOB</code> 형태의 <code>이진 스트림</code> 형태로 지오메트리 값을 교환하기 위해 사용됨</li>
+<li><code>WKB</code>는 1바이트의 <code>unsigned Integer</code>(<code>byte order</code>), 4바이트의 <code>unsigned Integer</code>(<code>WKB type</code>), 8바이트의 <code>배정밀도(double precision) 숫자 값</code>(<code>X, Y 좌표</code>)들을 사용
+<ul>
+<li><code>byte order</code>
+<ul>
+<li>0일 경우 <code>빅 엔디안</code>(<code>작은 주소</code>에서 데이터의 <code>높은 바이트(MSB)</code>부터 저장하는 방법)
+<ul>
+<li>만약 <code>0x12345678</code>을 저장한다면, 앞에서 부터 <code>0x12</code> / <code>0x34</code> / <code>0x56</code> / <code>0x78</code>을 저장</li>
+</ul>
+</li>
+<li>1일 경우 <code>리틀 엔디안</code>(<code>작은 주소</code>에서 데이터의 <code>낮은 바이트(LSB)</code>부터 저장하는 방법)
+<ul>
+<li>만약 <code>0x12345678</code>을 저장한다면, 앞에서 부터 <code>0x78</code> / <code>0x56</code> / <code>0x34</code> / <code>0x12</code>를 저장</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>WKB type</code>
+<ul>
+<li>어떤 지오메트리 유형인지 나타내는 값</li>
+<li>MySQL의 경우 1부터 7까지 각각 <code>Point</code>, <code>LineString</code>, <code>Polygon</code>, <code>MultiPoint</code>, <code>MultiLineString</code>, <code>MultiPolygon</code>, <code>GeometryCollection</code> 에 대응 됨</li>
+</ul>
+</li>
+<li>예시
+<ul>
+<li><code>POINT(1 -1)</code>에 대응되는 WKB는 다음 2개의 16진수로 표현되는 21바이트 시퀀스
+<ul>
+<li><code>0101000000000000000000F03F000000000000F0BF</code></li>
+<li>이는 <code>01</code> / <code>01000000</code> / <code>000000000000F03F</code> / <code>000000000000F0BF</code>로 나누어 볼 수 있음</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="단일-지오메트리-값-자료형" >단일 지오메트리 값 자료형
+<span>
+    <a href="#%eb%8b%a8%ec%9d%bc-%ec%a7%80%ec%98%a4%eb%a9%94%ed%8a%b8%eb%a6%ac-%ea%b0%92-%ec%9e%90%eb%a3%8c%ed%98%95">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>GEOMETRY</code>는 어떤 유형의 지오메트리 값이든 저장할 수 있으며, 나머지 단일 값 유형은 특정 도형의 유형으로 값을 제한함</li>
+</ul>
+<h5 id="geometry" >GEOMETRY
+<span>
+    <a href="#geometry">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>모든 지오메트리 클래스(타입)의 <code>루트 클래스</code></li>
+<li><code>추상 클래스</code>(인스턴스화 할 수 없음)</li>
+<li><code>GEOMETRY</code>의 하위 클래스들은 <code>GEOMETRY</code>가 갖는 여러 속성 값들을 갖고있으며, 특정 서브클래스에는 각각 고유한 프로퍼티가 있을 수 있음</li>
+<li>속성 값
+<ul>
+<li><code>type</code>
+<ul>
+<li>각 지오메트리 값은 지오메트리 클래스 중 <code>인스턴스화 가능한 클래스</code> 중 하나에 속해야 함</li>
+</ul>
+</li>
+<li><code>SRID</code>
+<ul>
+<li>해당 지오메트리 값의 <code>공간 참조 식별자</code></li>
+<li>지오메트리 값과 연관된 <code>공간 참조 시스템(SRS)</code>을 식별</li>
+<li>MySQL에서 SRID는 0부터 $2^{32} -1$ 사이이며, 지정되지 않을 경우 기본값은 0</li>
+</ul>
+</li>
+<li><code>coordinates</code>
+<ul>
+<li><code>공간 참조 시스템</code>상의 좌표 값으로, <code>배정밀도(8바이트)</code> 숫자로 표현됨</li>
+<li>비어있지 않은 지오메트리는 <code>적어도 한 쌍</code>의 <code>(X, Y) 좌표가 포함</code>되어야 함</li>
+</ul>
+</li>
+<li><code>interior</code>, <code>boundary</code>, <code>exterior</code>
+<ul>
+<li><code>interior</code>는 지오메트리가 차지하는 공간, <code>exterior</code>는 지오메트리가 차지하지 않는 모든 공간, <code>boundary</code>는 <code>interior</code>와 <code>exterior</code> 사이의 경계</li>
+</ul>
+</li>
+<li><code>MBR(최소 경계 사각형, Minimum Bounding Rectangle)</code>
+<ul>
+<li>최소 및 최대 (X, Y) 좌표로 구성된 경계 지오메트리</li>
+<li><code>((MINX MINY, MAXX MINY, MAXX MAXY, MINX MAXY, MINX MINY))</code></li>
+</ul>
+</li>
+<li><code>simple</code> / <code>nonsimple</code>
+<ul>
+<li><code>LineString</code>, <code>MultiPoint</code>, <code>MultiLineString</code>유형은 <code>simple</code>이거나 <code>nonsimple</code></li>
+</ul>
+</li>
+<li><code>closed</code> / <code>not closed</code>
+<ul>
+<li><code>LineString</code>, <code>MultiLineString</code> 유형은 <code>closed</code>이거나, <code>not closed</code></li>
+</ul>
+</li>
+<li><code>empty</code> / <code>nonempty</code>
+<ul>
+<li>지오메트리에 점이 하나도 존재하지 않는 경우 <code>empty</code>, 그렇지 않은 경우 <code>nonempty</code></li>
+</ul>
+</li>
+<li><code>dimension</code>
+<ul>
+<li><code>-1</code>: 비어있는 지오메트리</li>
+<li><code>0</code>: 길이도, 면적도 없는 지오메트리</li>
+<li><code>1</code>: 길이가 0이 아니지만, 면적은 0인 지오메트리</li>
+<li><code>2</code>: 면적이 0이 아닌 지오메트리</li>
+<li><code>Point</code>는 <code>0</code>, <code>LineString</code>은 <code>1</code>, <code>Polygon</code>은 2</li>
+<li><code>MultiXXX</code> 객체는 이를 이루는 요소들의 차원과 동일</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="point" >POINT
+<span>
+    <a href="#point">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>좌표 공간에서 단일 지점을 나타내는 지오메트리</li>
+<li><code>X, Y 좌표값</code>을 가지며 <code>0차원</code> 도형으로 정의되고 <code>boundary</code>는 비어있는 집합임</li>
+</ul>
+<h5 id="linestring" >LINESTRING
+<span>
+    <a href="#linestring">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>점 사이 <code>선형 보간(Linear Interpolation)</code>을 사용하는 <code>Curve</code> 지오메트리
+<ul>
+<li><code>선형 보간</code>: 양 끝점의 값이 주어졌을 때, 그 사이에 위치한 값을 추정하기 위하여 선형 다항식을 사용해 계산하는 방법</li>
+<li><code>Curve</code>
+<ul>
+<li><code>1차원</code>이며, 시작점과 끝점이 같으면 <code>closed</code></li>
+<li>동일한 점을 2번 지나지 않거나, 시작점과 끝점이 같은 경우 <code>simple</code></li>
+<li><code>closed</code>인 <code>Curve</code>의 <code>boundary</code>는 비어있으며, <code>not closed</code>인 <code>Curve</code>의 <code>boundary</code>는 양 끝점</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>각 <code>점 쌍으로 구성</code>된 <code>세그먼트의 좌표값</code>을 가짐</li>
+<li>정확히 두 점으로만 구성되면 <code>Line</code>, <code>closed</code> 이며 <code>simple</code>인 경우 <code>LinearRing</code>임</li>
+</ul>
+<h5 id="polygon" >POLYGON
+<span>
+    <a href="#polygon">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li><code>다면체</code>를 나타내는 평면형 <code>Surface</code></li>
+<li>하나의 <code>exterior boundary</code>와 0개 이상의 <code>interior boundary</code>로 구성되며 각 <code>interior boundary</code>는 <code>Polygon</code> 내부의 구멍의 경계를 정의함</li>
+<li><code>Polygon</code>의 <code>Boundary</code>는 <code>내/외부 경계</code>를 구성하는 <code>LinearRing</code> 객체 집합으로 구성됨</li>
+<li><code>Polygon</code>은 교차하는 <code>Ring</code>이 존재하지 않으며, <code>Boundary</code>의 <code>Ring</code>이 점과 교차할 수 있지만, 접선으로만 교차</li>
+<li><code>interior</code>로 <code>연결된 Point 집합</code>을 가짐</li>
+</ul>
+<h4 id="지오메트리-값-집합-자료형" >지오메트리 값 집합 자료형
+<span>
+    <a href="#%ec%a7%80%ec%98%a4%eb%a9%94%ed%8a%b8%eb%a6%ac-%ea%b0%92-%ec%a7%91%ed%95%a9-%ec%9e%90%eb%a3%8c%ed%98%95">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>GEOMETRYCOLLECTION</code>은 모든 유형의 객체 집합을 저장할 수 있으며, 나머지 집합 자료형은 집합 멤버를 특정 도형 유형을 가진 멤버로 제한함</li>
+</ul>
+<h5 id="multipoint" >MULTIPOINT
+<span>
+    <a href="#multipoint">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li><code>POINT</code>로 구성된 지오메트리 집합으로, 각 <code>POINT</code>들은 연결되거나 정렬되지 않음</li>
+<li><code>0차원</code> 지오메트리이며, 이를 구성하는 각 POINT 간의 좌표가 같지 않으면 <code>simple</code></li>
+<li><code>boundary</code>는 비어있음</li>
+</ul>
+<h5 id="multilinestring" >MULTILINESTRING
+<span>
+    <a href="#multilinestring">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li><code>LineString</code>로 구성된 <code>MultiCurve</code> 컬렉션</li>
+<li><code>MultiCurve</code>
+<ul>
+<li><code>1차원</code> 지오메트리</li>
+<li>이를 이루는 모든 요소들이 <code>simple</code>할 때만 <code>simple</code></li>
+<li><code>boundary</code>는 <code>mod 2 union 규칙(홀수-짝수 규칙)</code>으로 구할 수 있음
+<ul>
+<li>한 <code>Point</code>가 홀수 개의 <code>Curve</code>요소의 경계에 있는 경우 <code>MultiCurve</code>의 경계에 있다고 할 수 있음</li>
+<li>모든 요소가 <code>closed</code>이면 <code>closed</code></li>
+<li><code>boundary</code>는 비어있음</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="multipolygon" >MULTIPOLYGON
+<span>
+    <a href="#multipolygon">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li><code>Polygon</code>으로 구성된 <code>MultiSurface</code> 컬렉션</li>
+<li>각 <code>Polygon</code> 요소는 교차하는 <code>interior</code>가 없어야 함</li>
+<li>무한한 수의 점에 닿는 <code>Polygon</code> 요소를 가질 수 없음</li>
+<li><code>2차원</code> 지오메트리이며, <code>boundary</code>는 요소들의 경계들에 대응되는 <code>LineString</code> 집합</li>
+<li><code>MultiPolygon</code>의 경계를 이루는 각 <code>Curve</code>들은 각각 하나의 <code>Polygon</code>요소의 경계에 존재해야 함</li>
+</ul>
+<h5 id="geometrycollection" >GEOMETRYCOLLECTION
+<span>
+    <a href="#geometrycollection">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>0개 이상의 <code>지오메트리</code>로 이뤄진 컬렉션</li>
+<li><code>GEOMETRYCOLLECTION</code>의 모든 요소는 동일한 <code>좌표계(공간 참조 시스템)</code>에 있어야 함</li>
+</ul>
+<h2 id="공간-인덱스spatial-index" ><code>공간 인덱스(Spatial Index)</code>
+<span>
+    <a href="#%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4spatial-index">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="공간-인덱스와-비공간-인덱스" >공간 인덱스와 비공간 인덱스
+<span>
+    <a href="#%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4%ec%99%80-%eb%b9%84%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>공간 인덱스</code>는 <code>R-트리 인덱스</code>를 생성하며, 이를 지원하지 않는 다른 엔진(즉, <code>비공간 인덱스</code>를 지원하는)의 경우, <code>B-트리 인덱스</code>를 생성
+<ul>
+<li><code>B-트리 인덱스</code>는 <code>정확한 값을 조회</code>하는데는 <code>유용</code>하지만, <code>범위 스캔</code>에 대해서는 <code>그렇지 않음</code></li>
+</ul>
+</li>
+</ul>
+<h4 id="공간-인덱스" >공간 인덱스
+<span>
+    <a href="#%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>MySQL</code>의 <code>스토리지 엔진</code> 중 <code>InnoDB</code>와 <code>MyISAM</code>에서만 <code>공간 인덱스</code>를 지원</li>
+<li>일반 인덱스를 생성할 때 처럼 <code>CREATE INDEX</code>문을 사용하되, <code>SPATIAL</code> 키워드를 사용
+<ul>
+<li>ex) <code>ALTER TABLE mytable ADD SPATIAL INDEX(geomcolumn);</code></li>
+</ul>
+</li>
+<li><code>단일 공간 열</code>에 대해서만 인덱스를 생성할 수 있음</li>
+<li>인덱스로 지정된 열은 <code>NOT NULL</code>이어야 함</li>
+<li><code>기본 키</code>나 <code>유니크 인덱스</code>에는 허용되지 않음</li>
+<li><code>옵티마이저</code>는 <code>SRID</code>가 제한된 열에 정의된 <code>공간 인덱스</code>를 사용할 수 있음</li>
+</ul>
+<h4 id="비공간-인덱스" >비공간 인덱스
+<span>
+    <a href="#%eb%b9%84%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><a href="https://dev.mysql.com/doc/refman/8.4/en/archive-storage-engine.html" title="18.5 The ARCHIVE Storage Engine"><code>ARCHIVE</code></a>를 제외한 나머지 <code>공간 열</code>을 지원하는 <code>스토리지 엔진</code>에서 사용 가능</li>
+<li>인덱스가 <em>기본키가 아닌 경우</em> <code>NULL</code>을 <code>허용</code>
+<ul>
+<li><a href="https://dev.mysql.com/doc/refman/8.4/en/innodb-storage-engine.html" title="Chapter 17 The InnoDB Storage Engine"><code>InnoDB</code></a>, <a href="https://dev.mysql.com/doc/refman/8.4/en/myisam-storage-engine.html" title="18.2 The MyISAM Storage Engine"><code>MyISAM</code></a>, <a href="https://dev.mysql.com/doc/refman/8.4/en/memory-storage-engine.html" title="18.3 The MEMORY Storage Engine"><code>MEMORY</code></a>에서만</li>
+</ul>
+</li>
+</ul>
+<h3 id="공간-인덱스-사용하기" >공간 인덱스 사용하기
+<span>
+    <a href="#%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4-%ec%82%ac%ec%9a%a9%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>옵티마이저</code>는 <code>WHERE</code>절에서 <code>MBRContains()</code>, <code> MBRWithin()</code>와 같은 함수를 사용하는 쿼리에 대해, 가용한 <code>공간 인덱스</code>를 검색에 포함할 수 있는지 조사</li>
+<li>따라서 <code>공간 인덱스</code>를 사용하는 함수를 통해 탐색할 row의 범위를 줄이면 <code>최적화가 가능</code></li>
+<li>예시
+<ul>
+<li>한 점으로 부터 5km 떨어진 점들 검색하기
+<ul>
+<li>약 237만개의 POINT가 기록된 테이블에서 이를 검색하고자 함</li>
+<li><code>ST_DISTANCE()</code> 또는 <code>ST_DISTANCE_SPHERE()</code>를 사용할 경우 <code>공간 인덱스</code>를 <code>사용하지 않고</code>, 한 점 한 점 모두 연산을 거치기 때문에 비효율적
+<ul>
+<li>이 경우 쿼리는 다음과 같음</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">set</span> <span style="color:#f92672">@</span>lat <span style="color:#f92672">=</span> <span style="color:#ae81ff">35</span>.<span style="color:#ae81ff">865807</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">set</span> <span style="color:#f92672">@</span>lng <span style="color:#f92672">=</span> <span style="color:#ae81ff">128</span>.<span style="color:#ae81ff">593317</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">SET</span> <span style="color:#f92672">@</span>g1 <span style="color:#f92672">=</span> ST_GeomFromText(CONCAT(<span style="color:#e6db74">&#39;POINT(&#39;</span>, <span style="color:#f92672">@</span>lng, <span style="color:#e6db74">&#39; &#39;</span>, <span style="color:#f92672">@</span>lat, <span style="color:#e6db74">&#39;)&#39;</span>), <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> geotesttable <span style="color:#66d9ef">WHERE</span> ST_DISTANCE_SPHERE(<span style="color:#f92672">@</span>g1, <span style="color:#66d9ef">location</span>) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">5000</span>;
+</span></span></code></pre></div><ul>
+<li>위 쿼리를 분석하면, <code>공간 인덱스</code>가 <code>활용되지 않고</code> 237만개의 row들을 <code>모두 불러옴</code>을 알 수 있음
+<ul>
+<li><img src="query-not-using-spatial-index.png" alt="query-not-using-spatial-index.png">
+<ul>
+<li>참고로 <code>explain query</code>문을 수행시, 실제 DB의 row 갯수와 다른 값이 불러와 질 수 있음
+<ul>
+<li>이는 <code>explain</code>문이 <code>INFORMATION_SCHEMA</code> 테이블에서 제공하는 러프한 추정치를 사용하기 때문</li>
+<li>따라서 <code>ANALYZE TABLE table_name;</code> 문을 수행해 이를 업데이트 해주면 올바른 값을 불러옴</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>해당 쿼리문을 실제로 수행하면, 데이터를 불러오는데 약 <code>20초</code>가 소요됨
+<ul>
+<li><img src="time-taken-by-query-wihtout-spatial-index.png" alt="time-taken-by-query-wihtout-spatial-index.png"></li>
+<li><img src="query-not-using-spatial-index-mapview.png" alt="query-not-using-spatial-index-mapview.png"></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>이를 최적화하고자, 먼저 각 변이 한 점으로 부터 각각 5km씩 떨어진 정사각형 <code>Polygon</code>을 만들고, <code>ST_CONTAINS(A, B)</code> 함수를 사용해 이에 포함되는 점들만 검색
+<ul>
+<li>이를 위해 먼저 다음과 같은 형태의 <code>Polygon</code>을 만듦
+<ul>
+<li><img src="5km-square.png" alt="5km-square.png"></li>
+<li>각 변이 가운데 점으로부터 5km씩 떨어진 정사각형</li>
+</ul>
+</li>
+<li>이후 <code>공간 인덱스</code>를 사용하는 지오메트리 함수인 <code>ST_CONTAINS(A, B)</code>를 사용해 각 점이 해당 <code>Polygon</code> 내부에 존재하는지 확인
+<ul>
+<li><code>ST_CONTAINS(A, B)</code>는 B가 A 내부에 포함되는지 여부를 반환하는 함수</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>이후 각 점들에 대해 <code>ST_DISTANCE_SPHERE(A, B) &lt; 5000</code> 조건을 수행해 기준점과의 거리가 5km 이내인 점들을 불러온다</li>
+<li>이를 모두 반영한 쿼리는 다음과 같다</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span>	<span style="color:#66d9ef">set</span> <span style="color:#f92672">@</span>lat <span style="color:#f92672">=</span> <span style="color:#ae81ff">35</span>.<span style="color:#ae81ff">865807</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">set</span> <span style="color:#f92672">@</span>lng <span style="color:#f92672">=</span> <span style="color:#ae81ff">128</span>.<span style="color:#ae81ff">593317</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">SET</span> <span style="color:#f92672">@</span>g1 <span style="color:#f92672">=</span> ST_GeomFromText(CONCAT(<span style="color:#e6db74">&#39;POINT(&#39;</span>, <span style="color:#f92672">@</span>lng, <span style="color:#e6db74">&#39; &#39;</span>, <span style="color:#f92672">@</span>lat, <span style="color:#e6db74">&#39;)&#39;</span>), <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">#</span> <span style="color:#960050;background-color:#1e0010">위도</span>(latitude) <span style="color:#ae81ff">1</span><span style="color:#960050;background-color:#1e0010">도는</span> <span style="color:#960050;background-color:#1e0010">대략</span> <span style="color:#ae81ff">111</span>.<span style="color:#ae81ff">1</span>km
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">#</span> <span style="color:#960050;background-color:#1e0010">따라서</span> <span style="color:#ae81ff">1</span>km<span style="color:#960050;background-color:#1e0010">당</span> <span style="color:#960050;background-color:#1e0010">위도는</span> <span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0090009</span> <span style="color:#f92672">~=</span> <span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0091</span><span style="color:#960050;background-color:#1e0010">도</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">SET</span> <span style="color:#f92672">@</span>onelat <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0091</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">#</span> <span style="color:#960050;background-color:#1e0010">경도</span>(longitude) <span style="color:#ae81ff">1</span><span style="color:#960050;background-color:#1e0010">도는</span> <span style="color:#960050;background-color:#1e0010">위도에</span> <span style="color:#960050;background-color:#1e0010">따라</span> <span style="color:#960050;background-color:#1e0010">달라지며</span>, <span style="color:#960050;background-color:#1e0010">적도에서</span> <span style="color:#960050;background-color:#1e0010">대략</span> <span style="color:#ae81ff">111</span>.<span style="color:#ae81ff">1</span>km
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">#</span> <span style="color:#960050;background-color:#1e0010">계산식은</span> <span style="color:#ae81ff">111</span>.<span style="color:#ae81ff">1</span> <span style="color:#f92672">*</span> cos(theta <span style="color:#f92672">*</span> pi<span style="color:#f92672">/</span><span style="color:#ae81ff">180</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">#</span> <span style="color:#960050;background-color:#1e0010">한국은</span> <span style="color:#960050;background-color:#1e0010">북위</span> <span style="color:#ae81ff">33</span><span style="color:#f92672">~</span><span style="color:#ae81ff">38</span><span style="color:#960050;background-color:#1e0010">도</span> <span style="color:#960050;background-color:#1e0010">사이에</span> <span style="color:#960050;background-color:#1e0010">존재하며</span>, <span style="color:#960050;background-color:#1e0010">위에서</span> <span style="color:#960050;background-color:#1e0010">선언한</span> <span style="color:#960050;background-color:#1e0010">위도인</span> <span style="color:#ae81ff">35</span>.<span style="color:#ae81ff">8658</span><span style="color:#960050;background-color:#1e0010">도를</span> <span style="color:#960050;background-color:#1e0010">기준으로하면</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">#</span> <span style="color:#960050;background-color:#1e0010">경도</span> <span style="color:#ae81ff">1</span><span style="color:#960050;background-color:#1e0010">도는</span> <span style="color:#960050;background-color:#1e0010">대략</span> <span style="color:#ae81ff">90</span>.<span style="color:#ae81ff">0345</span>km
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">#</span> <span style="color:#960050;background-color:#1e0010">따라서</span> <span style="color:#ae81ff">1</span>km<span style="color:#960050;background-color:#1e0010">당</span> <span style="color:#960050;background-color:#1e0010">위도는</span> <span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0111069</span> <span style="color:#f92672">~=</span> <span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0111</span><span style="color:#960050;background-color:#1e0010">도</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">SET</span> <span style="color:#f92672">@</span>onelng <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">0111</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">SET</span> <span style="color:#f92672">@</span>toplat <span style="color:#f92672">=</span> <span style="color:#f92672">@</span>lat <span style="color:#f92672">+</span> <span style="color:#f92672">@</span>onelat <span style="color:#f92672">*</span> <span style="color:#ae81ff">5</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">SET</span> <span style="color:#f92672">@</span>bottomlat <span style="color:#f92672">=</span> <span style="color:#f92672">@</span>lat <span style="color:#f92672">-</span> <span style="color:#f92672">@</span>onelat <span style="color:#f92672">*</span> <span style="color:#ae81ff">5</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">SET</span> <span style="color:#f92672">@</span>toplng <span style="color:#f92672">=</span> <span style="color:#f92672">@</span>lng <span style="color:#f92672">+</span> <span style="color:#f92672">@</span>onelng <span style="color:#f92672">*</span> <span style="color:#ae81ff">5</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">SET</span> <span style="color:#f92672">@</span>bottomlng <span style="color:#f92672">=</span> <span style="color:#f92672">@</span>lng <span style="color:#f92672">-</span> <span style="color:#f92672">@</span>onelng <span style="color:#f92672">*</span> <span style="color:#ae81ff">5</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">SET</span> <span style="color:#f92672">@</span>p1 <span style="color:#f92672">=</span> ST_GEOMFROMTEXT(CONCAT(<span style="color:#e6db74">&#39;POLYGON((&#39;</span>, <span style="color:#f92672">@</span>bottomlng, <span style="color:#e6db74">&#39; &#39;</span>, <span style="color:#f92672">@</span>bottomlat, <span style="color:#e6db74">&#39;, &#39;</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#f92672">@</span>bottomlng, <span style="color:#e6db74">&#39; &#39;</span>, <span style="color:#f92672">@</span>toplat, <span style="color:#e6db74">&#39;, &#39;</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#f92672">@</span>toplng, <span style="color:#e6db74">&#39; &#39;</span>, <span style="color:#f92672">@</span>toplat, <span style="color:#e6db74">&#39;, &#39;</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#f92672">@</span>toplng, <span style="color:#e6db74">&#39; &#39;</span>, <span style="color:#f92672">@</span>bottomlat, <span style="color:#e6db74">&#39;, &#39;</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#f92672">@</span>bottomlng, <span style="color:#e6db74">&#39; &#39;</span>, <span style="color:#f92672">@</span>bottomlat, <span style="color:#e6db74">&#39;))&#39;</span>), <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> geotesttable <span style="color:#66d9ef">WHERE</span> ST_CONTAINS(<span style="color:#f92672">@</span>p1, <span style="color:#66d9ef">location</span>) <span style="color:#66d9ef">and</span> ST_DISTANCE_SPHERE(<span style="color:#f92672">@</span>g1, <span style="color:#66d9ef">location</span>) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">5000</span>;
+</span></span></code></pre></div><ul>
+<li>위 쿼리를 <code>explain</code>문을 통해 분석하면, 설정해놓은 <code>공간 인덱스(idx_location)</code>를 활용해 범위를 줄여 불러옴을 알 수 있음
+<ul>
+<li><img src="query-using-spatial-index.png" alt="query-using-spatial-index.png"></li>
+<li>쿼리 수행에 걸리는 시간도 20초에서 5초로 확 단축됨
+<ul>
+<li><img src="time-taken-by-query-with-spatial-index.png" alt="time-taken-by-query-with-spatial-index.png"></li>
+<li><img src="query-using-spatial-index-mapview.png" alt="query-using-spatial-index-mapview.png"></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="주의사항" >주의사항
+<span>
+    <a href="#%ec%a3%bc%ec%9d%98%ec%82%ac%ed%95%ad">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="지오메트리-컬럼-생성시-초기-srid를-신중히-정할-것" >지오메트리 컬럼 생성시 초기 SRID를 신중히 정할 것
+<span>
+    <a href="#%ec%a7%80%ec%98%a4%eb%a9%94%ed%8a%b8%eb%a6%ac-%ec%bb%ac%eb%9f%bc-%ec%83%9d%ec%84%b1%ec%8b%9c-%ec%b4%88%ea%b8%b0-srid%eb%a5%bc-%ec%8b%a0%ec%a4%91%ed%9e%88-%ec%a0%95%ed%95%a0-%ea%b2%83">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>어떤 이유인지는 몰라도, 이미 존재하는 컬럼의 <code>SRID</code>를 변경하려고 하면 변경이 이뤄지지 않음
+<ul>
+<li>시도해본 구문 목록 (예를 들기 위해 테이블 이름은 <code>table</code>, 컬럼 이름은 <code>geom</code>이라고 하겠음)
+<ul>
+<li><code>UPDATE table SET geom = ST_GeomFromText(ST_AsText(geom), SRID)</code></li>
+<li><code>UPDATE table SET geom = ST_Transform(geom, SRID)</code></li>
+<li><code>UPDATE table SET geom = ST_SRID(geom, SRID)</code></li>
+</ul>
+</li>
+<li>공통적으로 아래와 같은 오류가 발생함
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span>	ERROR <span style="color:#ae81ff">3643</span> (HY000): The SRID <span style="color:#66d9ef">of</span> the geometry does <span style="color:#66d9ef">not</span> <span style="color:#66d9ef">match</span> the SRID <span style="color:#66d9ef">of</span> the <span style="color:#66d9ef">column</span> 
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#39;position&#39;</span>. The SRID <span style="color:#66d9ef">of</span> the geometry <span style="color:#66d9ef">is</span> <span style="color:#ae81ff">0</span>, but the SRID <span style="color:#66d9ef">of</span> the <span style="color:#66d9ef">column</span> <span style="color:#66d9ef">is</span> <span style="color:#ae81ff">4326</span>. 
+</span></span><span style="display:flex;"><span>	Consider changing the SRID <span style="color:#66d9ef">of</span> the geometry <span style="color:#66d9ef">or</span> the SRID property <span style="color:#66d9ef">of</span> the <span style="color:#66d9ef">column</span>.
+</span></span></code></pre></div></li>
+</ul>
+</li>
+<li>이미 존재하는 컬럼의 <code>SRID</code>는 바꾸는게 불가능하다 판단
+<ul>
+<li>따라서 변경하고자 하는 <code>SRID</code>를 갖는 컬럼을 새로 생성한 뒤, 기존 컬럼의 값들을 복사해오고 공간 인덱스도 재설정함</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">ALTER</span><span style="color:#960050;background-color:#1e0010"> </span><span style="color:#66d9ef">TABLE</span><span style="color:#960050;background-color:#1e0010"> </span><span style="color:#f92672">`</span><span style="color:#66d9ef">table</span><span style="color:#f92672">`</span> <span style="color:#66d9ef">ADD</span><span style="color:#960050;background-color:#1e0010"> </span>geom4326 POINT SRID <span style="color:#f92672">=</span> <span style="color:#ae81ff">4326</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">UPDATE</span> <span style="color:#f92672">`</span><span style="color:#66d9ef">table</span><span style="color:#f92672">`</span> <span style="color:#66d9ef">SET</span> geom4326 <span style="color:#f92672">=</span> ST_GeomFromText(ST_AsText(geom), <span style="color:#ae81ff">4326</span>)<span style="color:#f92672">`</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">ALTER</span><span style="color:#960050;background-color:#1e0010"> </span><span style="color:#66d9ef">TABLE</span><span style="color:#960050;background-color:#1e0010"> </span><span style="color:#f92672">`</span><span style="color:#66d9ef">table</span><span style="color:#f92672">`</span> <span style="color:#66d9ef">DROP</span><span style="color:#960050;background-color:#1e0010"> </span><span style="color:#66d9ef">COLUMN</span><span style="color:#960050;background-color:#1e0010"> </span>geom;
+</span></span><span style="display:flex;"><span>...
+</span></span></code></pre></div></li>
+</ul>
+<h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://en.wikipedia.org/wiki/Spatial_database">Spatial database - Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Minimum_bounding_rectangle">Minimum bounding rectangle - Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Web_Mercator_projection">Web Mercator projection - Wikipedia</a></li>
+<li><a href="https://www.ismll.uni-hildesheim.de/lehre/spatial-10w/script/ch1.pdf">Introduction to Spatial Databases</a></li>
+<li>MYSQL Reference Manual
+<ul>
+<li><a href="https://dev.mysql.com/doc/refman/8.4/en/spatial-index-optimization.html">MySQL :: MySQL 8.4 Reference Manual :: 10.3.3 SPATIAL Index Optimization</a></li>
+<li><a href="https://dev.mysql.com/doc/refman/8.4/en/explain-output.html">MySQL :: MySQL 8.4 Reference Manual :: 10.8.2 EXPLAIN Output Format</a></li>
+<li><a href="https://dev.mysql.com/doc/refman/8.4/en/spatial-types.html">MySQL :: MySQL 8.4 Reference Manual :: 13.4 Spatial Data Types</a></li>
+<li><a href="https://dev.mysql.com/doc/refman/8.4/en/opengis-geometry-model.html">MySQL :: MySQL 8.4 Reference Manual :: 13.4.2 The OpenGIS Geometry Model</a></li>
+<li><a href="https://dev.mysql.com/doc/refman/8.4/en/gis-data-formats.html">MySQL :: MySQL 8.4 Reference Manual :: 13.4.3 Supported Spatial Data Formats</a></li>
+<li><a href="https://dev.mysql.com/doc/refman/8.4/en/fetching-spatial-data.html">MySQL :: MySQL 8.4 Reference Manual :: 13.4.8 Fetching Spatial Data</a></li>
+<li><a href="https://dev.mysql.com/doc/refman/8.4/en/creating-spatial-indexes.html">MySQL :: MySQL 8.4 Reference Manual :: 13.4.10 Creating Spatial Indexes</a></li>
+<li><a href="https://dev.mysql.com/doc/refman/8.4/en/using-spatial-indexes.html">MySQL :: MySQL 8.4 Reference Manual :: 13.4.11 Using Spatial Indexes</a></li>
+<li><a href="https://dev.mysql.com/doc/refman/8.4/en/gis-format-conversion-functions.html">MySQL :: MySQL 8.4 Reference Manual :: 14.16.6 Geometry Format Conversion Functions</a></li>
+<li><a href="https://dev.mysql.com/doc/refman/8.4/en/spatial-relation-functions-object-shapes.html">MySQL :: MySQL 8.4 Reference Manual :: 14.16.9.1 Spatial Relation Functions That Use Object Shapes</a></li>
+</ul>
+</li>
+<li><a href="https://dev.mysql.com/blog-archive/spatial-reference-systems-in-mysql-8-0/">MySQL :: Spatial Reference Systems in MySQL 8.0</a></li>
+<li><a href="https://www.sco.wisc.edu/2022/01/21/how-big-is-a-degree/#:~:text=Therefore%20we%20can%20easily%20compute,69.4%20miles%20(111.1%20km).">How Big is a Degree? – State Cartographer&rsquo;s Office – UW–Madison</a></li>
+<li><a href="https://dbeaver.com/docs/dbeaver/Working-with-Spatial-GIS-data/#labels-on-a-map">DBeaver Documentation - Working with Spatial GIS data</a></li>
+<li><a href="https://stackoverflow.com/questions/1037471/why-the-rows-returns-by-explain-is-not-equal-to-count">mysql - Why the rows returns by &ldquo;explain&rdquo; is not equal to count()? - Stack Overflow</a></li>
+<li><a href="https://stackoverflow.com/questions/7477003/calculating-new-longitude-latitude-from-old-n-meters">algorithm - Calculating new longitude, latitude from old + n meters - Stack Overflow</a></li>
+<li><a href="https://arthur-e.github.io/Wicket/sandbox-gmaps3.html">Wicket - Lightweight Javascript for WKT [Sandbox]</a></li>
+<li><a href="https://m.blog.naver.com/ilsan_ilsan/221497823431">[오픈소스GIS] WKB, WKT 이해 / postGIS에서의 변환, 입출력 : 네이버 블로그</a></li>
+<li><a href="https://docs.ogc.org/as/17-087r13/17-087r13.html#_the_first_part_feature_models">Features and geometry – Part 1: Feature models</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/database/spatial-index/"><time datetime="2024-12-11">2024-12-11 08:12 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/database/spatial-index/">https://cloudsoswift.github.io/post/develop/database/spatial-index/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/database/">#Database</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/mysql/">#MySQL</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/srs/">#SRS</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/spatial-index/">#Spatial Index</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/javascript/typescript-common/">[Javascript] Typescript 훑어보기</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>

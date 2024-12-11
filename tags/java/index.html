@@ -229,14 +229,6 @@
     </div>
 
     
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 6월 19일 발표한 Exception에 대해 정리한 문서를 블로그에 공유하고자 한다.
-Java에서, Exception이란?Exception 이란, Java 프로그램 실행 도중 발생하는 이벤트 로, 정상적인 명령 흐름을 방해합니다.
-예외 처리 흐름어떠한 메서드 내에서 오류가 발생하면, 메서드는 예외 객체(Exception Object)를 생성해 런타임 시스템에게 넘깁니다.
-이때, 이처럼 예외 객체를 생성해 런타임 시스템에 전달하는 것을 예외를 던진다(Throwing an Exception)라고 합니다.
-예외 객체(Exception Object) : 발생한 오류의 유형, 발생 당시 프로그램의 상태와 같은 오류에 대한 정보를 포함하는 객체입니다.
-        </div>
-    
     
     
     
@@ -294,13 +286,6 @@ Java에서, Exception이란?Exception 이란, Java 프로그램 실행 도중 �
         
     </div>
 
-    
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 3월 6일 발표한 synchronized에 대해 정리한 문서를 블로그에 공유하고자 한다.
-synchronized 키워드란?멀티 스레드 환경에서 Java 언어가 공유 자원에 대한 동기화 처리를 위해 사용되는 관용구(idiom)입니다. 이 키워드를 사용해 개발자는 간단하게 경쟁 조건(Race Condition) 을 피할 수 있습니다.
-Synchronized 키워드를 사용하게 되면 Java는 내부적으로 모니터(monitor)(모니터 락(monitor lock) 또는 내재적 락(intrinsic lock)이라고도 불림)을 사용해 동기화를 처리합니다.
-모니터는 동기화에 필요한 &lsquo;객체 상태에 대한 배타적 액세스 강제&rsquo;, &lsquo;가시성(visibility)에 필수적인 발생-전(happen-before) 관계 설정&rsquo; 과 같은 작업을 수행하는 역할을 합니다.
-        </div>
     
     
     
@@ -363,14 +348,6 @@ Synchronized 키워드를 사용하게 되면 Java는 내부적으로 모니터(
     </div>
 
     
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 2월 27일에 발표 예정인 IoC와 DI에 대해 정리한 문서를 블로그에 공유하고자 한다.
-IoC와 DI란?IoC (Inversion of Control, 제어의 역전)제어의 역전 은 사용자가 작성한 코드가 제네릭 프레임워크로부터 제어의 흐름을 전달받는 디자인 패턴을 말합니다.
-절차적 프로그래밍에선 사용자의 코드가 일반적인 작업을 위해 라이브러리를 호출하지만, 제어의 역전에선 프레임워크가 사용자의 코드를 호출하게 됩니다.
-제어의 역전은 재사용 가능한 코드와 특정 문제를 위한 코드가 애플리케이션에서 함께 동작해도, 독립적으로 개발된다는 의미를 지닙니다.
-예시
-        </div>
-    
     
     
     
@@ -429,13 +406,6 @@ IoC와 DI란?IoC (Inversion of Control, 제어의 역전)제어의 역전 은 
     </div>
 
     
-        <div class="content post-summary p-summary">
-            서론CS 스터디에서 2월 6일에 발표한 Java의 Reflection에 대해 정리한 문서를 블로그에 공유하고자 한다.
-Reflection이란? #Oracle 공식 문서Reflection은 Java의 기능 중 하나로, 실행중인 Java 프로그램이 스스로를 검사하거나, 프로그램 내부 속성(클래스, 인터페이스, 필드 값 및 메서드)을 조작할 수 있게 해줍니다.
-이는 컴파일 시간에 이름을 모르는 속성을 사용해야 할 때 특히 유용합니다.
-또한, Reflection을 통해 새로운 객체를 인스턴스화 하거나, 메서드를 호출(invoke) 하고 필드 값을 얻거나 설정할 수 있습니다. 이러한 기능은 Java만의 특징 으로 Reflection이 처음 나온 1997년 당시에는 Pascal, C, C++와 같은 언어로 작성된 프로그램은 프로그램 내에서 정의된 함수에 대한 정보를 얻을 수 있는 방법이 없습니다.
-        </div>
-    
     
     
     
@@ -491,13 +461,6 @@ Reflection이란? #Oracle 공식 문서Reflection은 Java의 기능 중 하나�
     </div>
 
     
-        <div class="content post-summary p-summary">
-            서론최근에 시작한 CS 스터디에서 첫 주제가 &lsquo;JVM&rsquo;에 관해 조사하는것으로 정해져 이를 문서로 정리 후 발표를 진행했었다.
-이를 블로그에도 일부분 정리를 해서 포스팅하고자 한다.
-여담으로 해당 문서를 작성하면서 최대한 Oracle과 같은 회사에서 올린 공식적인 문서를 참고하고자 노력했는데, JVM 구현을 위한 스펙 문서는 발견할 수 있었으나 총체적인 구조에 대한 정보는 없는 것 같아 GeeksforGeeks, Freecodecamp와 같은 학습 사이트도 참고하여 작성하였다.
-JVMJVM이란?JVM(Java Virtual Machine, 자바 가상 머신) 은 Java Application을 실행하는 런타임 엔진 역할을 하는 컴포넌트로, JRE(Java Runtime Environment)의 일부입니다.
-        </div>
-    
     
     
     
@@ -552,15 +515,6 @@ JVMJVM이란?JVM(Java Virtual Machine, 자바 가상 머신) 은 Java Applicat
         
     </div>
 
-    
-        <div class="content post-summary p-summary">
-            디자인 패턴에서의 빌더 패턴과, Java에서의 빌더 패턴에 대해 알아보고자 한다.
-디자인 패턴에서의 빌더 패턴빌더 패턴은 복잡한 객체의 &lsquo;구성&rsquo;과 &lsquo;표현&rsquo;을 분리하여, 동일한 생성 절차가 다른 표현을 생성할 수 있도록 하는 패턴이다.
-한 마디로, 복잡한 객체의 생성을 단계적이고, 관리 가능하며, 상호 교환 가능한 작업들로 분해하는 것이다.
-구성 요소디렉터(Director)빌더 인터페이스를 사용해 객체의 생성을 조절하는 요소. 객체 생성의 순서를 명시함.
-빌더 인터페이스(Builder Interface)생성 단계에 대해 개략적으로 설명하는 요소.
-콘크리트 빌더(Concrete Builder)빌더 인터페이스를 구현하여, 각 생성 단계별 세부 사항을 제공하며 조합을 관리함.
-        </div>
     
     
     
@@ -619,13 +573,6 @@ JVMJVM이란?JVM(Java Virtual Machine, 자바 가상 머신) 은 Java Applicat
         
     </div>
 
-    
-        <div class="content post-summary p-summary">
-            정적 팩토리 메서드란 무엇인지, 그리고 어떤 장점과 단점이 있는지를 정리해보고자 한다.
-정적 팩토리 메서드(Static Factory Method)클래스 인스턴스를 반환하는 단순한 정적 메서드이다.
-public 생성자를 사용하는 방법과 함께 클래스의 인스턴스를 생성하는 대표적인 방법 중 하나이다.
-예시 - Boolean클래스의 valueOfpublic static Boolean valueOf(boolean b) { // 인자로 받은 boolean 값에 따라 Boolean 클래스 인스턴스를 반환한다. return b ? Boolean.True : Boolean.FALSE; } Effective Java의 Item.2.에 따르면 생성자 대신 정적 팩터리 메서드를 고려하라 라는데, 이를 통해 얻는 이점과 실은 무엇일까?
-        </div>
     
     
     
