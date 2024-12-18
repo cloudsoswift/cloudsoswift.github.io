@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[DB] PostgreSQL 알아보기 &#43; PostGIS를 활용한 연산해보기 (w. DBeaver, GiST) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론CS 스터디에서 12월 17일 발표한 PostgreSQL 알아보기에 대해 정리하고, 이를 실습해본 문서를 블로그에 공유하고자 한다.
+개요PostgreSQL?복잡한 데이터 워크로드들을 안전하게 저장 및 확장할 수 있는 기능들을 제공하는 오픈 소스 객체-관계형 데이터베이스 시스템 객체-관계형 DB(Object-relational DB, ORD): 일반적인 관계형 DB와 유사하지만, 객체지향 개념이 추가적으로 지원되는 DB. 즉, DB단에서 클래스, 객체 및 상속의 개념을 지원 2001년부터 ACID를 지원해왔으며, 대부분의 주요 OS들을 지원함 Linux(Debian, Ubuntu, Redhat 등..), macOS, Windows, BSD(OpenBSD, FreeBSD, .">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[DB] PostgreSQL 알아보기 &#43; PostGIS를 활용한 연산해보기 (w. DBeaver, GiST)" />
+<meta property="og:description" content="서론CS 스터디에서 12월 17일 발표한 PostgreSQL 알아보기에 대해 정리하고, 이를 실습해본 문서를 블로그에 공유하고자 한다.
+개요PostgreSQL?복잡한 데이터 워크로드들을 안전하게 저장 및 확장할 수 있는 기능들을 제공하는 오픈 소스 객체-관계형 데이터베이스 시스템 객체-관계형 DB(Object-relational DB, ORD): 일반적인 관계형 DB와 유사하지만, 객체지향 개념이 추가적으로 지원되는 DB. 즉, DB단에서 클래스, 객체 및 상속의 개념을 지원 2001년부터 ACID를 지원해왔으며, 대부분의 주요 OS들을 지원함 Linux(Debian, Ubuntu, Redhat 등..), macOS, Windows, BSD(OpenBSD, FreeBSD, ." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/database/postgresql-common/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-12-18T09:12:20+09:00" />
+<meta property="article:modified_time" content="2024-12-18T09:12:20+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[DB] PostgreSQL 알아보기 &#43; PostGIS를 활용한 연산해보기 (w. DBeaver, GiST)"/>
+<meta name="twitter:description" content="서론CS 스터디에서 12월 17일 발표한 PostgreSQL 알아보기에 대해 정리하고, 이를 실습해본 문서를 블로그에 공유하고자 한다.
+개요PostgreSQL?복잡한 데이터 워크로드들을 안전하게 저장 및 확장할 수 있는 기능들을 제공하는 오픈 소스 객체-관계형 데이터베이스 시스템 객체-관계형 DB(Object-relational DB, ORD): 일반적인 관계형 DB와 유사하지만, 객체지향 개념이 추가적으로 지원되는 DB. 즉, DB단에서 클래스, 객체 및 상속의 개념을 지원 2001년부터 ACID를 지원해왔으며, 대부분의 주요 OS들을 지원함 Linux(Debian, Ubuntu, Redhat 등..), macOS, Windows, BSD(OpenBSD, FreeBSD, ."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[DB] PostgreSQL 알아보기 + PostGIS를 활용한 연산해보기 (w. DBeaver, GiST)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#postgresql"><code>PostgreSQL</code>?</a>
+      <ul>
+        <li><a href="#기원">기원</a></li>
+      </ul>
+    </li>
+    <li><a href="#왜-postgresql을-써야할까">왜 <code>PostgreSQL</code>을 써야할까?</a>
+      <ul>
+        <li><a href="#장점">장점</a></li>
+        <li><a href="#단점">단점</a></li>
+      </ul>
+    </li>
+    <li><a href="#mysql---postgresql로-마이그레이션-하기">MySQL -&gt; PostgreSQL로 마이그레이션 하기</a></li>
+    <li><a href="#postgis의-공간-인덱스-및-공간-연산">PostGIS의 공간 인덱스 및 공간 연산</a>
+      <ul>
+        <li><a href="#공간-인덱스-생성하기">공간 인덱스 생성하기</a></li>
+        <li><a href="#공간-연산-사용하기">공간 연산 사용하기</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><hr>
+<p><a href="https://github.com/orm712/CS-712">CS 스터디</a>에서 12월 17일 발표한 <a href="https://github.com/orm712/CS-712/blob/main/04-DATABASE/19_PostgreSQL/Readme.md">PostgreSQL 알아보기</a>에 대해 정리하고, 이를 실습해본 문서를 블로그에 공유하고자 한다.</p>
+<h1 id="개요" >개요
+<span>
+    <a href="#%ea%b0%9c%ec%9a%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><hr>
+<h2 id="postgresql" ><code>PostgreSQL</code>?
+<span>
+    <a href="#postgresql">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>복잡한 데이터 워크로드들을 안전하게 저장 및 확장할 수 있는 기능들을 제공하는 오픈 소스 <code>객체-관계형 데이터베이스 시스템</code>
+<ul>
+<li><code>객체-관계형 DB(Object-relational DB, ORD)</code>: 일반적인 <code>관계형 DB</code>와 유사하지만, <code>객체지향 개념</code>이 추가적으로 지원되는 DB. 즉, DB단에서 <code>클래스</code>, <code>객체</code> 및 <code>상속</code>의 개념을 지원</li>
+</ul>
+</li>
+<li>2001년부터 <code>ACID</code>를 지원해왔으며, 대부분의 <code>주요 OS들을 지원</code>함
+<ul>
+<li>Linux(Debian, Ubuntu, Redhat 등..), macOS, Windows, BSD(OpenBSD, FreeBSD, ..), Solaris</li>
+</ul>
+</li>
+<li><code>지리공간 데이터</code>를 효과적으로 저장 및 인덱싱하고 관련 쿼리를 지원하는 <a href="https://postgis.net/"><code>PostGIS</code></a>, DB단에서 암호화를 수행할 수 있는 기능들을 제공하는 <a href="https://www.postgresql.org/docs/current/pgcrypto.html"><code>pgcrypto</code></a>와 같은 다양한 확장 기능들을 사용할 수 있음</li>
+<li>(2023년 기준) <a href="https://en.wikipedia.org/wiki/SQL:2023"><code>SQL:2023(*또는 ISO/IEC 9075*)</code></a>의 필수 기능 177개 중 170 이상을 준수하는, <code>가장 표준을 완벽하게 준수하는 관계형 DB</code></li>
+</ul>
+<h3 id="기원" >기원
+<span>
+    <a href="#%ea%b8%b0%ec%9b%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>PostgreSQL</code>은 버클리 캘리포니아 대학교에서 작성된 <code>POSTGRE</code> 패키지로부터 파생됨</li>
+</ul>
+<h4 id="postgres-프로젝트" ><code>POSTGRES</code> 프로젝트
+<span>
+    <a href="#postgres-%ed%94%84%eb%a1%9c%ec%a0%9d%ed%8a%b8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><a href="https://en.wikipedia.org/wiki/Michael_Stonebraker">마이클 스톤브레이커</a> 교수가 주도한 프로젝트로, 1986년 구현이 시작됨</li>
+<li><code>POSTGRES</code>는 <code>INGRES</code>의 후속으로 1986년 개발되기 시작한 DBMS
+<ul>
+<li><a href="https://www.seas.upenn.edu/~zives/cis650/papers/INGRES.PDF"><code>INGRES</code></a>: 1975년 개발되기 시작한 <code>관계형 DBMS</code>로, UNIX 운영체제 상에서 동작하며 쿼리 언어로 <code>QUEL</code>을 사용(이후 SQL도 지원)
+<ul>
+<li>참고
+<ul>
+<li><a href="https://dl.acm.org/doi/pdf/10.1145/1499949.1500029">INGRES—A relational data base system* - by G. D. HELD, M. R. STONEBRAKER and E. WONG</a></li>
+<li><a href="https://www.seas.upenn.edu/~zives/cis650/papers/INGRES.PDF">The Design and Implementation of Ingres</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>INGRES</code>의 초기 설계로는 스톤브레이커 교수를 포함한 개발진들이 <strong>추가 및 확장하고 싶은 기능들을 <code>INGRES</code>에 통합할 수 없어</strong>, 새로운 데이터베이스 시스템인 <code>POSTGRES</code>를 구축하게 됨</li>
+</ul>
+</li>
+<li><code>POSTGRES</code>의 목표는 크게 다음과 같음 <a href="https://dsf.berkeley.edu/papers/ERL-M85-95.pdf">#</a>
+<ol>
+<li><code>복잡한 객체</code>를 더 원활하게 지원할 것
+<ul>
+<li>기존의 관계형 데이터베이스가 적합하지 않았던 <code>CAD 시스템</code>, <code>지리 데이터</code> 등의  환경에 대한 지원</li>
+<li>즉, 이러한 환경에서 사용되는 <code>지오메트리</code>(<code>Point</code>, <code>Polygon</code>, &hellip;)와 같은 타입의 지원</li>
+</ul>
+</li>
+<li>데이터 타입, 연산자 및 접근 방법에 대한 <code>사용자 확장성</code> 제공
+<ul>
+<li>이 역시, CAD용 <code>기하학 자료형</code>이나, 매핑 애플리케이션용 <code>위도/경도</code>와 같은 <code>자료형</code>과 <code>연산자</code>를 DBMS에 <code>추가할 수 있는 기능</code>을 제공하고, 일부 유형에 적합한 <code>액세스 방법</code>(ex. <code>Point</code> -&gt; <code>K-D-B 트리</code>, <code>Polygon</code> -&gt; <code>R-트리</code>) 방법을 추가할 수 있도록 하는 것을 의미</li>
+</ul>
+</li>
+<li><code>활성 데이터베이스</code>(알림 및 트리거)와 <code>포워드/백워드 체이닝</code>에 대한 추론을 위한 기능 제공
+<ul>
+<li><code>활성 데이터베이스</code> <a href="https://dl.acm.org/doi/10.1145/311531.311623">#</a>: 데이터베이스 내/외부에서 발생하는 <code>이벤트에 대응</code>할 수 있는 <code>이벤트-기반 구조</code>를 포함하는 데이터베이스.</li>
+<li><code>포워드/백워드 체이닝</code> <a href="https://www.geeksforgeeks.org/difference-between-backward-and-forward-chaining/">#</a>: 데이터 기반 추론에서, &lsquo;알려진 사실에 규칙을 적용해 나가 목표까지 도달하는 추론 기법&rsquo;(<code>포워드 체이닝</code>)과 &lsquo;목표에서 시작해 역방향으로 알려진 사실에 도달하는 추론 기법&rsquo;(<code>백워드 체이닝</code>)</li>
+<li>버그 리포트 시스템처럼, 특정 이벤트가 발생시 관리자에게 알림을 보내거나(<code>alerter</code>) 특정 데이터의 업데이트 발생시 일관성 유지를 위해 업데이트를 전파(<code>trigger</code>) 할 수 있도록 <code>활성 데이터베이스</code>와 <code>규칙(rule)</code>을 지원하는 것
+<ul>
+<li><code>규칙</code>의 경우, 일정한 규칙(ex. 수업 일정 DB에서 교수는 N학점 이상 강의를 개설 및 진행하고 &hellip; 와 같은 규칙)을 따르는 테이블이라면, 복잡한 제약 조건들로 이를 강제하는 것이 아니라, 데이터들을 기반으로 이러한 <code>규칙</code>을 추론하는 방향으로 구현해야 함</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>충돌 복구</code>를 위한 <code>DBMS 코드 간소화</code>
+<ul>
+<li>대부분의 DBMS는 <em>작성하기 까다롭고, 희귀한 케이스로 가득하며, 테스트 및 디버깅이 힘든</em> 충돌 복구 코드들이 존재</li>
+<li>게다가 앞선 목표 중 <code>사용자 정의 접근 기법</code>을 제공하는 것이 있었으므로, <code>충돌 복구 모델</code>은 <strong>가능한 간단하고 확장하기 쉬워야 함</strong></li>
+<li>따라서, <code>로그</code>를 <code>일반 데이터로 취급</code>해 <code>복구 코드를 단순화</code>하고, <code>기록 데이터에 대한 접근</code>을 <code>지원</code></li>
+</ul>
+</li>
+<li>광디스크, 워크스테이션(여러개의 프로세서로 이뤄진), 커스텀 <code>VLSI 칩</code> 등의 이점을 취할 수 있는 설계
+<ul>
+<li><code>VLSI(초고밀도 집적회로) 칩</code>: 수십억개의 MOS 트랜지스터를 결합해 단일 칩에 올리는 집적 회로 칩</li>
+<li>워크스테이션의 CPU 자원을 활용할 수 있고, 광디스크와 VLSI 칩을 효과적으로 활용할 수 있는 설계를 조사</li>
+</ul>
+</li>
+<li>관계형 모델을 가능한 적게 변경(가급적이면 변경 X)
+<ul>
+<li>많은 사용자들이 관계형 모델에 익숙해질 것이고, 관계형 모델이 데이터를 단순한 테이블 수준으로 강제하고, 관계형 대수 연산을 통해 테이블을 생성할 수 있는, 이른바 <a href="https://finance.yahoo.com/news/simplifying-big-data-keyark-allows-122000982.html"><code>스파르탄 단순성(Spartan Simplicity)</code></a>이라는 이점이 있기 때문</li>
+<li>또한, <em>일반적인 계층 구조부터 CAD 데이터와 같은 복잡한 구조</em>를 <strong>모두 다룰 수 있는</strong> <em><code>크고 복잡한 데이터 모델</code> 보단</em>, <code>확장 가능한 작고 단순한 모델</code>을 <strong>기반으로 시스템</strong>을 구축해야 한다고 생각</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h2 id="왜-postgresql을-써야할까" >왜 <code>PostgreSQL</code>을 써야할까?
+<span>
+    <a href="#%ec%99%9c-postgresql%ec%9d%84-%ec%8d%a8%ec%95%bc%ed%95%a0%ea%b9%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><hr>
+<h3 id="장점" >장점
+<span>
+    <a href="#%ec%9e%a5%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>함수, 데이터 유형, 언어 등을 추가할 수 있는 <code>확장성이 높음</code></li>
+<li><code>구조화되지 않은 데이터 유형 지원</code>
+<ul>
+<li><code>JSON</code>, <code>XML</code>, <code>H-Store(키-값 쌍으로 데이터를 저장하는 자료형)</code>와 같은 다양한 데이터 유형을 지원하며, NoSQL기능을 지원.</li>
+</ul>
+</li>
+<li>교착 상태가 거의 발생하지 않고 동시 처리가 가능하며 트랜잭션 속도가 빠른 <code>MVCC</code>
+<ul>
+<li><code>MVCC(Multi-Version Concurrency Control, 다중버전 동시성 제어)</code>: 동시 접근이 가능한 환경에서, 원본의 스냅샷과 변경중인 데이터를 동시에 유지해 별도의 락이 필요하지 않아 더 빠르게 동작하는 동시성 제어 방식</li>
+</ul>
+</li>
+<li><code>고가용성</code> 및 <code>서버 오류 복구</code></li>
+<li>데이터 암호화, SSL 인증서, 고급 인증 방법과 같은 <code>고급 보안 기능</code></li>
+<li><code>활발한 오픈소스 커뮤니티</code>가 <code>지속적으로 솔루션을 개선하고 업데이트</code></li>
+<li>이외의 추가적인 장점은 <a href="https://www.postgresql.org/about/">PostgreSQL: About</a>의 <code>Why use PostgreSQL?</code>에 나와 있음</li>
+</ul>
+<h3 id="단점" >단점
+<span>
+    <a href="#%eb%8b%a8%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>SQL Server 및 MySQL과 같은 <code>다른 RDBMS보다 성능이 느림</code>
+<ul>
+<li>다만 이는 경우에 따라 다름</li>
+<li>일반적으로 읽기 작업만 수행할 경우, MySQL/MariaDB 대비 PostgreSQL이 느리다고 알려져 있음</li>
+</ul>
+</li>
+<li><code>호환성에 더 주력</code>, <em>속도 향상을 위해서는</em> <code>추가 작업</code>이 필요함</li>
+<li><code>MVCC</code> 모델로 인해 발생하는 여러 문제점 <a href="https://www.cs.cmu.edu/~pavlo/blog/2023/04/the-part-of-postgresql-we-hate-the-most.html">참고 1 - The Part of PostgreSQL We Hate the Most // Blog // Andy Pavlo - Carnegie Mellon University</a> <a href="https://techblog.woowahan.com/9478/">참고 2 - PostgreSQL Vacuum에 대한 거의 모든 것 | 우아한형제들 기술블로그</a>
+<ul>
+<li>쿼리가 한 튜플을 업데이트하면, DBMS는 모든 컬럼을 새로운 버전에 복사함</li>
+<li><code>Dead Tuple</code>(기존 원본 데이터를 저장하여, 어디에도 참조되지 않는 Tuple)을 정리하는 <code>Vaccum</code>(Java로 비유하자면 <code>GC</code>)이 워크로드의 <code>write</code> 작업 속도를 따라잡지 못할 경우 쿼리 성능 저하(<code>DBMS</code>는 <code>Dead Tuple</code>을 메모리에 로드해야 하므로), <code>Dead Tuple</code>에 의한 부실한 쿼리 플랜 최적화 등이 발생할 수 있음</li>
+</ul>
+</li>
+</ul>
+<h2 id="mysql---postgresql로-마이그레이션-하기" >MySQL -&gt; PostgreSQL로 마이그레이션 하기
+<span>
+    <a href="#mysql---postgresql%eb%a1%9c-%eb%a7%88%ec%9d%b4%ea%b7%b8%eb%a0%88%ec%9d%b4%ec%85%98-%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><code>PostgreSQL</code> 생태계에는 다른 데이터베이스에서 자료를 가져올 수 있는 컨버터 툴들이 존재
+<ul>
+<li><a href="https://wiki.postgresql.org/wiki/Converting_from_other_Databases_to_PostgreSQL#MySQL">Converting from other Databases to PostgreSQL - PostgreSQL wiki</a></li>
+<li><code>MySQL</code>의 경우 <a href="https://github.com/dimitri/pgloader">pgloader</a>, <a href="https://pypi.org/project/pg-chameleon/">pg-chameleon</a>,  <a href="https://github.com/lanyrd/mysql-postgresql-converter">lanyrd/mysql-postgresql-converter</a>, <a href="https://github.com/philipsoutham/py-mysql2pgsql">philipsoutham/py-mysql2pgsql</a> 등 다양한 툴들이 존재함</li>
+</ul>
+</li>
+<li>하지만 이들을 본인의 경우 사용하기 쉽지 않았음
+<ul>
+<li>대부분의 툴들이 Linux 환경에서나 원활하게 동작하기 때문(특히, <code>pgloader</code>와 <code>pg-chameleon</code>은 Windows를 사실상 지원 X)</li>
+<li>또한, <code>mysqldump</code>를 통해 MySQL 데이터를 추출한 뒤, <code>pg_store</code>를 통해 복구하는 방법을 시도하는 사람들도 있었지만 두 DBMS의 규격이 달라 실패</li>
+</ul>
+</li>
+<li>따라서 다음과 같이 <code>DBeaver</code>를 활용해 자료를 CSV로 변환하고, 이를 PostgreSQL에서 import하는 방식으로 마이그레이션을 진행
+<ul>
+<li>먼저, <code>CSV 파일</code>로 MySQL 테이블을 export함
+<ul>
+<li><img src="mysql-export.png" alt="mysql-export.png"></li>
+</ul>
+</li>
+<li>이후, <code>PostgreSQL</code> DB의 <code>Schemas&gt;Tables</code>에서 데이터 가져오기를 수행
+<ul>
+<li><img src="postgresql-import.png" alt="postgresql-import.png"></li>
+</ul>
+</li>
+<li>이때, 사양의 차이로 <code>MySQL</code>의 <code>지오메트리 타입</code>이 온전히 옮겨지는 것이 아닌, <code>WKT</code>의 형태로 옮겨짐
+<ul>
+<li><img src="point-to-varchar.png" alt="point-to-varchar.png"></li>
+<li>컬럼 값을 확인해보면, 아래와 같이 <code>WKT</code> 포맷으로 varchar 타입의 문자열들이 기록되어 있음을 알 수 있음
+<ul>
+<li><img src="point-to-varchar2.png" alt="point-to-varchar2.png"></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>이를 <code>지오메트리 타입</code>으로 변환하는 과정을 수행해야 함
+<ul>
+<li>먼저, 지오메트리 타입 컬럼을 테이블에 추가하는 <a href="https://postgis.net/docs/AddGeometryColumn.html"><code>AddGeometryColumn</code></a> 함수를 호출</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#75715e">/* 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">`AddGeometryColumn(varchar table_name, varchar column_name, integer srid, varchar type, integer dimension, boolean use_typmod=true) 함수를 호출
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">*/</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">select</span> addgeometrycolumn(<span style="color:#e6db74">&#39;geotesttable&#39;</span>, <span style="color:#e6db74">&#39;geotesttable&#39;</span>, <span style="color:#e6db74">&#39;location_geom&#39;</span>, <span style="color:#ae81ff">4326</span>, <span style="color:#e6db74">&#39;POINT&#39;</span>, <span style="color:#ae81ff">2</span>)
+</span></span></code></pre></div></li>
+<li>이후, <code>update geotesttable set location_geom = ST_GeomFromText(location);</code> 문을 통해 기존 컬럼의 <code>WKT</code>를 기반으로 <code>지오메트리</code> 데이터를 생성해 컬럼 갱신</li>
+</ul>
+</li>
+</ul>
+<h2 id="postgis의-공간-인덱스-및-공간-연산" >PostGIS의 공간 인덱스 및 공간 연산
+<span>
+    <a href="#postgis%ec%9d%98-%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4-%eb%b0%8f-%ea%b3%b5%ea%b0%84-%ec%97%b0%ec%82%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><hr>
+<ul>
+<li><code>공간 연산</code>을 수행해보기 전, 먼저 <code>공간 인덱스</code>를 생성하여 <code>SELECT 쿼리</code>의 속도를 개선할 수 있도록 해야 함</li>
+</ul>
+<h3 id="공간-인덱스-생성하기" >공간 인덱스 생성하기
+<span>
+    <a href="#%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4-%ec%83%9d%ec%84%b1%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><a href="https://postgis.net/documentation/faq/spatial-indexes/">참고</a></li>
+<li><code>PostGIS</code>에서 <code>공간 인덱스</code>를 생성하는 구문은 다음과 같음
+<ul>
+<li><code>CREATE INDEX mytable_geom_x ON mytable USING GIST (geom)</code></li>
+<li><code>CREATE SPATIAL INDEX</code> 구문을 사용하던 <code>MySQL</code>과 다르게, <code>PostGIS</code>에서는 <code>USING GIST</code> 구문을 사용함
+<ul>
+<li><code>USING GIST</code>: 인덱스에서 <code>GiST(Generalized Search Tree)</code> 구조를 사용할 것을 의미
+<ul>
+<li><code>GiST(Generalized Search Tree)</code>: 단순한, 일반적인 자료형 뿐만 아니라, <em>지리 정보 시스템, 멀티미디어 시스템</em> 등 <code>다양한 환경</code>에서 사용되는 <code>자료 유형</code>을 지원하기 위해 &lsquo;<strong>확장 가능한</strong> <code>쿼리</code> 및 <code>데이터 유형 집합</code>&lsquo;을 지원하는 <code>인덱스 구조</code>.
+<ul>
+<li><code>B+ 트리</code>, <code>R-트리</code> 등 다양한 트리 구조를 지원함</li>
+<li><a href="https://www.cs.cmu.edu/~15721-f24/papers/GiST.pdf">참고1</a>, <a href="https://dsf.berkeley.edu/papers/UW-CS-TR-1274.pdf">참고2</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>이 키워드를 통해 인덱스를 설정할 경우, <code>기본 인덱스</code>가 <code>R-트리</code>로 설정되며, 해당 키워드를 사용하지 않을 경우 <code>표준 PostgreSQL B-트리</code> 인덱스를 생성함</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="공간-연산-사용하기" >공간 연산 사용하기
+<span>
+    <a href="#%ea%b3%b5%ea%b0%84-%ec%97%b0%ec%82%b0-%ec%82%ac%ec%9a%a9%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>PostGIS</code>와 <code>공간 인덱스</code>의 성능을 확인하기 위해, 다음 두 가지 케이스를 비교해보려 함
+<ol>
+<li><code>공간 인덱스</code>를 사용해 <code>사전 필터링</code>을 거친 쿼리</li>
+<li><code>공간 인덱스</code>를 사용하지 않는 함수를 사용하는 쿼리</li>
+</ol>
+<ul>
+<li>참고로 <code>공간 인덱스를 사용하는 함수</code>는 다음과 같음
+<ul>
+<li><img src="functions-which-use-spatial-index.png" alt="functions-which-use-spatial-index.png"></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>예시
+<ul>
+<li>한 점(<code>POINT(128.593317 35.865807)</code>)으로 부터 5km 떨어진 점들 검색하기
+<ul>
+<li>
+<p>약 237만개의 POINT가 기록된 테이블에서 이를 검색하고자 함</p>
+</li>
+<li>
+<p>먼저, 공간 인덱스를 사용하지 않는 <code>ST_DistanceSphere</code> 함수를 사용해봄</p>
+<ul>
+<li>이 경우, 쿼리는 다음과 같음
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> geotesttable <span style="color:#66d9ef">WHERE</span> ST_DistanceSphere(ST_GeomFromText(<span style="color:#e6db74">&#39;POINT(128.593317 35.865807)&#39;</span>, <span style="color:#ae81ff">4326</span>), location_geom) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">5000</span>;<span style="color:#f92672">`</span>
+</span></span></code></pre></div><ul>
+<li>위 쿼리에 대해 <code>EXPLAIN</code>문을 사용해 실행 계획을 살펴보면 <code>공간 인덱스</code>가 <code>활용되지 않으며</code>(<code>Seq Scan</code>), 많은 양의 row들을 살펴봄을 알 수 있음
+<ul>
+<li><img src="query-plan-with-distance-sphere.png" alt="query-plan-with-distance-sphere.png"></li>
+</ul>
+</li>
+<li>또한, 쿼리문을 수행하고 데이터를 가져오는데 약 3초정도 소요됨
+<ul>
+<li><img src="time-taken-by-query-with-distance-sphere.png" alt="time-taken-by-query-with-distance-sphere.png"></li>
+<li><img src="time-taken-by-query-with-distance-sphere2.png" alt="time-taken-by-query-with-distance-sphere2.png"></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p>반면, <code>ST_DWithin(g1, g2, distance)</code> 함수를 사용할 경우 <code>공간 인덱스를 사용</code>해 더 빠르게 탐색이 이뤄짐</p>
+<ul>
+<li><code>ST_DWithin(g1, g2, distance)</code>는 주어진 두 <code>geometry</code>(또는 <code>geography</code>) g1, g2 사이의 거리가 <code>distance</code>이내인지 <code>여부를 반환</code>하는 함수
+<ul>
+<li>
+<ul>
+<li>추가하자면, <code>ST_DWithin()</code>에 g1, g2로 <code>geography</code> 인자가 주어질 경우, <code>지구타원형</code> 형태를 기준으로 하게 됨
+<ul>
+<li>따라서 <code>ST_DistanceSphere</code> 와 동일한 기준 상에서 검색하려면 4번째 선택 인자인 <code>use_spheroid</code>을 false로 해주어야 함</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>이 경우, 쿼리는 다음과 같음
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> geotesttable <span style="color:#66d9ef">WHERE</span> ST_DWITHIN(location_geom::geography, ST_GeomFromText(<span style="color:#e6db74">&#39;POINT(128.593317 35.865807)&#39;</span>, <span style="color:#ae81ff">4326</span>)::geography , <span style="color:#ae81ff">5000</span>, <span style="color:#66d9ef">false</span>);
+</span></span></code></pre></div><ul>
+<li>이때, 지오메트리 자료형인 <code>location_geom</code>과 <code>ST_GeomFromText</code>의 결과값을 <a href="https://postgis.net/workshops/postgis-intro/geography.html"><code>geography</code></a> 타입으로 캐스팅 하고 있음을 알 수 있음</li>
+<li>이는 <code>ST_DWITHIN</code> 함수가 <code>geometry</code> 값 2개를 인자로 받을 경우, <code>distance</code>의 단위가 <code>SRID:4326</code>의 단위인 <code>도(degree)</code>로 바뀌어버리기 때문에, 미터를 사용하려면 <code>geography</code> 값 2개를 인자로 주어야 하기 때문임
+<ul>
+<li>그리고 이렇게 할 경우, <code>공간 인덱스</code> 역시 하나 더 만들어 주어야 함</li>
+<li>위에서 만들었던 <code>공간 인덱스</code>는 <code>geometry</code> 타입인 <code>location_geom</code>을 기준으로 했기 때문에, <code>geography</code>로 캐스팅하여 <code>DWITHIN</code> 함수를 호출할 경우 인덱스를 사용하지 못하기 때문</li>
+<li>따라서 아래 구문을 통해 <code>geography</code> 형태의 <code>인덱스</code>를 하나 더 만들어야 함</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">CREATE</span> <span style="color:#66d9ef">INDEX</span> location_idx_geo  <span style="color:#66d9ef">ON</span> geotesttable  <span style="color:#66d9ef">USING</span> GIST ((location_geom::geography));
+</span></span></code></pre></div></li>
+</ul>
+</li>
+<li>위 쿼리에 대해 <code>EXPLAIN</code>문을 사용해 실행 계획을 살펴보면, <code>공간 인덱스가 잘 활용되고 있으며</code>(<code>Index Scan</code>), 탐색하는 row 갯수도 훨씬 줄어들었음을 알 수 있음
+<ul>
+<li><img src="query-plan-with-dwithin.png" alt="query-plan-with-dwithin.png"></li>
+</ul>
+</li>
+<li>또한, 쿼리 수행도 총 0.4초가량으로 빠르게 이뤄짐
+<ul>
+<li><img src="time-taken-by-query-with-dwithin.png" alt="time-taken-by-query-with-dwithin.png"></li>
+<li><img src="time-taken-by-query-with-dwithin2.png" alt="time-taken-by-query-with-dwithin2.png"></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://dsf.berkeley.edu/papers/ERL-M85-95.pdf">THE DESIGN OF POSTGRES - Michael Stonebraker and Lawrence A. Rowe</a></li>
+<li><a href="https://cloud.google.com/learn/postgresql-vs-sql">PostgreSQL과 SQL Server 비교: 차이점은 무엇인가요? | Google Cloud</a></li>
+<li><a href="https://www.cs.cmu.edu/~pavlo/blog/2023/04/the-part-of-postgresql-we-hate-the-most.html">The Part of PostgreSQL We Hate the Most // Blog // Andy Pavlo - Carnegie Mellon University</a></li>
+<li><a href="https://postgis.net/workshops/postgis-intro/indexing.html">15. Spatial Indexing — Introduction to PostGIS</a></li>
+<li><a href="https://postgis.net/workshops/postgis-intro/geography.html">18. Geography — Introduction to PostGIS</a></li>
+<li><a href="https://postgis.net/docs/ST_DWithin.html">ST_DWithin</a></li>
+<li><a href="https://postgis.net/docs/ST_DistanceSphere.html">ST_DistanceSphere</a></li>
+<li><a href="https://www.postgresql.org/docs/9.1/textsearch-indexes.html">PostgreSQL: Documentation: 9.1: GiST and GIN Index Types</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/database/postgresql-common/"><time datetime="2024-12-18">2024-12-18 09:12 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/database/postgresql-common/">https://cloudsoswift.github.io/post/develop/database/postgresql-common/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/database/">#Database</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/postgresql/">#PostgreSQL</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/srs/">#SRS</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/spatial-index/">#Spatial Index</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/dbeaver/">#DBeaver</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/gist/">#GiST</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/database/spatial-index/">[DB] 공간 인덱스 알아보기 &#43; 쿼리 성능 개선해보기 (w. SRS, EPSG, SRID)</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/database/spatial-index/">[DB] 공간 인덱스 알아보기 + 쿼리 성능 개선해보기 (w. SRS, EPSG, SRID)</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2024<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>

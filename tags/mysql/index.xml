@@ -24,7 +24,7 @@
     &lt;/a&gt;
 &lt;/span&gt;
 &lt;/h1&gt;&lt;hr&gt;
-&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 12월 12일 발표 예정인 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/08-JAVASCRIPT/16_Typescript/Readme.md&#34;&gt;공간 인덱스&lt;/a&gt;에 대해 정리하고, 이를 실습해본 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/orm712/CS-712&#34;&gt;CS 스터디&lt;/a&gt;에서 12월 12일 발표 예정인 &lt;a href=&#34;https://github.com/orm712/CS-712/blob/main/04-DATABASE/18_Spatial_Index/Readme.md&#34;&gt;공간 인덱스&lt;/a&gt;에 대해 정리하고, 이를 실습해본 문서를 블로그에 공유하고자 한다.&lt;/p&gt;
 &lt;h1 id=&#34;공간-인덱스spatial-index란&#34; &gt;&lt;code&gt;공간 인덱스(Spatial Index)&lt;/code&gt;란?
 &lt;span&gt;
     &lt;a href=&#34;#%ea%b3%b5%ea%b0%84-%ec%9d%b8%eb%8d%b1%ec%8a%a4spatial-index%eb%9e%80&#34;&gt;
