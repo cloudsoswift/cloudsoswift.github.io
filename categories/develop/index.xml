@@ -6,10 +6,457 @@
     <description>오늘도 개발을 한다. (develop)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Wed, 18 Dec 2024 09:12:20 +0900</lastBuildDate>
+    <lastBuildDate>Sun, 02 Mar 2025 13:57:39 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/categories/develop/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[CS] 부동소수점 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/cs/floating-point/</link>
+      <pubDate>Sun, 02 Mar 2025 13:57:39 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/cs/floating-point/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;이펙티브 자바의 &amp;ldquo;Item 60. 정확한 답이 필요하다면 float과 double은 피하라&amp;quot;에 대한 &lt;a href=&#34;https://github.com/orm712/effective-712/blob/main/src/chapter9/item60/Item-60.%20Avoid%20float%20and%20double%20if%20exact%20answers%20are%20required.md&#34;&gt;자료&lt;/a&gt;를 작성하며 정리한 부동소수점에 대한 정보들을 포스팅하고자 한다.&lt;/p&gt;
+&lt;h2 id=&#34;이진-부동소수점binary-floating-point&#34; &gt;이진 부동소수점(binary floating point)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b4%ec%a7%84-%eb%b6%80%eb%8f%99%ec%86%8c%ec%88%98%ec%a0%90binary-floating-point&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;참고
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://0.30000000000000004.com/&#34;&gt;Floating Point Math&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;진법과, 그에 따른 &lt;code&gt;분수 표현&lt;/code&gt;에 있어 문제가 있음
+&lt;ul&gt;
+&lt;li&gt;우리가 보통 사용하는 &lt;code&gt;10진법&lt;/code&gt;의 경우, &lt;code&gt;10&lt;/code&gt;의 &lt;code&gt;소인수&lt;/code&gt;를 사용하는 분수만 표현할 수 있음
+&lt;ul&gt;
+&lt;li&gt;ex) 1/2, 1/4, 1/5, 1/8, 1/10, &amp;hellip;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;반면, 1/3, 1/6, 1/7 과 같은 수는 분모가 &lt;code&gt;3&lt;/code&gt; 또는 &lt;code&gt;7&lt;/code&gt;과 같은 &lt;code&gt;소수&lt;/code&gt;를 사용하기 때문에, &lt;code&gt;순환소수&lt;/code&gt;임
+&lt;ul&gt;
+&lt;li&gt;ex) 1/3을 &lt;code&gt;10진법&lt;/code&gt;으로 나타내려면 &lt;code&gt;0.333....&lt;/code&gt; 임&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이처럼, 컴퓨터가 사용하는 &lt;code&gt;2진법(binary)&lt;/code&gt;에서는 &lt;code&gt;2&lt;/code&gt;가 &lt;code&gt;유일한 소인수&lt;/code&gt;이기 때문에, 분모가 2인 분수만 소인수로 깔끔하게 표현할 수 있음
+&lt;ul&gt;
+&lt;li&gt;ex) 1/2, 1/4, 1/8, &amp;hellip;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;반면, &lt;code&gt;10진법&lt;/code&gt;에서 표현할 수 있던 &lt;code&gt;1/5&lt;/code&gt;, &lt;code&gt;1/10&lt;/code&gt;은 2진수에서는 &lt;code&gt;순환소수&lt;/code&gt;로 표현됨
+&lt;ul&gt;
+&lt;li&gt;따라서 &lt;code&gt;0.1(1/10)&lt;/code&gt;, &lt;code&gt;0.2(1/5)&lt;/code&gt;와 같은 수는 &lt;code&gt;10진수&lt;/code&gt;에서는 깔끔한 소수이지만, &lt;code&gt;2진수&lt;/code&gt; 체계에서는 &lt;code&gt;순환소수&lt;/code&gt;임&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;만약 &lt;code&gt;순환소수&lt;/code&gt;에 대해 연산을 수행할 경우, 이를 &lt;code&gt;2진수&lt;/code&gt;에서 사람이 읽을 수 있는 &lt;code&gt;10진수로 변환하는 과정&lt;/code&gt;에서 남은 &lt;code&gt;나머지 값&lt;/code&gt;들이 계속 &lt;code&gt;전달&lt;/code&gt;되게 됨
+&lt;ul&gt;
+&lt;li&gt;이 때문에 &lt;code&gt;0.1 + 0.2 != 0.3&lt;/code&gt;과 같은 문제가 발생하는 것&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;ieee-754---이진-부동소수점의-표현-방식&#34; &gt;IEEE 754 - 이진 부동소수점의 표현 방식
+&lt;span&gt;
+    &lt;a href=&#34;#ieee-754---%ec%9d%b4%ec%a7%84-%eb%b6%80%eb%8f%99%ec%86%8c%ec%88%98%ec%a0%90%ec%9d%98-%ed%91%9c%ed%98%84-%eb%b0%a9%ec%8b%9d&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;부동소수점의 연산에 관한 표준인 &lt;a href=&#34;https://standards.ieee.org/ieee/754/6210/&#34;&gt;IEEE 754&lt;/a&gt;에서는 &lt;em&gt;실수의 유한한 하위 집합을 표현&lt;/em&gt;하는데 사용되는 &lt;code&gt;부동소수점의 포맷&lt;/code&gt;을 정의
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;포맷&lt;/code&gt;은 &lt;code&gt;기수(radix)&lt;/code&gt;, &lt;code&gt;정밀도(precision)&lt;/code&gt;, &lt;code&gt;지수 범위(exponent range)&lt;/code&gt;로 이뤄짐&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;IEEE 754의 3절에서는 &lt;code&gt;이진수 형식 3가지(32, 64, 128bit)&lt;/code&gt;와 &lt;code&gt;십진수 형식 2가지(64, 128bit)&lt;/code&gt;의 &lt;code&gt;기본 형식&lt;/code&gt;을 정의
+- &lt;code&gt;단정도(single precision) 부동소수점&lt;/code&gt;은 32bit짜리(&lt;code&gt;binary32&lt;/code&gt;)에 해당하며, &lt;code&gt;배정도(double precision) 부동소수점&lt;/code&gt;은 64bit짜리(&lt;code&gt;binary64&lt;/code&gt;)에 해당함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;사양-수준&#34; &gt;사양 수준
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%82%ac%ec%96%91-%ec%88%98%ec%a4%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;부동소수점 산술&lt;/code&gt;은 &lt;code&gt;실수 산술&lt;/code&gt;의 체계적인 &lt;code&gt;근사치&lt;/code&gt;이므로, &lt;code&gt;실수 연속체&lt;/code&gt;의 &lt;strong&gt;&lt;code&gt;유한 하위 집합&lt;/code&gt;&lt;/strong&gt; 만 표현할 수 있음&lt;/li&gt;
+&lt;li&gt;또한, 이 표준의 산술이 기반하는 &lt;code&gt;확장 실수(extends reals)&lt;/code&gt;는 &lt;code&gt;음수/양수 무한대(-infinity, +infinity)&lt;/code&gt;를 포함하는 실수의 집합
+&lt;ul&gt;
+&lt;li&gt;따라서 &lt;code&gt;부호를 갖는(signed) 0&lt;/code&gt;, &lt;code&gt;유한한 0이 아닌 수&lt;/code&gt;, &lt;code&gt;부호를 갖는 무한대&lt;/code&gt;, &lt;code&gt;NaN&lt;/code&gt;와 같은 데이텀은 &lt;code&gt;부동 소수점 데이터 표현&lt;/code&gt; 중 하나 이상에 &lt;code&gt;매핑될 수 있음&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;표현할 수 있는 &lt;code&gt;유한 부동소수점 집합&lt;/code&gt;는 다음 &lt;code&gt;정수 매개변수&lt;/code&gt;들에 의해 정해짐
+&lt;ul&gt;
+&lt;li&gt;$b$ = &lt;code&gt;기수&lt;/code&gt;(2 또는 10)&lt;/li&gt;
+&lt;li&gt;$p$ = 정수부의 자릿수(&lt;code&gt;정밀도&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;$emax$ = 최대 지수 e&lt;/li&gt;
+&lt;li&gt;$emin$ = 최소 지수 e ($1-emax$)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;p&lt;/code&gt;와 &lt;code&gt;emax&lt;/code&gt;는 위에서 언급한 &lt;code&gt;5가지 기본 형식&lt;/code&gt;에 따라 다르며, 각 형식은 &lt;code&gt;기수&lt;/code&gt;와 &lt;code&gt;비트수&lt;/code&gt;로 식별됨
+&lt;ul&gt;
+&lt;li&gt;&lt;img src=&#34;parameters-defining-basic-format.png&#34; alt=&#34;parameters-defining-basic-format.png&#34;&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;부호를 갖는 0과 0이 아닌 부동소수점 숫자&lt;/code&gt;는 다음과 같은 형태로 표현됨
+$$
+(-1)^{s} \times b^q \times c
+$$
+&lt;ul&gt;
+&lt;li&gt;s = 0 또는 1&lt;/li&gt;
+&lt;li&gt;b = &lt;code&gt;기수&lt;/code&gt;(2 또는 10)&lt;/li&gt;
+&lt;li&gt;q = $emin \le q+p-1 \le emax$인 아무 정수&lt;/li&gt;
+&lt;li&gt;c = 이진 문자열 $d_0d_1d_2 \ldots d_{p-1}$($d_i$ 정수 자릿수 $0 \le d_i \le b$)로 표현되는 &lt;code&gt;숫자&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;따라서 c는 $0 \le c \le b^p$&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;이진-교환-형식-인코딩&#34; &gt;이진 교환 형식 인코딩
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b4%ec%a7%84-%ea%b5%90%ed%99%98-%ed%98%95%ec%8b%9d-%ec%9d%b8%ec%bd%94%eb%94%a9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img src=&#34;binary-interchange-format.png&#34; alt=&#34;binary-interchange-format.png&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;이진 교환 형식&lt;/code&gt;은 위처럼 3가지 부분으로 구성되어 있음
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;S&lt;/code&gt; : 1 bit짜리 부호 비트. 0이면 양수, 1이면 음수&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;E&lt;/code&gt;: w bit짜리 편향된 지수. ($E = e+bias$) (편향값인 &lt;code&gt;bias&lt;/code&gt;값 만큼 더하거나 뺀 수)
+&lt;ul&gt;
+&lt;li&gt;$w = round(4 \times log_2(k)) - 13$
+&lt;ul&gt;
+&lt;li&gt;k = 비트 수(ex. binary64 -&amp;gt; k = 64)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;$bias = emax (2^{w-1} - 1)$&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;T&lt;/code&gt;: t(p-1) bit짜리 후행 부호 필드 이진 문자열. $T=d_1d_2 \ldots d_{p-1}$ 이며, 맨 앞의 비트인 $d_0$은 편향된 지수인 $E$에 암시적으로 인코딩 됨
+&lt;ul&gt;
+&lt;li&gt;$t = k - w - 1$&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;예시
+&lt;ul&gt;
+&lt;li&gt;32bit라면, S = 1bit, E = $round(4 \times log_2(32)) - 13 = 8$bit, T = $32 - 8 - 1 = 23$ bit&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;이진-부동소수점의-특별한-수&#34; &gt;이진 부동소수점의 특별한 수
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b4%ec%a7%84-%eb%b6%80%eb%8f%99%ec%86%8c%ec%88%98%ec%a0%90%ec%9d%98-%ed%8a%b9%eb%b3%84%ed%95%9c-%ec%88%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;E(지수부)&lt;/code&gt;가 $2^{w}-1$, 즉 $emax + 1$ (지수부의 모든 비트가 1)이라면 다음과 같은 특수한 값을 나타냄
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;T(가수부)&lt;/code&gt;가 0인 경우, 부호화된 $\infty$&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;T&lt;/code&gt;가 0이 아닌 경우, $NaN$
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;quiet NaN&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;0/0&lt;/code&gt;, &lt;code&gt;sqrt(-1)&lt;/code&gt;, &lt;code&gt;Infinity -Infinity&lt;/code&gt;와 같이 유효하지 않거나 사용할 수 없는 데이터 및 결과값에 대한 표현&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;T&lt;/code&gt;의 첫 번째 비트(d1)가 1&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;signaling NaN&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;초기화되지 않은 변수, 표준의 범위를 벗어난 연산에 대한 표현&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;T&lt;/code&gt;의 첫 번째 비트가 0
+&lt;ul&gt;
+&lt;li&gt;대신 무한대와 구분하기 위해 다른 비트가 0이 아니어야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;후행 필드들($d_2d_3 \ldots d_{p-1}$)이 진단 정보일 수 있는 페이로드 값을 가짐&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;반면, E도 0이고, T도 0인 경우 부호화된 0을 뜻함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;서브노말&#34; &gt;서브노말
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%b8%8c%eb%85%b8%eb%a7%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;$e = emin$, 즉 E가 0이면서 T가 0이 아닌 값을 &lt;code&gt;비 정규값&lt;/code&gt;, 또는 &lt;code&gt;서브노말&lt;/code&gt;이라고 함&lt;/li&gt;
+&lt;li&gt;0과 극도로 가까운 값들을 표현하는데 사용&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;라운딩rounding&#34; &gt;라운딩(Rounding)
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%9d%bc%ec%9a%b4%eb%94%a9rounding&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;무한한 정밀도를 요구하는, &lt;code&gt;무한소수&lt;/code&gt;와 같은 수에 대해 &lt;code&gt;부동소수점&lt;/code&gt;으로 &lt;code&gt;표현&lt;/code&gt;할 수 있는 &lt;code&gt;가장 가까운 매칭 값&lt;/code&gt;을 찾는 연산&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;roundTiesToEven&lt;/code&gt;, &lt;code&gt;roundTiesToAway&lt;/code&gt;, &lt;code&gt;roundTowardPositive&lt;/code&gt; 등의 방법들이 있지만, &lt;code&gt;이진 포맷&lt;/code&gt;에서는 &lt;code&gt;roundTiesToEven&lt;/code&gt;가 디폴트
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;roundTiesToEven&lt;/code&gt;: 무한 정밀도 숫자와 가장 가까운 두 &lt;code&gt;부동소수점 숫자&lt;/code&gt;가 있을 경우, 반올림 결과의 &lt;code&gt;가장 낮은 자리수&lt;/code&gt;가 &lt;code&gt;짝수인 값&lt;/code&gt;을 선택
+&lt;ul&gt;
+&lt;li&gt;예시
+&lt;ul&gt;
+&lt;li&gt;1.40 -&amp;gt; 1&lt;/li&gt;
+&lt;li&gt;1.50 -&amp;gt; 2&lt;/li&gt;
+&lt;li&gt;2.50 -&amp;gt; 2&lt;/li&gt;
+&lt;li&gt;-1.50 -&amp;gt; -2&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;10진수를-이진-부동소수점으로-변환하기&#34; &gt;10진수를 이진 부동소수점으로 변환하기
+&lt;span&gt;
+    &lt;a href=&#34;#10%ec%a7%84%ec%88%98%eb%a5%bc-%ec%9d%b4%ec%a7%84-%eb%b6%80%eb%8f%99%ec%86%8c%ec%88%98%ec%a0%90%ec%9c%bc%eb%a1%9c-%eb%b3%80%ed%99%98%ed%95%98%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;10진수를 &lt;code&gt;이진 부동소수점&lt;/code&gt;으로 변환하는 과정은 다음과 같음
+&lt;ol&gt;
+&lt;li&gt;부호(양수 또는 음수)에 따라 &lt;code&gt;부호 비트&lt;/code&gt;를 설정함&lt;/li&gt;
+&lt;li&gt;10진수의 &lt;code&gt;정수부&lt;/code&gt;와 &lt;code&gt;소수부&lt;/code&gt;를 &lt;code&gt;2의 거듭제곱들의 합&lt;/code&gt;으로 치환하여, 각 거듭제곱들의 &lt;code&gt;지수&lt;/code&gt;를 &lt;code&gt;이진 비트&lt;/code&gt;로 기록함
+&lt;ul&gt;
+&lt;li&gt;ex) 118.625 라는 수를 2의 거듭제곱 합으로 분해하면
+&lt;ul&gt;
+&lt;li&gt;118 = $2^6$ + $2^5$ + $2^4$ + $2^2$ + $2^1$ = $1110110_2$&lt;/li&gt;
+&lt;li&gt;0.625 = $\frac{1}{2^1} + \frac{1}{2^3}$ = $0.101_2$&lt;/li&gt;
+&lt;li&gt;118.625 = $1110110.101_2$&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;정규화를 하여, 소수점 왼쪽에는 하나의 수만 남도록 함
+&lt;ul&gt;
+&lt;li&gt;$1110110.101_2$ -&amp;gt; $1.110110101_2 \times 2^6$&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;정규화된 수의 2의 거듭제곱 부분의 &lt;code&gt;지수&lt;/code&gt;(위 예시에서는 6)가 $e$가 되며, 지수부 $E = e + bias$ 라고 했으므로 편향값인 $bias$를 더해주면 &lt;code&gt;지수부&lt;/code&gt; 값이 됨
+&lt;ul&gt;
+&lt;li&gt;$E = 6 + 127 = 133 = 10000101_2$&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;반면, 소수부(소수점 아래 부분수)의 값들으이 오른쪽에 0으로 채워넣어 $t$ 비트만큼의 이진 문자열을 만들면 이것이 &lt;code&gt;가수부&lt;/code&gt;가 됨
+&lt;ul&gt;
+&lt;li&gt;$T = 11011010100000000000000$&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;부동소수점-연산&#34; &gt;부동소수점 연산
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b6%80%eb%8f%99%ec%86%8c%ec%88%98%ec%a0%90-%ec%97%b0%ec%82%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;덧셈&lt;/code&gt; 및 &lt;code&gt;뺄셈&lt;/code&gt;
+&lt;ol&gt;
+&lt;li&gt;두 수의 지수가 다를 경우, &lt;code&gt;지수가 작은 쪽&lt;/code&gt;을 큰 쪽에 &lt;code&gt;맞춤&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;작은 쪽의 가수를 &lt;code&gt;오른쪽으로 시프트&lt;/code&gt;하여 맞춤&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;가수를 더하거나, 뺌&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;이때 가수의 덧셈과 뺄셈은 이진수 덧셈/뺄셈과 같은 방식으로 이루어짐&lt;/li&gt;
+&lt;li&gt;ex) $0101_2$ + $1001_2$ = $1110_2$&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol start=&#34;3&#34;&gt;
+&lt;li&gt;연산 결과가 $1.XXXX \times 2^n$ 과 맞지 않으면 &lt;code&gt;정규화&lt;/code&gt; 수행&lt;/li&gt;
+&lt;li&gt;필요하다면 &lt;code&gt;반올림&lt;/code&gt; 및 &lt;code&gt;언더/오버플로우&lt;/code&gt; 처리
+&lt;ul&gt;
+&lt;li&gt;결과가 너무 작으면 0, 너무 크면 $\infty$로 처리&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;곱셈&lt;/code&gt; 및 &lt;code&gt;나눗셈&lt;/code&gt;
+&lt;ol&gt;
+&lt;li&gt;두 수의 지수를 &lt;code&gt;더하거나&lt;/code&gt;, &lt;code&gt;뺌&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;뺄 때는 &lt;code&gt;나누어지는 수의 지수 - 나누는 수의 지수&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;가수끼리 정수 곱셈하듯 곱하거나, 정수 나눗셈하듯 나눔&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;정규화&lt;/code&gt; 수행&lt;/li&gt;
+&lt;li&gt;필요하다면 반올림 및 언더/오버플로우 처리&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;예시-01--02&#34; &gt;예시) 0.1 + 0.2
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-01--02&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;0.1&lt;/code&gt;과 &lt;code&gt;0.2&lt;/code&gt;를 각각 부동소수점 표현으로 변환
+&lt;ul&gt;
+&lt;li&gt;소수를 2진수로 변환하기 위해서는 다음과 같은 과정 거침
+&lt;ul&gt;
+&lt;li&gt;소수 부분을 2로 곱한 뒤, 정수 부분 저장&lt;/li&gt;
+&lt;li&gt;소수 부분만 남긴 채, 다시 2를 곱함&lt;/li&gt;
+&lt;li&gt;위 두 단계를 소수 부분이 0이 되거나, 포맷에서 지원하는 자릿수까지 반복&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;0.1의 경우, 다음과 같이 반복됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;10진수 값 × 2&lt;/th&gt;
+&lt;th&gt;정수부분&lt;/th&gt;
+&lt;th&gt;소수 부분&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;0.1 × 2&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0.2&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.2 × 2&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0.4&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.4 × 2&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0.8&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.8 × 2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;0.6&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.6 × 2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;0.2&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.2 × 2&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0.4&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.4 × 2&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0.8&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.8 × 2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;0.6&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;0.6 × 2&lt;/td&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;0.2&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;ul&gt;
+&lt;li&gt;첫 번째 0 이후, 0011이 계속해서 나옴&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;0.000110011001100...&lt;/code&gt; 을 정규화 할 경우 &lt;code&gt;1.1001100110011001100110011₂ × 2⁻⁴&lt;/code&gt;가 됨
+&lt;ul&gt;
+&lt;li&gt;이때, 가수 부분은 23비트 만큼만 저장&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;즉, 0.1은 &lt;code&gt;지수&lt;/code&gt;가 (-4  + 127(bias)) = 123 = &lt;code&gt;01111011₂&lt;/code&gt; 이고,  &lt;code&gt;가수&lt;/code&gt;가 &lt;code&gt;10011001100110011001101&lt;/code&gt;인 수로 표현&lt;/li&gt;
+&lt;li&gt;0.2는 위 표에서 볼 수 있듯 왼쪽으로 한 칸 쉬프트된 0.1이라고 볼 수 있음
+&lt;ul&gt;
+&lt;li&gt;따라서 0.2는 &lt;code&gt;지수&lt;/code&gt;가 (-3  + 127(bias)) = 124 = &lt;code&gt;01111100₂&lt;/code&gt; 이고,  &lt;code&gt;가수&lt;/code&gt;가 &lt;code&gt;10011001100110011001101&lt;/code&gt;인 수로 표현&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;둘을 더하기 위해서는 지수를 맞춰주어야 하므로 지수가 작은 0.1을 0.2에 맞춤
+&lt;ul&gt;
+&lt;li&gt;따라서 0.1의 가수들을 오른쪽으로 한 칸 시프트해, 지수를 -3으로 변환&lt;/li&gt;
+&lt;li&gt;가수는 &lt;code&gt;1.10011001100110011001101&lt;/code&gt; -&amp;gt; &lt;code&gt;0.110011001100110011001101&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이후 가수끼리 덧셈
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;0.110011001100110011001101&lt;/code&gt; (0.1) + &lt;code&gt;1.10011001100110011001101&lt;/code&gt; (0.2) = &lt;code&gt;10.01100110011001100110010 * 2⁻³&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;구한 가수를 정규화하기 위해 오른쪽으로 시프트
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;1.00110011001100110011001 * 2⁻²&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;위 값은 정확히 0.3이 아니므로, 0.1 + 0.2 != 0.3와 같은 문제 발생&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;해결책&#34; &gt;해결책?
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%b4%ea%b2%b0%ec%b1%85&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;BigDecimal first &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; BigDecimal&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;valueOf&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.1&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;BigDecimal second &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; BigDecimal&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;valueOf&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.2&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;BigDecimal result &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; first&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;add&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;second&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;System&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;BigDecimal&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;valueOf&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0.3&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;).&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;equals&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;result&lt;span style=&#34;color:#f92672&#34;&gt;));&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;// true
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;표현 가능한 값의 범위가 $-10^{-999999999} \sim 10^{999999999}$ 까지로 훨씬 넓은 &lt;a href=&#34;https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html&#34;&gt;BigDecimal&lt;/a&gt;을 쓸 것을 권장&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://csap.snu.ac.kr/sites/default/files/teaching/03.Number.Representations.Floating.Point.pdf&#34;&gt;Number Representations - Floating Point Numbers : 4190.308 Computer Architecture&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://johngrib.github.io/wiki/floating-point/#00-%EA%B3%BC-10&#34;&gt;Floating Point 부동소수점 - 기계인간 John Grib&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/java-double-precision-issue&#34;&gt;Double Precision Issue in Java | Baeldung&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/IEEE_754&#34;&gt;IEEE 754 - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Floating-point_arithmetic&#34;&gt;Floating-point arithmetic - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://archive.md/ZGda8&#34;&gt;IEEE 부동 소수점 오류의 이해를 위한 자습서&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://sci-hub.se/10.1109/IEEESTD.2019.8766229&#34;&gt;Sci-Hub | | 10.1109/IEEESTD.2019.8766229&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.gnu.org/software/c-intro-and-ref/manual/html_node/Special-Float-Values.html&#34;&gt;Special Float Values (GNU C Language Manual)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://modulabs.co.kr/blog/floating-point-biased-exponent&#34;&gt;부동소수점 편향된 지수 Biased Exponent | 블로그 | 모두의연구소&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;추가로-읽으면-좋을-것들&#34; &gt;추가로 읽으면 좋을 것들
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b6%94%ea%b0%80%eb%a1%9c-%ec%9d%bd%ec%9c%bc%eb%a9%b4-%ec%a2%8b%ec%9d%84-%ea%b2%83%eb%93%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/cd/E19957-01/806-3568/ncg_math.html&#34;&gt;Numerical Computation Guide - IEEE Arithmetic&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html&#34;&gt;Numerical Computation Guide - What Every Computer Scientist Should Know About Floating-Point Arithmetic&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>[DB] PostgreSQL 알아보기 &#43; PostGIS를 활용한 연산해보기 (w. DBeaver, GiST)</title>

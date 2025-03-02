@@ -2,10 +2,34 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://cloudsoswift.github.io/post/develop/database/postgresql-common/</loc>
-    <lastmod>2024-12-18T09:12:20+09:00</lastmod>
+    <loc>https://cloudsoswift.github.io/post/develop/cs/floating-point/</loc>
+    <lastmod>2025-03-02T13:57:39+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/categories/</loc>
+    <lastmod>2025-03-02T13:57:39+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/cs/</loc>
+    <lastmod>2025-03-02T13:57:39+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/categories/develop/</loc>
+    <lastmod>2025-03-02T13:57:39+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/floating-point/</loc>
+    <lastmod>2025-03-02T13:57:39+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/java/</loc>
+    <lastmod>2025-03-02T13:57:39+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/post/</loc>
+    <lastmod>2025-03-02T13:57:39+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/</loc>
+    <lastmod>2025-03-02T13:57:39+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/</loc>
+    <lastmod>2025-03-02T13:57:39+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/post/develop/database/postgresql-common/</loc>
     <lastmod>2024-12-18T09:12:20+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/database/</loc>
@@ -14,28 +38,16 @@
     <loc>https://cloudsoswift.github.io/tags/dbeaver/</loc>
     <lastmod>2024-12-18T09:12:20+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/categories/develop/</loc>
-    <lastmod>2024-12-18T09:12:20+09:00</lastmod>
-  </url><url>
     <loc>https://cloudsoswift.github.io/tags/gist/</loc>
     <lastmod>2024-12-18T09:12:20+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/postgresql/</loc>
     <lastmod>2024-12-18T09:12:20+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/post/</loc>
-    <lastmod>2024-12-18T09:12:20+09:00</lastmod>
-  </url><url>
     <loc>https://cloudsoswift.github.io/tags/spatial-index/</loc>
     <lastmod>2024-12-18T09:12:20+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/srs/</loc>
-    <lastmod>2024-12-18T09:12:20+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/</loc>
-    <lastmod>2024-12-18T09:12:20+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/</loc>
     <lastmod>2024-12-18T09:12:20+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/database/spatial-index/</loc>
@@ -170,9 +182,6 @@
     <loc>https://cloudsoswift.github.io/post/develop/cs/virtualization/</loc>
     <lastmod>2024-08-15T19:45:01+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/tags/cs/</loc>
-    <lastmod>2024-08-15T19:45:01+09:00</lastmod>
-  </url><url>
     <loc>https://cloudsoswift.github.io/tags/docker/</loc>
     <lastmod>2024-08-15T19:45:01+09:00</lastmod>
   </url><url>
@@ -249,9 +258,6 @@
     <lastmod>2024-06-26T16:54:30+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/exception/</loc>
-    <lastmod>2024-06-26T16:54:30+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/java/</loc>
     <lastmod>2024-06-26T16:54:30+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/%EC%98%88%EC%99%B8-%EC%B2%98%EB%A6%AC/</loc>

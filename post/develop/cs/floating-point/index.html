@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[CS] 부동소수점 알아보기 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론이펙티브 자바의 &ldquo;Item 60. 정확한 답이 필요하다면 float과 double은 피하라&quot;에 대한 자료를 작성하며 정리한 부동소수점에 대한 정보들을 포스팅하고자 한다.
+이진 부동소수점(binary floating point)참고 Floating Point Math 진법과, 그에 따른 분수 표현에 있어 문제가 있음 우리가 보통 사용하는 10진법의 경우, 10의 소인수를 사용하는 분수만 표현할 수 있음 ex) 1/2, 1/4, 1/5, 1/8, 1/10, &hellip; 반면, 1/3, 1/6, 1/7 과 같은 수는 분모가 3 또는 7과 같은 소수를 사용하기 때문에, 순환소수임 ex) 1/3을 10진법으로 나타내려면 0.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[CS] 부동소수점 알아보기" />
+<meta property="og:description" content="서론이펙티브 자바의 &ldquo;Item 60. 정확한 답이 필요하다면 float과 double은 피하라&quot;에 대한 자료를 작성하며 정리한 부동소수점에 대한 정보들을 포스팅하고자 한다.
+이진 부동소수점(binary floating point)참고 Floating Point Math 진법과, 그에 따른 분수 표현에 있어 문제가 있음 우리가 보통 사용하는 10진법의 경우, 10의 소인수를 사용하는 분수만 표현할 수 있음 ex) 1/2, 1/4, 1/5, 1/8, 1/10, &hellip; 반면, 1/3, 1/6, 1/7 과 같은 수는 분모가 3 또는 7과 같은 소수를 사용하기 때문에, 순환소수임 ex) 1/3을 10진법으로 나타내려면 0." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/cs/floating-point/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2025-03-02T13:57:39+09:00" />
+<meta property="article:modified_time" content="2025-03-02T13:57:39+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[CS] 부동소수점 알아보기"/>
+<meta name="twitter:description" content="서론이펙티브 자바의 &ldquo;Item 60. 정확한 답이 필요하다면 float과 double은 피하라&quot;에 대한 자료를 작성하며 정리한 부동소수점에 대한 정보들을 포스팅하고자 한다.
+이진 부동소수점(binary floating point)참고 Floating Point Math 진법과, 그에 따른 분수 표현에 있어 문제가 있음 우리가 보통 사용하는 10진법의 경우, 10의 소인수를 사용하는 분수만 표현할 수 있음 ex) 1/2, 1/4, 1/5, 1/8, 1/10, &hellip; 반면, 1/3, 1/6, 1/7 과 같은 수는 분모가 3 또는 7과 같은 소수를 사용하기 때문에, 순환소수임 ex) 1/3을 10진법으로 나타내려면 0."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[CS] 부동소수점 알아보기</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#이진-부동소수점binary-floating-point">이진 부동소수점(binary floating point)</a></li>
+    <li><a href="#ieee-754---이진-부동소수점의-표현-방식">IEEE 754 - 이진 부동소수점의 표현 방식</a>
+      <ul>
+        <li><a href="#사양-수준">사양 수준</a></li>
+        <li><a href="#이진-교환-형식-인코딩">이진 교환 형식 인코딩</a></li>
+        <li><a href="#이진-부동소수점의-특별한-수">이진 부동소수점의 특별한 수</a></li>
+        <li><a href="#서브노말">서브노말</a></li>
+        <li><a href="#라운딩rounding">라운딩(Rounding)</a></li>
+        <li><a href="#10진수를-이진-부동소수점으로-변환하기">10진수를 이진 부동소수점으로 변환하기</a></li>
+        <li><a href="#부동소수점-연산">부동소수점 연산</a></li>
+        <li><a href="#예시-01--02">예시) 0.1 + 0.2</a></li>
+      </ul>
+    </li>
+    <li><a href="#해결책">해결책?</a></li>
+  </ul>
+
+  <ul>
+    <li><a href="#추가로-읽으면-좋을-것들">추가로 읽으면 좋을 것들</a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p>이펙티브 자바의 &ldquo;Item 60. 정확한 답이 필요하다면 float과 double은 피하라&quot;에 대한 <a href="https://github.com/orm712/effective-712/blob/main/src/chapter9/item60/Item-60.%20Avoid%20float%20and%20double%20if%20exact%20answers%20are%20required.md">자료</a>를 작성하며 정리한 부동소수점에 대한 정보들을 포스팅하고자 한다.</p>
+<h2 id="이진-부동소수점binary-floating-point" >이진 부동소수점(binary floating point)
+<span>
+    <a href="#%ec%9d%b4%ec%a7%84-%eb%b6%80%eb%8f%99%ec%86%8c%ec%88%98%ec%a0%90binary-floating-point">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>참고
+<ul>
+<li><a href="https://0.30000000000000004.com/">Floating Point Math</a></li>
+</ul>
+</li>
+<li>진법과, 그에 따른 <code>분수 표현</code>에 있어 문제가 있음
+<ul>
+<li>우리가 보통 사용하는 <code>10진법</code>의 경우, <code>10</code>의 <code>소인수</code>를 사용하는 분수만 표현할 수 있음
+<ul>
+<li>ex) 1/2, 1/4, 1/5, 1/8, 1/10, &hellip;</li>
+</ul>
+</li>
+<li>반면, 1/3, 1/6, 1/7 과 같은 수는 분모가 <code>3</code> 또는 <code>7</code>과 같은 <code>소수</code>를 사용하기 때문에, <code>순환소수</code>임
+<ul>
+<li>ex) 1/3을 <code>10진법</code>으로 나타내려면 <code>0.333....</code> 임</li>
+</ul>
+</li>
+<li>이처럼, 컴퓨터가 사용하는 <code>2진법(binary)</code>에서는 <code>2</code>가 <code>유일한 소인수</code>이기 때문에, 분모가 2인 분수만 소인수로 깔끔하게 표현할 수 있음
+<ul>
+<li>ex) 1/2, 1/4, 1/8, &hellip;</li>
+</ul>
+</li>
+<li>반면, <code>10진법</code>에서 표현할 수 있던 <code>1/5</code>, <code>1/10</code>은 2진수에서는 <code>순환소수</code>로 표현됨
+<ul>
+<li>따라서 <code>0.1(1/10)</code>, <code>0.2(1/5)</code>와 같은 수는 <code>10진수</code>에서는 깔끔한 소수이지만, <code>2진수</code> 체계에서는 <code>순환소수</code>임</li>
+</ul>
+</li>
+<li>만약 <code>순환소수</code>에 대해 연산을 수행할 경우, 이를 <code>2진수</code>에서 사람이 읽을 수 있는 <code>10진수로 변환하는 과정</code>에서 남은 <code>나머지 값</code>들이 계속 <code>전달</code>되게 됨
+<ul>
+<li>이 때문에 <code>0.1 + 0.2 != 0.3</code>과 같은 문제가 발생하는 것</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="ieee-754---이진-부동소수점의-표현-방식" >IEEE 754 - 이진 부동소수점의 표현 방식
+<span>
+    <a href="#ieee-754---%ec%9d%b4%ec%a7%84-%eb%b6%80%eb%8f%99%ec%86%8c%ec%88%98%ec%a0%90%ec%9d%98-%ed%91%9c%ed%98%84-%eb%b0%a9%ec%8b%9d">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>부동소수점의 연산에 관한 표준인 <a href="https://standards.ieee.org/ieee/754/6210/">IEEE 754</a>에서는 <em>실수의 유한한 하위 집합을 표현</em>하는데 사용되는 <code>부동소수점의 포맷</code>을 정의
+<ul>
+<li><code>포맷</code>은 <code>기수(radix)</code>, <code>정밀도(precision)</code>, <code>지수 범위(exponent range)</code>로 이뤄짐</li>
+</ul>
+</li>
+<li>IEEE 754의 3절에서는 <code>이진수 형식 3가지(32, 64, 128bit)</code>와 <code>십진수 형식 2가지(64, 128bit)</code>의 <code>기본 형식</code>을 정의
+- <code>단정도(single precision) 부동소수점</code>은 32bit짜리(<code>binary32</code>)에 해당하며, <code>배정도(double precision) 부동소수점</code>은 64bit짜리(<code>binary64</code>)에 해당함</li>
+</ul>
+<h3 id="사양-수준" >사양 수준
+<span>
+    <a href="#%ec%82%ac%ec%96%91-%ec%88%98%ec%a4%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>부동소수점 산술</code>은 <code>실수 산술</code>의 체계적인 <code>근사치</code>이므로, <code>실수 연속체</code>의 <strong><code>유한 하위 집합</code></strong> 만 표현할 수 있음</li>
+<li>또한, 이 표준의 산술이 기반하는 <code>확장 실수(extends reals)</code>는 <code>음수/양수 무한대(-infinity, +infinity)</code>를 포함하는 실수의 집합
+<ul>
+<li>따라서 <code>부호를 갖는(signed) 0</code>, <code>유한한 0이 아닌 수</code>, <code>부호를 갖는 무한대</code>, <code>NaN</code>와 같은 데이텀은 <code>부동 소수점 데이터 표현</code> 중 하나 이상에 <code>매핑될 수 있음</code></li>
+<li>표현할 수 있는 <code>유한 부동소수점 집합</code>는 다음 <code>정수 매개변수</code>들에 의해 정해짐
+<ul>
+<li>$b$ = <code>기수</code>(2 또는 10)</li>
+<li>$p$ = 정수부의 자릿수(<code>정밀도</code>)</li>
+<li>$emax$ = 최대 지수 e</li>
+<li>$emin$ = 최소 지수 e ($1-emax$)</li>
+<li><code>p</code>와 <code>emax</code>는 위에서 언급한 <code>5가지 기본 형식</code>에 따라 다르며, 각 형식은 <code>기수</code>와 <code>비트수</code>로 식별됨
+<ul>
+<li><img src="parameters-defining-basic-format.png" alt="parameters-defining-basic-format.png"></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>부호를 갖는 0과 0이 아닌 부동소수점 숫자</code>는 다음과 같은 형태로 표현됨
+$$
+(-1)^{s} \times b^q \times c
+$$
+<ul>
+<li>s = 0 또는 1</li>
+<li>b = <code>기수</code>(2 또는 10)</li>
+<li>q = $emin \le q+p-1 \le emax$인 아무 정수</li>
+<li>c = 이진 문자열 $d_0d_1d_2 \ldots d_{p-1}$($d_i$ 정수 자릿수 $0 \le d_i \le b$)로 표현되는 <code>숫자</code>
+<ul>
+<li>따라서 c는 $0 \le c \le b^p$</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="이진-교환-형식-인코딩" >이진 교환 형식 인코딩
+<span>
+    <a href="#%ec%9d%b4%ec%a7%84-%ea%b5%90%ed%99%98-%ed%98%95%ec%8b%9d-%ec%9d%b8%ec%bd%94%eb%94%a9">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><img src="binary-interchange-format.png" alt="binary-interchange-format.png"></p>
+<ul>
+<li><code>이진 교환 형식</code>은 위처럼 3가지 부분으로 구성되어 있음
+<ul>
+<li><code>S</code> : 1 bit짜리 부호 비트. 0이면 양수, 1이면 음수</li>
+<li><code>E</code>: w bit짜리 편향된 지수. ($E = e+bias$) (편향값인 <code>bias</code>값 만큼 더하거나 뺀 수)
+<ul>
+<li>$w = round(4 \times log_2(k)) - 13$
+<ul>
+<li>k = 비트 수(ex. binary64 -&gt; k = 64)</li>
+</ul>
+</li>
+<li>$bias = emax (2^{w-1} - 1)$</li>
+</ul>
+</li>
+<li><code>T</code>: t(p-1) bit짜리 후행 부호 필드 이진 문자열. $T=d_1d_2 \ldots d_{p-1}$ 이며, 맨 앞의 비트인 $d_0$은 편향된 지수인 $E$에 암시적으로 인코딩 됨
+<ul>
+<li>$t = k - w - 1$</li>
+</ul>
+</li>
+<li>예시
+<ul>
+<li>32bit라면, S = 1bit, E = $round(4 \times log_2(32)) - 13 = 8$bit, T = $32 - 8 - 1 = 23$ bit</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="이진-부동소수점의-특별한-수" >이진 부동소수점의 특별한 수
+<span>
+    <a href="#%ec%9d%b4%ec%a7%84-%eb%b6%80%eb%8f%99%ec%86%8c%ec%88%98%ec%a0%90%ec%9d%98-%ed%8a%b9%eb%b3%84%ed%95%9c-%ec%88%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>E(지수부)</code>가 $2^{w}-1$, 즉 $emax + 1$ (지수부의 모든 비트가 1)이라면 다음과 같은 특수한 값을 나타냄
+<ul>
+<li><code>T(가수부)</code>가 0인 경우, 부호화된 $\infty$</li>
+<li><code>T</code>가 0이 아닌 경우, $NaN$
+<ul>
+<li><code>quiet NaN</code>
+<ul>
+<li><code>0/0</code>, <code>sqrt(-1)</code>, <code>Infinity -Infinity</code>와 같이 유효하지 않거나 사용할 수 없는 데이터 및 결과값에 대한 표현</li>
+<li><code>T</code>의 첫 번째 비트(d1)가 1</li>
+</ul>
+</li>
+<li><code>signaling NaN</code>
+<ul>
+<li>초기화되지 않은 변수, 표준의 범위를 벗어난 연산에 대한 표현</li>
+<li><code>T</code>의 첫 번째 비트가 0
+<ul>
+<li>대신 무한대와 구분하기 위해 다른 비트가 0이 아니어야 함</li>
+</ul>
+</li>
+<li>후행 필드들($d_2d_3 \ldots d_{p-1}$)이 진단 정보일 수 있는 페이로드 값을 가짐</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>반면, E도 0이고, T도 0인 경우 부호화된 0을 뜻함</li>
+</ul>
+<h3 id="서브노말" >서브노말
+<span>
+    <a href="#%ec%84%9c%eb%b8%8c%eb%85%b8%eb%a7%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>$e = emin$, 즉 E가 0이면서 T가 0이 아닌 값을 <code>비 정규값</code>, 또는 <code>서브노말</code>이라고 함</li>
+<li>0과 극도로 가까운 값들을 표현하는데 사용</li>
+</ul>
+<h3 id="라운딩rounding" >라운딩(Rounding)
+<span>
+    <a href="#%eb%9d%bc%ec%9a%b4%eb%94%a9rounding">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>무한한 정밀도를 요구하는, <code>무한소수</code>와 같은 수에 대해 <code>부동소수점</code>으로 <code>표현</code>할 수 있는 <code>가장 가까운 매칭 값</code>을 찾는 연산</li>
+<li><code>roundTiesToEven</code>, <code>roundTiesToAway</code>, <code>roundTowardPositive</code> 등의 방법들이 있지만, <code>이진 포맷</code>에서는 <code>roundTiesToEven</code>가 디폴트
+<ul>
+<li><code>roundTiesToEven</code>: 무한 정밀도 숫자와 가장 가까운 두 <code>부동소수점 숫자</code>가 있을 경우, 반올림 결과의 <code>가장 낮은 자리수</code>가 <code>짝수인 값</code>을 선택
+<ul>
+<li>예시
+<ul>
+<li>1.40 -&gt; 1</li>
+<li>1.50 -&gt; 2</li>
+<li>2.50 -&gt; 2</li>
+<li>-1.50 -&gt; -2</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="10진수를-이진-부동소수점으로-변환하기" >10진수를 이진 부동소수점으로 변환하기
+<span>
+    <a href="#10%ec%a7%84%ec%88%98%eb%a5%bc-%ec%9d%b4%ec%a7%84-%eb%b6%80%eb%8f%99%ec%86%8c%ec%88%98%ec%a0%90%ec%9c%bc%eb%a1%9c-%eb%b3%80%ed%99%98%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>10진수를 <code>이진 부동소수점</code>으로 변환하는 과정은 다음과 같음
+<ol>
+<li>부호(양수 또는 음수)에 따라 <code>부호 비트</code>를 설정함</li>
+<li>10진수의 <code>정수부</code>와 <code>소수부</code>를 <code>2의 거듭제곱들의 합</code>으로 치환하여, 각 거듭제곱들의 <code>지수</code>를 <code>이진 비트</code>로 기록함
+<ul>
+<li>ex) 118.625 라는 수를 2의 거듭제곱 합으로 분해하면
+<ul>
+<li>118 = $2^6$ + $2^5$ + $2^4$ + $2^2$ + $2^1$ = $1110110_2$</li>
+<li>0.625 = $\frac{1}{2^1} + \frac{1}{2^3}$ = $0.101_2$</li>
+<li>118.625 = $1110110.101_2$</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>정규화를 하여, 소수점 왼쪽에는 하나의 수만 남도록 함
+<ul>
+<li>$1110110.101_2$ -&gt; $1.110110101_2 \times 2^6$</li>
+</ul>
+</li>
+<li>정규화된 수의 2의 거듭제곱 부분의 <code>지수</code>(위 예시에서는 6)가 $e$가 되며, 지수부 $E = e + bias$ 라고 했으므로 편향값인 $bias$를 더해주면 <code>지수부</code> 값이 됨
+<ul>
+<li>$E = 6 + 127 = 133 = 10000101_2$</li>
+</ul>
+</li>
+<li>반면, 소수부(소수점 아래 부분수)의 값들으이 오른쪽에 0으로 채워넣어 $t$ 비트만큼의 이진 문자열을 만들면 이것이 <code>가수부</code>가 됨
+<ul>
+<li>$T = 11011010100000000000000$</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h3 id="부동소수점-연산" >부동소수점 연산
+<span>
+    <a href="#%eb%b6%80%eb%8f%99%ec%86%8c%ec%88%98%ec%a0%90-%ec%97%b0%ec%82%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>덧셈</code> 및 <code>뺄셈</code>
+<ol>
+<li>두 수의 지수가 다를 경우, <code>지수가 작은 쪽</code>을 큰 쪽에 <code>맞춤</code>
+<ul>
+<li>작은 쪽의 가수를 <code>오른쪽으로 시프트</code>하여 맞춤</li>
+</ul>
+</li>
+<li>가수를 더하거나, 뺌</li>
+</ol>
+<ul>
+<li>이때 가수의 덧셈과 뺄셈은 이진수 덧셈/뺄셈과 같은 방식으로 이루어짐</li>
+<li>ex) $0101_2$ + $1001_2$ = $1110_2$</li>
+</ul>
+<ol start="3">
+<li>연산 결과가 $1.XXXX \times 2^n$ 과 맞지 않으면 <code>정규화</code> 수행</li>
+<li>필요하다면 <code>반올림</code> 및 <code>언더/오버플로우</code> 처리
+<ul>
+<li>결과가 너무 작으면 0, 너무 크면 $\infty$로 처리</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><code>곱셈</code> 및 <code>나눗셈</code>
+<ol>
+<li>두 수의 지수를 <code>더하거나</code>, <code>뺌</code>
+<ul>
+<li>뺄 때는 <code>나누어지는 수의 지수 - 나누는 수의 지수</code></li>
+</ul>
+</li>
+<li>가수끼리 정수 곱셈하듯 곱하거나, 정수 나눗셈하듯 나눔</li>
+<li><code>정규화</code> 수행</li>
+<li>필요하다면 반올림 및 언더/오버플로우 처리</li>
+</ol>
+</li>
+</ul>
+<h3 id="예시-01--02" >예시) 0.1 + 0.2
+<span>
+    <a href="#%ec%98%88%ec%8b%9c-01--02">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>0.1</code>과 <code>0.2</code>를 각각 부동소수점 표현으로 변환
+<ul>
+<li>소수를 2진수로 변환하기 위해서는 다음과 같은 과정 거침
+<ul>
+<li>소수 부분을 2로 곱한 뒤, 정수 부분 저장</li>
+<li>소수 부분만 남긴 채, 다시 2를 곱함</li>
+<li>위 두 단계를 소수 부분이 0이 되거나, 포맷에서 지원하는 자릿수까지 반복</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>0.1의 경우, 다음과 같이 반복됨</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>10진수 값 × 2</th>
+<th>정수부분</th>
+<th>소수 부분</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.1 × 2</td>
+<td>0</td>
+<td>0.2</td>
+</tr>
+<tr>
+<td>0.2 × 2</td>
+<td>0</td>
+<td>0.4</td>
+</tr>
+<tr>
+<td>0.4 × 2</td>
+<td>0</td>
+<td>0.8</td>
+</tr>
+<tr>
+<td>0.8 × 2</td>
+<td>1</td>
+<td>0.6</td>
+</tr>
+<tr>
+<td>0.6 × 2</td>
+<td>1</td>
+<td>0.2</td>
+</tr>
+<tr>
+<td>0.2 × 2</td>
+<td>0</td>
+<td>0.4</td>
+</tr>
+<tr>
+<td>0.4 × 2</td>
+<td>0</td>
+<td>0.8</td>
+</tr>
+<tr>
+<td>0.8 × 2</td>
+<td>1</td>
+<td>0.6</td>
+</tr>
+<tr>
+<td>0.6 × 2</td>
+<td>1</td>
+<td>0.2</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>첫 번째 0 이후, 0011이 계속해서 나옴</li>
+<li><code>0.000110011001100...</code> 을 정규화 할 경우 <code>1.1001100110011001100110011₂ × 2⁻⁴</code>가 됨
+<ul>
+<li>이때, 가수 부분은 23비트 만큼만 저장</li>
+</ul>
+</li>
+<li>즉, 0.1은 <code>지수</code>가 (-4  + 127(bias)) = 123 = <code>01111011₂</code> 이고,  <code>가수</code>가 <code>10011001100110011001101</code>인 수로 표현</li>
+<li>0.2는 위 표에서 볼 수 있듯 왼쪽으로 한 칸 쉬프트된 0.1이라고 볼 수 있음
+<ul>
+<li>따라서 0.2는 <code>지수</code>가 (-3  + 127(bias)) = 124 = <code>01111100₂</code> 이고,  <code>가수</code>가 <code>10011001100110011001101</code>인 수로 표현</li>
+</ul>
+</li>
+<li>둘을 더하기 위해서는 지수를 맞춰주어야 하므로 지수가 작은 0.1을 0.2에 맞춤
+<ul>
+<li>따라서 0.1의 가수들을 오른쪽으로 한 칸 시프트해, 지수를 -3으로 변환</li>
+<li>가수는 <code>1.10011001100110011001101</code> -&gt; <code>0.110011001100110011001101</code></li>
+</ul>
+</li>
+<li>이후 가수끼리 덧셈
+<ul>
+<li><code>0.110011001100110011001101</code> (0.1) + <code>1.10011001100110011001101</code> (0.2) = <code>10.01100110011001100110010 * 2⁻³</code></li>
+</ul>
+</li>
+<li>구한 가수를 정규화하기 위해 오른쪽으로 시프트
+<ul>
+<li><code>1.00110011001100110011001 * 2⁻²</code></li>
+</ul>
+</li>
+<li>위 값은 정확히 0.3이 아니므로, 0.1 + 0.2 != 0.3와 같은 문제 발생</li>
+</ul>
+<h2 id="해결책" >해결책?
+<span>
+    <a href="#%ed%95%b4%ea%b2%b0%ec%b1%85">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>BigDecimal first <span style="color:#f92672">=</span> BigDecimal<span style="color:#f92672">.</span><span style="color:#a6e22e">valueOf</span><span style="color:#f92672">(</span><span style="color:#ae81ff">0.1</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>BigDecimal second <span style="color:#f92672">=</span> BigDecimal<span style="color:#f92672">.</span><span style="color:#a6e22e">valueOf</span><span style="color:#f92672">(</span><span style="color:#ae81ff">0.2</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>BigDecimal result <span style="color:#f92672">=</span> first<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>second<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span>BigDecimal<span style="color:#f92672">.</span><span style="color:#a6e22e">valueOf</span><span style="color:#f92672">(</span><span style="color:#ae81ff">0.3</span><span style="color:#f92672">).</span><span style="color:#a6e22e">equals</span><span style="color:#f92672">(</span>result<span style="color:#f92672">));</span> <span style="color:#75715e">// true
+</span></span></span></code></pre></div><ul>
+<li>표현 가능한 값의 범위가 $-10^{-999999999} \sim 10^{999999999}$ 까지로 훨씬 넓은 <a href="https://docs.oracle.com/javase/8/docs/api/java/math/BigDecimal.html">BigDecimal</a>을 쓸 것을 권장</li>
+</ul>
+<h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://csap.snu.ac.kr/sites/default/files/teaching/03.Number.Representations.Floating.Point.pdf">Number Representations - Floating Point Numbers : 4190.308 Computer Architecture</a></li>
+<li><a href="https://johngrib.github.io/wiki/floating-point/#00-%EA%B3%BC-10">Floating Point 부동소수점 - 기계인간 John Grib</a></li>
+<li><a href="https://www.baeldung.com/java-double-precision-issue">Double Precision Issue in Java | Baeldung</a></li>
+<li><a href="https://en.wikipedia.org/wiki/IEEE_754">IEEE 754 - Wikipedia</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Floating-point_arithmetic">Floating-point arithmetic - Wikipedia</a></li>
+<li><a href="https://archive.md/ZGda8">IEEE 부동 소수점 오류의 이해를 위한 자습서</a></li>
+<li><a href="https://sci-hub.se/10.1109/IEEESTD.2019.8766229">Sci-Hub | | 10.1109/IEEESTD.2019.8766229</a></li>
+<li><a href="https://www.gnu.org/software/c-intro-and-ref/manual/html_node/Special-Float-Values.html">Special Float Values (GNU C Language Manual)</a></li>
+<li><a href="https://modulabs.co.kr/blog/floating-point-biased-exponent">부동소수점 편향된 지수 Biased Exponent | 블로그 | 모두의연구소</a></li>
+</ul>
+<h2 id="추가로-읽으면-좋을-것들" >추가로 읽으면 좋을 것들
+<span>
+    <a href="#%ec%b6%94%ea%b0%80%eb%a1%9c-%ec%9d%bd%ec%9c%bc%eb%a9%b4-%ec%a2%8b%ec%9d%84-%ea%b2%83%eb%93%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><a href="https://docs.oracle.com/cd/E19957-01/806-3568/ncg_math.html">Numerical Computation Guide - IEEE Arithmetic</a></li>
+<li><a href="https://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html">Numerical Computation Guide - What Every Computer Scientist Should Know About Floating-Point Arithmetic</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/cs/floating-point/"><time datetime="2025-03-02">2025-03-02 13:57 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/cs/floating-point/">https://cloudsoswift.github.io/post/develop/cs/floating-point/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/cs/">#CS</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/floating-point/">#Floating Point</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/cs/virtualization/">[CS] 가상화 알아보기 (w. Hypervisor, Docker)</a></li>
+                
+                <li><a href="/post/develop/javascript/ast/">[Javascript] 추상 구문 트리(AST) 알아보기(w. 파스 트리, CFG, BNF)</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/database/postgresql-common/">[DB] PostgreSQL 알아보기 + PostGIS를 활용한 연산해보기 (w. DBeaver, GiST)</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2025<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>
