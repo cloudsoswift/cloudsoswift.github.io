@@ -2,10 +2,37 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://cloudsoswift.github.io/post/develop/cs/floating-point/</loc>
-    <lastmod>2025-03-02T13:57:39+09:00</lastmod>
+    <loc>https://cloudsoswift.github.io/post/develop/javascript/bundler/deprecate-of-cra/</loc>
+    <lastmod>2025-05-29T23:50:07+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/categories/</loc>
+    <lastmod>2025-05-29T23:50:07+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/cra/</loc>
+    <lastmod>2025-05-29T23:50:07+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/categories/javascript/</loc>
+    <lastmod>2025-05-29T23:50:07+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/javascript/</loc>
+    <lastmod>2025-05-29T23:50:07+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/module/</loc>
+    <lastmod>2025-05-29T23:50:07+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/post/</loc>
+    <lastmod>2025-05-29T23:50:07+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/</loc>
+    <lastmod>2025-05-29T23:50:07+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/webpack/</loc>
+    <lastmod>2025-05-29T23:50:07+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/</loc>
+    <lastmod>2025-05-29T23:50:07+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/post/develop/cs/floating-point/</loc>
     <lastmod>2025-03-02T13:57:39+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/cs/</loc>
@@ -18,15 +45,6 @@
     <lastmod>2025-03-02T13:57:39+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/java/</loc>
-    <lastmod>2025-03-02T13:57:39+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/post/</loc>
-    <lastmod>2025-03-02T13:57:39+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/</loc>
-    <lastmod>2025-03-02T13:57:39+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/</loc>
     <lastmod>2025-03-02T13:57:39+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/database/postgresql-common/</loc>
@@ -56,15 +74,6 @@
     <loc>https://cloudsoswift.github.io/tags/mysql/</loc>
     <lastmod>2024-12-11T08:12:35+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/post/develop/javascript/typescript-common/</loc>
-    <lastmod>2024-12-11T07:59:00+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/javascript/</loc>
-    <lastmod>2024-12-11T07:59:00+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/typescript/</loc>
-    <lastmod>2024-12-11T07:59:00+09:00</lastmod>
-  </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/network/websocket-common/</loc>
     <lastmod>2024-12-11T07:54:11+09:00</lastmod>
   </url><url>
@@ -73,21 +82,6 @@
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/websocket/</loc>
     <lastmod>2024-12-11T07:54:11+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/post/develop/javascript/virtual-dom-implementation/</loc>
-    <lastmod>2024-11-18T10:37:23+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/vdom/</loc>
-    <lastmod>2024-11-18T10:37:23+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/post/develop/javascript/virtual-dom/</loc>
-    <lastmod>2024-11-18T10:37:02+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/react/</loc>
-    <lastmod>2024-11-18T10:37:02+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/vue.js/</loc>
-    <lastmod>2024-11-18T10:37:02+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/network/tcp-udp/</loc>
     <lastmod>2024-11-01T18:18:16+09:00</lastmod>
@@ -137,24 +131,6 @@
     <loc>https://cloudsoswift.github.io/tags/%EC%9D%B8%EC%A6%9D/</loc>
     <lastmod>2024-10-10T16:46:55+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/post/develop/javascript/react/design-pattern/</loc>
-    <lastmod>2024-10-02T18:32:05+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/design-pattern/</loc>
-    <lastmod>2024-10-02T18:32:05+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/post/develop/javascript/async-await/</loc>
-    <lastmod>2024-09-14T20:55:53+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/promise/</loc>
-    <lastmod>2024-09-14T20:55:53+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/v8/</loc>
-    <lastmod>2024-09-14T20:55:53+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/%EB%8F%99%EC%8B%9C%EC%84%B1/</loc>
-    <lastmod>2024-09-14T20:55:53+09:00</lastmod>
-  </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/database/sql-injection/</loc>
     <lastmod>2024-09-14T20:29:34+09:00</lastmod>
   </url><url>
@@ -170,15 +146,6 @@
     <loc>https://cloudsoswift.github.io/tags/%EB%B3%B4%EC%95%88/</loc>
     <lastmod>2024-09-14T20:29:34+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/post/develop/javascript/generator/</loc>
-    <lastmod>2024-08-23T10:26:06+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/generator/</loc>
-    <lastmod>2024-08-23T10:26:06+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/iterator/</loc>
-    <lastmod>2024-08-23T10:26:06+09:00</lastmod>
-  </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/cs/virtualization/</loc>
     <lastmod>2024-08-15T19:45:01+09:00</lastmod>
   </url><url>
@@ -191,43 +158,7 @@
     <loc>https://cloudsoswift.github.io/tags/virtualization/</loc>
     <lastmod>2024-08-15T19:45:01+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/post/develop/javascript/ast/</loc>
-    <lastmod>2024-08-01T10:05:48+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/ast/</loc>
-    <lastmod>2024-08-01T10:05:48+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/bnf/</loc>
-    <lastmod>2024-08-01T10:05:48+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/compiler/</loc>
-    <lastmod>2024-08-01T10:05:48+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/parse-tree/</loc>
-    <lastmod>2024-08-01T10:05:48+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/post/develop/javascript/scope/</loc>
-    <lastmod>2024-07-18T12:10:45+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/function/</loc>
-    <lastmod>2024-07-18T12:10:45+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/hoisting/</loc>
-    <lastmod>2024-07-18T12:10:45+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/scope/</loc>
-    <lastmod>2024-07-18T12:10:45+09:00</lastmod>
-  </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/javascript/prototype/</loc>
-    <lastmod>2024-07-18T11:47:14+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/constructor-function/</loc>
-    <lastmod>2024-07-18T11:47:14+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/object/</loc>
-    <lastmod>2024-07-18T11:47:14+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/prototype/</loc>
     <lastmod>2024-07-18T11:47:14+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/javascript/module-system/</loc>
@@ -240,9 +171,6 @@
     <lastmod>2024-07-03T14:24:26+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/esmodule/</loc>
-    <lastmod>2024-07-03T14:24:26+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/module/</loc>
     <lastmod>2024-07-03T14:24:26+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/umd/</loc>
@@ -287,6 +215,9 @@
     <loc>https://cloudsoswift.github.io/tags/map/</loc>
     <lastmod>2024-04-21T06:13:01+09:00</lastmod>
   </url><url>
+    <loc>https://cloudsoswift.github.io/tags/object/</loc>
+    <lastmod>2024-04-21T06:13:01+09:00</lastmod>
+  </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/network/xss/</loc>
     <lastmod>2024-03-19T19:51:00+09:00</lastmod>
   </url><url>
@@ -308,7 +239,13 @@
     <loc>https://cloudsoswift.github.io/tags/locking/</loc>
     <lastmod>2024-03-04T23:19:16+09:00</lastmod>
   </url><url>
+    <loc>https://cloudsoswift.github.io/tags/%EB%8F%99%EC%8B%9C%EC%84%B1/</loc>
+    <lastmod>2024-03-04T23:19:16+09:00</lastmod>
+  </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/java/ioc-di/</loc>
+    <lastmod>2024-02-27T01:55:34+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/design-pattern/</loc>
     <lastmod>2024-02-27T01:55:34+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/spring/</loc>
