@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Webpack 기반의 React App 만들기] 2. Create React App의 Webpack 및 Babel 환경 설정 (수정중) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론앞선 게시물에 이어, CRA 기반의 React App과 Vite 기반의 React App 비교를 위해 먼저 CRA 기반의 React App의 구조 및 내포하고 있는 설정들의 파악이 필요하다고 판단했습니다.
+따라서 React App을 eject하여, 내포하고 있던 다양한 dependencies와 config들을 분석하는 시간을 먼저 갖고자 했습니다.
+따라서 이번 포스트에서는 React App을 eject 했을 때 드러나는 의존성 및 설정들의 역할과, 최종적으로 그 구조를 도식화하여 살펴볼 예정입니다.
+CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scripts eject 명령어를 통해 숨겨진 설정들과 의존성들을 꺼내면(eject) 다음과 같은 의존성들이 추가됨 Babel 관련ES6 이상의 코드를 이전 환경에 호환되도록 변환하거나, 타입스크립트, React jsx 등 다른 문법의 코드를 변환해주는 툴체인 @babel/core : Babel 컴파일러의 코어 babel-jest : 코드 전처리(transform)를 위해 Babel을 사용하도록 하는 Jest의 플러그인 babel-plugin-named-asset-import : Babel plugin for named asset imports in Create React App JS/CSS를 제외한 정적 자원들을 Named Import 형태로 가져올 수 있도록하는 플러그인 Named Import: default export가 아닌, named Export된 요소들을 불러오기 위한 import (ex.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.a863b4abb00ba3862e5d085827416c340f13ee98e430b3fca75a05d676a6ee88.css" integrity="sha256-qGO0q7ALo4YuXQhYJ0FsNA8T7pjkMLP8p1oF1nam7og=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Webpack 기반의 React App 만들기] 2. Create React App의 Webpack 및 Babel 환경 설정 (수정중)" />
+<meta property="og:description" content="서론앞선 게시물에 이어, CRA 기반의 React App과 Vite 기반의 React App 비교를 위해 먼저 CRA 기반의 React App의 구조 및 내포하고 있는 설정들의 파악이 필요하다고 판단했습니다.
+따라서 React App을 eject하여, 내포하고 있던 다양한 dependencies와 config들을 분석하는 시간을 먼저 갖고자 했습니다.
+따라서 이번 포스트에서는 React App을 eject 했을 때 드러나는 의존성 및 설정들의 역할과, 최종적으로 그 구조를 도식화하여 살펴볼 예정입니다.
+CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scripts eject 명령어를 통해 숨겨진 설정들과 의존성들을 꺼내면(eject) 다음과 같은 의존성들이 추가됨 Babel 관련ES6 이상의 코드를 이전 환경에 호환되도록 변환하거나, 타입스크립트, React jsx 등 다른 문법의 코드를 변환해주는 툴체인 @babel/core : Babel 컴파일러의 코어 babel-jest : 코드 전처리(transform)를 위해 Babel을 사용하도록 하는 Jest의 플러그인 babel-plugin-named-asset-import : Babel plugin for named asset imports in Create React App JS/CSS를 제외한 정적 자원들을 Named Import 형태로 가져올 수 있도록하는 플러그인 Named Import: default export가 아닌, named Export된 요소들을 불러오기 위한 import (ex." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/javascript/bundler/webpack-and-babel-config/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2025-06-20T15:40:00+09:00" />
+<meta property="article:modified_time" content="2025-06-20T15:40:00+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Webpack 기반의 React App 만들기] 2. Create React App의 Webpack 및 Babel 환경 설정 (수정중)"/>
+<meta name="twitter:description" content="서론앞선 게시물에 이어, CRA 기반의 React App과 Vite 기반의 React App 비교를 위해 먼저 CRA 기반의 React App의 구조 및 내포하고 있는 설정들의 파악이 필요하다고 판단했습니다.
+따라서 React App을 eject하여, 내포하고 있던 다양한 dependencies와 config들을 분석하는 시간을 먼저 갖고자 했습니다.
+따라서 이번 포스트에서는 React App을 eject 했을 때 드러나는 의존성 및 설정들의 역할과, 최종적으로 그 구조를 도식화하여 살펴볼 예정입니다.
+CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scripts eject 명령어를 통해 숨겨진 설정들과 의존성들을 꺼내면(eject) 다음과 같은 의존성들이 추가됨 Babel 관련ES6 이상의 코드를 이전 환경에 호환되도록 변환하거나, 타입스크립트, React jsx 등 다른 문법의 코드를 변환해주는 툴체인 @babel/core : Babel 컴파일러의 코어 babel-jest : 코드 전처리(transform)를 위해 Babel을 사용하도록 하는 Jest의 플러그인 babel-plugin-named-asset-import : Babel plugin for named asset imports in Create React App JS/CSS를 제외한 정적 자원들을 Named Import 형태로 가져올 수 있도록하는 플러그인 Named Import: default export가 아닌, named Export된 요소들을 불러오기 위한 import (ex."/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="container">
+        <header class="common-header"> 
+            
+                <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+            
+        </header>
+        <main id="main" tabindex="-1"> 
+            
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Webpack 기반의 React App 만들기] 2. Create React App의 Webpack 및 Babel 환경 설정 (수정중)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#cra-eject시-드러나는-의존성들">CRA eject시 드러나는 의존성들</a>
+      <ul>
+        <li><a href="#babel-관련">Babel 관련</a></li>
+        <li><a href="#webpack-관련">Webpack 관련</a></li>
+        <li><a href="#css--sass-관련">CSS / SASS 관련</a></li>
+        <li><a href="#eslint-관련">ESLint 관련</a></li>
+        <li><a href="#테스트-관련">테스트 관련</a></li>
+        <li><a href="#기타-유틸">기타 유틸</a></li>
+      </ul>
+    </li>
+    <li><a href="#당장-필요없는-것-덜어내기">당장 필요없는 것 덜어내기</a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p>앞선 게시물에 이어, <code>CRA</code> 기반의 React App과 <code>Vite</code> 기반의 React App 비교를 위해 먼저 <code>CRA</code> 기반의 React App의 구조 및 내포하고 있는 설정들의 파악이 필요하다고 판단했습니다.<br>
+따라서 React App을 <code>eject</code>하여, 내포하고 있던 다양한 dependencies와 config들을 분석하는 시간을 먼저 갖고자 했습니다.<br>
+따라서 이번 포스트에서는 React App을 <code>eject</code> 했을 때 드러나는 의존성 및 설정들의 역할과, 최종적으로 그 구조를 도식화하여 살펴볼 예정입니다.</p>
+<h2 id="cra-eject시-드러나는-의존성들" >CRA eject시 드러나는 의존성들
+<span>
+    <a href="#cra-eject%ec%8b%9c-%eb%93%9c%eb%9f%ac%eb%82%98%eb%8a%94-%ec%9d%98%ec%a1%b4%ec%84%b1%eb%93%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>CRA로 생성한 React App을 <code>react-scripts eject</code> 명령어를 통해 숨겨진 설정들과 의존성들을 <code>꺼내면(eject)</code> 다음과 같은 의존성들이 추가됨</li>
+</ul>
+<h3 id="babel-관련" >Babel 관련
+<span>
+    <a href="#babel-%ea%b4%80%eb%a0%a8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>ES6 이상의 코드</code>를 이전 환경에 호환되도록 변환하거나, <code>타입스크립트</code>, <code>React jsx</code> 등 다른 문법의 코드를 변환해주는 툴체인</li>
+<li><code>@babel/core</code> : Babel 컴파일러의 코어</li>
+<li><code>babel-jest</code> : <code>코드 전처리(transform)</code>를 위해 Babel을 사용하도록 하는 Jest의 플러그인</li>
+<li><code>babel-plugin-named-asset-import</code> : <code>Babel plugin</code> for <code>named asset imports</code> in Create React App
+<ul>
+<li>JS/CSS를 제외한 <code>정적 자원</code>들을 <code>Named Import</code> 형태로 가져올 수 있도록하는 플러그인
+<ul>
+<li><code>Named Import</code>: default export가 아닌, <code>named Export</code>된 요소들을 불러오기 위한 import (ex. <code>import { funcA } from 'A.js';</code>)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>babel-preset-react-app</code> : <a href="https://github.com/facebook/create-react-app/tree/main/packages/babel-preset-react-app">CRA에서 사용된 Babel 프리셋</a>으로, 해당 프리셋 모듈안에 있는 <a href="https://github.com/facebook/create-react-app/blob/main/packages/babel-preset-react-app/create.js">create.js</a>에 설정된 <code>환경(개발, 프로덕션) 별 프리셋</code> 및 <code>플러그인 설정</code>을 내보냄</li>
+</ul>
+<h3 id="webpack-관련" >Webpack 관련
+<span>
+    <a href="#webpack-%ea%b4%80%eb%a0%a8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>webpack</code> : Javascript 기반의 <code>모듈 번들러</code>로, React App의 여러 모듈들을 의존관계끼리 엮어 하나 이상의 번들 정적 에셋으로 번들링하는 툴</li>
+<li><code>webpack-dev-server</code>: 웹팩과 함께 사용하는, <code>라이브 리로딩</code>을 제공하는 <code>개발 서버</code>로, 내부적으로 <a href="https://github.com/webpack/webpack-dev-middleware">webpack-dev-middleware</a>를 사용해 웹팩 에셋에 빠르게 인-메모리 접근</li>
+<li><code>webpack-manifest-plugin</code>: <code>에셋 매니페스트</code>를 생성하기 위한 웹팩 <code>플러그인</code>으로, 생성된 <code>매니페스트</code>는 아래와 같이 <code>소스 파일 이름</code> - <code>대응되는 빌드 output 파일</code> 간의 매핑들을 포함함 (이를 통해 <em>추후</em> <code>새롭게 번들링된 파일의 파일명</code>을 <strong>빠르게 파악</strong>해 사용 가능)
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;dist/batman.js&#34;</span>: <span style="color:#e6db74">&#34;dist/batman.1234567890.js&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;dist/joker.js&#34;</span>: <span style="color:#e6db74">&#34;dist/joker.0987654321.js&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></li>
+<li><code>workbox-webpack-plugin</code>: <code>PWA(프로그레시브 웹 앱)</code>을 위한 라이브러리 모음인 <a href="https://github.com/googlechrome/workbox">Workbox</a>의 웹팩용 플러그인으로, <code>서비스 워커 생성(GenerateSW)</code> 및 <code>사전 캐싱(precache)할 에셋 목록(매니페스트)을 생성해 서비스 워커 파일에 주입(InjectManifest)</code> 하는 기능을 제공 <a href="https://developer.chrome.com/docs/workbox/modules/workbox-webpack-plugin">#</a></li>
+<li><code>terser-webpack-plugin</code>: <em>변수 이름 축소, 공백 및 주석 제거, 미사용 코드 제거 등을 통해 코드를 압축(최소화)하는</em> <a href="https://terser.org/"><code>Terser</code> </a>의 웹팩 플러그인
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span>...
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">minimizer</span><span style="color:#f92672">:</span> [
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// This is only used in production mode
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">TerserPlugin</span>({
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">terserOptions</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">parse</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>          <span style="color:#75715e">// We want terser to parse ecma 8 code. However, we don&#39;t want it
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#75715e">// to apply any minification steps that turns valid ecma 5 code
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#75715e">// into invalid ecma 5 code. This is why the &#39;compress&#39; and &#39;output&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#75715e">// sections only apply transformations that are ecma 5 safe
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#75715e">// https://github.com/facebook/create-react-app/pull/4234
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#a6e22e">ecma</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">8</span>,
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">compress</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">ecma</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">5</span>,
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">warnings</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span>,
+</span></span><span style="display:flex;"><span>		  <span style="color:#75715e">// Terser가 uglify-es의 포크이기 때문에, Uglify에서 발생했던
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		  <span style="color:#75715e">// &#39;특정 라이브러리 사용시 비교 연산자 처리 버그&#39;가 있기 때문에
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		  <span style="color:#75715e">// 비교 연산자를 압축하는 것을 비활성화 함
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		  <span style="color:#75715e">// https://github.com/mishoo/UglifyJS2/issues/2011
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#a6e22e">comparisons</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span>,
+</span></span><span style="display:flex;"><span>		  <span style="color:#75715e">// 작은 함수들을 인라인 함수로 변환해 함수 오버헤드를 줄이는 옵션으로
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		  <span style="color:#75715e">// 값이 2일경우 적절한 인라인 레벨을 Terser가 선택하도록 함
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		  <span style="color:#75715e">// 정확히는, inline functions with arguments, 즉 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		  <span style="color:#75715e">// 아래 두 가지 버그 이슈때문에 2로 명시
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#75715e">// https://github.com/facebook/create-react-app/issues/5250
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#75715e">// https://github.com/terser-js/terser/issues/120
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#a6e22e">inline</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">2</span>,
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">mangle</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>		  <span style="color:#75715e">// 변수 및 함수 이름 난독화 관련 옵션으로, 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		  <span style="color:#75715e">// safari10 이란 Safari 10 브라우저의 버그를 회피하기 위한 설정
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#a6e22e">safari10</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 개발 툴에서 프로파일링 할 수 있도록, 클래스 이름과 함수 명을 난독화할지 설정하는 변수
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">keep_classnames</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">isEnvProductionProfile</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">keep_fnames</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">isEnvProductionProfile</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">output</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>		  <span style="color:#75715e">// 압축된 코드의 출력 형태와 관한 옵션
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		  <span style="color:#75715e">// 최종적으로 압축된 코드는 ES5 버전 호환성을 지님
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#a6e22e">ecma</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">5</span>,
+</span></span><span style="display:flex;"><span>		  <span style="color:#75715e">// 모든 주석을 제거하도록 함
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#a6e22e">comments</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span>,
+</span></span><span style="display:flex;"><span>		  <span style="color:#75715e">// 문자열 및 정규 표현식에 존재하는 유니코드 문자를 ASCII 이스케이프 시퀀스(\uXXXX와 같은 형태. ex) `H` =&gt; `\u0048`)로 변경
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#75715e">// 이모티콘 또는 특정 정규 표현식이 default로는 제대로 압축되지 않기 때문
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#75715e">// https://github.com/facebook/create-react-app/issues/2488
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          <span style="color:#a6e22e">ascii_only</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>      },
+</span></span><span style="display:flex;"><span>    }),
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// This is only used in production mode
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">CssMinimizerPlugin</span>(),
+</span></span><span style="display:flex;"><span>  ],
+</span></span><span style="display:flex;"><span>},
+</span></span></code></pre></div><ul>
+<li>eject된 <code>webpack.config.js</code> 설정에 따르면, <strong>프로덕션 환경</strong>에서 이러한 <code>코드 압축</code>이 수행되며 <em><code>ES8(ECMAScript 2017)</code> 문법까지 이해하고 파싱하되</em> <code>코드 압축(compress)</code> 및 <code>출력(output)</code>은 <code>ES5</code> 호환성을 유지하도록 코드를 <code>minimize</code>하려 함</li>
+<li>이외에도 비교 연산자를 압축하지 않는다거나, 클래스 이름 및 함수 명을 난독화 할지 등을 설정하고 있음</li>
+</ul>
+</li>
+<li><code>css-minimizer-webpack-plugin</code>: <a href="https://cssnano.github.io/cssnano/">cssnano</a>를 사용해 <code>CSS 파일들을 최적화 및 최소화</code>하는 웹팩 플러그인으로, <code>캐싱</code> 및 <code>병렬 처리</code>를 지원하는 것이 특징임
+<ul>
+<li><code>cssnano</code>란, <code>PostCSS</code> 생태계 기반의 CSS 압축 툴로 <code>주석/공백/줄 바꿈 제거</code>, <code>헥스코드 축약</code>, <code>단위 제거</code> 등의 압축을 수행</li>
+<li>테스트 해볼 수 있는 사이트: <a href="https://minify-css.com/">Minify CSS Online. CSS Minification tool powered by CSSNANO. | Minify CSS Online</a></li>
+</ul>
+</li>
+<li><code>@pmmmwh/react-refresh-webpack-plugin</code>: <code>React Component</code>에 대해 <code>핫 리로딩</code>이라고도 부르는 <code>빠른 새로고침</code>을 가능하게 해주는 웹팩 플러그인
+<ul>
+<li><code>react-dom</code>, <code>react-refresh</code> 등의 모듈에 의존하므로 선행 설치가 필요함</li>
+</ul>
+</li>
+<li><code>case-sensitive-paths-webpack-plugin</code>: 모든 <code>필수 모듈의 전체 경로</code>를 <code>디스크 상 실제 경로</code>와 <strong>정확히 일치하도록 강제</strong>하는 웹팩 플러그인
+<ul>
+<li>이를 통해 <code>대소문자에 둔감(case-insensitive)</code>한 환경(ex. OS X(macOS))의 개발자가 <code>대소문자 구분 규칙</code>을 지키지 않아 <em>다른 개발자나 빌드 환경에서 충돌이 발생하는 문제</em>를 방지</li>
+</ul>
+</li>
+<li><code>eslint-webpack-plugin</code>: 웹팩 빌드 과정에서 코드의 문제를 발견하고 고치기 위해 <a href="https://eslint.org/"><code>ESlint</code></a>를 사용하는 플러그인
+<ul>
+<li><code>webpack.config.js</code>에서는 <code>react-dev-utils/eslintFormatter</code> 포매터와 <code>eslint-config-react-app/base</code> 설정을 사용해 린팅</li>
+</ul>
+</li>
+</ul>
+<h4 id="로더-httpswebpackjsorgconceptsloaders" >로더 <a href="https://webpack.js.org/concepts/loaders/">#</a>
+<span>
+    <a href="#%eb%a1%9c%eb%8d%94-httpswebpackjsorgconceptsloaders">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>웹팩이 처리할 수 없는 <em><code>Javascript 파일 이외의 파일들</code></em> 을 변환할 수 있도록 도와주는 라이브러리로, 파일을 <code>import</code>하거나 로드할 때 <code>사전처리</code>를 수행할 수 있음
+<ul>
+<li><code>로더</code>는 <strong><code>체이닝</code></strong> 될 수 있으며, <em>체인의 각 로더</em>는 각각 (앞선 로더에 의해) <code>처리된 리소스</code>를 전달 받아 변환을 적용함</li>
+<li>최종적으로, <code>Webpack</code>은 이러한 <code>체인의 마지막 로더</code>로 부터 <code>Javascript 파일</code>을 넘겨 받기를 기대함</li>
+</ul>
+</li>
+<li>로더는 <code>webpack.config.js</code>의 <code>module.rules</code> 배열에서 지정할 수 있으며, 선언된 역순으로 로더가 적용됨
+<ul>
+<li>예를 들어 <code>module: { rules: [&quot;style-loader&quot;, &quot;css-loader&quot;, &quot;sass-loader&quot;]}</code> 라고 선언이 되어있다면,  <code>sass-loader</code> -&gt; <code>css-loader</code> -&gt; <code>style-loader</code> 순으로 작업이 이뤄짐</li>
+</ul>
+</li>
+<li><code>babel-loader</code> : 웹팩을 위한 <code>Babel Module 로더</code></li>
+<li><code>@svgr/webpack</code>: <code>SVGR</code> 을 위한 웹팩 로더
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// SVGR 예시 코드
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">Logo</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;assets/logo.svg&#39;</span>; <span style="color:#75715e">// SVG 파일을 React Component 처럼 import
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">App</span> <span style="color:#f92672">=</span> () =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">div</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">Logo</span> <span style="color:#a6e22e">width</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;100&#34;</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;mx-auto&#34;</span> <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/div&gt;</span>
+</span></span><span style="display:flex;"><span>  );
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><ul>
+<li><code>SVGR</code>이란, <code>SVG</code>를 <code>React Component</code>로 변환해주는 툴로, <code>React Component</code>에서 <code>SVG 파일</code>들을 컴포넌트 쓰듯 import 해 사용할 수 있게 해주는 툴</li>
+</ul>
+</li>
+<li><code>css-loader</code>:  사용된 <code>CSS</code>를 <code>문자열</code>로 변환해주는 로더로, <code>@import</code>와 <code>url()</code>을 <code>import</code> / <code>require()</code>와 동일하게 <code>해석</code> 및 <code>resolve</code> 해줌
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// 예시 1. url() -&gt; require()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">url</span>(<span style="color:#a6e22e">image</span>.<span style="color:#a6e22e">png</span>) =&gt; <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;./image.png&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 예시 2. @import -&gt; require()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#960050;background-color:#1e0010">@</span><span style="color:#66d9ef">import</span> <span style="color:#e6db74">&#39;style.css&#39;</span> =&gt; <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;./style.css&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 예시 3. @import url() -&gt; require()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#960050;background-color:#1e0010">@</span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">url</span>(<span style="color:#a6e22e">style</span>.<span style="color:#a6e22e">css</span>) =&gt; <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;./style.css&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 변환 전 CSS
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">h1</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">color</span><span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">#</span><span style="color:#a6e22e">FFFFFF</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">body</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">background</span><span style="color:#f92672">-</span><span style="color:#a6e22e">color</span><span style="color:#f92672">:</span> <span style="color:#960050;background-color:#1e0010">#</span><span style="color:#ae81ff">272727</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 문자열로 변환된 CSS
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>... [<span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">id</span>, <span style="color:#e6db74">&#34;h1 {\n	color: #FFFFFF;\n}\nbody {\n	background-color: #272727;\n}&#34;</span>]
+</span></span></code></pre></div><ul>
+<li>또한, <a href="https://github.com/css-modules/css-modules">CSS Module</a>을 지원해 CSS 클래스 이름이 전역적으로 충돌하는 것을 방지하게 해줌</li>
+</ul>
+</li>
+<li><code>style-loader</code>: <code>css-loader</code>와 <strong>함께 쓰길 권장</strong>하는 로더로, <code>CSS</code>를 <code>DOM</code>에 주입하는 로더 (정확히는, <em>CSS를 DOM에 주입하는</em> <code>Javascript 코드로 변환</code>하는 역할)
+<ul>
+<li>옵션의 <code>injectType</code>을 통해 <strong>어떻게 <code>style</code>이 <code>DOM</code>에 주입될 지</strong> 지정할 수 있음
+<ul>
+<li>하나 또는 여러 개의 <code>&lt;style&gt;</code> 태그로 주입할 지(<code>singletonStyleTag</code>/<code>styleTag</code>), <code>&lt;link&gt;</code> 태그를 통해 css 파일을 참조하도록 할 지(<code>linkTag</code>) 등의 옵션이 있음</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><em>CRA 프로젝트 설정</em> 에서는 <code>개발 환경</code>일 경우 <code>style-loader</code>를, <code>프로덕션 빌드</code>에서는 <code>MiniCssExtractPlugin</code>를 사용</p>
+</blockquote>
+<h3 id="css--sass-관련" >CSS / SASS 관련
+<span>
+    <a href="#css--sass-%ea%b4%80%eb%a0%a8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>browserslist</code>: <code>Babel</code>, <code>Autoprefixer</code> 등 여러 프론트엔드 툴에서 동일한 <code>타깃 브라우저 및 Node.js 런타임 버전</code>을 공유하기 위한 <code>Configuration</code>
+<ul>
+<li>이를 통해 불필요한 <code>Polyfil</code>, <code>벤더 프리픽스</code> 등을 줄일 수 있으며, 프론트엔드 툴 간 일관성이 보장됨</li>
+<li><em>CRA 프로젝트 설정에서는</em> 프로덕션 빌드의 경우 0.2% 이상의 점유율을 지녔으며(<code>&gt;0.2%</code>) 24개월 내 업데이트가 없는 브라우저를 제외하고(<code>not dead</code>) 오페라 미니를 제외한(<code>not op_mini all</code>), 개발 환경에서는 가장 최신 버전의 <code>크롬</code>/<code>파이어폭스</code>/<code>사파리</code> 를 지원 하도록 설정됨</li>
+</ul>
+</li>
+<li><code>mini-css-extract-plugin</code> : <em>CSS를 포함하고 있는 JS 파일 별로</em> <code>CSS를 추출</code>해 <em>JS 파일 당</em> <strong><code>CSS 파일을 생성</code></strong> 하는 <code>웹팩 플러그인</code>으로, <code>css-loader</code>와 함께 사용하기를 권장함
+<ul>
+<li>다만, <code>웹팩 엔트리 포인트</code> 또는 <a href="https://webpack.js.org/concepts/under-the-hood/#chunks">initial chunk</a>에서 <strong>import 하고 있는 CSS</strong>의 경우, (이 플러그인이) <em>페이지에서 해당 CSS들을 로드하도록 하지 않음</em>
+<ul>
+<li><code>엔트리 포인트</code>: <code>webpack.config.js</code>에서 <code>entry</code>로 설정된 파일</li>
+<li><code>initial chunk</code>: 엔트리 포인트의 <code>메인 청크</code>를 의미하며, <code>엔트리 포인트</code>에 <em>명시된 모든 모듈 및 의존성을 포함</em>하고 있는 청크</li>
+</ul>
+</li>
+<li>즉, <em>엔트리 포인트에 대응되는</em> <code>CSS 파일</code>의 경우, <strong>자동으로 <code>&lt;link&gt;</code> 태그를 생성</strong>하거나 / <code>&lt;link&gt;</code> 태그를 포함한 <code>index.html</code>을 만들기 위해 <a href="https://github.com/jantimon/html-webpack-plugin"><code>html-webpack-plugin</code></a>를 사용해야 함
+<ul>
+<li><code>html-webpack-plugin</code>: <em>웹팩 번들 서빙을 위한</em> HTML 파일 <code>생성을 간소화</code> 시켜주는 <code>웹팩 플러그인</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>tailwindcss</code></li>
+<li><code>sass-loader</code></li>
+<li><code>postcss</code></li>
+<li><code>postcss-flexbugs-fixes</code></li>
+<li><code>postcss-loader</code></li>
+<li><code>postcss-normalize</code></li>
+<li><code>postcss-preset-env</code></li>
+</ul>
+<h3 id="eslint-관련" >ESLint 관련
+<span>
+    <a href="#eslint-%ea%b4%80%eb%a0%a8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>eslint</code></li>
+<li><code>eslint-config-react-app</code></li>
+</ul>
+<h3 id="테스트-관련" >테스트 관련
+<span>
+    <a href="#%ed%85%8c%ec%8a%a4%ed%8a%b8-%ea%b4%80%eb%a0%a8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>jest</code></li>
+<li><code>jest-resolve</code></li>
+<li><code>jest-watch-typeahead</code></li>
+</ul>
+<h3 id="기타-유틸" >기타 유틸
+<span>
+    <a href="#%ea%b8%b0%ed%83%80-%ec%9c%a0%ed%8b%b8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>bfj</code></li>
+<li><code>camelcase</code></li>
+<li><code>dotenv</code></li>
+<li><code>dotenv-expand</code></li>
+<li><code>file-loader</code></li>
+<li><code>fs-extra</code></li>
+<li><code>identity-obj-proxy</code></li>
+<li><code>prompts</code></li>
+<li><code>react-app-polyfill</code></li>
+<li><code>react-dev-utils</code></li>
+<li><code>react-refresh</code></li>
+<li><code>resolve</code></li>
+<li><code>resolve-url-loader</code></li>
+<li><code>semver</code></li>
+<li><code>source-map-loader</code></li>
+</ul>
+<h2 id="당장-필요없는-것-덜어내기" >당장 필요없는 것 덜어내기
+<span>
+    <a href="#%eb%8b%b9%ec%9e%a5-%ed%95%84%ec%9a%94%ec%97%86%eb%8a%94-%ea%b2%83-%eb%8d%9c%ec%96%b4%eb%82%b4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2>
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/javascript/bundler/webpack-and-babel-config/"><time datetime="2025-06-20">2025-06-20 15:40 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/bundler/webpack-and-babel-config/">https://cloudsoswift.github.io/post/develop/javascript/bundler/webpack-and-babel-config/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/module/">#Module</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/webpack/">#Webpack</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/cra/">#CRA</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/javascript/bundler/deprecate-of-cra/">[Webpack 기반의 React App 만들기] 1. Create React App의 Deprecated 발표</a></li>
+                
+                <li><a href="/post/develop/javascript/module-system/">[Javascript] 모듈 시스템들 알아보기</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/javascript/bundler/deprecate-of-cra/">[Webpack 기반의 React App 만들기] 1. Create React App의 Deprecated 발표</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+        </main>
+        
+            <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2025<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+        
+    </div>
+</body>
+</html>

@@ -6,10 +6,312 @@
     <description>오늘도 개발을 한다. (CRA)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Thu, 29 May 2025 23:50:07 +0900</lastBuildDate>
+    <lastBuildDate>Fri, 20 Jun 2025 15:40:00 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/tags/cra/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[Webpack 기반의 React App 만들기] 2. Create React App의 Webpack 및 Babel 환경 설정 (수정중)</title>
+      <link>https://cloudsoswift.github.io/post/develop/javascript/bundler/webpack-and-babel-config/</link>
+      <pubDate>Fri, 20 Jun 2025 15:40:00 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/javascript/bundler/webpack-and-babel-config/</guid>
+      <description>&lt;h1 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;p&gt;앞선 게시물에 이어, &lt;code&gt;CRA&lt;/code&gt; 기반의 React App과 &lt;code&gt;Vite&lt;/code&gt; 기반의 React App 비교를 위해 먼저 &lt;code&gt;CRA&lt;/code&gt; 기반의 React App의 구조 및 내포하고 있는 설정들의 파악이 필요하다고 판단했습니다.&lt;br&gt;
+따라서 React App을 &lt;code&gt;eject&lt;/code&gt;하여, 내포하고 있던 다양한 dependencies와 config들을 분석하는 시간을 먼저 갖고자 했습니다.&lt;br&gt;
+따라서 이번 포스트에서는 React App을 &lt;code&gt;eject&lt;/code&gt; 했을 때 드러나는 의존성 및 설정들의 역할과, 최종적으로 그 구조를 도식화하여 살펴볼 예정입니다.&lt;/p&gt;
+&lt;h2 id=&#34;cra-eject시-드러나는-의존성들&#34; &gt;CRA eject시 드러나는 의존성들
+&lt;span&gt;
+    &lt;a href=&#34;#cra-eject%ec%8b%9c-%eb%93%9c%eb%9f%ac%eb%82%98%eb%8a%94-%ec%9d%98%ec%a1%b4%ec%84%b1%eb%93%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;CRA로 생성한 React App을 &lt;code&gt;react-scripts eject&lt;/code&gt; 명령어를 통해 숨겨진 설정들과 의존성들을 &lt;code&gt;꺼내면(eject)&lt;/code&gt; 다음과 같은 의존성들이 추가됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;babel-관련&#34; &gt;Babel 관련
+&lt;span&gt;
+    &lt;a href=&#34;#babel-%ea%b4%80%eb%a0%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ES6 이상의 코드&lt;/code&gt;를 이전 환경에 호환되도록 변환하거나, &lt;code&gt;타입스크립트&lt;/code&gt;, &lt;code&gt;React jsx&lt;/code&gt; 등 다른 문법의 코드를 변환해주는 툴체인&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@babel/core&lt;/code&gt; : Babel 컴파일러의 코어&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;babel-jest&lt;/code&gt; : &lt;code&gt;코드 전처리(transform)&lt;/code&gt;를 위해 Babel을 사용하도록 하는 Jest의 플러그인&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;babel-plugin-named-asset-import&lt;/code&gt; : &lt;code&gt;Babel plugin&lt;/code&gt; for &lt;code&gt;named asset imports&lt;/code&gt; in Create React App
+&lt;ul&gt;
+&lt;li&gt;JS/CSS를 제외한 &lt;code&gt;정적 자원&lt;/code&gt;들을 &lt;code&gt;Named Import&lt;/code&gt; 형태로 가져올 수 있도록하는 플러그인
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Named Import&lt;/code&gt;: default export가 아닌, &lt;code&gt;named Export&lt;/code&gt;된 요소들을 불러오기 위한 import (ex. &lt;code&gt;import { funcA } from &#39;A.js&#39;;&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;babel-preset-react-app&lt;/code&gt; : &lt;a href=&#34;https://github.com/facebook/create-react-app/tree/main/packages/babel-preset-react-app&#34;&gt;CRA에서 사용된 Babel 프리셋&lt;/a&gt;으로, 해당 프리셋 모듈안에 있는 &lt;a href=&#34;https://github.com/facebook/create-react-app/blob/main/packages/babel-preset-react-app/create.js&#34;&gt;create.js&lt;/a&gt;에 설정된 &lt;code&gt;환경(개발, 프로덕션) 별 프리셋&lt;/code&gt; 및 &lt;code&gt;플러그인 설정&lt;/code&gt;을 내보냄&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;webpack-관련&#34; &gt;Webpack 관련
+&lt;span&gt;
+    &lt;a href=&#34;#webpack-%ea%b4%80%eb%a0%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;webpack&lt;/code&gt; : Javascript 기반의 &lt;code&gt;모듈 번들러&lt;/code&gt;로, React App의 여러 모듈들을 의존관계끼리 엮어 하나 이상의 번들 정적 에셋으로 번들링하는 툴&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;webpack-dev-server&lt;/code&gt;: 웹팩과 함께 사용하는, &lt;code&gt;라이브 리로딩&lt;/code&gt;을 제공하는 &lt;code&gt;개발 서버&lt;/code&gt;로, 내부적으로 &lt;a href=&#34;https://github.com/webpack/webpack-dev-middleware&#34;&gt;webpack-dev-middleware&lt;/a&gt;를 사용해 웹팩 에셋에 빠르게 인-메모리 접근&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;webpack-manifest-plugin&lt;/code&gt;: &lt;code&gt;에셋 매니페스트&lt;/code&gt;를 생성하기 위한 웹팩 &lt;code&gt;플러그인&lt;/code&gt;으로, 생성된 &lt;code&gt;매니페스트&lt;/code&gt;는 아래와 같이 &lt;code&gt;소스 파일 이름&lt;/code&gt; - &lt;code&gt;대응되는 빌드 output 파일&lt;/code&gt; 간의 매핑들을 포함함 (이를 통해 &lt;em&gt;추후&lt;/em&gt; &lt;code&gt;새롭게 번들링된 파일의 파일명&lt;/code&gt;을 &lt;strong&gt;빠르게 파악&lt;/strong&gt;해 사용 가능)
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-json&#34; data-lang=&#34;json&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;dist/batman.js&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;dist/batman.1234567890.js&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;#34;dist/joker.js&amp;#34;&lt;/span&gt;: &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;dist/joker.0987654321.js&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;workbox-webpack-plugin&lt;/code&gt;: &lt;code&gt;PWA(프로그레시브 웹 앱)&lt;/code&gt;을 위한 라이브러리 모음인 &lt;a href=&#34;https://github.com/googlechrome/workbox&#34;&gt;Workbox&lt;/a&gt;의 웹팩용 플러그인으로, &lt;code&gt;서비스 워커 생성(GenerateSW)&lt;/code&gt; 및 &lt;code&gt;사전 캐싱(precache)할 에셋 목록(매니페스트)을 생성해 서비스 워커 파일에 주입(InjectManifest)&lt;/code&gt; 하는 기능을 제공 &lt;a href=&#34;https://developer.chrome.com/docs/workbox/modules/workbox-webpack-plugin&#34;&gt;#&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;terser-webpack-plugin&lt;/code&gt;: &lt;em&gt;변수 이름 축소, 공백 및 주석 제거, 미사용 코드 제거 등을 통해 코드를 압축(최소화)하는&lt;/em&gt; &lt;a href=&#34;https://terser.org/&#34;&gt;&lt;code&gt;Terser&lt;/code&gt; &lt;/a&gt;의 웹팩 플러그인
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;minimizer&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; [
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// This is only used in production mode
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;TerserPlugin&lt;/span&gt;({
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;terserOptions&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;parse&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#75715e&#34;&gt;// We want terser to parse ecma 8 code. However, we don&amp;#39;t want it
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#75715e&#34;&gt;// to apply any minification steps that turns valid ecma 5 code
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#75715e&#34;&gt;// into invalid ecma 5 code. This is why the &amp;#39;compress&amp;#39; and &amp;#39;output&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#75715e&#34;&gt;// sections only apply transformations that are ecma 5 safe
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#75715e&#34;&gt;// https://github.com/facebook/create-react-app/pull/4234
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#a6e22e&#34;&gt;ecma&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;compress&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#a6e22e&#34;&gt;ecma&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          &lt;span style=&#34;color:#a6e22e&#34;&gt;warnings&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// Terser가 uglify-es의 포크이기 때문에, Uglify에서 발생했던
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// &amp;#39;특정 라이브러리 사용시 비교 연산자 처리 버그&amp;#39;가 있기 때문에
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// 비교 연산자를 압축하는 것을 비활성화 함
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// https://github.com/mishoo/UglifyJS2/issues/2011
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#a6e22e&#34;&gt;comparisons&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// 작은 함수들을 인라인 함수로 변환해 함수 오버헤드를 줄이는 옵션으로
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// 값이 2일경우 적절한 인라인 레벨을 Terser가 선택하도록 함
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// 정확히는, inline functions with arguments, 즉 
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// 아래 두 가지 버그 이슈때문에 2로 명시
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#75715e&#34;&gt;// https://github.com/facebook/create-react-app/issues/5250
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#75715e&#34;&gt;// https://github.com/terser-js/terser/issues/120
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#a6e22e&#34;&gt;inline&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;2&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;mangle&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// 변수 및 함수 이름 난독화 관련 옵션으로, 
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// safari10 이란 Safari 10 브라우저의 버그를 회피하기 위한 설정
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#a6e22e&#34;&gt;safari10&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// 개발 툴에서 프로파일링 할 수 있도록, 클래스 이름과 함수 명을 난독화할지 설정하는 변수
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;keep_classnames&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;isEnvProductionProfile&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;keep_fnames&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;isEnvProductionProfile&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;output&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// 압축된 코드의 출력 형태와 관한 옵션
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// 최종적으로 압축된 코드는 ES5 버전 호환성을 지님
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#a6e22e&#34;&gt;ecma&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;5&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// 모든 주석을 제거하도록 함
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#a6e22e&#34;&gt;comments&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;false&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		  &lt;span style=&#34;color:#75715e&#34;&gt;// 문자열 및 정규 표현식에 존재하는 유니코드 문자를 ASCII 이스케이프 시퀀스(\uXXXX와 같은 형태. ex) `H` =&amp;gt; `\u0048`)로 변경
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#75715e&#34;&gt;// 이모티콘 또는 특정 정규 표현식이 default로는 제대로 압축되지 않기 때문
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#75715e&#34;&gt;// https://github.com/facebook/create-react-app/issues/2488
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;          &lt;span style=&#34;color:#a6e22e&#34;&gt;ascii_only&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      },
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#75715e&#34;&gt;// This is only used in production mode
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;CssMinimizerPlugin&lt;/span&gt;(),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  ],
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;},
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;eject된 &lt;code&gt;webpack.config.js&lt;/code&gt; 설정에 따르면, &lt;strong&gt;프로덕션 환경&lt;/strong&gt;에서 이러한 &lt;code&gt;코드 압축&lt;/code&gt;이 수행되며 &lt;em&gt;&lt;code&gt;ES8(ECMAScript 2017)&lt;/code&gt; 문법까지 이해하고 파싱하되&lt;/em&gt; &lt;code&gt;코드 압축(compress)&lt;/code&gt; 및 &lt;code&gt;출력(output)&lt;/code&gt;은 &lt;code&gt;ES5&lt;/code&gt; 호환성을 유지하도록 코드를 &lt;code&gt;minimize&lt;/code&gt;하려 함&lt;/li&gt;
+&lt;li&gt;이외에도 비교 연산자를 압축하지 않는다거나, 클래스 이름 및 함수 명을 난독화 할지 등을 설정하고 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;css-minimizer-webpack-plugin&lt;/code&gt;: &lt;a href=&#34;https://cssnano.github.io/cssnano/&#34;&gt;cssnano&lt;/a&gt;를 사용해 &lt;code&gt;CSS 파일들을 최적화 및 최소화&lt;/code&gt;하는 웹팩 플러그인으로, &lt;code&gt;캐싱&lt;/code&gt; 및 &lt;code&gt;병렬 처리&lt;/code&gt;를 지원하는 것이 특징임
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;cssnano&lt;/code&gt;란, &lt;code&gt;PostCSS&lt;/code&gt; 생태계 기반의 CSS 압축 툴로 &lt;code&gt;주석/공백/줄 바꿈 제거&lt;/code&gt;, &lt;code&gt;헥스코드 축약&lt;/code&gt;, &lt;code&gt;단위 제거&lt;/code&gt; 등의 압축을 수행&lt;/li&gt;
+&lt;li&gt;테스트 해볼 수 있는 사이트: &lt;a href=&#34;https://minify-css.com/&#34;&gt;Minify CSS Online. CSS Minification tool powered by CSSNANO. | Minify CSS Online&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@pmmmwh/react-refresh-webpack-plugin&lt;/code&gt;: &lt;code&gt;React Component&lt;/code&gt;에 대해 &lt;code&gt;핫 리로딩&lt;/code&gt;이라고도 부르는 &lt;code&gt;빠른 새로고침&lt;/code&gt;을 가능하게 해주는 웹팩 플러그인
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;react-dom&lt;/code&gt;, &lt;code&gt;react-refresh&lt;/code&gt; 등의 모듈에 의존하므로 선행 설치가 필요함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;case-sensitive-paths-webpack-plugin&lt;/code&gt;: 모든 &lt;code&gt;필수 모듈의 전체 경로&lt;/code&gt;를 &lt;code&gt;디스크 상 실제 경로&lt;/code&gt;와 &lt;strong&gt;정확히 일치하도록 강제&lt;/strong&gt;하는 웹팩 플러그인
+&lt;ul&gt;
+&lt;li&gt;이를 통해 &lt;code&gt;대소문자에 둔감(case-insensitive)&lt;/code&gt;한 환경(ex. OS X(macOS))의 개발자가 &lt;code&gt;대소문자 구분 규칙&lt;/code&gt;을 지키지 않아 &lt;em&gt;다른 개발자나 빌드 환경에서 충돌이 발생하는 문제&lt;/em&gt;를 방지&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;eslint-webpack-plugin&lt;/code&gt;: 웹팩 빌드 과정에서 코드의 문제를 발견하고 고치기 위해 &lt;a href=&#34;https://eslint.org/&#34;&gt;&lt;code&gt;ESlint&lt;/code&gt;&lt;/a&gt;를 사용하는 플러그인
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;webpack.config.js&lt;/code&gt;에서는 &lt;code&gt;react-dev-utils/eslintFormatter&lt;/code&gt; 포매터와 &lt;code&gt;eslint-config-react-app/base&lt;/code&gt; 설정을 사용해 린팅&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;로더-httpswebpackjsorgconceptsloaders&#34; &gt;로더 &lt;a href=&#34;https://webpack.js.org/concepts/loaders/&#34;&gt;#&lt;/a&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a1%9c%eb%8d%94-httpswebpackjsorgconceptsloaders&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;웹팩이 처리할 수 없는 &lt;em&gt;&lt;code&gt;Javascript 파일 이외의 파일들&lt;/code&gt;&lt;/em&gt; 을 변환할 수 있도록 도와주는 라이브러리로, 파일을 &lt;code&gt;import&lt;/code&gt;하거나 로드할 때 &lt;code&gt;사전처리&lt;/code&gt;를 수행할 수 있음
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;로더&lt;/code&gt;는 &lt;strong&gt;&lt;code&gt;체이닝&lt;/code&gt;&lt;/strong&gt; 될 수 있으며, &lt;em&gt;체인의 각 로더&lt;/em&gt;는 각각 (앞선 로더에 의해) &lt;code&gt;처리된 리소스&lt;/code&gt;를 전달 받아 변환을 적용함&lt;/li&gt;
+&lt;li&gt;최종적으로, &lt;code&gt;Webpack&lt;/code&gt;은 이러한 &lt;code&gt;체인의 마지막 로더&lt;/code&gt;로 부터 &lt;code&gt;Javascript 파일&lt;/code&gt;을 넘겨 받기를 기대함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;로더는 &lt;code&gt;webpack.config.js&lt;/code&gt;의 &lt;code&gt;module.rules&lt;/code&gt; 배열에서 지정할 수 있으며, 선언된 역순으로 로더가 적용됨
+&lt;ul&gt;
+&lt;li&gt;예를 들어 &lt;code&gt;module: { rules: [&amp;quot;style-loader&amp;quot;, &amp;quot;css-loader&amp;quot;, &amp;quot;sass-loader&amp;quot;]}&lt;/code&gt; 라고 선언이 되어있다면,  &lt;code&gt;sass-loader&lt;/code&gt; -&amp;gt; &lt;code&gt;css-loader&lt;/code&gt; -&amp;gt; &lt;code&gt;style-loader&lt;/code&gt; 순으로 작업이 이뤄짐&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;babel-loader&lt;/code&gt; : 웹팩을 위한 &lt;code&gt;Babel Module 로더&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@svgr/webpack&lt;/code&gt;: &lt;code&gt;SVGR&lt;/code&gt; 을 위한 웹팩 로더
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// SVGR 예시 코드
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Logo&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;from&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;assets/logo.svg&amp;#39;&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// SVG 파일을 React Component 처럼 import
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;App&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; () =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;div&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;Logo&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;width&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;100&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;className&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;mx-auto&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  );
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;SVGR&lt;/code&gt;이란, &lt;code&gt;SVG&lt;/code&gt;를 &lt;code&gt;React Component&lt;/code&gt;로 변환해주는 툴로, &lt;code&gt;React Component&lt;/code&gt;에서 &lt;code&gt;SVG 파일&lt;/code&gt;들을 컴포넌트 쓰듯 import 해 사용할 수 있게 해주는 툴&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;css-loader&lt;/code&gt;:  사용된 &lt;code&gt;CSS&lt;/code&gt;를 &lt;code&gt;문자열&lt;/code&gt;로 변환해주는 로더로, &lt;code&gt;@import&lt;/code&gt;와 &lt;code&gt;url()&lt;/code&gt;을 &lt;code&gt;import&lt;/code&gt; / &lt;code&gt;require()&lt;/code&gt;와 동일하게 &lt;code&gt;해석&lt;/code&gt; 및 &lt;code&gt;resolve&lt;/code&gt; 해줌
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 예시 1. url() -&amp;gt; require()
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;image&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;png&lt;/span&gt;) =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;require&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;./image.png&amp;#39;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 예시 2. @import -&amp;gt; require()
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;@&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;style.css&amp;#39;&lt;/span&gt; =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;require&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;./style.css&amp;#39;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 예시 3. @import url() -&amp;gt; require()
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;@&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;import&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;url&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;style&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;css&lt;/span&gt;) =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;require&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;./style.css&amp;#39;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 변환 전 CSS
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;h1&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;color&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;#&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;FFFFFF&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;body&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;background&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;color&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#960050;background-color:#1e0010&#34;&gt;#&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;272727&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 문자열로 변환된 CSS
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;... [&lt;span style=&#34;color:#a6e22e&#34;&gt;n&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;id&lt;/span&gt;, &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;h1 {\n	color: #FFFFFF;\n}\nbody {\n	background-color: #272727;\n}&amp;#34;&lt;/span&gt;]
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;또한, &lt;a href=&#34;https://github.com/css-modules/css-modules&#34;&gt;CSS Module&lt;/a&gt;을 지원해 CSS 클래스 이름이 전역적으로 충돌하는 것을 방지하게 해줌&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;style-loader&lt;/code&gt;: &lt;code&gt;css-loader&lt;/code&gt;와 &lt;strong&gt;함께 쓰길 권장&lt;/strong&gt;하는 로더로, &lt;code&gt;CSS&lt;/code&gt;를 &lt;code&gt;DOM&lt;/code&gt;에 주입하는 로더 (정확히는, &lt;em&gt;CSS를 DOM에 주입하는&lt;/em&gt; &lt;code&gt;Javascript 코드로 변환&lt;/code&gt;하는 역할)
+&lt;ul&gt;
+&lt;li&gt;옵션의 &lt;code&gt;injectType&lt;/code&gt;을 통해 &lt;strong&gt;어떻게 &lt;code&gt;style&lt;/code&gt;이 &lt;code&gt;DOM&lt;/code&gt;에 주입될 지&lt;/strong&gt; 지정할 수 있음
+&lt;ul&gt;
+&lt;li&gt;하나 또는 여러 개의 &lt;code&gt;&amp;lt;style&amp;gt;&lt;/code&gt; 태그로 주입할 지(&lt;code&gt;singletonStyleTag&lt;/code&gt;/&lt;code&gt;styleTag&lt;/code&gt;), &lt;code&gt;&amp;lt;link&amp;gt;&lt;/code&gt; 태그를 통해 css 파일을 참조하도록 할 지(&lt;code&gt;linkTag&lt;/code&gt;) 등의 옵션이 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;em&gt;CRA 프로젝트 설정&lt;/em&gt; 에서는 &lt;code&gt;개발 환경&lt;/code&gt;일 경우 &lt;code&gt;style-loader&lt;/code&gt;를, &lt;code&gt;프로덕션 빌드&lt;/code&gt;에서는 &lt;code&gt;MiniCssExtractPlugin&lt;/code&gt;를 사용&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;css--sass-관련&#34; &gt;CSS / SASS 관련
+&lt;span&gt;
+    &lt;a href=&#34;#css--sass-%ea%b4%80%eb%a0%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;browserslist&lt;/code&gt;: &lt;code&gt;Babel&lt;/code&gt;, &lt;code&gt;Autoprefixer&lt;/code&gt; 등 여러 프론트엔드 툴에서 동일한 &lt;code&gt;타깃 브라우저 및 Node.js 런타임 버전&lt;/code&gt;을 공유하기 위한 &lt;code&gt;Configuration&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;이를 통해 불필요한 &lt;code&gt;Polyfil&lt;/code&gt;, &lt;code&gt;벤더 프리픽스&lt;/code&gt; 등을 줄일 수 있으며, 프론트엔드 툴 간 일관성이 보장됨&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;CRA 프로젝트 설정에서는&lt;/em&gt; 프로덕션 빌드의 경우 0.2% 이상의 점유율을 지녔으며(&lt;code&gt;&amp;gt;0.2%&lt;/code&gt;) 24개월 내 업데이트가 없는 브라우저를 제외하고(&lt;code&gt;not dead&lt;/code&gt;) 오페라 미니를 제외한(&lt;code&gt;not op_mini all&lt;/code&gt;), 개발 환경에서는 가장 최신 버전의 &lt;code&gt;크롬&lt;/code&gt;/&lt;code&gt;파이어폭스&lt;/code&gt;/&lt;code&gt;사파리&lt;/code&gt; 를 지원 하도록 설정됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;mini-css-extract-plugin&lt;/code&gt; : &lt;em&gt;CSS를 포함하고 있는 JS 파일 별로&lt;/em&gt; &lt;code&gt;CSS를 추출&lt;/code&gt;해 &lt;em&gt;JS 파일 당&lt;/em&gt; &lt;strong&gt;&lt;code&gt;CSS 파일을 생성&lt;/code&gt;&lt;/strong&gt; 하는 &lt;code&gt;웹팩 플러그인&lt;/code&gt;으로, &lt;code&gt;css-loader&lt;/code&gt;와 함께 사용하기를 권장함
+&lt;ul&gt;
+&lt;li&gt;다만, &lt;code&gt;웹팩 엔트리 포인트&lt;/code&gt; 또는 &lt;a href=&#34;https://webpack.js.org/concepts/under-the-hood/#chunks&#34;&gt;initial chunk&lt;/a&gt;에서 &lt;strong&gt;import 하고 있는 CSS&lt;/strong&gt;의 경우, (이 플러그인이) &lt;em&gt;페이지에서 해당 CSS들을 로드하도록 하지 않음&lt;/em&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;엔트리 포인트&lt;/code&gt;: &lt;code&gt;webpack.config.js&lt;/code&gt;에서 &lt;code&gt;entry&lt;/code&gt;로 설정된 파일&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;initial chunk&lt;/code&gt;: 엔트리 포인트의 &lt;code&gt;메인 청크&lt;/code&gt;를 의미하며, &lt;code&gt;엔트리 포인트&lt;/code&gt;에 &lt;em&gt;명시된 모든 모듈 및 의존성을 포함&lt;/em&gt;하고 있는 청크&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;즉, &lt;em&gt;엔트리 포인트에 대응되는&lt;/em&gt; &lt;code&gt;CSS 파일&lt;/code&gt;의 경우, &lt;strong&gt;자동으로 &lt;code&gt;&amp;lt;link&amp;gt;&lt;/code&gt; 태그를 생성&lt;/strong&gt;하거나 / &lt;code&gt;&amp;lt;link&amp;gt;&lt;/code&gt; 태그를 포함한 &lt;code&gt;index.html&lt;/code&gt;을 만들기 위해 &lt;a href=&#34;https://github.com/jantimon/html-webpack-plugin&#34;&gt;&lt;code&gt;html-webpack-plugin&lt;/code&gt;&lt;/a&gt;를 사용해야 함
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;html-webpack-plugin&lt;/code&gt;: &lt;em&gt;웹팩 번들 서빙을 위한&lt;/em&gt; HTML 파일 &lt;code&gt;생성을 간소화&lt;/code&gt; 시켜주는 &lt;code&gt;웹팩 플러그인&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;tailwindcss&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;sass-loader&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;postcss&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;postcss-flexbugs-fixes&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;postcss-loader&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;postcss-normalize&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;postcss-preset-env&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;eslint-관련&#34; &gt;ESLint 관련
+&lt;span&gt;
+    &lt;a href=&#34;#eslint-%ea%b4%80%eb%a0%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;eslint&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;eslint-config-react-app&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;테스트-관련&#34; &gt;테스트 관련
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%85%8c%ec%8a%a4%ed%8a%b8-%ea%b4%80%eb%a0%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;jest&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;jest-resolve&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;jest-watch-typeahead&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;기타-유틸&#34; &gt;기타 유틸
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b8%b0%ed%83%80-%ec%9c%a0%ed%8b%b8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;bfj&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;camelcase&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;dotenv&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;dotenv-expand&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;file-loader&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;fs-extra&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;identity-obj-proxy&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;prompts&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;react-app-polyfill&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;react-dev-utils&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;react-refresh&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;resolve&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;resolve-url-loader&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;semver&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;source-map-loader&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;당장-필요없는-것-덜어내기&#34; &gt;당장 필요없는 것 덜어내기
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8b%b9%ec%9e%a5-%ed%95%84%ec%9a%94%ec%97%86%eb%8a%94-%ea%b2%83-%eb%8d%9c%ec%96%b4%eb%82%b4%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;</description>
+    </item>
     
     <item>
       <title>[Webpack 기반의 React App 만들기] 1. Create React App의 Deprecated 발표</title>
