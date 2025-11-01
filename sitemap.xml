@@ -3,36 +3,42 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://cloudsoswift.github.io/post/develop/javascript/bundler/webpack-and-babel-config/</loc>
-    <lastmod>2025-06-20T15:40:00+09:00</lastmod>
+    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/categories/</loc>
-    <lastmod>2025-06-20T15:40:00+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/cra/</loc>
-    <lastmod>2025-06-20T15:40:00+09:00</lastmod>
+    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/categories/develop/</loc>
-    <lastmod>2025-06-20T15:40:00+09:00</lastmod>
+    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/javascript/</loc>
-    <lastmod>2025-06-20T15:40:00+09:00</lastmod>
+    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/loader/</loc>
+    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/module/</loc>
-    <lastmod>2025-06-20T15:40:00+09:00</lastmod>
+    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/post/</loc>
-    <lastmod>2025-06-20T15:40:00+09:00</lastmod>
+    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/</loc>
-    <lastmod>2025-06-20T15:40:00+09:00</lastmod>
+    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/vite/</loc>
+    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/webpack/</loc>
-    <lastmod>2025-06-20T15:40:00+09:00</lastmod>
+    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/</loc>
-    <lastmod>2025-06-20T15:40:00+09:00</lastmod>
+    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/javascript/bundler/deprecate-of-cra/</loc>
+    <lastmod>2025-05-29T23:50:07+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/cra/</loc>
     <lastmod>2025-05-29T23:50:07+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/categories/javascript/</loc>

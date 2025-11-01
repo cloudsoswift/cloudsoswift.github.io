@@ -10,12 +10,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="referrer" content="no-referrer-when-downgrade">
 
-<title>[Webpack 기반의 React App 만들기] 2. Create React App의 Webpack 및 Babel 환경 설정 (수정중) - 오늘도 개발을 한다.</title>
+<title>[Webpack/Vite 파헤치기] 2. Create React App 내부의 의존성과 환경 설정  꺼내기 - 오늘도 개발을 한다.</title>
 
 <meta name="description" content="서론앞선 게시물에 이어, CRA 기반의 React App과 Vite 기반의 React App 비교를 위해 먼저 CRA 기반의 React App의 구조 및 내포하고 있는 설정들의 파악이 필요하다고 판단했습니다.
 따라서 React App을 eject하여, 내포하고 있던 다양한 dependencies와 config들을 분석하는 시간을 먼저 갖고자 했습니다.
 따라서 이번 포스트에서는 React App을 eject 했을 때 드러나는 의존성 및 설정들의 역할과, 최종적으로 그 구조를 도식화하여 살펴볼 예정입니다.
-CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scripts eject 명령어를 통해 숨겨진 설정들과 의존성들을 꺼내면(eject) 다음과 같은 의존성들이 추가됨 Babel 관련ES6 이상의 코드를 이전 환경에 호환되도록 변환하거나, 타입스크립트, React jsx 등 다른 문법의 코드를 변환해주는 툴체인 @babel/core : Babel 컴파일러의 코어 babel-plugin-named-asset-import : Babel plugin for named asset imports in Create React App JS/CSS를 제외한 정적 자원들을 Named Import 형태로 가져올 수 있도록하는 플러그인 Named Import: default export가 아닌, named Export된 요소들을 불러오기 위한 import (ex.">
+CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scripts eject 명령어를 통해 숨겨진 설정들과 의존성들을 꺼내면(eject) 다음과 같은 의존성들이 추가됨.">
 
 
 
@@ -94,22 +94,22 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 
 
 
-<meta property="og:title" content="[Webpack 기반의 React App 만들기] 2. Create React App의 Webpack 및 Babel 환경 설정 (수정중)" />
+<meta property="og:title" content="[Webpack/Vite 파헤치기] 2. Create React App 내부의 의존성과 환경 설정  꺼내기" />
 <meta property="og:description" content="서론앞선 게시물에 이어, CRA 기반의 React App과 Vite 기반의 React App 비교를 위해 먼저 CRA 기반의 React App의 구조 및 내포하고 있는 설정들의 파악이 필요하다고 판단했습니다.
 따라서 React App을 eject하여, 내포하고 있던 다양한 dependencies와 config들을 분석하는 시간을 먼저 갖고자 했습니다.
 따라서 이번 포스트에서는 React App을 eject 했을 때 드러나는 의존성 및 설정들의 역할과, 최종적으로 그 구조를 도식화하여 살펴볼 예정입니다.
-CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scripts eject 명령어를 통해 숨겨진 설정들과 의존성들을 꺼내면(eject) 다음과 같은 의존성들이 추가됨 Babel 관련ES6 이상의 코드를 이전 환경에 호환되도록 변환하거나, 타입스크립트, React jsx 등 다른 문법의 코드를 변환해주는 툴체인 @babel/core : Babel 컴파일러의 코어 babel-plugin-named-asset-import : Babel plugin for named asset imports in Create React App JS/CSS를 제외한 정적 자원들을 Named Import 형태로 가져올 수 있도록하는 플러그인 Named Import: default export가 아닌, named Export된 요소들을 불러오기 위한 import (ex." />
+CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scripts eject 명령어를 통해 숨겨진 설정들과 의존성들을 꺼내면(eject) 다음과 같은 의존성들이 추가됨." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://cloudsoswift.github.io/post/develop/javascript/bundler/webpack-and-babel-config/" /><meta property="article:section" content="post" />
-<meta property="article:published_time" content="2025-06-20T15:40:00+09:00" />
-<meta property="article:modified_time" content="2025-06-20T15:40:00+09:00" />
+<meta property="article:published_time" content="2025-11-01T18:16:27+09:00" />
+<meta property="article:modified_time" content="2025-11-01T18:16:27+09:00" />
 
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="[Webpack 기반의 React App 만들기] 2. Create React App의 Webpack 및 Babel 환경 설정 (수정중)"/>
+<meta name="twitter:title" content="[Webpack/Vite 파헤치기] 2. Create React App 내부의 의존성과 환경 설정  꺼내기"/>
 <meta name="twitter:description" content="서론앞선 게시물에 이어, CRA 기반의 React App과 Vite 기반의 React App 비교를 위해 먼저 CRA 기반의 React App의 구조 및 내포하고 있는 설정들의 파악이 필요하다고 판단했습니다.
 따라서 React App을 eject하여, 내포하고 있던 다양한 dependencies와 config들을 분석하는 시간을 먼저 갖고자 했습니다.
 따라서 이번 포스트에서는 React App을 eject 했을 때 드러나는 의존성 및 설정들의 역할과, 최종적으로 그 구조를 도식화하여 살펴볼 예정입니다.
-CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scripts eject 명령어를 통해 숨겨진 설정들과 의존성들을 꺼내면(eject) 다음과 같은 의존성들이 추가됨 Babel 관련ES6 이상의 코드를 이전 환경에 호환되도록 변환하거나, 타입스크립트, React jsx 등 다른 문법의 코드를 변환해주는 툴체인 @babel/core : Babel 컴파일러의 코어 babel-plugin-named-asset-import : Babel plugin for named asset imports in Create React App JS/CSS를 제외한 정적 자원들을 Named Import 형태로 가져올 수 있도록하는 플러그인 Named Import: default export가 아닌, named Export된 요소들을 불러오기 위한 import (ex."/>
+CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scripts eject 명령어를 통해 숨겨진 설정들과 의존성들을 꺼내면(eject) 다음과 같은 의존성들이 추가됨."/>
 
 
 
@@ -229,7 +229,7 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
     <article class="post h-entry">
         <div class="post-header">
             <header>
-                <h1 class="p-name post-title">[Webpack 기반의 React App 만들기] 2. Create React App의 Webpack 및 Babel 환경 설정 (수정중)</h1>
+                <h1 class="p-name post-title">[Webpack/Vite 파헤치기] 2. Create React App 내부의 의존성과 환경 설정  꺼내기</h1>
 
                 
             </header>
@@ -249,9 +249,9 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
         <li><a href="#eslint-관련">ESLint 관련</a></li>
         <li><a href="#테스트-관련">테스트 관련</a></li>
         <li><a href="#기타-유틸">기타 유틸</a></li>
+        <li><a href="#ejecting-이후-콘솔에-출력된-메세지">Ejecting 이후 콘솔에 출력된 메세지</a></li>
       </ul>
     </li>
-    <li><a href="#당장-필요없는-것-덜어내기">당장 필요없는 것 덜어내기</a></li>
   </ul>
 </nav>
 
@@ -272,7 +272,8 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
     </a>
 </span>
 </h2><ul>
-<li>CRA로 생성한 React App을 <code>react-scripts eject</code> 명령어를 통해 숨겨진 설정들과 의존성들을 <code>꺼내면(eject)</code> 다음과 같은 의존성들이 추가됨</li>
+<li>CRA로 생성한 React App을 <code>react-scripts eject</code> 명령어를 통해 숨겨진 설정들과 의존성들을 <code>꺼내면(eject)</code> 다음과 같은 의존성들이 추가됨.</li>
+<li>크게 요약하면 <strong><code>Babel</code> 관련 종속성</strong>, <strong><code>Webpack</code> 관련 종속성</strong>(<code>Webpack Loader</code>), <strong><code>CSS/SASS</code> 관련 종속성</strong>, <strong><code>ESLint</code> 관련 종속성</strong>, <strong>테스트 관련 종속성</strong>, <strong>기타 유틸</strong> 로 이뤄져 있음</li>
 </ul>
 <h3 id="babel-관련" >Babel 관련
 <span>
@@ -280,10 +281,24 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
         <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
     </a>
 </span>
-</h3><ul>
+</h3><h4 id="babel이란" >Babel이란?
+<span>
+    <a href="#babel%ec%9d%b4%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
 <li><code>ES6 이상의 코드</code>를 이전 환경에 호환되도록 변환하거나, <code>타입스크립트</code>, <code>React jsx</code> 등 다른 문법의 코드를 변환해주는 툴체인</li>
-<li><code>@babel/core</code> : Babel 컴파일러의 코어</li>
-<li><code>babel-plugin-named-asset-import</code> : <code>Babel plugin</code> for <code>named asset imports</code> in Create React App
+</ul>
+<h4 id="관련-종속성" >관련 종속성
+<span>
+    <a href="#%ea%b4%80%eb%a0%a8-%ec%a2%85%ec%86%8d%ec%84%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><a href="https://www.npmjs.com/package/@babel/core">@babel/core</a> : Babel 컴파일러의 코어</li>
+<li><a href="https://www.npmjs.com/package/babel-plugin-named-asset-import">babel-plugin-named-asset-import</a> : <code>Babel plugin</code> for <code>named asset imports</code> in Create React App
 <ul>
 <li>JS/CSS를 제외한 <code>정적 자원</code>들을 <code>Named Import</code> 형태로 가져올 수 있도록하는 플러그인
 <ul>
@@ -292,7 +307,7 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 </li>
 </ul>
 </li>
-<li><code>babel-preset-react-app</code> : <a href="https://github.com/facebook/create-react-app/tree/main/packages/babel-preset-react-app">CRA에서 사용된 Babel 프리셋</a>으로, 해당 프리셋 모듈안에 있는 <a href="https://github.com/facebook/create-react-app/blob/main/packages/babel-preset-react-app/create.js">create.js</a>에 설정된 <code>환경(개발, 프로덕션) 별 프리셋</code> 및 <code>플러그인 설정</code>을 내보냄</li>
+<li><a href="https://www.npmjs.com/package/babel-preset-react-app">babel-preset-react-app</a> : <a href="https://github.com/facebook/create-react-app/tree/main/packages/babel-preset-react-app">CRA에서 사용된 Babel 프리셋</a>으로, 해당 프리셋 패키지안에 있는 <a href="https://github.com/facebook/create-react-app/blob/main/packages/babel-preset-react-app/create.js">create.js</a>에 설정된 <code>환경(개발, 프로덕션) 별 프리셋</code> 및 <code>플러그인 설정</code>을 내보냄</li>
 </ul>
 <h3 id="webpack-관련" >Webpack 관련
 <span>
@@ -300,17 +315,31 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
         <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
     </a>
 </span>
-</h3><ul>
+</h3><h4 id="webpack이란" >Webpack이란?
+<span>
+    <a href="#webpack%ec%9d%b4%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
 <li><code>webpack</code> : Javascript 기반의 <code>모듈 번들러</code>로, React App의 여러 모듈들을 의존관계끼리 엮어 하나 이상의 번들 정적 에셋으로 번들링하는 툴</li>
-<li><code>webpack-dev-server</code>: 웹팩과 함께 사용하는, <code>라이브 리로딩</code>을 제공하는 <code>개발 서버</code>로, 내부적으로 <a href="https://github.com/webpack/webpack-dev-middleware">webpack-dev-middleware</a>를 사용해 웹팩 에셋에 빠르게 인-메모리 접근</li>
-<li><code>webpack-manifest-plugin</code>: <code>에셋 매니페스트</code>를 생성하기 위한 웹팩 <code>플러그인</code>으로, 생성된 <code>매니페스트</code>는 아래와 같이 <code>소스 파일 이름</code> - <code>대응되는 빌드 output 파일</code> 간의 매핑들을 포함함 (이를 통해 <em>추후</em> <code>새롭게 번들링된 파일의 파일명</code>을 <strong>빠르게 파악</strong>해 사용 가능)
+</ul>
+<h4 id="관련-종속성-1" >관련 종속성
+<span>
+    <a href="#%ea%b4%80%eb%a0%a8-%ec%a2%85%ec%86%8d%ec%84%b1-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><a href="https://www.npmjs.com/package/webpack-dev-server">webpack-dev-server</a>: 웹팩과 함께 사용하는, <code>라이브 리로딩</code>을 제공하는 <code>개발 서버</code>로, 내부적으로 <a href="https://github.com/webpack/webpack-dev-middleware">webpack-dev-middleware</a>를 사용해 웹팩 에셋에 빠르게 인-메모리 접근</li>
+<li><a href="https://www.npmjs.com/package/webpack-manifest-plugin">webpack-manifest-plugin</a>: <code>에셋 매니페스트</code>를 생성하기 위한 웹팩 <code>플러그인</code>으로, 생성된 <code>매니페스트</code>는 아래와 같이 <code>소스 파일 이름</code> - <code>대응되는 빌드 output 파일</code> 간의 매핑들을 포함함 (이를 통해 <em>추후</em> <code>새롭게 번들링된 파일의 파일명</code>을 <strong>빠르게 파악</strong>해 사용 가능)
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;dist/batman.js&#34;</span>: <span style="color:#e6db74">&#34;dist/batman.1234567890.js&#34;</span>,
 </span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;dist/joker.js&#34;</span>: <span style="color:#e6db74">&#34;dist/joker.0987654321.js&#34;</span>
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></div></li>
-<li><code>workbox-webpack-plugin</code>: <code>PWA(프로그레시브 웹 앱)</code>을 위한 라이브러리 모음인 <a href="https://github.com/googlechrome/workbox">Workbox</a>의 웹팩용 플러그인으로, <code>서비스 워커 생성(GenerateSW)</code> 및 <code>사전 캐싱(precache)할 에셋 목록(매니페스트)을 생성해 서비스 워커 파일에 주입(InjectManifest)</code> 하는 기능을 제공 <a href="https://developer.chrome.com/docs/workbox/modules/workbox-webpack-plugin">#</a></li>
-<li><code>terser-webpack-plugin</code>: <em>변수 이름 축소, 공백 및 주석 제거, 미사용 코드 제거 등을 통해 코드를 압축(최소화)하는</em> <a href="https://terser.org/"><code>Terser</code> </a>의 웹팩 플러그인
+<li><a href="https://www.npmjs.com/package/workbox-webpack-plugin">workbox-webpack-plugin</a>: <code>PWA(프로그레시브 웹 앱)</code>을 위한 라이브러리 모음인 <a href="https://github.com/googlechrome/workbox">Workbox</a>의 웹팩용 플러그인으로, <code>서비스 워커 생성(GenerateSW)</code> 및 <code>사전 캐싱(precache)할 에셋 목록(매니페스트)을 생성해 서비스 워커 파일에 주입(InjectManifest)</code> 하는 기능을 제공 <a href="https://developer.chrome.com/docs/workbox/modules/workbox-webpack-plugin">#</a></li>
+<li><a href="https://www.npmjs.com/package/terser-webpack-plugin">terser-webpack-plugin</a>: <em>변수 이름 축소, 공백 및 주석 제거, 미사용 코드 제거 등을 통해 코드를 압축(최소화)하는</em> <a href="https://terser.org/"><code>Terser</code> </a>의 웹팩 플러그인
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span>...
 </span></span><span style="display:flex;"><span><span style="color:#a6e22e">minimizer</span><span style="color:#f92672">:</span> [
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">// This is only used in production mode
@@ -370,23 +399,23 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 <li>이외에도 비교 연산자를 압축하지 않는다거나, 클래스 이름 및 함수 명을 난독화 할지 등을 설정하고 있음</li>
 </ul>
 </li>
-<li><code>css-minimizer-webpack-plugin</code>: <a href="https://cssnano.github.io/cssnano/">cssnano</a>를 사용해 <code>CSS 파일들을 최적화 및 최소화</code>하는 웹팩 플러그인으로, <code>캐싱</code> 및 <code>병렬 처리</code>를 지원하는 것이 특징임
+<li><a href="https://www.npmjs.com/package/css-minimizer-webpack-plugin">css-minimizer-webpack-plugin</a>: <a href="https://cssnano.github.io/cssnano/">cssnano</a>를 사용해 <code>CSS 파일들을 최적화 및 최소화</code>하는 웹팩 플러그인으로, <code>캐싱</code> 및 <code>병렬 처리</code>를 지원하는 것이 특징임
 <ul>
 <li><code>cssnano</code>란, <code>PostCSS</code> 생태계 기반의 CSS 압축 툴로 <code>주석/공백/줄 바꿈 제거</code>, <code>헥스코드 축약</code>, <code>단위 제거</code> 등의 압축을 수행</li>
 <li>테스트 해볼 수 있는 사이트: <a href="https://minify-css.com/">Minify CSS Online. CSS Minification tool powered by CSSNANO. | Minify CSS Online</a></li>
 </ul>
 </li>
-<li><code>@pmmmwh/react-refresh-webpack-plugin</code>: <code>React Component</code>에 대해 <code>핫 리로딩</code>이라고도 부르는 <code>빠른 새로고침</code>을 가능하게 해주는 웹팩 플러그인
+<li><a href="https://www.npmjs.com/package/@pmmmwh/react-refresh-webpack-plugin">@pmmmwh/react-refresh-webpack-plugin</a>: <code>React Component</code>에 대해 <code>핫 리로딩</code>이라고도 부르는 <code>빠른 새로고침</code>을 가능하게 해주는 웹팩 플러그인
 <ul>
-<li><code>react-dom</code>, <code>react-refresh</code> 등의 모듈에 의존하므로 선행 설치가 필요함</li>
+<li>위 패키지는 <code>react-dom</code>, <code>react-refresh</code> 등의 패키지에 의존하므로 선행 설치가 필요함</li>
 </ul>
 </li>
-<li><code>case-sensitive-paths-webpack-plugin</code>: 모든 <code>필수 모듈의 전체 경로</code>를 <code>디스크 상 실제 경로</code>와 <strong>정확히 일치하도록 강제</strong>하는 웹팩 플러그인
+<li><a href="https://www.npmjs.com/package/case-sensitive-paths-webpack-plugin">case-sensitive-paths-webpack-plugin</a> 모든 <code>필수 모듈의 전체 경로</code>를 <code>디스크 상 실제 경로</code>와 <strong>정확히 일치하도록 강제</strong>하는 웹팩 플러그인
 <ul>
 <li>이를 통해 <code>대소문자에 둔감(case-insensitive)</code>한 환경(ex. OS X(macOS))의 개발자가 <code>대소문자 구분 규칙</code>을 지키지 않아 <em>다른 개발자나 빌드 환경에서 충돌이 발생하는 문제</em>를 방지</li>
 </ul>
 </li>
-<li><code>eslint-webpack-plugin</code>: 웹팩 빌드 과정에서 코드의 문제를 발견하고 고치기 위해 <a href="https://eslint.org/"><code>ESlint</code></a>를 사용하는 플러그인
+<li><a href="https://www.npmjs.com/package/eslint-webpack-plugin">eslint-webpack-plugin</a>: 웹팩 빌드 과정에서 코드의 문제를 발견하고 고치기 위해 <a href="https://eslint.org/"><code>ESlint</code></a>를 사용하는 플러그인
 <ul>
 <li><code>webpack.config.js</code>에서는 <code>react-dev-utils/eslintFormatter</code> 포매터와 <code>eslint-config-react-app/base</code> 설정을 사용해 린팅</li>
 </ul>
@@ -398,7 +427,13 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
         <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
     </a>
 </span>
-</h4><ul>
+</h4><h5 id="로더란" >로더란?
+<span>
+    <a href="#%eb%a1%9c%eb%8d%94%eb%9e%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
 <li>웹팩이 처리할 수 없는 <em><code>Javascript 파일 이외의 파일들</code></em> 을 변환할 수 있도록 도와주는 라이브러리로, 파일을 <code>import</code>하거나 로드할 때 <code>사전처리</code>를 수행할 수 있음
 <ul>
 <li><code>로더</code>는 <strong><code>체이닝</code></strong> 될 수 있으며, <em>체인의 각 로더</em>는 각각 (앞선 로더에 의해) <code>처리된 리소스</code>를 전달 받아 변환을 적용함</li>
@@ -410,8 +445,22 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 <li>예를 들어 <code>module: { rules: [&quot;style-loader&quot;, &quot;css-loader&quot;, &quot;sass-loader&quot;]}</code> 라고 선언이 되어있다면,  <code>sass-loader</code> -&gt; <code>css-loader</code> -&gt; <code>style-loader</code> 순으로 작업이 이뤄짐</li>
 </ul>
 </li>
-<li><code>babel-loader</code> : 웹팩을 위한 <code>Babel Module 로더</code></li>
-<li><code>@svgr/webpack</code>: <code>SVGR</code> 을 위한 웹팩 로더
+</ul>
+<h5 id="관련-종속성-2" >관련 종속성
+<span>
+    <a href="#%ea%b4%80%eb%a0%a8-%ec%a2%85%ec%86%8d%ec%84%b1-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><ul>
+<li>
+<p><a href="https://www.npmjs.com/package/babel-loader">babel-loader</a> : 웹팩을 위한 <code>Babel Module 로더</code></p>
+<ul>
+<li><code>.js</code>, <code>.jsx</code>, <code>.ts</code>, <code>.tsx</code> 와 같은 파일들에 대해 폴리필, TS 및 React JSX 트랜스파일링 등의 작업을 수행하도록 연결</li>
+</ul>
+</li>
+<li>
+<p><a href="https://www.npmjs.com/package/@svgr/webpack">@svgr/webpack</a>: <code>SVGR</code> 을 위한 웹팩 로더</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// SVGR 예시 코드
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">Logo</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;assets/logo.svg&#39;</span>; <span style="color:#75715e">// SVG 파일을 React Component 처럼 import
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
@@ -426,7 +475,8 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 <li><code>SVGR</code>이란, <code>SVG</code>를 <code>React Component</code>로 변환해주는 툴로, <code>React Component</code>에서 <code>SVG 파일</code>들을 컴포넌트 쓰듯 import 해 사용할 수 있게 해주는 툴</li>
 </ul>
 </li>
-<li><code>css-loader</code>:  사용된 <code>CSS</code>를 <code>문자열</code>로 변환해주는 로더로, <code>@import</code>와 <code>url()</code>을 <code>import</code> / <code>require()</code>와 동일하게 <code>해석</code> 및 <code>resolve</code> 해줌
+<li>
+<p><a href="https://www.npmjs.com/package/css-loader">css-loader</a>:  사용된 <code>CSS</code>를 <code>문자열</code>로 변환해주는 로더로, <code>@import</code>와 <code>url()</code>을 <code>import</code> / <code>require()</code>와 동일하게 <code>해석</code> 및 <code>resolve</code> 해줌</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// 예시 1. url() -&gt; require()
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">url</span>(<span style="color:#a6e22e">image</span>.<span style="color:#a6e22e">png</span>) =&gt; <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;./image.png&#39;</span>)
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// 예시 2. @import -&gt; require()
@@ -449,7 +499,8 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 <li>또한, <a href="https://github.com/css-modules/css-modules">CSS Module</a>을 지원해 CSS 클래스 이름이 전역적으로 충돌하는 것을 방지하게 해줌</li>
 </ul>
 </li>
-<li><code>style-loader</code>: <code>css-loader</code>와 <strong>함께 쓰길 권장</strong>하는 로더로, <code>CSS</code>를 <code>DOM</code>에 주입하는 로더 (정확히는, <em>CSS를 DOM에 주입하는</em> <code>Javascript 코드로 변환</code>하는 역할)
+<li>
+<p><a href="https://www.npmjs.com/package/style-loader">style-loader</a>: <code>css-loader</code>와 <strong>함께 쓰길 권장</strong>하는 로더로, <code>CSS</code>를 <code>DOM</code>에 주입하는 로더 (정확히는, <em>CSS를 DOM에 주입하는</em> <code>Javascript 코드로 변환</code>하는 역할)</p>
 <ul>
 <li>옵션의 <code>injectType</code>을 통해 <strong>어떻게 <code>style</code>이 <code>DOM</code>에 주입될 지</strong> 지정할 수 있음
 <ul>
@@ -457,13 +508,12 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 </ul>
 </li>
 </ul>
-</li>
-</ul>
 <blockquote>
 <p><em>CRA 프로젝트 설정</em> 에서는 <code>개발 환경</code>일 경우 <code>style-loader</code>를, <code>프로덕션 빌드</code>에서는 <code>MiniCssExtractPlugin</code>를 사용</p>
 </blockquote>
-<ul>
-<li><code>sass-loader</code>: <code>SASS</code>/<code>SCSS</code> 파일을 불러와, <code>CSS</code>로 <code>컴파일</code>하는 로더
+</li>
+<li>
+<p><a href="https://www.npmjs.com/package/sass-loader">sass-loader</a>: <code>SASS</code>/<code>SCSS</code> 파일을 불러와, <code>CSS</code>로 <code>컴파일</code>하는 로더</p>
 <ul>
 <li><code>css-loader</code>, <code>style-loader</code>와 체이닝해 DOM에 즉각적으로 스타일들을 반영하거나, <code>mini-css-extract-plugin</code>과 체이닝해 개별 CSS 파일로 추출할 수 있음
 <ul>
@@ -472,12 +522,14 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 </li>
 </ul>
 </li>
-<li><code>postcss-loader</code>: 프로젝트에서 사용된 <code>CSS</code> 파일을 불러와, <code>PostCSS</code>의 여러 처리(<code>CSS 린팅</code>, <code>최신 CSS 문법의 폴리필</code> 등)들을 수행하도록 하는 로더
+<li>
+<p><a href="https://www.npmjs.com/package/postcss-loader">postcss-loader</a>: 프로젝트에서 사용된 <code>CSS</code> 파일을 불러와, <code>PostCSS</code>의 여러 처리(<code>CSS 린팅</code>, <code>최신 CSS 문법의 폴리필</code> 등)들을 수행하도록 하는 로더</p>
 <ul>
 <li><em>CRA 프로젝트 설정</em>에서는 <code>tailwindcss</code>, <code>postcss-preset-env</code>, <code>postcss-normalize</code> 플러그인을 사용</li>
 </ul>
 </li>
-<li><code>file-loader</code>: Javascript 코드 중 파일을 <code>import</code> / <code>require()</code>하는 구문에 대해, 해당 파일을 <code>지정된 디렉토리(output directory)</code>로 이동시킨 뒤 <code>public URL</code>을 생성하는 로더
+<li>
+<p><a href="https://www.npmjs.com/package/file-loader">file-loader</a>: Javascript 코드 중 파일을 <code>import</code> / <code>require()</code>하는 구문에 대해, 해당 파일을 <code>지정된 디렉토리(output directory)</code>로 이동시킨 뒤 <code>public URL</code>을 생성하는 로더</p>
 <ul>
 <li><code>public URL</code>: <em>애플리케이션 내 모든 <code>asset</code>들이 위치할 기본 경로</em>인 <a href="https://webpack.js.org/guides/public-path/">Public Path</a>와 해당 자원의 위치를 결합한 URL</li>
 </ul>
@@ -487,7 +539,8 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 </span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 변환 후
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">png</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;dirname/0dcbbaa701328ae351f.png&#34;</span>; <span style="color:#75715e">// &#39;dirname/[contenthash].[ext]&#39; 포맷
 </span></span></span></code></pre></div></li>
-<li><code>resolve-url-loader</code>: <em>분산된</em> <code>SCSS</code> 파일과, 각 <code>SCSS</code>파일과 관련된 에셋들(이미지, 폰트 등)을 같은 곳에 위치시키도록 해주는 로더
+<li>
+<p><a href="https://www.npmjs.com/package/resolve-url-loader">resolve-url-loader</a>: <em>분산된</em> <code>SCSS</code> 파일과, 각 <code>SCSS</code>파일과 관련된 에셋들(이미지, 폰트 등)을 같은 곳에 위치시키도록 해주는 로더</p>
 <ul>
 <li><code>여러 곳에 SCSS 파일을 분산</code>해두었으며, 그와 <code>관련된 에셋들을 같은 곳에 위치</code>시켜 사용하고, <em>에셋에 대한 접근</em>을 <code>완전한 상대경로</code>(현재 파일을 기준으로한 상대 경로, <code>url(./filename.ext)</code> 또는 <code>url(filename.ext)</code>)로 접근하는 경우 적합</li>
 <li><code>웹팩</code>은 <code>url()</code> 구문에서 <code>완전한 상대경로</code>가 사용됐을 경우 해당 <code>에셋</code>이 <code>루트 SCSS 파일</code>과 <strong><code>같은 디렉토리</code></strong> 에 존재한다고 가정하기 때문에 <code>분산 저장된 SCSS 및 에셋</code> 들을 제대로 처리하지 못함
@@ -500,7 +553,8 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 </li>
 </ul>
 </li>
-<li><code>source-map-loader</code>: 소스 코드 파일들로부터 <code>소스맵</code>을 <code>추출</code>하는 로더
+<li>
+<p><a href="https://www.npmjs.com/package/source-map-loader">source-map-loader</a>: 소스 코드 파일들로부터 <code>소스맵</code>을 <code>추출</code>하는 로더</p>
 <ul>
 <li><code>소스맵</code>: <code>원본 소스코드</code>와 <code>트랜스파일된 소스 코드</code> 간의 매핑 정보가 선언된 파일
 <ul>
@@ -522,13 +576,13 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
     </a>
 </span>
 </h3><ul>
-<li><code>browserslist</code>: <code>Babel</code>, <code>Autoprefixer</code> 등 여러 프론트엔드 툴에서 동일한 <code>타깃 브라우저 및 Node.js 런타임 버전</code>을 공유하기 위한 <code>Configuration</code>
+<li><a href="https://www.npmjs.com/package/browserslist">browserslist</a>: <code>Babel</code>, <code>Autoprefixer</code> 등 여러 프론트엔드 툴에서 동일한 <code>타깃 브라우저 및 Node.js 런타임 버전</code>을 공유하기 위한 <code>Configuration</code>
 <ul>
 <li>이를 통해 불필요한 <code>Polyfil</code>, <code>벤더 프리픽스</code> 등을 줄일 수 있으며, 프론트엔드 툴 간 일관성이 보장됨</li>
 <li><em>CRA 프로젝트 설정에서는</em> 프로덕션 빌드의 경우 0.2% 이상의 점유율을 지녔으며(<code>&gt;0.2%</code>) 24개월 내 업데이트가 없는 브라우저를 제외하고(<code>not dead</code>) 오페라 미니를 제외한(<code>not op_mini all</code>), 개발 환경에서는 가장 최신 버전의 <code>크롬</code>/<code>파이어폭스</code>/<code>사파리</code> 를 지원 하도록 설정됨</li>
 </ul>
 </li>
-<li><code>mini-css-extract-plugin</code> : <em>CSS를 포함하고 있는 JS 파일 별로</em> <code>CSS를 추출</code>해 <em>JS 파일 당</em> <strong><code>CSS 파일을 생성</code></strong> 하는 <code>웹팩 플러그인</code>으로, <code>css-loader</code>와 함께 사용하기를 권장함
+<li><a href="https://www.npmjs.com/package/mini-css-extract-plugin">mini-css-extract-plugin</a> : <em>CSS를 포함하고 있는 JS 파일 별로</em> <code>CSS를 추출</code>해 <em>JS 파일 당</em> <strong><code>CSS 파일을 생성</code></strong> 하는 <code>웹팩 플러그인</code>으로, <code>css-loader</code>와 함께 사용하기를 권장함
 <ul>
 <li>다만, <code>웹팩 엔트리 포인트</code> 또는 <a href="https://webpack.js.org/concepts/under-the-hood/#chunks">initial chunk</a>에서 <strong>import 하고 있는 CSS</strong>의 경우, (이 플러그인이) <em>페이지에서 해당 CSS들을 로드하도록 하지 않음</em>
 <ul>
@@ -538,22 +592,22 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 </li>
 <li>즉, <em>엔트리 포인트에 대응되는</em> <code>CSS 파일</code>의 경우, <strong>자동으로 <code>&lt;link&gt;</code> 태그를 생성</strong>하거나 / <code>&lt;link&gt;</code> 태그를 포함한 <code>index.html</code>을 만들기 위해 <a href="https://github.com/jantimon/html-webpack-plugin"><code>html-webpack-plugin</code></a>를 사용해야 함
 <ul>
-<li><code>html-webpack-plugin</code>: <em>웹팩 번들 서빙을 위한 HTML 파일</em> <code>생성을 간소화</code> 시켜주는 <code>웹팩 플러그인</code></li>
+<li><a href="https://www.npmjs.com/package/html-webpack-plugin">html-webpack-plugin</a>: <em>웹팩 번들 서빙을 위한 HTML 파일</em> <code>생성을 간소화</code> 시켜주는 <code>웹팩 플러그인</code></li>
 </ul>
 <blockquote>
-<p>If you have any CSS assets in webpack&rsquo;s output (for example, CSS extracted with the <a href="https://github.com/webpack-contrib/mini-css-extract-plugin">mini-css-extract-plugin</a>) then these will be included with <code>&lt;link&gt;</code> tags in the HTML head.
-( 만약 Webpack 출력이 CSS 에셋을 포함할 경우, HTML <code>&lt;head&gt;</code>에 <code>&lt;link&gt;</code> 태그로 포함될 것입니다.)
+<p>If you have any <code>CSS assets</code> in <strong>webpack&rsquo;s output</strong> (for example, CSS extracted with the <a href="https://github.com/webpack-contrib/mini-css-extract-plugin">mini-css-extract-plugin</a>) then these will be included with <strong><code>&lt;link&gt;</code> tags</strong> in the HTML head.<br>
+( 만약 Webpack 출력이 CSS 에셋을 포함할 경우, HTML <code>&lt;head&gt;</code>에 <code>&lt;link&gt;</code> 태그로 포함될 것입니다.)<br>
 출처: <a href="https://github.com/jantimon/html-webpack-plugin?tab=readme-ov-file#usage">jantimon/html-webpack-plugin: Simplifies creation of HTML files to serve your webpack bundles</a></p>
 </blockquote>
 </li>
 </ul>
 </li>
-<li><code>tailwindcss</code>: <code>유틸리티-우선(utility-first)</code> CSS 프레임워크로, 프레임워크에서 <code>지정한 클래스 명</code>을 사용하면 <code>CSS 유틸리티</code>가 적용됨
+<li><a href="https://www.npmjs.com/package/tailwindcss">tailwindcss</a>: <code>유틸리티-우선(utility-first)</code> CSS 프레임워크로, 프레임워크에서 <code>지정한 클래스 명</code>을 사용하면 <code>CSS 유틸리티</code>가 적용됨
 <ul>
 <li><em><code>인라인 스타일</code>과 비슷하지만</em>, <a href="https://tailwindcss.com/docs/theme">미리정의된 디자인(predefined design)</a>을 사용할 수 있고 <code>호버/포커스 등 상태</code> 및 <code>미디어 쿼리</code>를 사용할 수 있음</li>
 </ul>
 </li>
-<li><code>postcss</code>: <code>Javascript 플러그인</code>을 사용해 <code>CSS 린팅</code>, <code>변수</code> 및 <code>믹스인</code> 지원, <code>최신 CSS 문법의 트랜스파일</code> 등의 기능을 제공하는 변환기
+<li><a href="https://www.npmjs.com/package/postcss">postcss</a>: <code>Javascript 플러그인</code>을 사용해 <code>CSS 린팅</code>, <code>변수</code> 및 <code>믹스인</code> 지원, <code>최신 CSS 문법의 트랜스파일</code> 등의 기능을 제공하는 변환기
 <ul>
 <li>내부적으로 <code>CSS</code> -&gt; <code>Parser</code> -&gt; <code>[Plugin 1, Plugin 2, ... ]</code> -&gt; <code>Stringifier</code> -&gt; <code>New CSS</code>로 이어지는 <a href="https://postcss.org/docs/postcss-architecture">구조</a>를 갖고 있음
 <ul>
@@ -563,8 +617,8 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 <li>널리 사용되고 있는 <a href="https://github.com/postcss/autoprefixer">autoprefixer</a>가 대표적인 <code>PostCSS</code> 플러그인임</li>
 </ul>
 </li>
-<li><code>postcss-flexbugs-fixes</code> : <code>flowbox 이슈</code> 및 <code>크로스-브라우저 이슈</code>를 <code>수정</code>하기 위한 <code>PostCSS 플러그인</code></li>
-<li><code>postcss-normalize</code>: <a href="http://browserl.ist/"><code>browserlist</code></a> 설정에 맞춰 <a href="https://github.com/csstools/normalize.css">normalize.css</a> 라이브러리 또는 <a href="https://github.com/csstools/sanitize.css">sanitize.css</a> 라이브러리를 사용할 수 있도록 해주는 툴
+<li><a href="https://www.npmjs.com/package/postcss-flexbugs-fixes">postcss-flexbugs-fixes</a> : <code>flowbox 이슈</code> 및 <code>크로스-브라우저 이슈</code>를 <code>수정</code>하기 위한 <code>PostCSS 플러그인</code></li>
+<li><a href="https://www.npmjs.com/package/postcss-normalize">postcss-normalize</a>: <a href="http://browserl.ist/"><code>browserlist</code></a> 설정에 맞춰 <a href="https://github.com/csstools/normalize.css">normalize.css</a> 라이브러리 또는 <a href="https://github.com/csstools/sanitize.css">sanitize.css</a> 라이브러리를 사용할 수 있도록 해주는 툴
 <ul>
 <li><code>normalize.css</code> : <code>HTML 요소</code>에 대해 <em>크로스-브라우저 간</em> <code>일관된 스타일</code>을 제공하는 CSS 라이브러리
 <ul>
@@ -578,7 +632,7 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 </li>
 </ul>
 </li>
-<li><code>postcss-preset-env</code>: <code>최신 CSS 문법</code>을 <em>브라우저가 이해할 수 있도록</em> <code>변환</code>하고, <code>타겟 브라우저 및 런타임</code>에 맞춰 <code>필요한 폴리필</code>을 <code>결정</code>하는 <strong><code>PostCSS 플러그인</code></strong>
+<li>[postcss-preset-env]: <code>최신 CSS 문법</code>을 <em>브라우저가 이해할 수 있도록</em> <code>변환</code>하고, <code>타겟 브라우저 및 런타임</code>에 맞춰 <code>필요한 폴리필</code>을 <code>결정</code>하는 <strong><code>PostCSS 플러그인</code></strong>
 <ul>
 <li><a href="https://developer.mozilla.org/en-US/docs/Web/CSS/all">MDN</a>과 <a href="https://caniuse.com/css-all">Can I Use</a>로부터 <em>버전 별 지원 기능 정보들</em>을 가져와 <code>browserlist</code>를 기반으로 <strong>기능의 변환이 필요한지 판단</strong>하며, 내부적으로 <code>autoprefixer</code>를 포함해 <em>브라우저 지원 목록에 따라</em> <strong>필요할때만 접두사를 적용</strong>하도록 함</li>
 <li><em>CRA 프로젝트 설정</em>에서는 <code>autoprefixer: { flexbox: 'no-2009' }, stage: 3</code>라고 옵션을 지정하여 <code>최신</code> 및 <code>IE 버전</code>의 <em>flexbox 문법에만</em> <code>접두사를 추가</code>하도록 하며, 또한 <code>stage 3</code>에 해당하는 CSS 기능들을 <strong>변환</strong>하도록 설정
@@ -598,7 +652,7 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
     </a>
 </span>
 </h3><ul>
-<li><code>eslint</code>: Javascript 코드에서 <code>발견된 패턴</code>을 <code>식별</code> 및 <code>보고</code>하는 툴
+<li><a href="https://www.npmjs.com/package/eslint">eslint</a>: Javascript 코드에서 <code>발견된 패턴</code>을 <code>식별</code> 및 <code>보고</code>하는 툴
 <ul>
 <li>여기서 말하는 &ldquo;패턴&quot;으로는 <code>문법 오류</code>, <em>버그를 일으킬 수 있는</em> <code>사용되지 않는 변수</code>/<code>접근 불가능한 코드</code> 등의 요소, 정해진 코딩 <code>컨벤션을 위반하는 코드</code> 등이 있음</li>
 <li><a href="https://github.com/eslint/js/tree/main/packages/espree">Espree</a>를 사용해 Javascript 코드를 파싱하며, 패턴을 확인하기 위해 <code>AST</code>를 사용함</li>
@@ -609,7 +663,7 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 </li>
 </ul>
 </li>
-<li><code>eslint-config-react-app</code>: <code>CRA</code>에서 사용되는 <code>ESLint 설정</code>을 포함하고 있는 패키지
+<li><a href="https://www.npmjs.com/package/eslint-config-react-app">eslint-config-react-app</a>: <code>CRA</code>에서 사용되는 <code>ESLint 설정</code>을 포함하고 있는 패키지
 <ul>
 <li><a href="https://github.com/facebook/create-react-app/blob/main/packages/eslint-config-react-app/index.js">create-react-app/packages/eslint-config-react-app/index.js at main · facebook/create-react-app</a> 에서 그 설정 값들을 확인할 수 있음</li>
 </ul>
@@ -622,19 +676,23 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
     </a>
 </span>
 </h3><ul>
-<li><code>jest</code>: 자바스크립트 테스팅 프레임워크로, 테스트를 찾아 실행하는 <code>테스트 러너</code> 뿐만 아니라 <code>Test Matcher</code>(<code>expect()</code>와 같은 <code>Assertion</code>)그리고 <code>Test Mock</code>(<code>jest.spyOn</code>, <code>jest.mock</code> 등) 프레임워크를 제공
+<li><a href="https://www.npmjs.com/package/jest">jest</a>: 자바스크립트 테스팅 프레임워크로, 테스트를 찾아 실행하는 <code>테스트 러너</code> 뿐만 아니라 <code>Test Matcher</code>(<code>expect()</code>와 같은 <code>Assertion</code>)그리고 <code>Test Mock</code>(<code>jest.spyOn</code>, <code>jest.mock</code> 등) 프레임워크를 제공
 <ul>
 <li><em>CRA 프로젝트 설정</em>에서는 <code>&lt;rootDir&gt;/src</code> 내 모든 <code>js</code>/<code>jsx</code>/<code>ts</code>/<code>tsx</code> 파일 중 <strong><code>__test__</code>폴더 내 모든 테스트 파일</strong> 또는 <strong><code>*.spec.{확장자}</code>/<code>*.test.{확장자}</code> 파일</strong> 에 대해 테스트를 수행하도록 설정되어 있음</li>
 </ul>
 </li>
-<li><code>babel-jest</code> : <code>코드 전처리(transform)</code>를 위해 <code>Babel</code>을 사용하도록 하는 Jest의 플러그인
+<li><a href="https://www.npmjs.com/package/babel-jest">babel-jest</a> : <code>코드 전처리(transform)</code>를 위해 <code>Babel</code>을 사용하도록 하는 Jest의 플러그인
 <ul>
 <li><code>Javascript</code>/<code>JSX</code> 파일 테스트 전, 전처리 수행</li>
 <li><em>CRA 프로젝트 설정</em>에서는 <code>babel-preset-react-app</code> 프리셋을 사용하고, 해당 프리셋에서 <code>runtime</code>을 <code>classic</code>(react 17 미만) 또는 <code>automatic</code>(<code>_jsx(react/jsx-runtime)</code>을 사용하는 환경)으로 설정한 <code>트랜스포머</code>를 생성해 사용하는데에 쓰임</li>
 </ul>
 </li>
-<li><code>jest-resolve</code></li>
-<li><code>jest-watch-typeahead</code></li>
+<li><a href="https://www.npmjs.com/package/jest-resolve">jest-resolve</a>: <code>jest</code> 내부에서 배포하는 패키지로, <strong>모듈 경로를 Resolve</strong> 하는데 사용되는 <code>AsyncResolver</code>, <code>SyncResolver</code>와 같은 <code>Resolver</code>를 배포
+<ul>
+<li><code>AsyncResolver</code> - <code>SyncResolver</code>는 이름 그대로 모듈이름을 <strong>동기적으로</strong>(<code>resolveStubModuleName : string</code>) 또는 <strong>비동기적으로</strong>(<code>resolveStubModuleNameAsync : Promise</code>) Resolve 할 것인지 차이</li>
+</ul>
+</li>
+<li><a href="https://www.npmjs.com/package/jest-watch-typeahead">jest-watch-typeahead</a>: <code>파일 이름</code> 또는 <code>테스트 이름</code>으로 테스트들을 필터링해 실행할 수 있는 플러그인</li>
 </ul>
 <h3 id="기타-유틸" >기타 유틸
 <span>
@@ -643,29 +701,297 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
     </a>
 </span>
 </h3><ul>
-<li><code>bfj</code></li>
-<li><code>camelcase</code></li>
-<li><code>dotenv</code></li>
-<li><code>dotenv-expand</code></li>
-<li><code>file-loader</code></li>
-<li><code>fs-extra</code></li>
-<li><code>identity-obj-proxy</code></li>
-<li><code>prompts</code></li>
-<li><code>react-app-polyfill</code></li>
-<li><code>react-dev-utils</code></li>
-<li><code>react-refresh</code></li>
-<li><code>resolve</code></li>
-<li><code>resolve-url-loader</code></li>
-<li><code>semver</code></li>
-<li><code>source-map-loader</code></li>
+<li><a href="https://www.npmjs.com/package/bfj">bfj</a>: <code>Big-Friendly JSON</code>의 약자로, <strong>대형 JSON 데이터 셋</strong>용 <strong>비동기 스트리밍</strong> 함수를 제공
+<ul>
+<li>만약 <strong>큰 JSON 문자열</strong>을 <strong>파싱</strong>하거나, <strong>대규모 데이터 셋</strong>을 <strong>문자열로 변환</strong>할 경우 이벤트 루프를 독점하고, <code>OOM(메모리 부족) 예외</code>를 발생시킬 수 있음</li>
+<li>이때, <code>BFJ</code>는 <code>비동기 함수</code>, 그리고 <code>사전-할당된 고정-길이 배열</code>을 사용해 이런 문제를 완화하려고 함</li>
+<li><em>CRA 프로젝트 설정</em>에서는 빌드 시 발생하는 <code>stat(warning, error 등)</code>들을 기록한 <code>bundle-stats.json</code> 파일을 작성하기 위해 사용</li>
 </ul>
-<h2 id="당장-필요없는-것-덜어내기" >당장 필요없는 것 덜어내기
+</li>
+<li><a href="https://www.npmjs.com/package/camelcase">camelcase</a>: <code>대시(-)</code>/<code>점(.)</code>/<code>밑줄(_)</code>/<code>공백( )</code>으로 구분된 문자열을 <code>camelCase</code> 또는 <code>PascalCase</code>로 변환해주는 함수를 제공
+<ul>
+<li><code>camelCase</code>와 <code>PascalCase</code> 모두, <em>단어들을 합칠때</em> <strong>공백없이 각 단어의 첫 글자를 대문자</strong>로 표기한다는 공통점이 있지만 <code>camelCase</code>는 <strong>첫 번째 단어의 첫 글자를 소문자</strong>로, <code>PascalCase</code>는 <em>첫 번째 단어를 포함한</em> <strong>모든 단어의 첫 글자를 대문자로 표기</strong>한다는 차이가 있음</li>
+<li><em>CRA 프로젝트 설정</em>에서는 <code>커스텀 Jest 트랜스포머(fileTransform.js)</code>에서 <code>SVG 파일</code>을 <strong><code>React 컴포넌트</code>처럼 가져올 때</strong>, SVG 파일 이름을 PascalCase로 처리하기 위해 사용</li>
+</ul>
+</li>
+<li><a href="https://www.npmjs.com/package/dotenv">dotenv</a>: <code>.env</code> 파일로부터 환경 변수들을 불러와, <code>node.js</code>의 <code>process.env</code> 객체에 주입하는 패키지
+<ul>
+<li><code>.env</code> 파일에는 <code>키=값</code>으로 이루어진 변수들을 두고 사용</li>
+<li>2년 전부터 <code>dotenv</code>에 <strong><code>&quot;암호화 된&quot; .env 파일</code></strong> 을 지원하고, <strong><code>크로스-플랫폼 일관성</code></strong> 을 지원하는 <a href="https://www.npmjs.com/package/@dotenvx/dotenvx">dotenvx</a>를 사용하길 권고하고 있음</li>
+</ul>
+</li>
+<li><a href="https://www.npmjs.com/package/dotenv-expand">dotenv-expand</a>: <code>dotenv</code>에 <code>변수 확장(variable expansion)</code> 기능을 추가한 패키지
+<ul>
+<li><code>변수 확장</code>: 한 변수에서 다른 변수를 <code>${이름}</code> 구문을 통해 참조할 수 있는 기능
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>	<span style="color:#960050;background-color:#1e0010">HOST_URL=http:</span><span style="color:#75715e">//localhost:3000 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#960050;background-color:#1e0010">API_URL=$</span>{<span style="color:#960050;background-color:#1e0010">HOST_URL</span>}<span style="color:#960050;background-color:#1e0010">/api</span>
+</span></span></code></pre></div></li>
+<li><em>CRA 프로젝트 설정</em>에서는 <code>env.js</code>에서 환경 변수들을 설정할 때, <code>.env</code>파일들을 우선순위가 높은대로 배열에 담은 뒤 순회하며 <code>dotenv</code> 를 통해 환경변수들을 불러온 뒤, 그 사이에 존재하는 <code>변수 확장</code>을 처리하기 위해 <code>dotenv-expand</code>로 한 번 더 처리하는 형태로 사용</li>
+</ul>
+</li>
+<li><a href="https://www.npmjs.com/package/fs-extra">fs-extra</a>: <code>node.js</code>의 <code>fs</code> 모듈에 포함되어 있지 않은 파일 시스템 메서드를 추가하고, <code>fs</code> 메서드들에 대한 <code>Promise</code> 지원을 추가한 패키지
+<ul>
+<li><code>fs</code> 모듈의 모든 기능을 포함한채 확장하기 때문에 <code>fs-extra</code>만 가져와 사용하면 됨</li>
+<li>또한, 모든 <code>fs 메서드</code>들이 <code>Promise</code>를 지원하도록 했기 때문에, 별도의 <code>callback</code>을 넘기지 않을 경우 <code>Promise</code>를 반환함</li>
+<li><code>ESM(ES Module)</code>도 지원하나(<code>fs-extra/esm</code>), <em><code>fs</code> 메서드들이 포함되어 있지 않으므로</em> <strong>별도로 import</strong> 해주어야 함</li>
+<li><em>CRA 프로젝트 설정</em>에서는 애플리케이션을 build할 때 사용됨
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// 1. Yarn 패키지 매니저가 사용되는지 확인하는데 사용
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">useYarn</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">existsSync</span>(<span style="color:#a6e22e">paths</span>.<span style="color:#a6e22e">yarnLockFile</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 2. 빌드 디렉토리 내 파일들을 지우는데 사용
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">emptyDirSync</span>(<span style="color:#a6e22e">paths</span>.<span style="color:#a6e22e">appBuild</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 3. `Public` 폴더 내 정적 에셋들을 빌드 디렉토리로 복사하는데에 사용 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">copySync</span>(<span style="color:#a6e22e">paths</span>.<span style="color:#a6e22e">appPublic</span>, <span style="color:#a6e22e">paths</span>.<span style="color:#a6e22e">appBuild</span>, {
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">dereference</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">filter</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">file</span> =&gt; <span style="color:#a6e22e">file</span> <span style="color:#f92672">!==</span> <span style="color:#a6e22e">paths</span>.<span style="color:#a6e22e">appHtml</span>,
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div></li>
+</ul>
+</li>
+<li><a href="https://www.npmjs.com/package/identity-obj-proxy">identity-obj-proxy</a>: <code>ES6 Proxy</code>를 이용한 <code>항등(Identity) 객체</code>를 제공하는 패키지로, <code>CSS 모듈</code>과 같이 <code>Webpack</code>이 처리해주는 <code>import</code> 동작을 <code>모킹</code>하는데 유용함
+<ul>
+<li><code>Proxy</code>: <em>다른 객체에 대한</em> <code>프록시</code>를 생성하여, <em>해당 객체의 기본적인 작업</em>을 <code>가로채고, 재정의</code>할 수 있도록 하는 <code>ES6 문법</code>
+<ul>
+<li><code>Proxy(obj, handler)</code>: <code>Proxy</code> 생성자는 <code>프록시할 다른 객체(obj)</code>와 <code>다른 객체의 어떤 작업을 가로채고 해당 작업을 어떻게 재정의할 지 정의된 객체(hanlder)</code> 두 가지 매개변수를 받음
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy/Proxy">정의할 수 있는 <code>handler 함수</code></a>로는 <code>apply()</code>, <code>construct()</code>, <code>get()</code>, <code>set()</code> 등이 있으며, 아래 <code>idObj</code>에서는 <em>객체 프로퍼티에 접근하는 메서드</em>인 <code>get()</code>을 재정의한 <code>handler function</code>을 정의하고 있음</li>
+</ul>
+</li>
+<li><code>identity-obj-proxy</code>에서는 아래와 같이, 접근하려는 key 이름을 그대로 반환하는 <code>Proxy 객체</code>를 제공함
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">idObj</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Proxy({}, {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 객체 내부 메서드(Object internal methods)인 get 호출을 가로채고 대신 응답하는 handler function
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">get</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">getter</span>(<span style="color:#a6e22e">target</span>, <span style="color:#a6e22e">key</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">key</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;__esModule&#39;</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">key</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div></li>
+</ul>
+</li>
+<li><code>항등(Identity) 객체</code>: 모든 원소를 자기 자신과 같은 값을 대응시키는 함수인 <code>항등 함수(ex) f(x) = x)</code>처럼, 모든 <code>key</code>에 대해 <code>obj[key] = 'key' (또는 obj.key = 'key')</code>인 객체</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-jsx" data-lang="jsx"><span style="display:flex;"><span><span style="color:#75715e">// 예시 코드
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// jest.config.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">module</span>.<span style="color:#a6e22e">exports</span> <span style="color:#f92672">=</span> {  
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">moduleNameMapper</span><span style="color:#f92672">:</span> {  
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#39;\\.jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$&#39;</span><span style="color:#f92672">:</span>  
+</span></span><span style="display:flex;"><span>		<span style="color:#e6db74">&#39;&lt;rootDir&gt;/__mocks__/fileMock.js&#39;</span>,   
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// CSS 또는 LESS(Leaner Style Sheets) 정적 에셋 모듈 경로에 대해 identity-obj-proxy의 프록시 객체를 대신 사용하도록 설정
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 즉, 프로젝트 내 사용되는 모든 CSS Module에 대해 className을 `identity-obj-proxy`에서 제공하는 프록시 객체에서 lookup 하도록 설정
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#e6db74">&#39;\\.(css|less)$&#39;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;identity-obj-proxy&#39;</span>,
+</span></span><span style="display:flex;"><span>	},  
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// SomeComponent.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">React</span>, { <span style="color:#a6e22e">Component</span> } <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;react&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// jest와 같은 프레임워크를 통해 컴포넌트를 테스트 할 땐 이미지, CSS와 같은 정적 에셋들이 특별히 유용하진 않음
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 따라서, 이들을 실제처럼 `css-loader`와 같은 툴을 통해 해싱된 클래스 명을 주입하기 보다, 모킹된 프록시를 만들어 className이 일치하는지만 확인하도록 하는 것이 더 안전하고 편리
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 따라서 `identity-obj-proxy`와 같은 모듈이 제공하는 `항등 객체`에서 className을 lookup해 확인하도록 설정
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">import</span> <span style="color:#a6e22e">styles</span> <span style="color:#a6e22e">from</span> <span style="color:#e6db74">&#39;./App.css&#39;</span>; <span style="color:#75715e">// CSS Module import
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">App</span> <span style="color:#66d9ef">extends</span> <span style="color:#a6e22e">Component</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">render</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>      &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">styles</span>.<span style="color:#a6e22e">root</span>}&gt;
+</span></span><span style="display:flex;"><span>        &lt;<span style="color:#f92672">h1</span> <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">styles</span>.<span style="color:#a6e22e">hello</span>}&gt;<span style="color:#a6e22e">Hello</span>, <span style="color:#a6e22e">world</span><span style="color:#f92672">!</span>&lt;/<span style="color:#f92672">h1</span>&gt;
+</span></span><span style="display:flex;"><span>      &lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>    );
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div></li>
+<li><a href="https://www.npmjs.com/package/prompts">prompts</a>: CLI 프롬프트를 쉽게 만들어주는 패키지
+<ul>
+<li><code>jest-cli</code>, <code>react-dev-utils</code>에서 의존하는 패키지</li>
+</ul>
+</li>
+<li><a href="https://www.npmjs.com/package/react-app-polyfill">react-app-polyfill</a>: <code>Create-React-App</code> 프로젝트에서 <em>일반적으로 사용된</em> <code>Javascript 기능</code>과 <code>최소 요구 사항</code>에 대한 <code>Polyfill</code>을 포함하는 패키지
+<ul>
+<li>프로젝트에서 지원하고자 하는 <code>최소 버전의 진입점</code>을 <code>import</code>하면 <code>Create React App</code> 프로젝트를 이용하기 위한 <code>최소 언어 기능</code>을 포함하도록 할 수 있음</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// 아래와 같은 import문을 프로젝트 진입점(&#39;src/index.js&#39;)의 첫 번째 줄로 기입해야 함
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 최소 IE 9버전 이상(IE9, IE10, IE11, ...)을 지원하려는 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">import</span> <span style="color:#e6db74">&#39;react-app-polyfill/ie9&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 최소 IE 11버전 이상을 지원하려는 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">import</span> <span style="color:#e6db74">&#39;react-app-polyfill/ie11&#39;</span>;
+</span></span></code></pre></div><ul>
+<li>또한, <strong><code>stable</code>한 기능</strong>이지만 <em>타겟 브라우저에서 이를 지원하지 않는 경우</em> 이를 제공하는 Polyfill(<code>'react-app-polyfill/stable'</code>)을 사용할 수 있음 (<code>Create-React-App</code>을 사용하고 있는 경우, 사용자가 정의한 <code>browserlist</code>를 자동적으로 불러와, 타겟 브라우저에서 필요한 폴리필만 가져옴)</li>
+</ul>
+</li>
+<li><a href="https://www.npmjs.com/package/react-dev-utils">react-dev-utils</a>: <code>Create-React-App</code>에서 사용되는 몇가지 유틸리티들을 포함하는 패키지
+<ul>
+<li><code>react-dev-utils</code>는 <code>단일 엔트리 포인트</code>를 갖고 있지 않으며, 각각의 모듈을 <code>직접 import</code> 해야 하는 형태로 작성되어 있음</li>
+<li><code>react-dev-utils</code>를 구성하는 주요 모듈 중, <code>CRA 프로젝트</code>에서 사용된 모듈은 다음과 같음
+<ul>
+<li><strong><code>InterpolateHtmlPlugin</code></strong>: <a href="https://github.com/jantimon/html-webpack-plugin">html-webpack-plugin</a>을 사용해 <code>index.html</code>에 <code>사용자 정의 변수</code>를 <code>삽입</code>할 수 있도록 돕는 <strong>웹팩 플러그인</strong></li>
+<li><strong><code>InlineChunkHtmlPlugin</code></strong>: 마찬가지로 <a href="https://github.com/jantimon/html-webpack-plugin">html-webpack-plugin</a>을 사용해 <code>index.html</code>에 <code>인라인 스크립트 청크를 삽입</code>하는 <strong>웹팩 플러그인</strong>
+<ul>
+<li>즉, <code>&lt;script src=&quot;...&quot;&gt;</code> 대신 <code>&lt;script&gt;</code>태그 내부에 직접 코드를 삽입</li>
+</ul>
+</li>
+<li><strong><code>ModuleScopePlugin</code></strong>: 애플리케이션의 <code>소스 디렉토리</code>에서 <code>상대 경로로 가져온(relative import) 파일</code>들을 디렉토리 외부에서 접근하지 못하도록 보장하는 <strong>웹팩 플러그인</strong></li>
+<li><strong><code>getCSSModuleLocalIdent</code></strong>: <code>index.module.css</code>라는 이름의 CSS 파일에 대해 <code>파일 이름</code> 또는 <code>폴더 이름</code>을 사용한 <code>CSS 모듈 클래스 이름</code>을 생성해주는 <strong><code>style-loader 모듈</code></strong></li>
+<li><strong><code>ModuleNotFoundPlugin</code></strong>: <code>Webpack</code>에서 발생하는, <code>모듈을 찾을 수 없다는 에러</code>를 알기 쉽게 꾸며주는 <strong>웹팩 플러그인</strong></li>
+<li><a href="https://www.npmjs.com/package/fork-ts-checker-webpack-plugin"><strong><code>ForkTsCheckerWebpackPlugin</code></strong></a>: 타입스크립트 타입 검사를 별도의 프로세스에서 실행하는 <strong>웹팩 플러그인</strong></li>
+<li><strong><code>eslintFormatter</code></strong>: <code>Create React App</code> 콘솔 출력과의 통합을 위한 <strong>커스텀 ESLint 포매터</strong></li>
+<li><strong><code>checkRequiredFiles</code></strong>: 필수 파일 목록을 받아 <strong>포함되지 않은 파일들</strong>을 <a href="https://www.npmjs.com/package/chalk">chalk</a>를 사용해 <strong>터미널에 출력하는 함수</strong></li>
+<li><strong><code>formatWebpackMessages</code></strong>: webpack의 <a href="https://github.com/webpack/docs/wiki/node.js-api#stats">stats</a> 객체가 갖고있는 <code>경고 및 에러 메시지</code>를 <code>추출</code>하고 꾸며주는 <strong>유틸리티 함수</strong></li>
+<li><strong><code>printHostingInstructions</code></strong>: <code>패키지 경로</code>, <code>public URL</code> 등을 받아, 프로젝트 빌드 후 <code>호스팅 지침을 출력</code>해주는 <strong>유틸리티 함수</strong></li>
+<li><strong><code>FileSizeReporter</code></strong>: <code>빌드 전</code> JS 및 CSS 에셋 <code>파일 크기를 기록</code>해두고, <code>빌드 후 이들의 크기 비교를 수행하고 출력</code>하는 <strong>유틸리티 함수 모음</strong></li>
+<li><strong><code>printBuildError</code></strong>: 잘 알려진 빌드 에러들을 꾸며주는 <strong>유틸리티 함수</strong></li>
+<li><strong><code>evalSourceMapMiddleware</code></strong>: <code>/__get-internal-source</code>로 시작하는 요청에서 웹팩 내부 URL(<code>webpack-internal:///&lt;module-id&gt;</code>)의 <code>module id</code>를 추출해 <code>&lt;source-text&gt;&lt;sourceMappingURL&gt;&lt;sourceURL&gt;</code> (모듈 원본 소스코드 + 소스맵 URL(base64 인코딩된 소스맵 정보) + 소스 URL )를 반환하는 <strong><code>웹팩 내부 미들웨어</code></strong> 생성 함수</li>
+<li><strong><code>noopServiceWorkerMiddleware</code></strong>: <code>${servedPath}/service-worker.js</code>라는, 이전의 <code>Service Worker</code> <strong>설정을 초기화</strong>하는 파일을 제공하는 <strong><code>Express</code> 미들웨어</strong></li>
+<li><strong><code>ignoredFiles</code></strong>: 소스 디렉토리 외부의 <code>node_modules</code>를 <strong>파일 감시에서 무시</strong>하기 위해, 정규표현식을 활용해 <strong>파일 경로 패턴을 생성</strong>하는 함수
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// webpackDevServer.config.js
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">watch</span><span style="color:#f92672">:</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Reportedly, this avoids CPU overload on some systems.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#75715e">// https://github.com/facebook/create-react-app/issues/293
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#75715e">// src/node_modules is not ignored to support absolute imports
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#75715e">// https://github.com/facebook/create-react-app/issues/1065
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">ignored</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ignoredFiles</span>(<span style="color:#a6e22e">paths</span>.<span style="color:#a6e22e">appSrc</span>),
+</span></span><span style="display:flex;"><span>      },
+</span></span></code></pre></div></li>
+<li><strong><code>redirectServedPathMiddleware</code></strong>: <code>req.url</code>이 <code>servedPath</code>로 시작하지 않을 경우 <code>${servedPath}/${req.path}</code>로 리다이렉션 시키는 <strong><code>Express</code> 미들웨어</strong></li>
+<li><strong><code>clearConsole</code></strong>: 콘솔 내용을 지우는 <strong>유틸리티 함수</strong></li>
+<li><strong><code>WebpackDevServerUtils</code></strong>: <code>WebpackDevServer</code>를 위한 웹팩 컴파일러 인스턴스를 생성하거나, 대체 포트를 제공하거나, <code>package.json</code>의 <code>proxy</code>세팅을 기반으로 <code>WebpackDevServer</code> 프록시 설정 객체를 생성하는 등의 작업을 수행하는 <strong>유틸리티 함수 모음</strong></li>
+<li><strong><code>openBrowser</code></strong>: 주어진 URL과 함께 브라우저를 여는 <strong>유틸리티 함수</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="https://www.npmjs.com/package/react-refresh">react-refresh</a>: <code>Fast Refresh</code>라고 부르는, &ldquo;실행중인 React 애플리케이션에서 컴포넌트를 상태값의 손실 없이 편집할 수 있도록 해주는 기능&quot;을 번들러에 통합시키기 위한 패키지
+<ul>
+<li><a href="https://github.com/facebook/react/issues/16604#issuecomment-528663101">How should we set up apps for HMR now that Fast Refresh replaces react-hot-loader? · Issue #16604 · facebook/react</a> 에 따르면, 과거에 사용되던 <a href="https://www.npmjs.com/package/react-hot-loader"><code>react-hot-loader</code></a>라는 패키지를 대체하는 패키지임</li>
+<li><em>CRA 프로젝트 설정</em>에서는 개발환경이며(<code>isEnvDevelopment</code>), React Refresh를 사용해야 하는 경우(<code>shouldUseReactRefresh</code>) <code>ReactRefreshWebpackPlugin</code> 플러그인을 사용하며, <code>babel-loader</code>에 <a href="https://github.com/facebook/react/blob/main/packages/react-refresh/babel.js"><code>react-refresh/babel</code></a>플러그인을 연결함</li>
+</ul>
+</li>
+<li><a href="https://www.npmjs.com/package/resolve">resolve</a>: <code>node.js</code>의 <code>require.resolve()</code> 알고리즘을 구현하여, 비동기/동기적으로 <code>require.resolve()</code>를 호출할 수 있도록 해주는 패키지
+<ul>
+<li><code>require.resolve()</code>: <code>require()</code>를 통해 모듈을 탐색할 때, 주어진 경로를 해석하는 함수
+<ul>
+<li>대략적인 pseudo algorithm은 <a href="https://nodejs.org/api/modules.html#all-together">문서</a>참고</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="https://www.npmjs.com/package/semver">semver</a>: npm을 위한 <code>시멘틱 버전 관리(Semantic Versioning)</code> 도구.
+<ul>
+<li><a href="https://semver.org/">Semantic Versioning 2.0.0 | Semantic Versioning</a>에 따르면, 의존성이 많은 시스템에서 의존성 지정이 너무 엄격해 발생할 수 있는 <code>버전 락(Version Lock)</code>, 또는 의존성이 너무 느슨하게 지정되어 발생할 수 있는 <code>버전 난잡성(Version Promiscuity)</code>를 방지하기 위해서 <code>시멘틱 버전 관리</code> 사양을 제안함</li>
+<li><code>시멘틱 버저닝</code>에서는, <code>X.Y.Z</code>와 같은 체계의 형태로 버전 번호를 관리하는데, 이때 각 부분은 다음을 의미
+<ul>
+<li><code>X</code>: 메이저 업데이트. <em>하위 호환성이 <strong>없는</strong> API</em>의 <code>변경 사항</code></li>
+<li><code>Y</code>: 마이너 업데이트. <em>하위 호환성이 <strong>있는</strong>(Backward Compatible)</em> <code>API</code>의 <code>추가/변경 사항</code></li>
+<li><code>Z</code>: 패치. <em>API에 영향을 주지않는</em> <code>버그 수정(Bug Fixes)</code></li>
+</ul>
+</li>
+<li>이러한 <code>시멘틱 버저닝 관리 체계</code>에 있어, 유용한 여러 <code>유틸리티 함수</code>를 제공하는 것이 <code>semver</code>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">semver</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;semver&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">semver</span>.<span style="color:#a6e22e">valid</span>(<span style="color:#e6db74">&#39;1.2.3&#39;</span>) <span style="color:#75715e">// &#39;1.2.3&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">semver</span>.<span style="color:#a6e22e">valid</span>(<span style="color:#e6db74">&#39;a.b.c&#39;</span>) <span style="color:#75715e">// null
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">semver</span>.<span style="color:#a6e22e">clean</span>(<span style="color:#e6db74">&#39;  =v1.2.3   &#39;</span>) <span style="color:#75715e">// &#39;1.2.3&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">semver</span>.<span style="color:#a6e22e">satisfies</span>(<span style="color:#e6db74">&#39;1.2.3&#39;</span>, <span style="color:#e6db74">&#39;1.x || &gt;=2.5.0 || 5.0.0 - 7.2.3&#39;</span>) <span style="color:#75715e">// 첫 번째 인자가 두 번째 인자로 주어진 버전 조건을 만족하는가? true
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">semver</span>.<span style="color:#a6e22e">gt</span>(<span style="color:#e6db74">&#39;1.2.3&#39;</span>, <span style="color:#e6db74">&#39;9.8.7&#39;</span>) <span style="color:#75715e">// 첫 번째 인자가 두 번째 인자보다 높은 버전인가? false
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">semver</span>.<span style="color:#a6e22e">lt</span>(<span style="color:#e6db74">&#39;1.2.3&#39;</span>, <span style="color:#e6db74">&#39;9.8.7&#39;</span>) <span style="color:#75715e">// 첫 번째 인자가 두 번째 인자보다 낮은 버전인가? true
+</span></span></span></code></pre></div></li>
+</ul>
+</li>
+</ul>
+<h3 id="ejecting-이후-콘솔에-출력된-메세지" >Ejecting 이후 콘솔에 출력된 메세지
 <span>
-    <a href="#%eb%8b%b9%ec%9e%a5-%ed%95%84%ec%9a%94%ec%97%86%eb%8a%94-%ea%b2%83-%eb%8d%9c%ec%96%b4%eb%82%b4%ea%b8%b0">
+    <a href="#ejecting-%ec%9d%b4%ed%9b%84-%ec%bd%98%ec%86%94%ec%97%90-%ec%b6%9c%eb%a0%a5%eb%90%9c-%eb%a9%94%ec%84%b8%ec%a7%80">
         <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
     </a>
 </span>
-</h2>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>// 의존성용 config 파일들 및 스크립트 파일 생성
+</span></span><span style="display:flex;"><span>  Adding \config\env.js to the project
+</span></span><span style="display:flex;"><span>  Adding \config\getHttpsConfig.js to the project
+</span></span><span style="display:flex;"><span>  Adding \config\modules.js to the project
+</span></span><span style="display:flex;"><span>  Adding \config\paths.js to the project
+</span></span><span style="display:flex;"><span>  Adding \config\webpack.config.js to the project
+</span></span><span style="display:flex;"><span>  Adding \config\webpackDevServer.config.js to the project
+</span></span><span style="display:flex;"><span>  Adding \config\jest\babelTransform.js to the project
+</span></span><span style="display:flex;"><span>  Adding \config\jest\cssTransform.js to the project
+</span></span><span style="display:flex;"><span>  Adding \config\jest\fileTransform.js to the project
+</span></span><span style="display:flex;"><span>  Adding \scripts\build.js to the project
+</span></span><span style="display:flex;"><span>  Adding \scripts\start.js to the project
+</span></span><span style="display:flex;"><span>  Adding \scripts\test.js to the project
+</span></span><span style="display:flex;"><span>  Adding \config\webpack\persistentCache\createEnvironmentHash.js to the project
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>// 감춰져있던 의존성들 추가
+</span></span><span style="display:flex;"><span>Updating the dependencies
+</span></span><span style="display:flex;"><span>  Removing react-scripts from dependencies
+</span></span><span style="display:flex;"><span>  Adding @babel/core to dependencies
+</span></span><span style="display:flex;"><span>  Adding @pmmmwh/react-refresh-webpack-plugin to dependencies
+</span></span><span style="display:flex;"><span>  Adding @svgr/webpack to dependencies
+</span></span><span style="display:flex;"><span>  Adding babel-jest to dependencies
+</span></span><span style="display:flex;"><span>  Adding babel-loader to dependencies
+</span></span><span style="display:flex;"><span>  Adding babel-plugin-named-asset-import to dependencies
+</span></span><span style="display:flex;"><span>  Adding babel-preset-react-app to dependencies
+</span></span><span style="display:flex;"><span>  Adding bfj to dependencies
+</span></span><span style="display:flex;"><span>  Adding browserslist to dependencies
+</span></span><span style="display:flex;"><span>  Adding camelcase to dependencies
+</span></span><span style="display:flex;"><span>  Adding case-sensitive-paths-webpack-plugin to dependencies
+</span></span><span style="display:flex;"><span>  Adding css-loader to dependencies
+</span></span><span style="display:flex;"><span>  Adding css-minimizer-webpack-plugin to dependencies
+</span></span><span style="display:flex;"><span>  Adding dotenv to dependencies
+</span></span><span style="display:flex;"><span>  Adding dotenv-expand to dependencies
+</span></span><span style="display:flex;"><span>  Adding eslint to dependencies
+</span></span><span style="display:flex;"><span>  Adding eslint-config-react-app to dependencies
+</span></span><span style="display:flex;"><span>  Adding eslint-webpack-plugin to dependencies
+</span></span><span style="display:flex;"><span>  Adding file-loader to dependencies
+</span></span><span style="display:flex;"><span>  Adding fs-extra to dependencies
+</span></span><span style="display:flex;"><span>  Adding html-webpack-plugin to dependencies
+</span></span><span style="display:flex;"><span>  Adding identity-obj-proxy to dependencies
+</span></span><span style="display:flex;"><span>  Adding jest to dependencies
+</span></span><span style="display:flex;"><span>  Adding jest-resolve to dependencies
+</span></span><span style="display:flex;"><span>  Adding jest-watch-typeahead to dependencies
+</span></span><span style="display:flex;"><span>  Adding mini-css-extract-plugin to dependencies
+</span></span><span style="display:flex;"><span>  Adding postcss to dependencies
+</span></span><span style="display:flex;"><span>  Adding postcss-flexbugs-fixes to dependencies
+</span></span><span style="display:flex;"><span>  Adding postcss-loader to dependencies
+</span></span><span style="display:flex;"><span>  Adding postcss-normalize to dependencies
+</span></span><span style="display:flex;"><span>  Adding postcss-preset-env to dependencies
+</span></span><span style="display:flex;"><span>  Adding prompts to dependencies
+</span></span><span style="display:flex;"><span>  Adding react-app-polyfill to dependencies
+</span></span><span style="display:flex;"><span>  Adding react-dev-utils to dependencies
+</span></span><span style="display:flex;"><span>  Adding react-refresh to dependencies
+</span></span><span style="display:flex;"><span>  Adding resolve to dependencies
+</span></span><span style="display:flex;"><span>  Adding resolve-url-loader to dependencies
+</span></span><span style="display:flex;"><span>  Adding sass-loader to dependencies
+</span></span><span style="display:flex;"><span>  Adding semver to dependencies
+</span></span><span style="display:flex;"><span>  Adding source-map-loader to dependencies
+</span></span><span style="display:flex;"><span>  Adding style-loader to dependencies
+</span></span><span style="display:flex;"><span>  Adding tailwindcss to dependencies
+</span></span><span style="display:flex;"><span>  Adding terser-webpack-plugin to dependencies
+</span></span><span style="display:flex;"><span>  Adding webpack to dependencies
+</span></span><span style="display:flex;"><span>  Adding webpack-dev-server to dependencies
+</span></span><span style="display:flex;"><span>  Adding webpack-manifest-plugin to dependencies
+</span></span><span style="display:flex;"><span>  Adding workbox-webpack-plugin to dependencies
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>Updating the scripts
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>Configuring package.json
+</span></span><span style="display:flex;"><span>  Adding Jest configuration
+</span></span><span style="display:flex;"><span>  Adding Babel preset
+</span></span></code></pre></div><h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li>각 의존성들의 Github Repository 및 공식 문서</li>
+<li></li>
+</ul>
+
         </div>
         
 
@@ -676,7 +1002,7 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
 <div class="post-info">
     
         <div class="post-date dt-published">
-            <a class="u-url" href="/post/develop/javascript/bundler/webpack-and-babel-config/"><time datetime="2025-06-20">2025-06-20 15:40 KST</time></a>
+            <a class="u-url" href="/post/develop/javascript/bundler/webpack-and-babel-config/"><time datetime="2025-11-01">2025-11-01 18:16 KST</time></a>
             
         </div>
     
@@ -707,7 +1033,10 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
                     <li><a href="https://cloudsoswift.github.io/tags/webpack/">#Webpack</a></li>
                 
                     
-                    <li><a href="https://cloudsoswift.github.io/tags/cra/">#CRA</a></li>
+                    <li><a href="https://cloudsoswift.github.io/tags/vite/">#Vite</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/loader/">#Loader</a></li>
                 
             </ul>
         
@@ -723,7 +1052,7 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
             <h3 class="read-next-title">Read next</h3>
             <ul class="read-next-posts">
                 
-                <li><a href="/post/develop/javascript/bundler/deprecate-of-cra/">[Webpack 기반의 React App 만들기] 1. Create React App의 Deprecated 발표</a></li>
+                <li><a href="/post/develop/javascript/bundler/deprecate-of-cra/">[Webpack/Vite 파헤치기] 1. Create React App의 Deprecated 발표</a></li>
                 
                 <li><a href="/post/develop/javascript/module-system/">[Javascript] 모듈 시스템들 알아보기</a></li>
                 
@@ -741,7 +1070,7 @@ CRA eject시 드러나는 의존성들CRA로 생성한 React App을 react-scrip
         </div>
         <div class="right pagination-item ">
             
-                <a href="/post/develop/javascript/bundler/deprecate-of-cra/">[Webpack 기반의 React App 만들기] 1. Create React App의 Deprecated 발표</a>
+                <a href="/post/develop/javascript/bundler/deprecate-of-cra/">[Webpack/Vite 파헤치기] 1. Create React App의 Deprecated 발표</a>
             
         </div>
     </div>
