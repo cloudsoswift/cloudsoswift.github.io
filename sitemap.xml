@@ -2,13 +2,31 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://cloudsoswift.github.io/post/develop/javascript/bundler/webpack-and-babel-config/</loc>
-    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
+    <loc>https://cloudsoswift.github.io/post/develop/toy-project/podor/01-project-summary-and-db-structure/</loc>
+    <lastmod>2026-03-10T15:52:49+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/categories/</loc>
-    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
+    <lastmod>2026-03-10T15:52:49+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/database/</loc>
+    <lastmod>2026-03-10T15:52:49+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/categories/develop/</loc>
+    <lastmod>2026-03-10T15:52:49+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/post/</loc>
+    <lastmod>2026-03-10T15:52:49+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/</loc>
+    <lastmod>2026-03-10T15:52:49+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/tags/toyproject/</loc>
+    <lastmod>2026-03-10T15:52:49+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/</loc>
+    <lastmod>2026-03-10T15:52:49+09:00</lastmod>
+  </url><url>
+    <loc>https://cloudsoswift.github.io/post/develop/javascript/bundler/webpack-and-babel-config/</loc>
     <lastmod>2025-11-01T18:16:27+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/javascript/</loc>
@@ -20,19 +38,10 @@
     <loc>https://cloudsoswift.github.io/tags/module/</loc>
     <lastmod>2025-11-01T18:16:27+09:00</lastmod>
   </url><url>
-    <loc>https://cloudsoswift.github.io/post/</loc>
-    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/</loc>
-    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
-  </url><url>
     <loc>https://cloudsoswift.github.io/tags/vite/</loc>
     <lastmod>2025-11-01T18:16:27+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/webpack/</loc>
-    <lastmod>2025-11-01T18:16:27+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/</loc>
     <lastmod>2025-11-01T18:16:27+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/javascript/bundler/deprecate-of-cra/</loc>
@@ -57,9 +66,6 @@
     <lastmod>2025-03-02T13:57:39+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/post/develop/database/postgresql-common/</loc>
-    <lastmod>2024-12-18T09:12:20+09:00</lastmod>
-  </url><url>
-    <loc>https://cloudsoswift.github.io/tags/database/</loc>
     <lastmod>2024-12-18T09:12:20+09:00</lastmod>
   </url><url>
     <loc>https://cloudsoswift.github.io/tags/dbeaver/</loc>
