@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Java] equals()와 hashCode() 알아보기 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="equals()와 hashCode()두 가지 함수 모두 모든 클래스의 최상위 부모인 Object에 정의 되어있는 함수로, 인스턴스 간의 동등함과 관련된 함수들입니다.
+equals() #public boolean equals(Object obj) 인자로 주어지는 객체가 equals()를 호출한 객체와 동일한 객체인지 여부를 반환합니다.
+null이 아닌 객체에 대해 equals()는 다음과 같은 Object 명세를 지키는 동등 관계를 구현합니다.
+이를 어긴다면, 해당 클래스 인스턴스를 저장한 Collection에서 contatins()와 같은 함수를 호출 시, 인스턴스를 찾지 못할 것입니다.
+이처럼, equals 규약을 어기면 이 객체를 사용하는 다른 객체들이 어떻게 반응할지 알 수 없습니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.538b1869ceb05ae0d55cd41ef8e22ebc151bdc0e0d45b056d5f786d594660177.css" integrity="sha256-U4sYac6wWuDVXNQe&#43;OIuvBUb3A4NRbBW1feG1ZRmAXc=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Java] equals()와 hashCode() 알아보기" />
+<meta property="og:description" content="equals()와 hashCode()두 가지 함수 모두 모든 클래스의 최상위 부모인 Object에 정의 되어있는 함수로, 인스턴스 간의 동등함과 관련된 함수들입니다.
+equals() #public boolean equals(Object obj) 인자로 주어지는 객체가 equals()를 호출한 객체와 동일한 객체인지 여부를 반환합니다.
+null이 아닌 객체에 대해 equals()는 다음과 같은 Object 명세를 지키는 동등 관계를 구현합니다.
+이를 어긴다면, 해당 클래스 인스턴스를 저장한 Collection에서 contatins()와 같은 함수를 호출 시, 인스턴스를 찾지 못할 것입니다.
+이처럼, equals 규약을 어기면 이 객체를 사용하는 다른 객체들이 어떻게 반응할지 알 수 없습니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/java/equals-hashcode/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-04-16T18:42:22+09:00" />
+<meta property="article:modified_time" content="2024-04-16T18:42:22+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Java] equals()와 hashCode() 알아보기"/>
+<meta name="twitter:description" content="equals()와 hashCode()두 가지 함수 모두 모든 클래스의 최상위 부모인 Object에 정의 되어있는 함수로, 인스턴스 간의 동등함과 관련된 함수들입니다.
+equals() #public boolean equals(Object obj) 인자로 주어지는 객체가 equals()를 호출한 객체와 동일한 객체인지 여부를 반환합니다.
+null이 아닌 객체에 대해 equals()는 다음과 같은 Object 명세를 지키는 동등 관계를 구현합니다.
+이를 어긴다면, 해당 클래스 인스턴스를 저장한 Collection에서 contatins()와 같은 함수를 호출 시, 인스턴스를 찾지 못할 것입니다.
+이처럼, equals 규약을 어기면 이 객체를 사용하는 다른 객체들이 어떻게 반응할지 알 수 없습니다."/>
+
+
+
+
+
+
+
+
+
+
+
+<link rel="canonical" href="https://cloudsoswift.github.io/post/develop/java/equals-hashcode/">
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="page-wrapper">
+        <div class="container">
+            <header class="common-header">
+                
+                    <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+
+                
+            </header>
+            <main id="main" tabindex="-1">
+                
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Java] equals()와 hashCode() 알아보기</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#equals와-hashcode">equals()와 hashCode()</a>
+      <ul>
+        <li><a href="#equals-httpsdocsoraclecomjavase8docsapijavalangobjecthtmlequals-javalangobject-"><code>equals()</code> <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html#equals-java.lang.Object-">#</a></a></li>
+        <li><a href="#hashcode-httpsdocsoraclecomjavase8docsapijavalangobjecthtmlhashcode--"><code>hashCode()</code> <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html#hashCode--">#</a></a></li>
+      </ul>
+    </li>
+    <li><a href="#hashcode-를-재정의할-때-염두해야-할-점">hashCode() 를 재정의할 때, 염두해야 할 점</a>
+      <ul>
+        <li><a href="#모든-객체에서-다른-값을-반환할-수-있는가">모든 객체에서 다른 값을 반환할 수 있는가?</a></li>
+        <li><a href="#hashcode-계산-비용이-큰-가">hashCode 계산 비용이 큰 가?</a></li>
+        <li><a href="#핵심-필드가-포함되어-있는가">핵심 필드가 포함되어 있는가?</a></li>
+        <li><a href="#hashcode-생성-규칙을-api에-공표해야-하는가">hashCode 생성 규칙을 API에 공표해야 하는가?</a></li>
+      </ul>
+    </li>
+    <li><a href="#equals-를-재정의-해야-할-때-염두해야-할-점">equals() 를 재정의 해야 할 때, 염두해야 할 점</a>
+      <ul>
+        <li><a href="#꼭-재정의가-필요한가">꼭 재정의가 필요한가?</a></li>
+        <li><a href="#hashcode도-재정의했는가"><code>hashCode()</code>도 재정의했는가?</a></li>
+        <li><a href="#object-외의-타입을-인자로-받는-equals를-선언하진-않았는가">Object 외의 타입을 인자로 받는 <code>equals</code>를 선언하진 않았는가?</a></li>
+        <li><a href="#구체-클래스에-값을-추가해-확장했는가">구체 클래스에 값을 추가해 확장했는가?</a></li>
+        <li><a href="#equals를-통한-비교-과정에-신뢰할-수-없는-자원이-포함되어있는가">equals를 통한 비교 과정에 신뢰할 수 없는 자원이 포함되어있는가?</a></li>
+        <li><a href="#같은-타입의-객체를-비교하고-있는가">같은 타입의 객체를 비교하고 있는가?</a></li>
+        <li><a href="#어떤-필드를-비교하는가">어떤 필드를 비교하는가?</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h2 id="equals와-hashcode" >equals()와 hashCode()
+<span>
+    <a href="#equals%ec%99%80-hashcode">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>두 가지 함수 모두 모든 클래스의 최상위 부모인 <code>Object</code>에 정의 되어있는 함수로, 인스턴스 간의 <code>동등함</code>과 관련된 함수들입니다.</p>
+<h3 id="equals-httpsdocsoraclecomjavase8docsapijavalangobjecthtmlequals-javalangobject-" ><code>equals()</code> <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html#equals-java.lang.Object-">#</a>
+<span>
+    <a href="#equals-httpsdocsoraclecomjavase8docsapijavalangobjecthtmlequals-javalangobject-">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">equals</span><span style="color:#f92672">(</span>Object obj<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>인자로 주어지는 객체가 <code>equals()</code>를 호출한 객체와 <strong><code>동일한</code></strong> 객체인지 여부를 반환합니다.<br>
+<code>null이 아닌 객체</code>에 대해 <code>equals()</code>는 다음과 같은 <code>Object 명세</code>를 지키는 <code>동등 관계</code>를 구현합니다.<br>
+이를 어긴다면, 해당 클래스 인스턴스를 저장한 <code>Collection</code>에서 <code>contatins()</code>와 같은 함수를 호출 시, 인스턴스를 찾지 못할 것입니다.<br>
+이처럼, <strong>equals 규약을 어기면</strong> 이 객체를 사용하는 <strong>다른 객체들</strong>이 <strong>어떻게 반응</strong>할지 <strong>알 수 없습니다</strong>.</p>
+<h4 id="동등-관계-규약" >동등 관계 규약
+<span>
+    <a href="#%eb%8f%99%eb%93%b1-%ea%b4%80%ea%b3%84-%ea%b7%9c%ec%95%bd">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h5 id="반사성reflexivity" >반사성(reflexivity)
+<span>
+    <a href="#%eb%b0%98%ec%82%ac%ec%84%b1reflexivity">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>null이 아닌 모든 참조 값 x에 대해,  <code>x.equals(x)</code>는 true다.<br>
+즉, 객체는 자기 자신과 같아야 합니다.</p>
+<h5 id="대칭성symmetry" >대칭성(symmetry)
+<span>
+    <a href="#%eb%8c%80%ec%b9%ad%ec%84%b1symmetry">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>null이 아닌 모든 참조 값 x, y에 대해,  <code>x.equals(y)</code>가 true면 <code>y.equals(x)</code>도 true다.<br>
+즉, 두 객체는 <strong>서로</strong>에 대한 <strong>동치 여부에 동일하게 답</strong>해야 합니다.</p>
+<h5 id="추이성transitivity" >추이성(transitivity)
+<span>
+    <a href="#%ec%b6%94%ec%9d%b4%ec%84%b1transitivity">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>null이 아닌 모든 참조 값 x, y,z에 대해, <code>x.equals(y)</code>가 true고 <code>y.equals(z)</code>도 true면, <code>x.equals(z)</code>도 true다.<br>
+즉, 첫 번째 객체와 두 번째 객체가 같고, 두 번째 객체와 세 번째 객체가 같다면, 첫 번째 객체와 세 번째 객체도 같아야 합니다.</p>
+<h5 id="일관성consistency" >일관성(consistency)
+<span>
+    <a href="#%ec%9d%bc%ea%b4%80%ec%84%b1consistency">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>null이 아닌 모든 참조 값 x, y에 대해 <code>x.equals(y)</code>를 반복해 호출하면, <strong>일관되게</strong> true를 반환하거나 false를 반환한다.<br>
+두 객체가 같다면, 이후로 둘 중 한 객체에서도 수정이 발생하지 않는 한 <strong>앞으로도 영원히 같아야 합니다</strong>.</p>
+<h3 id="hashcode-httpsdocsoraclecomjavase8docsapijavalangobjecthtmlhashcode--" ><code>hashCode()</code> <a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html#hashCode--">#</a>
+<span>
+    <a href="#hashcode-httpsdocsoraclecomjavase8docsapijavalangobjecthtmlhashcode--">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">int</span> <span style="color:#a6e22e">hashCode</span><span style="color:#f92672">()</span>
+</span></span></code></pre></div><p>함수를 호출한 <strong>객체의 해시 코드 값</strong>을 <strong>반환</strong>합니다.<br>
+이 함수는 <code>HashMap</code>과 같은 클래스에서 제공하는 <code>해시 테이블</code>의 이점을 위해 지원됩니다.
+<code>hashCode()</code> 역시 원활한 사용을 위해 지켜야하는 규약들이 명시되어 있습니다.<br>
+만약 이를 어긴다면, <code>Hash 기반 컬렉션</code>에서 <code>get</code> 메서드를 통해 <strong><code>논리적 동치</code></strong> 인 객체로 꺼내려 해도, <code>hashCode</code>가 다르기 때문에 꺼낼 수 없습니다. (내부에서 최적화 때문에 hashCode가 동일하지 않으면, 동치인지 비교조차 하지 않도록 되어있습니다.)<br>
+일반적으로 객체의 내부 주소를 <code>Integer</code>로 변환해 반환하는 방식으로 구현되지만, 이러한 형태는 Java 언어에서 공식적으로 요구하는 기법은 아닙니다.</p>
+<h4 id="hashcode-일반-규약" >hashCode 일반 규약
+<span>
+    <a href="#hashcode-%ec%9d%bc%eb%b0%98-%ea%b7%9c%ec%95%bd">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>equals</code> 비교시 사용되는 정보가 변하지 않았다면, <em>애플리케이션의 실행시간 동안</em>은 <strong>항상 같은 값을 반환</strong>해야 한다. 단, 애플리케이션이 재실행된다면 값이 달라져도 상관없다.</li>
+<li><code>equals(obj)</code>가 두 객체를 <strong>같다고 판단</strong>한 경우, 두 객체의 <code>hashCode</code>는 <strong>똑같은 값을 반환</strong>해야 한다.</li>
+<li><code>equals(obj)</code>가 두 객체를 <strong>다르다 판단</strong>해도, hashCode 값이 꼭 <strong>달라야 할 필요는 없다</strong>.
+<ul>
+<li>다만, <strong>다른 값을 반환</strong>하는 것이 <strong>해시테이블 성능</strong>에 좋다.</li>
+</ul>
+</li>
+</ul>
+<h2 id="hashcode-를-재정의할-때-염두해야-할-점" >hashCode() 를 재정의할 때, 염두해야 할 점
+<span>
+    <a href="#hashcode-%eb%a5%bc-%ec%9e%ac%ec%a0%95%ec%9d%98%ed%95%a0-%eb%95%8c-%ec%97%bc%eb%91%90%ed%95%b4%ec%95%bc-%ed%95%a0-%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="모든-객체에서-다른-값을-반환할-수-있는가" >모든 객체에서 다른 값을 반환할 수 있는가?
+<span>
+    <a href="#%eb%aa%a8%eb%93%a0-%ea%b0%9d%ec%b2%b4%ec%97%90%ec%84%9c-%eb%8b%a4%eb%a5%b8-%ea%b0%92%ec%9d%84-%eb%b0%98%ed%99%98%ed%95%a0-%ec%88%98-%ec%9e%88%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>최대한 모든 객체에서 다른 값을 반환하도록 구현해야 합니다.<br>
+만약 모든 객체가 같은 값을 반환하게 된다면, 모든 객체가 <code>해시 테이블</code>의 한 버킷에 담기게되어, 마치 연결 리스트처럼 동작하게 됩니다. 따라서 평균 수행시간이 $O(N)$으로 느려지므로 성능에 좋지 않습니다.</p>
+<h4 id="좋은-hashcode-작성하기" >좋은 <code>hashCode()</code> 작성하기
+<span>
+    <a href="#%ec%a2%8b%ec%9d%80-hashcode-%ec%9e%91%ec%84%b1%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>Effective Java의 <code>item 11</code>에 나와있는 방식은 다음과 같습니다.<br>
+참고로 아래에 나오는 <code>핵심 필드</code>는 <code>equals</code> 비교시 사용되는 필드를 의미합니다.</p>
+<ol>
+<li>int 변수인 <code>result</code>를 선언하고, 해당 객체의 첫 <code>핵심 필드</code>를 를 <code>2.a</code> 방식으로 계산한 값으로 초기화 합니다.</li>
+<li>해당 객체의 나머지 핵심 필드 <code>f</code> 각각에 다음 작업을 수행합니다.
+<ul>
+<li>a. 해당 필드의 해시 코드 C를 계산한다.
+<ol>
+<li>원시 타입인 경우: <code>Type(래퍼 클래스).hashCode(f)</code>를 수행한다.</li>
+<li>객체인 경우: 해당 객체의 <code>hashCode()</code>를 호출(<em>null이면 0 사용</em>)한다.</li>
+<li>배열인 경우: 각각을 별도의 필드로 다뤄, <code>2.a.1</code> 또는 <code>2.a.2</code> 규칙대로 계산한다.</li>
+</ol>
+</li>
+<li>b. <code>2.a</code>에서 계산한 hashCode로 <code>result</code>를 갱신한다.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>result <span style="color:#f92672">=</span> <span style="color:#ae81ff">31</span> <span style="color:#f92672">*</span> result <span style="color:#f92672">+</span> c<span style="color:#f92672">;</span>
+</span></span></code></pre></div></li>
+<li><code>result</code>를 반환한다.</li>
+</ol>
+<h4 id="주의-사항" >주의 사항
+<span>
+    <a href="#%ec%a3%bc%ec%9d%98-%ec%82%ac%ed%95%ad">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>hashCode를 계산할 때, <strong><code>equals</code>에 사용되지 않는 필드</strong>는 계산에서 <strong>반드시 제외</strong>해야 합니다.</li>
+<li>31을 사용하는 이유는, 홀수이면서 소수이기 때문에 짝수를 사용할 경우 발생하는 &lsquo;오버플로 발생시 정보 소실&rsquo;을 방지할 수 있습니다.</li>
+</ul>
+<h3 id="hashcode-계산-비용이-큰-가" >hashCode 계산 비용이 큰 가?
+<span>
+    <a href="#hashcode-%ea%b3%84%ec%82%b0-%eb%b9%84%ec%9a%a9%ec%9d%b4-%ed%81%b0-%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>매 번 계산하기 보다, <code>캐싱</code> 하는 방법을 고려해야 합니다.<br>
+다만, <em>객체 내부의 값이 바뀔 수 있는 경우</em> 이러한 방법은 적용하기 힘들고, <strong>불변 클래스일 경우</strong>에만 가능합니다.<br>
+인스턴스 생성시, 해시코드를 계산해 저장해두고 추후에는 이를 불러오도록 하면 성능이 향상될 수 있습니다.<br>
+추가로 <code>지연 초기화(Lazy-loading)</code>를 적용할 수도 있지만, <strong>thread-safe한 지</strong> 신경써야 합니다.</p>
+<h3 id="핵심-필드가-포함되어-있는가" >핵심 필드가 포함되어 있는가?
+<span>
+    <a href="#%ed%95%b5%ec%8b%ac-%ed%95%84%eb%93%9c%ea%b0%80-%ed%8f%ac%ed%95%a8%eb%90%98%ec%96%b4-%ec%9e%88%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>성능이 떨어진다고 hashCode 계산시 <strong>핵심 필드를 생략</strong>한다면, <strong>해시 품질이 떨어지게 되고</strong> <strong>해시 테이블의 성능 저하</strong>를 야기하게 됩니다.<br>
+특히, <strong>해시코드를 퍼뜨려주는 효과를 가진 필드</strong>를 생략한다면, <strong>몇 개의 해시코드</strong>로 인스턴스들이 <strong>집중</strong>되기 때문에 속도가 더욱 느려집니다.</p>
+<ul>
+<li>실제로 Java  2버전 이전의 <code>String</code>은, 성능 문제로 문자열의 16자만 가지고 해시코드를 계산했고 위와 같은 문제가 드러났었습니다.</li>
+</ul>
+<h3 id="hashcode-생성-규칙을-api에-공표해야-하는가" >hashCode 생성 규칙을 API에 공표해야 하는가?
+<span>
+    <a href="#hashcode-%ec%83%9d%ec%84%b1-%ea%b7%9c%ec%b9%99%ec%9d%84-api%ec%97%90-%ea%b3%b5%ed%91%9c%ed%95%b4%ec%95%bc-%ed%95%98%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>정말 불가피한 경우가 아니라면, API에 어떤 방식으로 hashCode가 생성되는지 공표하지 않는 것이 좋습니다.<br>
+그래야 클라이언트가 hashCode 값에 의지하는 것을 방지할 수 있고, 추후 더 나은 방식을 도입해 해싱 속도나 정확도를 개선할 수 있기 때문입니다.</p>
+<h2 id="equals-를-재정의-해야-할-때-염두해야-할-점" >equals() 를 재정의 해야 할 때, 염두해야 할 점
+<span>
+    <a href="#equals-%eb%a5%bc-%ec%9e%ac%ec%a0%95%ec%9d%98-%ed%95%b4%ec%95%bc-%ed%95%a0-%eb%95%8c-%ec%97%bc%eb%91%90%ed%95%b4%ec%95%bc-%ed%95%a0-%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><code>equals()</code>를 재정의할 땐, 다음과 같은 사항들을 신중히 고려해 재정의해야 합니다.</p>
+<h3 id="꼭-재정의가-필요한가" >꼭 재정의가 필요한가?
+<span>
+    <a href="#%ea%bc%ad-%ec%9e%ac%ec%a0%95%ec%9d%98%ea%b0%80-%ed%95%84%ec%9a%94%ed%95%9c%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>equals()</code>를 잘못 재정의하게 되면 <strong>오작동 할 우려</strong>가 큽니다.<br>
+따라서 꼭 재정의하지 않아도 된다면 <strong>하지 않는것이 최선</strong>일 수 있습니다.<br>
+재정의하지 않아도 되는 경우는 다음과 같습니다.</p>
+<h4 id="각-인스턴스가-본질적으로-고유한-경우" >각 인스턴스가 본질적으로 고유한 경우
+<span>
+    <a href="#%ea%b0%81-%ec%9d%b8%ec%8a%a4%ed%84%b4%ec%8a%a4%ea%b0%80-%eb%b3%b8%ec%a7%88%ec%a0%81%ec%9c%bc%eb%a1%9c-%ea%b3%a0%ec%9c%a0%ed%95%9c-%ea%b2%bd%ec%9a%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>값을 표현하는게 아닌, 동작하는 개체를 표현하는 클래스가 이에 해당합니다.</p>
+<h4 id="인스턴스의-논리적-동치성을-검사할-일이-없는-경우" >인스턴스의 <code>논리적 동치성</code>을 검사할 일이 없는 경우
+<span>
+    <a href="#%ec%9d%b8%ec%8a%a4%ed%84%b4%ec%8a%a4%ec%9d%98-%eb%85%bc%eb%a6%ac%ec%a0%81-%eb%8f%99%ec%b9%98%ec%84%b1%ec%9d%84-%ea%b2%80%ec%82%ac%ed%95%a0-%ec%9d%bc%ec%9d%b4-%ec%97%86%eb%8a%94-%ea%b2%bd%ec%9a%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h4 id="상위-클래스에서-이미-재정의한-equals가-하위-클래스에서도-잘-동작하는-경우" >상위 클래스에서 이미 재정의한 <code>equals</code>가 하위 클래스에서도 잘 동작하는 경우
+<span>
+    <a href="#%ec%83%81%ec%9c%84-%ed%81%b4%eb%9e%98%ec%8a%a4%ec%97%90%ec%84%9c-%ec%9d%b4%eb%af%b8-%ec%9e%ac%ec%a0%95%ec%9d%98%ed%95%9c-equals%ea%b0%80-%ed%95%98%ec%9c%84-%ed%81%b4%eb%9e%98%ec%8a%a4%ec%97%90%ec%84%9c%eb%8f%84-%ec%9e%98-%eb%8f%99%ec%9e%91%ed%95%98%eb%8a%94-%ea%b2%bd%ec%9a%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>예시로 대부분의 <code>Set</code>, <code>List</code>, <code>Map</code> 구현체들은 그들의 상위인 <code>AbstractSet</code>, <code>AbstractList</code>, <code>AbstractMap</code> 으로 부터 상속받은 <code>equals</code>를 사용합니다.</p>
+<h4 id="클래스가-private-또는-package-private이고-equals-메서드를-호출할-일이-없는-경우" >클래스가 private 또는 package-private이고, <code>equals</code> 메서드를 호출할 일이 없는 경우
+<span>
+    <a href="#%ed%81%b4%eb%9e%98%ec%8a%a4%ea%b0%80-private-%eb%98%90%eb%8a%94-package-private%ec%9d%b4%ea%b3%a0-equals-%eb%a9%94%ec%84%9c%eb%93%9c%eb%a5%bc-%ed%98%b8%ec%b6%9c%ed%95%a0-%ec%9d%bc%ec%9d%b4-%ec%97%86%eb%8a%94-%ea%b2%bd%ec%9a%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><h4 id="반대로-꼭-재정의해야하는-경우" >반대로, 꼭 재정의해야하는 경우?
+<span>
+    <a href="#%eb%b0%98%eb%8c%80%eb%a1%9c-%ea%bc%ad-%ec%9e%ac%ec%a0%95%ec%9d%98%ed%95%b4%ec%95%bc%ed%95%98%eb%8a%94-%ea%b2%bd%ec%9a%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><strong><code>논리적 동치성</code></strong> 을 확인해야 하는데, 상위 클래스의 <code>equals()</code>가 이러한 논리적 동치성을 비교하도록 재정의되어있지 않은 경우 <strong>꼭 재정의해주어야 합니다.</strong><br>
+주로 <strong><code>값을 표현하는 클래스</code></strong> 가 이러한 경우에 해당됩니다.</p>
+<h3 id="hashcode도-재정의했는가" ><code>hashCode()</code>도 재정의했는가?
+<span>
+    <a href="#hashcode%eb%8f%84-%ec%9e%ac%ec%a0%95%ec%9d%98%ed%96%88%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>그렇지 않으면 <code>hashCode()</code> 일반 규약을 어기게 되어, <code>HashMap</code>, <code>HashSet</code>과 같이 Hash 값을 사용하는 컬렉션의 원소로 사용할 때 문제를 일으키게 됩니다.</p>
+<h3 id="object-외의-타입을-인자로-받는-equals를-선언하진-않았는가" >Object 외의 타입을 인자로 받는 <code>equals</code>를 선언하진 않았는가?
+<span>
+    <a href="#object-%ec%99%b8%ec%9d%98-%ed%83%80%ec%9e%85%ec%9d%84-%ec%9d%b8%ec%9e%90%eb%a1%9c-%eb%b0%9b%eb%8a%94-equals%eb%a5%bc-%ec%84%a0%ec%96%b8%ed%95%98%ec%a7%84-%ec%95%8a%ec%95%98%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>Class ABC <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">equals</span><span style="color:#f92672">(</span>ABC o<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>위와 같이 구현하게 되면, <code>Object</code>의 <code>equals</code>를 재정의 하는게 아닌, <code>다중정의(Overloading)</code>을 하게 되는 것이다.</p>
+<h3 id="구체-클래스에-값을-추가해-확장했는가" >구체 클래스에 값을 추가해 확장했는가?
+<span>
+    <a href="#%ea%b5%ac%ec%b2%b4-%ed%81%b4%eb%9e%98%ec%8a%a4%ec%97%90-%ea%b0%92%ec%9d%84-%ec%b6%94%ea%b0%80%ed%95%b4-%ed%99%95%ec%9e%a5%ed%96%88%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>이러한 경우에는 상기된 <code>equals()</code>에 대한 규약을 만족시킬 방법이 존재하지 않습니다.<br>
+이는 모든 객체지향 언어의 동치 관계에서 나타나는 근본적인 문제로, 객체지향적 추상화의 이점을 포기하지 않는한 지킬 수 없습니다.<br>
+따라서, 구체 클래스에 새로운 값을 추가해 확장하고 싶다면, 상속 대신 <code>컴포지션</code>의 방식으로 우회해 구현하게 된다면 <code>equals()</code> 규약을 지킬 수 있습니다.</p>
+<ul>
+<li>예시로 Java의 API 중에서도 <code>Date</code>에 값을 추가하여 확장한 <code>TimeStamp</code> 클래스가 있는데, 이 둘 역시 대칭성을 위배해 API 설명에 이 둘을 섞어 쓰지 않도록 권장합니다.</li>
+</ul>
+<h3 id="equals를-통한-비교-과정에-신뢰할-수-없는-자원이-포함되어있는가" >equals를 통한 비교 과정에 신뢰할 수 없는 자원이 포함되어있는가?
+<span>
+    <a href="#equals%eb%a5%bc-%ed%86%b5%ed%95%9c-%eb%b9%84%ea%b5%90-%ea%b3%bc%ec%a0%95%ec%97%90-%ec%8b%a0%eb%a2%b0%ed%95%a0-%ec%88%98-%ec%97%86%eb%8a%94-%ec%9e%90%ec%9b%90%ec%9d%b4-%ed%8f%ac%ed%95%a8%eb%90%98%ec%96%b4%ec%9e%88%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>예시로 <a href="https://docs.oracle.com/javase%2F7%2Fdocs%2Fapi%2F%2F/java/net/URL.html#equals(java.lang.Object)"><code>java.net.URL</code></a>의 equals는 주어진 URL과 매핑된 호스트의 IP 주소를 비교에 이용하는데, 호스트 이름을 IP 주소로 바꾸었을 때 그 결과가 항상 같음을 보장할 수 없습니다.<br>
+이 때문에 실무에서 종종 문제를 일으키기도 합니다.</p>
+<h3 id="같은-타입의-객체를-비교하고-있는가" >같은 타입의 객체를 비교하고 있는가?
+<span>
+    <a href="#%ea%b0%99%ec%9d%80-%ed%83%80%ec%9e%85%ec%9d%98-%ea%b0%9d%ec%b2%b4%eb%a5%bc-%eb%b9%84%ea%b5%90%ed%95%98%ea%b3%a0-%ec%9e%88%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>이를 확인하기 위해 <code>equals()</code> 내부에서 <code>instanceof</code> 연산자를 통해 올바른 타입의 객체가 입력으로 주어졌는지 확인하는 과정이 필요합니다.<br>
+이러한 과정을 거치면 추가로 묵시적인 null 검사도 진행할 수 있고, 이후 올바른 타입으로 형변환 할때도 오류가 발생하지 않습니다.</p>
+<h3 id="어떤-필드를-비교하는가" >어떤 필드를 비교하는가?
+<span>
+    <a href="#%ec%96%b4%eb%96%a4-%ed%95%84%eb%93%9c%eb%a5%bc-%eb%b9%84%ea%b5%90%ed%95%98%eb%8a%94%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>기본적으로 핵심 필드들이 모두 일치하는지 비교해야하며, 필드의 비교는 종류별로 다음과 같은 방법을 통해 진행해야 합니다.</p>
+<ul>
+<li><code>원시 타입 필드</code>(<code>float</code>, <code>double</code> 제외) : <code>==</code> 연산자로 비교합니다.</li>
+<li><code>float</code>, <code>double</code> : <strong>부동소수 값의 비교</strong>는 신중해야 하기 때문에, <code>Float.compare(float, float)</code>와 <code>Double.compare(double, double)</code>을 이용해 비교해야 합니다.</li>
+<li><code>참조 타입 필드</code>: 각각의 <code>equals()</code> 메서드로 비교합니다.
+<ul>
+<li>만약 null 값도 정상 값으로 취급하는 경우, <code>Object.equals(obj, obj)</code>로 비교합니다.</li>
+</ul>
+</li>
+</ul>
+<p>또한, 어떤 필드를 먼저 비교하느냐에 따라 성능이 갈릴 수 있기 때문에, 다를 가능성이 크거나 비교 비용이 싼 필드를 먼저 비교해야 합니다.</p>
+<h1 id="참고-문서" >참고 문서
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html">Object (Java Platform SE 8 ) (oracle.com)</a></li>
+<li><a href="https://www.baeldung.com/java-hashcode">Guide to hashCode() in Java | Baeldung</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/equals-hashcode/"><time datetime="2024-04-16">2024-04-16 18:42 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/equals-hashcode/">https://cloudsoswift.github.io/post/develop/java/equals-hashcode/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/object/">#Object</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/effective-java/">#Effective Java</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/java/static-factory-method/">정적 팩토리 메서드(Static Factory Method)</a></li>
+                
+                <li><a href="/post/develop/java/synchronized/">[Java] synchronized 알아보기</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item ">
+            
+                <a href="/post/develop/java/interceptor-filter/">[Java] Interceptor와 Servlet Filter 알아보기</a>
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/java/synchronized/">[Java] synchronized 알아보기</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+            </main>
+            
+                <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2026<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+            
+        </div>
+        <aside class="sidebar">
+    <div class="sidebar-widget">
+        <h2 class="sidebar-title">카테고리</h2>
+
+        
+        
+
+           
+              
+             
+
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+
+        
+        
+
+        <ul class="sidebar-categories">
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/algorithm/">algorithm</a>
+                        
+                        <span class="sidebar-category-count">12</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/algorithm/data-structure/">data-structure</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/develop/">develop</a>
+                        
+                        <span class="sidebar-category-count">42</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/cs/">cs</a>
+                                    
+                                    <span class="sidebar-category-count">3</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/database/">database</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/java/">java</a>
+                                    
+                                    <span class="sidebar-category-count">10</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/javascript/">javascript</a>
+                                    
+                                    <span class="sidebar-category-count">11</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/network/">network</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/nodejs/">nodejs</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/os/">OS</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/toy-project/">toy-project</a>
+                                    
+                                    <span class="sidebar-category-count">2</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/etc/">etc</a>
+                        
+                        <span class="sidebar-category-count">2</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/etc/etc/">etc</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/self-development/">self-development</a>
+                        
+                        <span class="sidebar-category-count">1</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/self-development/ril/">RIL</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+        </ul>
+    </div>
+</aside>
+
+    </div>
+</body>
+</html>

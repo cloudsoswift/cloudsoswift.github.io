@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Page-Fault on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/page-fault/</link>
+    <description>오늘도 개발을 한다. (Page-Fault)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Wed, 10 Apr 2024 20:08:49 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/page-fault/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[OS] 가상 메모리 알아보기 (w. Page Fault, Segmentation)</title>
+      <link>https://cloudsoswift.github.io/post/develop/os/virtual-memory/</link>
+      <pubDate>Wed, 10 Apr 2024 20:08:49 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/os/virtual-memory/</guid>
+      <description>&lt;h2 id=&#34;가상-메모리란&#34; &gt;가상 메모리란?
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%80%ec%83%81-%eb%a9%94%eb%aa%a8%eb%a6%ac%eb%9e%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;img src=&#34;virtual-memory.png&#34; alt=&#34;virtual-memory.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;가상 메모리&lt;/code&gt;는 보조 기억장치를 마치 주 기억장치의 일부처럼 주소를 지정하고, 사용할 수 있는 스토리지 할당 방식을 의미합니다. 따라서 각 프로그램에 실제 메모리 주소가 아닌, 가상의 메모리 주소를 할당합니다.&lt;br&gt;
+이를 통해 물리적 메모리 공간 보다 더 큰 프로그램을 실행할 수 있게 됩니다.&lt;br&gt;
+가상 주소 공간은 &lt;code&gt;메모리 관리 장치(MMU)&lt;/code&gt;에 의해 물리 주소로 변환되어, 개발자들이 주 기억장치 상의 프로세스나 데이터가 어떻게 배치되어있는지 신경쓰지 않아도 됩니다.&lt;/p&gt;
+&lt;h3 id=&#34;배경&#34; &gt;배경
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%b0%ea%b2%bd&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img src=&#34;virtual-address-space.png&#34; alt=&#34;virtual-address-space.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;과거 프로세스가 필요로 하는 양보다 많은 메모리 공간을 할당하거나, 적은 공간들만 존재해 할당하지 못하는 &lt;code&gt;메모리 단편화(Memory Fragmentation)&lt;/code&gt; 문제가 발생하게 되었습니다. 이를 해결하고자 물리적 공간을 고정된 크기의 &lt;code&gt;페이지&lt;/code&gt;들로 분할하고, 논리적 공간 역시 동일한 크기의 &lt;code&gt;페이지&lt;/code&gt;들로 분할해, 연속적이지 않은 물리 메모리 공간을 가상 공간에서는 연속적인 것처럼 활용할 수 있게 되었습니다.&lt;br&gt;
+하지만 모든 주 기억장치 공간을 활용해도, 그보다 프로세스 크기가 크다면 해당 프로세스를 물리 공간에 적재할 수 없어 실행할 수 없었습니다. 이를 보완하고자 보조기억장치를 활용해, 가상 주소 공간을 실제 주 기억장치 공간보다 확장해 더 많은 메모리를 참조할 수 있게 했습니다.&lt;/p&gt;
+&lt;h2 id=&#34;가상-메모리가-가능한-이유&#34; &gt;가상 메모리가 가능한 이유
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%80%ec%83%81-%eb%a9%94%eb%aa%a8%eb%a6%ac%ea%b0%80-%ea%b0%80%eb%8a%a5%ed%95%9c-%ec%9d%b4%ec%9c%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;실제로는 프로세스의 모든 페이지가 메모리 상에 존재하지 않아도 되기 때문인데, 상세한 이유는 다음과 같습니다.&lt;/p&gt;
+&lt;h3 id=&#34;웬만한-경우-프로세스의-모든-페이지가-필요하진-않음&#34; &gt;웬만한 경우 프로세스의 모든 페이지가 필요하진 않음
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9b%ac%eb%a7%8c%ed%95%9c-%ea%b2%bd%ec%9a%b0-%ed%94%84%eb%a1%9c%ec%84%b8%ec%8a%a4%ec%9d%98-%eb%aa%a8%eb%93%a0-%ed%8e%98%ec%9d%b4%ec%a7%80%ea%b0%80-%ed%95%84%ec%9a%94%ed%95%98%ec%a7%84-%ec%95%8a%ec%9d%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;드물게 발생하는 에러에 대한 오류 처리 코드, 실제 사용되는 것 보다 더 큰 크기로 선언한 배열, 드물게 사용되는 기능의 코드 와 같이 메모리를 과대사용하거나 거의 쓰이지 않는 기능들이 프로세스 내에 존재하는 경우가 대부분입니다.&lt;br&gt;
+따라서 해당 코드들은 보조기억장치에 저장해두다가, 필요할때만 불러와 사용해도 프로세스 동작에 크게 문제가 발생하지 않습니다.&lt;br&gt;
+이러한 방식의 동작을 위해, 가상 메모리는 &lt;code&gt;요구 페이징(Demand Paging)&lt;/code&gt; 이라는 기법이 사용됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;요구-페이징demand-paging&#34; &gt;&lt;code&gt;요구 페이징(Demand Paging)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9a%94%ea%b5%ac-%ed%8e%98%ec%9d%b4%ec%a7%95demand-paging&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;demand-paging.png&#34; alt=&#34;demand-paging.png&#34;&gt;
+&lt;code&gt;요구 페이징&lt;/code&gt;이란, 프로세스가 교체(swap) 될 때, 일반적으로 프로세스 전체 공간을 메모리에 적재하고 비우는 것과 달리, 필요로 할때만 교체되는 방식을 말합니다.&lt;br&gt;
+즉, 프로세스가 교체될 때, 프로세스에서 필요할 것으로 예상되는 페이지만 메모리에 로드하는 방식입니다.&lt;br&gt;
+메모리에 로드되지 않은 페이지는 page table entry에 포함된  &lt;code&gt;valid bit&lt;/code&gt;라는 비트를 활용해 표시합니다. 만약 메모리에 로드 되었다면 &lt;code&gt;1&lt;/code&gt;, 그렇지 않다면 &lt;code&gt;0&lt;/code&gt;으로 표시합니다.&lt;br&gt;
+이러한 &lt;code&gt;요구 페이징&lt;/code&gt;을 수행하는 프로그램을 &lt;code&gt;lazy swapper&lt;/code&gt; 또는 &lt;code&gt;pager&lt;/code&gt;라고 부릅니다.&lt;/p&gt;
+&lt;h5 id=&#34;장점&#34; &gt;장점
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%a5%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;필요한 페이지만 swap하기 때문에 I/O 시간이 줄고 swap하는데 드는 시간이 감소합니다.&lt;/li&gt;
+&lt;li&gt;필요한 메모리만 로드하므로 적은 메모리 공간을 사용해 메모리를 절약합니다.&lt;/li&gt;
+&lt;li&gt;메모리 공간을 절약하므로 더 많은 프로세스를 위한 공간이 생깁니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;page-fault가-발생했을-때-어떻게-처리하는가&#34; &gt;Page Fault가 발생했을 때, 어떻게 처리하는가?
+&lt;span&gt;
+    &lt;a href=&#34;#page-fault%ea%b0%80-%eb%b0%9c%ec%83%9d%ed%96%88%ec%9d%84-%eb%95%8c-%ec%96%b4%eb%96%bb%ea%b2%8c-%ec%b2%98%eb%a6%ac%ed%95%98%eb%8a%94%ea%b0%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;Page fault&lt;/code&gt;란, 프로세스에서 메모리에 로드되지 않은 페이지(즉, &lt;code&gt;valid bit&lt;/code&gt;가 &lt;code&gt;0&lt;/code&gt;인)를 참조하려 할 때 &lt;code&gt;MMU&lt;/code&gt;에서 발생시키는 예외입니다.&lt;br&gt;
+&lt;code&gt;Page fault&lt;/code&gt;가 발생했을 때, 다음과 같은 단계를 거쳐 예외를 처리합니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;page-fault.png&#34; alt=&#34;page-fault.png&#34;&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;요청된 메모리 주소가 유효한 요청인지 확인합니다.&lt;/li&gt;
+&lt;li&gt;만약 해당 참조가 유효하지 않은 경우, 프로세스가 종료됩니다. 그렇지 않다면 디스크로 부터 페이지를 불러와야 합니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;빈 프레임(free frame)&lt;/code&gt;을 &lt;code&gt;빈 프레임 목록(free-frame list)&lt;/code&gt;에서 찾습니다.&lt;/li&gt;
+&lt;li&gt;디스크에서 필요한 페이지를 찾기 위한 디스크 작업을 예약합니다. 따라서 I/O 대기동안 해당 프로세스는 block되고, CPU는 다른 프로세스를 처리합니다.&lt;/li&gt;
+&lt;li&gt;I/O 작업이 완료되면, 프로세스의 페이지 테이블이 새 프레임 번호로 갱신되고, 유효하지 않은 비트는 유효한 페이지 참조임을 나타내도록 변경됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;page fault&lt;/code&gt;를 일으킨 명령어를 처음부터 다시 실행합니다.
+위 과정에서, &lt;code&gt;빈 프레임(free frame)&lt;/code&gt;이 없을 경우, 메모리에서 사용 중이 아닌 page frame(&lt;code&gt;victim frame&lt;/code&gt;)을 선택해 swap out 하고, 새 page를 swap in 하는 &lt;code&gt;페이지 교체(Page Replacement)&lt;/code&gt; 과정을 거치게 됩니다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;페이지-크기에-대한-trade-off&#34; &gt;페이지 크기에 대한 Trade-Off
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%8e%98%ec%9d%b4%ec%a7%80-%ed%81%ac%ea%b8%b0%ec%97%90-%eb%8c%80%ed%95%9c-trade-off&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;최적의 페이지 크기를 선택하기 위해, 다음과 같은 사항을 고려할 수 있습니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;페이지 크기 큼&lt;/th&gt;
+&lt;th&gt;고려 사항&lt;/th&gt;
+&lt;th&gt;페이지 크기 작음&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;더 적은 페이지&lt;/strong&gt;를 사용해&lt;br&gt;페이지 테이블이 더 적은&lt;br&gt;메모리 공간을 차지합니다.&lt;/td&gt;
+&lt;td&gt;페이지 테이블 크기&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;더 많은 페이지&lt;/strong&gt;를 사용해&lt;br&gt;페이지 테이블이 더 많은&lt;br&gt;메모리 공간을 차지합니다.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;같은 크기의 TLB 캐시가&lt;br&gt;더 많은 양의 메모리를 추적해&lt;br&gt;&lt;code&gt;TLB Miss&lt;/code&gt;를 방지할 수 있습니다.&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;TLB&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;같은 크기의 TLB 캐시가 &lt;br&gt;더 적은 양의 메모리를 추적해&lt;br&gt;&lt;code&gt;TLB Miss&lt;/code&gt; 발생 빈도가 높아집니다.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;프로세스의 마지막 페이지에서&lt;br&gt;낭비되는 메모리 양이&lt;br&gt;더 많아집니다.&lt;/td&gt;
+&lt;td&gt;내부 파편화&lt;/td&gt;
+&lt;td&gt;페이지 크기가 작을 수록&lt;br&gt;실제 할당에 필요한 메모리와 &lt;br&gt;가깝게 일치하므로 낭비되는&lt;br&gt;메모리 공간이 더 적습니다.&lt;br&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;큰 페이지에서는 디스크로부터&lt;br&gt;큰 규모의 순차 전송이 발생하므로&lt;br&gt;디스크 헤드 이동 시간이 더 적게들어&lt;br&gt;더 적은 시간이 소요됩니다.&lt;br&gt;&lt;/td&gt;
+&lt;td&gt;디스크 접근&lt;/td&gt;
+&lt;td&gt;작은 페이지에서는 디스크로부터&lt;br&gt;작은 규모의 전송이 여러번 발생하므로&lt;br&gt;디스크 헤드 이동이 빈번하게 발생해&lt;br&gt;더 많은 시간이 소요됩니다.&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;TLB(Translation Lookaside Buffer)&lt;/code&gt; : 매 번 페이지 테이블을 읽어 가상 주소 - 실제 주소를 매핑하는 대신, 가상 주소- 실제 주소로 변환한 내용을 캐싱하여 사용하는 캐시의 일종입니다. 만약 TLB 에서 찾을 수 없는 경우(&lt;code&gt;TLB Miss&lt;/code&gt;) 페이지 테이블을 읽어야 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;페이지-크기가-커지면-페이지-폴트가-더-많이-발생한다&#34; &gt;페이지 크기가 커지면, 페이지 폴트가 더 많이 발생한다?
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%8e%98%ec%9d%b4%ec%a7%80-%ed%81%ac%ea%b8%b0%ea%b0%80-%ec%bb%a4%ec%a7%80%eb%a9%b4-%ed%8e%98%ec%9d%b4%ec%a7%80-%ed%8f%b4%ed%8a%b8%ea%b0%80-%eb%8d%94-%eb%a7%8e%ec%9d%b4-%eb%b0%9c%ec%83%9d%ed%95%9c%eb%8b%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;페이지 크기가 커지면, 더 많은 &lt;code&gt;Page Fault&lt;/code&gt;가 발생하게 됩니다.&lt;br&gt;
+페이지 크기가 커지면, 프레임 크기도 함께 커지고 따라서 더 적은 수의 프레임을 사용하게 됩니다.&lt;br&gt;
+&lt;code&gt;Page Fault&lt;/code&gt; 를 줄이기 위해서는, 앞으로 자주 사용 될 페이지를 메모리 상에 적재해두어야 하고 필요하다면 메모리에 적재된 기존 page를 디스크의 page와 교체하는 &lt;code&gt;페이지 교체(Page Replacement)&lt;/code&gt;를 수행하게 됩니다.&lt;br&gt;
+만약, 프레임 수가 적으면 이러한 &lt;code&gt;페이지 교체&lt;/code&gt; 과정에서 선택의 자유도가 낮아져 &lt;code&gt;Page fault&lt;/code&gt; 발생 횟수가 증가하는 경향을 보입니다.&lt;/p&gt;
+&lt;h2 id=&#34;세그멘테이션-방식을-사용하고-있다면-가상-메모리를-사용할-수-없다&#34; &gt;세그멘테이션 방식을 사용하고 있다면, 가상 메모리를 사용할 수 없다?
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%b8%ea%b7%b8%eb%a9%98%ed%85%8c%ec%9d%b4%ec%85%98-%eb%b0%a9%ec%8b%9d%ec%9d%84-%ec%82%ac%ec%9a%a9%ed%95%98%ea%b3%a0-%ec%9e%88%eb%8b%a4%eb%a9%b4-%ea%b0%80%ec%83%81-%eb%a9%94%eb%aa%a8%eb%a6%ac%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%a0-%ec%88%98-%ec%97%86%eb%8b%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;세그멘테이션 방식 역시 &lt;code&gt;요구 페이징&lt;/code&gt; 기법과 유사한 형태로 가상 메모리를 사용할 수 있습니다.&lt;br&gt;
+&lt;code&gt;세그멘테이션&lt;/code&gt;이란, 프로세스를 가변 크기를 갖는 &lt;code&gt;세그먼트&lt;/code&gt;로 나누는 방식입니다.
+가변 크기이므로 내부 단편화가 발생하지 않고, 한 프로세스가 다른 프로세스의 세그먼트에 접근/수정할 수 없도록 제한하는 세그먼트 간 보안 수준을 제공합니다.&lt;br&gt;
+하지만 외부 단편화는 여전히 발생 가능하며, 세그먼트 테이블과 주 기억장치에 대한 두 개의 메모리 엑세스가 존재해 명령문에 접근하기 위한 접근 시간이 증가합니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;segmentation.png&#34; alt=&#34;segmentation.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;세그먼테이션&lt;/code&gt; 방식은 &lt;code&gt;요구 페이징&lt;/code&gt;과 유사하게, 각 세그먼트 별로 주 기억장치 상에 위치하는지 여부를 나타내는 플래그를 기록하고 만약 주 기억장치에 없는 세그먼트에 접근하는 경우 &lt;code&gt;Segmentation fault&lt;/code&gt;를 발생시키고 이를 디스크로부터 불러옵니다.&lt;/p&gt;
+&lt;h1 id=&#34;참고-문서&#34; &gt;참고 문서
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Memory_segmentation&#34;&gt;Memory segmentation - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Page_replacement_algorithm&#34;&gt;Page replacement algorithm - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Page_fault&#34;&gt;Page fault - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Virtual_memory&#34;&gt;Virtual memory - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Virtual_address_space&#34;&gt;Virtual address space - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cs.uic.edu/~jbell/CourseNotes/OperatingSystems/9_VirtualMemory.html&#34;&gt;Operating Systems: Virtual Memory (uic.edu)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/virtual-memory-in-operating-system/&#34;&gt;Virtual Memory in Operating System - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Page_(computer_memory)&#34;&gt;Page (computer memory) - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://csys.yonsei.ac.kr/lect/os/o8-19.pdf&#34;&gt;8장. 가상 메모리.pptx (yonsei.ac.kr)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

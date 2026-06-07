@@ -1,0 +1,2337 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Javascript] Javascript의 비동기 작업 알아보기 (w. Promise, async) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="Javascript에서의 비동기 작업기본적으로 Javascript는 싱글-스레드 언어이기 때문에, 오래 걸리는 동기식 코드를 작성하면 해당 코드가 실행되는 동안은 다른 작업을 수행할 수 없습니다.
+즉, 해당 코드가 나머지 코드를 블락하게 됩니다.
+이를 해소하고자, Javascript에서는 보통 실행엔진이나 브라우저에서 제공되는 Web API를 사용해 타이머 기반 작업, 타 사이트 요청 등의 비동기 작업을 처리합니다.
+Web API에는 fetch, setInterval, setTimeout, Promise 등이 포함됩니다.
+Web API는 비동기 작업이 끝난 뒤, 작업 결과를 바탕으로 실행되는 콜백 함수를 JS 엔진의 Callback Queue에 전달하게 됩니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.538b1869ceb05ae0d55cd41ef8e22ebc151bdc0e0d45b056d5f786d594660177.css" integrity="sha256-U4sYac6wWuDVXNQe&#43;OIuvBUb3A4NRbBW1feG1ZRmAXc=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Javascript] Javascript의 비동기 작업 알아보기 (w. Promise, async)" />
+<meta property="og:description" content="Javascript에서의 비동기 작업기본적으로 Javascript는 싱글-스레드 언어이기 때문에, 오래 걸리는 동기식 코드를 작성하면 해당 코드가 실행되는 동안은 다른 작업을 수행할 수 없습니다.
+즉, 해당 코드가 나머지 코드를 블락하게 됩니다.
+이를 해소하고자, Javascript에서는 보통 실행엔진이나 브라우저에서 제공되는 Web API를 사용해 타이머 기반 작업, 타 사이트 요청 등의 비동기 작업을 처리합니다.
+Web API에는 fetch, setInterval, setTimeout, Promise 등이 포함됩니다.
+Web API는 비동기 작업이 끝난 뒤, 작업 결과를 바탕으로 실행되는 콜백 함수를 JS 엔진의 Callback Queue에 전달하게 됩니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/javascript/promise-async/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-04-30T20:47:21+09:00" />
+<meta property="article:modified_time" content="2024-04-30T20:47:21+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Javascript] Javascript의 비동기 작업 알아보기 (w. Promise, async)"/>
+<meta name="twitter:description" content="Javascript에서의 비동기 작업기본적으로 Javascript는 싱글-스레드 언어이기 때문에, 오래 걸리는 동기식 코드를 작성하면 해당 코드가 실행되는 동안은 다른 작업을 수행할 수 없습니다.
+즉, 해당 코드가 나머지 코드를 블락하게 됩니다.
+이를 해소하고자, Javascript에서는 보통 실행엔진이나 브라우저에서 제공되는 Web API를 사용해 타이머 기반 작업, 타 사이트 요청 등의 비동기 작업을 처리합니다.
+Web API에는 fetch, setInterval, setTimeout, Promise 등이 포함됩니다.
+Web API는 비동기 작업이 끝난 뒤, 작업 결과를 바탕으로 실행되는 콜백 함수를 JS 엔진의 Callback Queue에 전달하게 됩니다."/>
+
+
+
+
+
+
+
+
+
+
+
+<link rel="canonical" href="https://cloudsoswift.github.io/post/develop/javascript/promise-async/">
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="page-wrapper">
+        <div class="container">
+            <header class="common-header">
+                
+                    <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+
+                
+            </header>
+            <main id="main" tabindex="-1">
+                
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Javascript] Javascript의 비동기 작업 알아보기 (w. Promise, async)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#javascript에서의-비동기-작업">Javascript에서의 비동기 작업</a>
+      <ul>
+        <li><a href="#콜백-함수">콜백 함수</a></li>
+        <li><a href="#promise"><code>Promise</code></a></li>
+        <li><a href="#promise를-동기적으로-다루는-방법-async-function"><code>Promise</code>를 동기적으로 다루는 방법, <code>async function</code></a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h2 id="javascript에서의-비동기-작업" >Javascript에서의 비동기 작업
+<span>
+    <a href="#javascript%ec%97%90%ec%84%9c%ec%9d%98-%eb%b9%84%eb%8f%99%ea%b8%b0-%ec%9e%91%ec%97%85">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>기본적으로 Javascript는 싱글-스레드 언어이기 때문에, 오래 걸리는 동기식 코드를 작성하면 해당 코드가 실행되는 동안은 다른 작업을 수행할 수 없습니다.<br>
+즉, 해당 코드가 나머지 코드를 블락하게 됩니다.<br>
+이를 해소하고자, Javascript에서는 보통 실행엔진이나 브라우저에서 제공되는 <code>Web API</code>를 사용해 <code>타이머 기반 작업</code>, <code>타 사이트 요청</code> 등의 비동기 작업을 처리합니다.<br>
+<code>Web API</code>에는 <code>fetch</code>, <code>setInterval</code>, <code>setTimeout</code>, <code>Promise</code> 등이 포함됩니다.</p>
+<p><img src="javascript-runtime.png" alt="javascript-runtime.png"></p>
+<p><code>Web API</code>는 비동기 작업이 끝난 뒤, <em>작업 결과를 바탕으로 실행되는</em> 콜백 함수를 JS 엔진의 Callback Queue에 전달하게 됩니다.<br>
+이후 Event Loop가 Call Stack에서 처리할 작업이 없을 때, Callback Qeue의 작업들을 등록해 처리합니다. <a href="https://dev.to/bipinrajbhar/how-javascript-works-web-apis-callback-queue-and-event-loop-2p3e">#</a></p>
+<ul>
+<li>과거에는 <a href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest">XMLHttpRequest </a>와 같은 객체를 이용해 웹 비동기 통신을 진행하기도 했으나, 네트워크 상태나 응답속도에 따른 중단 이슈 때문에 deprecated되어 사용하지 않습니다. <a href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest_API/Synchronous_and_Asynchronous_Requests">#</a></li>
+</ul>
+<h3 id="콜백-함수" >콜백 함수
+<span>
+    <a href="#%ec%bd%9c%eb%b0%b1-%ed%95%a8%ec%88%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>최신 Javascript 비동기 작업은 대부분 <strong><code>Promise</code></strong> 객체를 반환하거나, <code>setTimeout</code>과 같이 인자로 작업이 끝난 뒤 실행할 행동이 정의된 <code>콜백 함수</code>를 인자로 받게됩니다.<br>
+타이머 기반 작업의 경우, 콜백 함수에 별다른 인자가 주어지지 않지만, <code>Promise</code>에 사용되는 콜백 함수의 경우 작업의 결과(또는 에러)가 인자로 주어지게 됩니다.</p>
+<h3 id="promise" ><code>Promise</code>
+<span>
+    <a href="#promise">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>Promise</code>란, 작업이 완료되지 않은 비동기 작업에 의해 반환된 객체로, 작업의 최종 완료/실패를 나타내는 프록시 역할을 하는 객체입니다.<br>
+기존의 함수들이 콜백 함수를 인자로 받던것과 달리, Promise는 <code>then</code> 또는 <code>catch</code>를 통해 <code>콜백 함수를 붙이는 방식</code>으로 코드를 전개할 수 있습니다. 즉, <code>Promise Chaining</code>이 가능합니다.</p>
+<h4 id="promise의-구조" ><code>Promise</code>의 구조
+<span>
+    <a href="#promise%ec%9d%98-%ea%b5%ac%ec%a1%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">myPromise</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Promise((<span style="color:#a6e22e">resolve</span>, <span style="color:#a6e22e">reject</span>) =&gt; {
+</span></span><span style="display:flex;"><span>	...
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">error</span>) <span style="color:#a6e22e">reject</span>(<span style="color:#e6db74">&#34;error&#34;</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">else</span> <span style="color:#a6e22e">resolve</span>(<span style="color:#e6db74">&#34;abc&#34;</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p><code>Promise</code>는 생성시 <code>executor</code>라고 불리는 실행 함수를 인자로 받습니다.<br>
+이러한 생성 방식 때문에, Promise를 지원하지 않는 함수가 있다면 생성자로 감싸 지원하도록 만들 수 있습니다.</p>
+<h5 id="실행-함수" >실행 함수
+<span>
+    <a href="#%ec%8b%a4%ed%96%89-%ed%95%a8%ec%88%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>이는 <code>reslove</code> 및 <code>reject</code> 함수를 인자로 받는 함수입니다.<br>
+보통 실행 함수는, 비동기 작업을 모두 처리한 뒤 작업이 끝날 때 <code>resolve</code>를 호출해 <code>Promise</code>를 <code>이행(fulfilled)</code>하고, 에러가 발생한 경우 <code>reject</code>를 호출해 <code>Promise</code>를 <code>거부(rejected)</code>합니다.</p>
+<h4 id="promise의-상태" ><code>Promise</code>의 상태
+<span>
+    <a href="#promise%ec%9d%98-%ec%83%81%ed%83%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><img src="state-of-promise.png" alt="state-of-promise.png">
+<code>Promise</code>는 <code>대기</code>, <code>이행</code>, <code>거부</code> 중 하나의 상태를 가집니다.<br>
+추가로, Promise가 <code>fulfilled</code>되거나 <code>rejected</code>된 경우, <code>pending</code>이 아닌 <code>settled(또는 locked-in)</code> 상태라고 일컬어집니다.</p>
+<h5 id="대기pending" >대기(pending)
+<span>
+    <a href="#%eb%8c%80%ea%b8%b0pending">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>연산을 이행하지도, 거부하지도 않은 초기 상태입니다.</p>
+<h5 id="이행fulfilled" >이행(fulfilled)
+<span>
+    <a href="#%ec%9d%b4%ed%96%89fulfilled">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>연산이 성공적으로 완료됐음을 의미합니다.<br>
+실행함수 내부에서 <code>resolve(value)</code>를 호출해 <code>.then()</code>의 인자로 전달될 콜백 함수에 값을 전달합니다.</p>
+<h5 id="거부rejected" >거부(rejected)
+<span>
+    <a href="#%ea%b1%b0%eb%b6%80rejected">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>연산이 실패했음을 의미합니다.<br>
+실행함수 내부에서 <code>reject(value)</code>를 호출해 <code>.catch()</code>의 인자로 전달될 콜백 함수에 값을 전달합니다.</p>
+<h4 id="promise-연결chaining" ><code>Promise</code> 연결(Chaining)
+<span>
+    <a href="#promise-%ec%97%b0%ea%b2%b0chaining">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>settled</code>된, 즉 <code>fulfilled</code> 되거나 <code>rejected</code>된 Promise에 추가 작업을 연결하기 위해 <code>then()</code>, <code>catch()</code>, <code>finally()</code> 메서드를 사용할  수 있습니다.<br>
+위 메서드들은 <code>Promise</code>를 다시 반환할 수 있기 때문에, 연쇄적으로 연결할 수 있습니다.</p>
+<h5 id="thenonfulfilled-onrejected" ><code>then(onFulfilled, onRejected)</code>
+<span>
+    <a href="#thenonfulfilled-onrejected">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#a6e22e">promise</span>.<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">onFulfilled</span>, <span style="color:#a6e22e">onRejected</span>);
+</span></span></code></pre></div><p>두 개의 콜백 함수를 인수로 받고, <code>Promise</code>를 반환하는 함수입니다.<br>
+처음 주어지는 함수는 <code>Promise</code>가 이행되었을 때, 두 번째 함수는 <code>Promise</code>가 거부되었을 때를 위한 콜백 함수입니다.<br>
+<code>then()</code>의 매개변수 중 하나 이상을 생략하거나, 함수가 아닌 값을 전달한 경우 핸들러가 없는 것으로 인식해 <code>then()</code> 이전의 <code>Promise</code>의 마지막 상태를 그대로 이어받습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">myPromises</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Promise((<span style="color:#a6e22e">resolve</span>, <span style="color:#a6e22e">reject</span>) =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">resolve</span>(<span style="color:#e6db74">&#34;abc&#34;</span>);
+</span></span><span style="display:flex;"><span>}); 
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">myPromise</span>.<span style="color:#a6e22e">then</span>(<span style="color:#e6db74">&#34;가나다라&#34;</span>).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">r</span>=&gt;<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">r</span>)); <span style="color:#75715e">// &#34;abc&#34;
+</span></span></span></code></pre></div><p>인수로 주어진 핸들러 함수의 결과에 따라, 반환되는 <code>Promise</code>는 다음과 같은 규칙을 갖습니다.</p>
+<ul>
+<li>콜백 함수가 값을 반환한 경우: 반환되는 Promise(이행됨)는 그 반환값을 결과값으로 갖습니다.</li>
+<li>콜백 함수가 값을 반환하지 않은 경우: 반환되는 Promise(이행됨)는 <code>undefined</code>를 결과값으로 갖습니다.</li>
+<li>오류가 발생한 경우: 반환되는 Promise(거부됨)는 그 반환값을 결과값으로 갖습니다.</li>
+<li>이행된/거부된 프로미스를 반환할 경우: 반환되는 Promise(이행/거부됨)는 그 프로미스의 반환값을 결과값으로 갖습니다.</li>
+<li>대기중인 <code>Promise</code>를 반환할 경우: 반환되는 Promise(이행됨)는 그 프로미스의 이행 여부/결과값을 따릅니다.</li>
+</ul>
+<h5 id="catchonrejected" ><code>catch(onRejected)</code>
+<span>
+    <a href="#catchonrejected">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>프로미스가 거부되었을 때, 호출될 콜백 함수를 지정하는 함수입니다.<br>
+<code>catch(onRejected)</code>는 실제로는 <code>then(undefined, onRejected)</code>으로 동작합니다.<br>
+<code>onRejected</code> 함수는 <code>Promise</code>에서 <code>reject(reason)</code> 호출 시 인자로 넘긴 <code>reason</code> 값을 인수로 받습니다.<br>
+<code>onRejected</code> 함수 내부에서 반환되는 값에 따라, 반환될 <code>Promise</code>가 이행될지, 거부될지 결정됩니다.<br>
+<code>Promise</code>가 거부되고, 이를 처리할 거부 핸들러가 없는 경우, <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event"><code>unhandledrejection</code></a>이벤트가 발생하고, 처리할 거부 핸들러가 있는 경우 <a href="https://developer.mozilla.org/en-US/docs/Web/API/Window/rejectionhandled_event"><code>rejectionhandled</code></a> 이벤트가 발생합니다.</p>
+<h5 id="finallyonfinally" ><code>finally(onFinally)</code>
+<span>
+    <a href="#finallyonfinally">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p><code>Promise</code>를 처리(이행/거부)한 후, 호출할 콜백 함수를 지정합니다.<br>
+<code>finally(onFinally)</code> 역시 동등한 <code>Promise</code>를 반환합니다.<br>
+만약 <code>onFinally</code> 내부에서 예외가 발생하거나, 거부된 <code>Promise</code>를 반환하면 <code>finally()</code>가 반환하는<code>Promise</code>는 해당 값으로 거부되게 됩니다.</p>
+<ul>
+<li>이외의 반환값은 <code>finally()</code>가 반환하는 <code>Promise</code>의 상태에 영향을 주지 않습니다.
+<ul>
+<li>예시로, <code>Promise.resolve(2).finally(() =&gt; 77)</code>는 2로 이행됩니다.</li>
+</ul>
+</li>
+<li>또한, <code>onFinally</code> 콜백은 인자를 받지 않습니다.
+<ul>
+<li>이는 <code>finally()</code>가 <em>결과에 관계없이</em> <code>Promise</code> 처리 후 수행될 작업(무언가를 처리하거나 정리)을 수행하는데 사용되기 때문입니다.</li>
+</ul>
+</li>
+</ul>
+<h5 id="콜백함수의-생략" >콜백함수의 생략
+<span>
+    <a href="#%ec%bd%9c%eb%b0%b1%ed%95%a8%ec%88%98%ec%9d%98-%ec%83%9d%eb%9e%b5">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>연결된 <code>.then()</code>에서 콜백 함수가 생략되어도, 다음 체인으로 계속 이어집니다.<br>
+따라서 체인의 마지막 <code>.catch()</code>까지 <code>.then()</code>의 인자에 거부 콜백함수를 생략할 수 있습니다.<br>
+그렇기 때문에 마지막에 <code>.catch()</code>로 연결 되어있을 때, 즉각적인 오류 처리가 필요하다면 콜백함수 내부에서 특정 타입의 에러를 던져 체인 아래까지 오류 상태를 유지해야 합니다.</p>
+<h4 id="promise의-동시성" ><code>Promise</code>의 동시성
+<span>
+    <a href="#promise%ec%9d%98-%eb%8f%99%ec%8b%9c%ec%84%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>Promise</code>에서는 비동기 작업 동시성을 위해 4개의 정적 메서드를 제공합니다.<br>
+4개 메서드 모두 <code>Promise</code>로 이뤄진 <code>iterable</code>한 객체(ex. <code>Array</code>)를 인수로 받고, 새로운 <code>Promise</code>를 반환합니다.</p>
+<h5 id="promisealliterable" ><code>Promise.all(iterable)</code>
+<span>
+    <a href="#promisealliterable">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span>Promise.<span style="color:#a6e22e">all</span>([<span style="color:#a6e22e">promise1</span>, <span style="color:#a6e22e">promise2</span>, <span style="color:#a6e22e">promise3</span>]).<span style="color:#a6e22e">then</span>((<span style="color:#a6e22e">values</span>) =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">values</span>);
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>인자로 주어진 모든 프로미스가 이행되면 이행되고, 프로미스 중 하나라도 거부되면 거부된 <code>Promise</code>를 반환합니다.</p>
+<ul>
+<li><code>iterable</code>이 비어있는 경우: 반환값이 없는, 이행된 Promise를 반환합니다.</li>
+<li><code>iterable</code> 내부에 <code>Promise</code>가 없는 경우: iterable을 내부에 포함하는, 이행된 Promise를 반환합니다.</li>
+<li>이외의 경우: 인자로 주어진 모든 <code>Promise</code>가 이행되거나, 한 <code>Promise</code>가 거부될 때 비동기적으로 이행/거부되는 <code>Promise</code>(이전까진 Pending 상태)를 반환합니다.
+<ul>
+<li>반환되는 <code>Promise</code>의 이행 값의 순서는 인자로 주어진 <code>Promise</code>의 순서와 동일합니다.</li>
+<li>주어진 <code>Promise</code> 중 하나라도 거부될 경우, 다른 <code>Promise</code>의 이행여부와 관계 없이 첫 번째 거부 <code>reason</code>를 사용해 거부합니다.</li>
+</ul>
+</li>
+</ul>
+<h5 id="promiseallsettlediterable" ><code>Promise.allSettled(iterable)</code>
+<span>
+    <a href="#promiseallsettlediterable">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>모든 <code>Promise</code>를 이행/거부한 뒤, 각 <code>Promise</code>에 대한 결과를 나타내는 객체 배열을 반환합니다.<br>
+정확히는 결과 배열을 <code>resolve()</code>의 입력으로 전달하는, pending된 Promise를 반환합니다.<br>
+만약, 빈 <code>Iterable</code> 객체를 인자로 받은 경우, 빈 배열을 반환하는 이미 이행된 <code>Promise</code>를 반환합니다.<br>
+반환된 배열의 각 객체는 Promise 처리 상태(<code>&quot;fulfilled&quot;</code>, <code>&quot;rejected&quot;</code>)를 나타내는<code>status</code>와 상태에 따른 값, 즉 <code>fulfilled</code> 상태라면 <code>value</code>, <code>rejected</code> 상태라면 <code>reason</code>을 갖습니다.</p>
+<h5 id="promiseanyiterable" ><code>Promise.any(iterable)</code>
+<span>
+    <a href="#promiseanyiterable">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>프로미스 중 하나라도 이행되면 이행하고, 모든 프로미스가 거부되면 거부합니다.<br>
+즉, 하나라도 이행된다면 첫 번째 이행 값으로 이행되고, 모든 <code>Promise</code>가 거부되면, 거부 <code>reason</code> 배열이 담긴 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError"><code>AggregateError</code></a> 객체를 반환하는 <code>Promise</code>를 반환합니다.</p>
+<h5 id="promiseraceiterable" ><code>Promise.race(iterable)</code>
+<span>
+    <a href="#promiseraceiterable">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>프로미스 중 가장 먼저 처리된 것의 결과값을 토대로 이행/거부될 <code>Promise</code>를 반환합니다.<br>
+즉, <code>Promise</code> 중 하나라도 먼저 이행되면 이행 예정인 <code>Promise</code>를, <code>Promise</code> 중 하나라도 먼저 거부되면 거부 예정인 <code>Promise</code>를 반환합니다.</p>
+<h3 id="promise를-동기적으로-다루는-방법-async-function" ><code>Promise</code>를 동기적으로 다루는 방법, <code>async function</code>
+<span>
+    <a href="#promise%eb%a5%bc-%eb%8f%99%ea%b8%b0%ec%a0%81%ec%9c%bc%eb%a1%9c-%eb%8b%a4%eb%a3%a8%eb%8a%94-%eb%b0%a9%eb%b2%95-async-function">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">param0</span>, <span style="color:#a6e22e">param1</span>, <span style="color:#75715e">/* ... */</span> <span style="color:#a6e22e">paramN</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">statements</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 또는 Arrow Function 형태로도 사용 가능합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">param1</span>, <span style="color:#a6e22e">param2</span>, ...<span style="color:#a6e22e">paramN</span>) =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">statements</span>;
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p><code>async function</code>이란, 여러 <code>Promise</code>간의 흐름을 순서대로 처리할 수 있는, 즉 여러 비동기 함수들을 동기적인 순서로 진행시키는 함수를 말합니다. 항상 <code>Promise</code>를 반환할 수 있습니다.<br>
+<code>async function</code>은 0개 이상의 <code>await</code> 키워드를 포함할 수 있는데, <code>await</code>가 달린 <code>Promise</code>를 만나게 되면 해당 <code>Promise</code>가 이행/거부될 때 까지 함수 실행을 일시 중단하며, 처리가 된 뒤 다시 진행됩니다.<br>
+즉, <code>Promise</code>를  반환하는 함수를 동기식인것 처럼 동작하도록 해줍니다.</p>
+<h1 id="참고-문서" >참고 문서
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Promise/Promise">Promise() 생성자 - JavaScript | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Promise/then">Promise.prototype.then() - JavaScript | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/catch">Promise.prototype.catch() - JavaScript | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Promise/finally">Promise.prototype.finally() - JavaScript | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function">async function - JavaScript | MDN (mozilla.org)</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/javascript/promise-async/"><time datetime="2024-04-30">2024-04-30 20:47 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/promise-async/">https://cloudsoswift.github.io/post/develop/javascript/promise-async/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/promise/">#Promise</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/async/">#Async</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/javascript/map-vs-object/">[Javascript] Map과 Object, 뭘 써야 할까?</a></li>
+                
+                <li><a href="/post/develop/javascript/circular-import/circular_import/">[Javascript] 순환 참조 (Circular Import)</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item ">
+            
+                <a href="/post/develop/javascript/function/">[Javascript] Function 알아보기</a>
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/javascript/map-vs-object/">[Javascript] Map과 Object, 뭘 써야 할까?</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+            </main>
+            
+                <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2026<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+            
+        </div>
+        <aside class="sidebar">
+    <div class="sidebar-widget">
+        <h2 class="sidebar-title">카테고리</h2>
+
+        
+        
+
+           
+              
+             
+
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+
+        
+        
+
+        <ul class="sidebar-categories">
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/algorithm/">algorithm</a>
+                        
+                        <span class="sidebar-category-count">12</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/algorithm/data-structure/">data-structure</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/develop/">develop</a>
+                        
+                        <span class="sidebar-category-count">42</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/cs/">cs</a>
+                                    
+                                    <span class="sidebar-category-count">3</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/database/">database</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/java/">java</a>
+                                    
+                                    <span class="sidebar-category-count">10</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/javascript/">javascript</a>
+                                    
+                                    <span class="sidebar-category-count">11</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/network/">network</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/nodejs/">nodejs</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/os/">OS</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/toy-project/">toy-project</a>
+                                    
+                                    <span class="sidebar-category-count">2</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/etc/">etc</a>
+                        
+                        <span class="sidebar-category-count">2</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/etc/etc/">etc</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/self-development/">self-development</a>
+                        
+                        <span class="sidebar-category-count">1</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/self-development/ril/">RIL</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+        </ul>
+    </div>
+</aside>
+
+    </div>
+</body>
+</html>

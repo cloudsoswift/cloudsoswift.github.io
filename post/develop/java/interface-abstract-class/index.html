@@ -1,0 +1,2330 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Java] 인터페이스와 추상 클래스 알아보기 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="인터페이스와 추상 클래스의 차이인터페이스인터페이스란, 클래스와 유사하지만, 동작의 집합을 나타내는데 주로 사용되는 참조 타입입니다.
+전역 정적 상수(인터페이스에 선언된 변수는 기본적으로 public static final임), 메서드 선언(추상 메서드), 디폴트 메서드, 정적 메서드 및 중첩 인터페이스만 포함할 수 있습니다.
+인스턴스화 될 수 없으며, 클래스에 의해 구현(implements)되거나 인터페이스에 의해 상속(extends)될 수 있습니다.
+Java 8 이후로는 static, default 메서드를 지원하며, Java 9 이후로는 private 메서드를 지원합니다.
+추가로, 클래스의 static 메서드와 달리, 인터페이스의 static 메서드는 상속되지 않습니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.538b1869ceb05ae0d55cd41ef8e22ebc151bdc0e0d45b056d5f786d594660177.css" integrity="sha256-U4sYac6wWuDVXNQe&#43;OIuvBUb3A4NRbBW1feG1ZRmAXc=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Java] 인터페이스와 추상 클래스 알아보기" />
+<meta property="og:description" content="인터페이스와 추상 클래스의 차이인터페이스인터페이스란, 클래스와 유사하지만, 동작의 집합을 나타내는데 주로 사용되는 참조 타입입니다.
+전역 정적 상수(인터페이스에 선언된 변수는 기본적으로 public static final임), 메서드 선언(추상 메서드), 디폴트 메서드, 정적 메서드 및 중첩 인터페이스만 포함할 수 있습니다.
+인스턴스화 될 수 없으며, 클래스에 의해 구현(implements)되거나 인터페이스에 의해 상속(extends)될 수 있습니다.
+Java 8 이후로는 static, default 메서드를 지원하며, Java 9 이후로는 private 메서드를 지원합니다.
+추가로, 클래스의 static 메서드와 달리, 인터페이스의 static 메서드는 상속되지 않습니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/java/interface-abstract-class/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-05-14T20:27:33+09:00" />
+<meta property="article:modified_time" content="2024-05-14T20:27:33+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Java] 인터페이스와 추상 클래스 알아보기"/>
+<meta name="twitter:description" content="인터페이스와 추상 클래스의 차이인터페이스인터페이스란, 클래스와 유사하지만, 동작의 집합을 나타내는데 주로 사용되는 참조 타입입니다.
+전역 정적 상수(인터페이스에 선언된 변수는 기본적으로 public static final임), 메서드 선언(추상 메서드), 디폴트 메서드, 정적 메서드 및 중첩 인터페이스만 포함할 수 있습니다.
+인스턴스화 될 수 없으며, 클래스에 의해 구현(implements)되거나 인터페이스에 의해 상속(extends)될 수 있습니다.
+Java 8 이후로는 static, default 메서드를 지원하며, Java 9 이후로는 private 메서드를 지원합니다.
+추가로, 클래스의 static 메서드와 달리, 인터페이스의 static 메서드는 상속되지 않습니다."/>
+
+
+
+
+
+
+
+
+
+
+
+<link rel="canonical" href="https://cloudsoswift.github.io/post/develop/java/interface-abstract-class/">
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="page-wrapper">
+        <div class="container">
+            <header class="common-header">
+                
+                    <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+
+                
+            </header>
+            <main id="main" tabindex="-1">
+                
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Java] 인터페이스와 추상 클래스 알아보기</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#인터페이스와-추상-클래스의-차이">인터페이스와 추상 클래스의 차이</a>
+      <ul>
+        <li><a href="#인터페이스">인터페이스</a></li>
+        <li><a href="#추상-클래스">추상 클래스</a></li>
+        <li><a href="#차이점">차이점</a></li>
+        <li><a href="#어떤걸-써야-할까">어떤걸 써야 할까?</a></li>
+        <li><a href="#예시">예시</a></li>
+      </ul>
+    </li>
+    <li><a href="#왜-클래스는-단일-상속만-가능한데-인터페이스는-2개-이상-구현이-가능할까">왜 클래스는 단일 상속만 가능한데, 인터페이스는 2개 이상 구현이 가능할까?</a></li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h2 id="인터페이스와-추상-클래스의-차이" >인터페이스와 추상 클래스의 차이
+<span>
+    <a href="#%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4%ec%99%80-%ec%b6%94%ec%83%81-%ed%81%b4%eb%9e%98%ec%8a%a4%ec%9d%98-%ec%b0%a8%ec%9d%b4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="인터페이스" >인터페이스
+<span>
+    <a href="#%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>인터페이스</code>란, 클래스와 유사하지만, 동작의 집합을 나타내는데 주로 사용되는 참조 타입입니다.<br>
+<code>전역 정적 상수</code>(인터페이스에 선언된 변수는 기본적으로 <code>public static final</code>임), <code>메서드 선언(추상 메서드)</code>, <code>디폴트 메서드</code>, <code>정적 메서드</code> 및 <code>중첩 인터페이스</code>만 포함할 수 있습니다.<br>
+<strong>인스턴스화 될 수 없으며</strong>, <code>클래스</code>에 의해 <code>구현(implements)</code>되거나 <code>인터페이스</code>에 의해 <code>상속(extends)</code>될 수 있습니다.<br>
+<code>Java 8</code> 이후로는 <code>static</code>, <code>default</code> 메서드를 지원하며, <code>Java 9</code> 이후로는 <code>private</code> 메서드를 지원합니다.</p>
+<ul>
+<li>추가로, 클래스의 static 메서드와 달리, 인터페이스의 static 메서드는 <strong>상속되지 않습니다.</strong></li>
+</ul>
+<h4 id="default-메서드-중복" ><code>default</code> 메서드 중복
+<span>
+    <a href="#default-%eb%a9%94%ec%84%9c%eb%93%9c-%ec%a4%91%eb%b3%b5">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">A</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">default</span> String <span style="color:#a6e22e">printline</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#f92672">...</span> <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">B</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">default</span> String <span style="color:#a6e22e">printline</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span> <span style="color:#f92672">...</span> <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">C</span> <span style="color:#66d9ef">implements</span> A<span style="color:#f92672">,</span> B <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>한 클래스가 여러 인터페이스를 구현할 때, 동일한 이름의 <code>default</code> 메서드가 존재할 수 있습니다.<br>
+이 때, 다중 인터페이스 상속으로 인한 충돌(<code>다이아몬드 문제</code>)이 발생해 코드가 컴파일 되지 않습니다.<br>
+이를 해결하려면, 해당 디폴트 메서드를 재정의해, 어떤 인터페이스의 디폴트 메서드를 호출할 지 명시적으로 알려주어야 합니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">C</span> <span style="color:#66d9ef">implements</span> A<span style="color:#f92672">,</span> B <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">printline</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// A 인터페이스의 메서드를 호출
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		A<span style="color:#f92672">.</span><span style="color:#a6e22e">super</span><span style="color:#f92672">.</span><span style="color:#a6e22e">printline</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// A, B 인터페이스의 메서드 모두 호출할 수도 있습니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		B<span style="color:#f92672">.</span><span style="color:#a6e22e">super</span><span style="color:#f92672">.</span><span style="color:#a6e22e">printline</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h4 id="private-메서드" ><code>private</code> 메서드
+<span>
+    <a href="#private-%eb%a9%94%ec%84%9c%eb%93%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>Java 9</code>부터 인터페이스에 <code>private</code> 메서드를 추가할 수 있게 되었습니다.<br>
+이는 <code>정적</code>/<code>비정적</code> 메서드로 구현할 수 있으며, <code>public static 메서드</code>에서 <code>private static 메서드</code>를 호출하는 등의 용도로 사용할 수 있습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">interface</span> <span style="color:#a6e22e">Foo</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">buzz</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">print</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Hello&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        staticBaz<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">staticBaz</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34; static world!&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>이를 통해 코드 중복을 줄이고, 로직을 캡슐화해 인터페이스를 구현하는 클래스로 부터 세부 사항을 숨길 수 있습니다.</p>
+<h3 id="추상-클래스" >추상 클래스
+<span>
+    <a href="#%ec%b6%94%ec%83%81-%ed%81%b4%eb%9e%98%ec%8a%a4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>추상 클래스</code>란, <code>abstract</code> 키워드와 함께 선언된 <strong>클래스</strong>를 말합니다.<br>
+<code>추상 메서드</code>를 포함할 수 있으며, <em>인스턴스화 될 수 없지만</em> <code>상속</code>이 <strong>가능</strong>합니다.<br>
+일반 클래스와 같이 필드, 메서드에 대해 <code>접근 제한자</code>에 대한 <strong>제한이 없습니다</strong>.</p>
+<h4 id="추상-메서드" >추상 메서드?
+<span>
+    <a href="#%ec%b6%94%ec%83%81-%eb%a9%94%ec%84%9c%eb%93%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>abstract</code> 키워드와 함께, 구현부 없이 선언된 메서드를 말합니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>	<span style="color:#66d9ef">abstract</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">draw</span><span style="color:#f92672">();</span>
+</span></span></code></pre></div><p>만약 클래스가 <code>추상 메서드</code>를 포함하는 경우, 반드시 <code>추상 클래스</code>로 선언되어야 합니다.</p>
+<ul>
+<li>인터페이스 내부에서 <code>default</code> 또는 <code>static</code>으로 선언되지 않은 메서드는 암묵적으로 <code>추상 메서드</code>이기 때문에, <code>abstract</code> 키워드를 굳이 명시하지 않습니다.</li>
+</ul>
+<h4 id="상속" >상속
+<span>
+    <a href="#%ec%83%81%ec%86%8d">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>추상 클래스</code>가 상속된 경우, 자식 클래스는 부모의 모든 <code>추상 메서드</code>에 대한 <strong>구현</strong>을 제공해야 합니다.</p>
+<ul>
+<li>그러지 않는다면, 자식 클래스 역시 <code>추상 클래스</code>로 선언되어야 합니다.</li>
+</ul>
+<h4 id="생성자" >생성자?
+<span>
+    <a href="#%ec%83%9d%ec%84%b1%ec%9e%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>추상 클래스</code>는 인스턴스화 될 수 없지만, 생성자는 가질 수 있습니다.<br>
+일반 클래스 처럼, <code>추상 클래스</code>에 생성자를 선언하지 않으면 컴파일러가 기본 생성자를 만들어주거나 또는 직접 기본 생성자를 정의할 수 있습니다.<br>
+이렇게 만들어진 생성자는 자식 클래스의 생성자에서 <code>super()</code>를 통해 호출할 수 있습니다.<br>
+이를 활용하면 자식 클래스에서 수정할 수 없도록 하고 싶은 값에 대해 초기화를 할 수 있습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">abstract</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Car</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">int</span> distance<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// private 생성자 (접근 불가)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">private</span> <span style="color:#a6e22e">Car</span><span style="color:#f92672">(</span><span style="color:#66d9ef">int</span> distance<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">distance</span> <span style="color:#f92672">=</span> distance<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Car의 기본 생성자
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// 모든 자식 클래스의 생성자들이 호출되기 전, 이 생성자를 호출하기 때문에
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">// Car의 distance 값은 0으로 초기화 될것임이 보장됨.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">public</span> <span style="color:#a6e22e">Car</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">this</span><span style="color:#f92672">(</span><span style="color:#ae81ff">0</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        System<span style="color:#f92672">.</span><span style="color:#a6e22e">out</span><span style="color:#f92672">.</span><span style="color:#a6e22e">println</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Car default constructor&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h3 id="차이점" >차이점
+<span>
+    <a href="#%ec%b0%a8%ec%9d%b4%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>인터페이스</code>와 <code>추상 클래스</code> 모두 인스턴스화 될 수 없고, 구현을 포함하거나 포함하지 않는(<code>추상 메서드</code>) 메서드들을 보유할 수 있다는 점에서 유사한 점이 많습니다.<br>
+다만, <code>추상 클래스</code>에서는 <code>static</code> 또는 <code>final</code>이 아닌 필드 값을 선언할 수 있습니다.<br>
+또한, <code>public</code>/<code>protected</code>/<code>private</code>로 선언된 <code>구체 메서드</code>를 선언할 수 있습니다.</p>
+<ul>
+<li><code>구체 메서드(concrete method)</code>: 완전한 구현을 포함하며, 자식 클래스에서 재정의 가능한 메서드. 즉, <code>추상 메서드</code>가 아닌 메서드</li>
+</ul>
+<p>반면, 인터페이스에서는 모든 필드가 <code>public static final</code>이어야 하며, 모든 메서드는 <code>public</code> 이어야 합니다.<br>
+또한, <code>클래스</code>는 추상 클래스든 일반 클래스든 <strong>하나만 상속</strong>할 수 있지만,   <code>인터페이스</code>를 구현하는데는 <strong>제한이 없습니다</strong>.</p>
+<h3 id="어떤걸-써야-할까" >어떤걸 써야 할까?
+<span>
+    <a href="#%ec%96%b4%eb%96%a4%ea%b1%b8-%ec%8d%a8%ec%95%bc-%ed%95%a0%ea%b9%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="추상-클래스를-써야할-때" >추상 클래스를 써야할 때
+<span>
+    <a href="#%ec%b6%94%ec%83%81-%ed%81%b4%eb%9e%98%ec%8a%a4%eb%a5%bc-%ec%8d%a8%ec%95%bc%ed%95%a0-%eb%95%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>관련된 여러 클래스 간 코드를 공유 해야할 때</li>
+<li>추상 클래스를 상속할 클래스에 공통 메서드/필드가 많거나, <code>public</code> 이외의 접근 제한자가 필요한 경우</li>
+<li><code>static</code> 또는 <code>final</code>이 어난 필드를 선언해야 할 때, 해당 필드를 접근/수정할 수 있는 메서드를 정의할 수 있음</li>
+</ul>
+<h4 id="인터페이스를-써야할-때" >인터페이스를 써야할 때
+<span>
+    <a href="#%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4%eb%a5%bc-%ec%8d%a8%ec%95%bc%ed%95%a0-%eb%95%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>관련 없는 클래스에서 인터페이스를 구현할 것으로 예상 될 때
+<ul>
+<li>ex) <code>Cloneable</code>, <code>Comparable</code>과 같은 인터페이스들은 관련이 없는 클래스들에서 구현되고 있음.</li>
+</ul>
+</li>
+<li>특정 자료형의 동작을 명세하고 싶지만, 구현에 대해서는 신경쓰지 않는 경우</li>
+<li>타입의 다중 상속을 활용하고 싶은 경우</li>
+</ul>
+<h3 id="예시" >예시
+<span>
+    <a href="#%ec%98%88%ec%8b%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="추상-클래스-1" >추상 클래스
+<span>
+    <a href="#%ec%b6%94%ec%83%81-%ed%81%b4%eb%9e%98%ec%8a%a4-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>대표적인 추상 클래스의 활용 예시는 <code>Collection Framework</code> 내부에 존재하는 <code>Abstract 컬렉션</code>(<code>AbstractMap</code>, <code>AbstractList</code>, <code>AbstractSet</code> 등)이 있습니다.<br>
+해당 클래스들의 하위 클래스들은 <code>Abstract 컬렉션</code>이 정의하는 메서드들(<code>get</code>, <code>put</code>, <code>isEmpty</code> 등)을 공유합니다.</p>
+<h4 id="인터페이스-1" >인터페이스
+<span>
+    <a href="#%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>대표적인 인터페이스의 활용 예시는 <code>Cloneable</code>, <code>Serializable</code>, <code>Map&lt;K, V&gt;</code> 등이 있습니다.<br>
+예시로 이들을 구현하는 <code>HashMap</code>을 보면, 이 클래스의 인스턴스가 <code>clone()</code>을 통해 복제할 수 있으며, 직렬화 할 수 있고, <code>Map</code>에 기대되는 기능들을 가지고 있음을 예상할 수 있습니다.</p>
+<ul>
+<li>또한, <code>Map&lt;K, V&gt;</code>의 경우, <code>merge</code>, <code>forEach</code>와 같은 디폴트 메서드를 갖고 있어, 해당 인터페이스를 구현한 오래된 클래스들을 자동적으로 개선했습니다.</li>
+</ul>
+<h2 id="왜-클래스는-단일-상속만-가능한데-인터페이스는-2개-이상-구현이-가능할까" >왜 클래스는 단일 상속만 가능한데, 인터페이스는 2개 이상 구현이 가능할까?
+<span>
+    <a href="#%ec%99%9c-%ed%81%b4%eb%9e%98%ec%8a%a4%eb%8a%94-%eb%8b%a8%ec%9d%bc-%ec%83%81%ec%86%8d%eb%a7%8c-%ea%b0%80%eb%8a%a5%ed%95%9c%eb%8d%b0-%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4%eb%8a%94-2%ea%b0%9c-%ec%9d%b4%ec%83%81-%ea%b5%ac%ed%98%84%ec%9d%b4-%ea%b0%80%eb%8a%a5%ed%95%a0%ea%b9%8c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>상속관계에서 발생할 수 있는 <strong><code>다이아몬드 문제(또는 마름모 문제)</code></strong> 때문에 단일 상속만 가능합니다.<br>
+<img src="diamond-problem.png" alt="diamond-problem.png"></p>
+<blockquote>
+<p>출처: <a href="https://bhawana-gaur.medium.com/how-does-java-provide-support-for-multiple-inheritance-indirectly-4588241126fb">How does Java provide support for multiple inheritance indirectly? | by Bhawana Gaur | Medium</a></p>
+</blockquote>
+<p>만약 두 개 이상의 클래스를 상속할 수 있게 했다면, 위 그림처럼 자식 클래스는 동일한 시그니처를 갖는 메서드 2개를 물려받게 됩니다.<br>
+이후 자식 클래스에서 해당 메서드를 호출한다면, 둘 중 어느 메서드를 호출하겠다는 것인지 알 수 없는 상황이 발생합니다.<br>
+이러한 문제를 피하고자, <code>Java</code>에서는 하나의 클래스만 상속할 수 있도록 제한을 두었습니다. <a href="https://docs.oracle.com/javase/tutorial/java/IandI/multipleinheritance.html">#</a><br>
+인터페이스에는 구현 없이, 메서드에 대한 명세만 존재하기 때문에 인터페이스 간 메서드 명세가 중복되어도 이러한 문제가 발생하지 않아 다중 구현이 가능합니다.</p>
+<ul>
+<li>다만, 디폴트 메서드가 등장한 이후, 앞서 설명한 것 처럼 다중 상속 문제가 발생할 수 있게 되었습니다.</li>
+</ul>
+<h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://docs.oracle.com/javase/tutorial/java/IandI/createinterface.html">Interfaces (The Java™ Tutorials &gt; Learning the Java Language &gt; Interfaces and Inheritance) (oracle.com)</a></li>
+<li><a href="https://docs.oracle.com/javase/tutorial/java/IandI/abstract.html">Abstract Methods and Classes (The Java™ Tutorials &gt; Learning the Java Language &gt; Interfaces and Inheritance) (oracle.com)</a></li>
+<li><a href="https://www.baeldung.com/java-abstract-classes-constructors">Constructors in Java Abstract Classes | Baeldung</a></li>
+<li><a href="https://www.javatpoint.com/java-extend-multiple-classes">Java Extend Multiple Classes - Javatpoint</a></li>
+<li><a href="https://docs.oracle.com/javase/tutorial/java/IandI/multipleinheritance.html">Multiple Inheritance of State, Implementation, and Type (The Java™ Tutorials &gt; Learning the Java Language &gt; Interfaces and Inheritance) (oracle.com)</a></li>
+<li><a href="https://www.baeldung.com/java-interface-private-methods">Private Methods in Java Interfaces | Baeldung</a></li>
+<li><a href="https://www.geeksforgeeks.org/difference-between-abstract-class-and-interface-in-java/">Difference between Abstract Class and Interface in Java - GeeksforGeeks</a></li>
+<li><a href="https://www.baeldung.com/java-static-default-methods">Static and Default Methods in Interfaces in Java | Baeldung</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/java/interface-abstract-class/"><time datetime="2024-05-14">2024-05-14 20:27 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/java/interface-abstract-class/">https://cloudsoswift.github.io/post/develop/java/interface-abstract-class/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/java/">#Java</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/interface/">#Interface</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/abstract-class/">#Abstract-Class</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/java/interceptor-filter/">[Java] Interceptor와 Servlet Filter 알아보기</a></li>
+                
+                <li><a href="/post/develop/java/equals-hashcode/">[Java] equals()와 hashCode() 알아보기</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item ">
+            
+                <a href="/post/develop/java/exception/">[Java] Exception 알아보기</a>
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/java/interceptor-filter/">[Java] Interceptor와 Servlet Filter 알아보기</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+            </main>
+            
+                <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2026<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+            
+        </div>
+        <aside class="sidebar">
+    <div class="sidebar-widget">
+        <h2 class="sidebar-title">카테고리</h2>
+
+        
+        
+
+           
+              
+             
+
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+
+        
+        
+
+        <ul class="sidebar-categories">
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/algorithm/">algorithm</a>
+                        
+                        <span class="sidebar-category-count">12</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/algorithm/data-structure/">data-structure</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/develop/">develop</a>
+                        
+                        <span class="sidebar-category-count">42</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/cs/">cs</a>
+                                    
+                                    <span class="sidebar-category-count">3</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/database/">database</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/java/">java</a>
+                                    
+                                    <span class="sidebar-category-count">10</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/javascript/">javascript</a>
+                                    
+                                    <span class="sidebar-category-count">11</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/network/">network</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/nodejs/">nodejs</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/os/">OS</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/toy-project/">toy-project</a>
+                                    
+                                    <span class="sidebar-category-count">2</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/etc/">etc</a>
+                        
+                        <span class="sidebar-category-count">2</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/etc/etc/">etc</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/self-development/">self-development</a>
+                        
+                        <span class="sidebar-category-count">1</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/self-development/ril/">RIL</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+        </ul>
+    </div>
+</aside>
+
+    </div>
+</body>
+</html>

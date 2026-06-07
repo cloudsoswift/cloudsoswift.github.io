@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Interface on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/interface/</link>
+    <description>오늘도 개발을 한다. (Interface)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Tue, 14 May 2024 20:27:33 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/interface/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[Java] 인터페이스와 추상 클래스 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/java/interface-abstract-class/</link>
+      <pubDate>Tue, 14 May 2024 20:27:33 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/java/interface-abstract-class/</guid>
+      <description>&lt;h2 id=&#34;인터페이스와-추상-클래스의-차이&#34; &gt;인터페이스와 추상 클래스의 차이
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4%ec%99%80-%ec%b6%94%ec%83%81-%ed%81%b4%eb%9e%98%ec%8a%a4%ec%9d%98-%ec%b0%a8%ec%9d%b4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;h3 id=&#34;인터페이스&#34; &gt;인터페이스
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;인터페이스&lt;/code&gt;란, 클래스와 유사하지만, 동작의 집합을 나타내는데 주로 사용되는 참조 타입입니다.&lt;br&gt;
+&lt;code&gt;전역 정적 상수&lt;/code&gt;(인터페이스에 선언된 변수는 기본적으로 &lt;code&gt;public static final&lt;/code&gt;임), &lt;code&gt;메서드 선언(추상 메서드)&lt;/code&gt;, &lt;code&gt;디폴트 메서드&lt;/code&gt;, &lt;code&gt;정적 메서드&lt;/code&gt; 및 &lt;code&gt;중첩 인터페이스&lt;/code&gt;만 포함할 수 있습니다.&lt;br&gt;
+&lt;strong&gt;인스턴스화 될 수 없으며&lt;/strong&gt;, &lt;code&gt;클래스&lt;/code&gt;에 의해 &lt;code&gt;구현(implements)&lt;/code&gt;되거나 &lt;code&gt;인터페이스&lt;/code&gt;에 의해 &lt;code&gt;상속(extends)&lt;/code&gt;될 수 있습니다.&lt;br&gt;
+&lt;code&gt;Java 8&lt;/code&gt; 이후로는 &lt;code&gt;static&lt;/code&gt;, &lt;code&gt;default&lt;/code&gt; 메서드를 지원하며, &lt;code&gt;Java 9&lt;/code&gt; 이후로는 &lt;code&gt;private&lt;/code&gt; 메서드를 지원합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;추가로, 클래스의 static 메서드와 달리, 인터페이스의 static 메서드는 &lt;strong&gt;상속되지 않습니다.&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;default-메서드-중복&#34; &gt;&lt;code&gt;default&lt;/code&gt; 메서드 중복
+&lt;span&gt;
+    &lt;a href=&#34;#default-%eb%a9%94%ec%84%9c%eb%93%9c-%ec%a4%91%eb%b3%b5&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;A&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;default&lt;/span&gt; String &lt;span style=&#34;color:#a6e22e&#34;&gt;printline&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;B&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;default&lt;/span&gt; String &lt;span style=&#34;color:#a6e22e&#34;&gt;printline&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;C&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;implements&lt;/span&gt; A&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; B &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;한 클래스가 여러 인터페이스를 구현할 때, 동일한 이름의 &lt;code&gt;default&lt;/code&gt; 메서드가 존재할 수 있습니다.&lt;br&gt;
+이 때, 다중 인터페이스 상속으로 인한 충돌(&lt;code&gt;다이아몬드 문제&lt;/code&gt;)이 발생해 코드가 컴파일 되지 않습니다.&lt;br&gt;
+이를 해결하려면, 해당 디폴트 메서드를 재정의해, 어떤 인터페이스의 디폴트 메서드를 호출할 지 명시적으로 알려주어야 합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;C&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;implements&lt;/span&gt; A&lt;span style=&#34;color:#f92672&#34;&gt;,&lt;/span&gt; B &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;@Override&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; String &lt;span style=&#34;color:#a6e22e&#34;&gt;printline&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// A 인터페이스의 메서드를 호출
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		A&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;super&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;printline&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#75715e&#34;&gt;// A, B 인터페이스의 메서드 모두 호출할 수도 있습니다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;		B&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;super&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;printline&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;private-메서드&#34; &gt;&lt;code&gt;private&lt;/code&gt; 메서드
+&lt;span&gt;
+    &lt;a href=&#34;#private-%eb%a9%94%ec%84%9c%eb%93%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;Java 9&lt;/code&gt;부터 인터페이스에 &lt;code&gt;private&lt;/code&gt; 메서드를 추가할 수 있게 되었습니다.&lt;br&gt;
+이는 &lt;code&gt;정적&lt;/code&gt;/&lt;code&gt;비정적&lt;/code&gt; 메서드로 구현할 수 있으며, &lt;code&gt;public static 메서드&lt;/code&gt;에서 &lt;code&gt;private static 메서드&lt;/code&gt;를 호출하는 등의 용도로 사용할 수 있습니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;interface&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Foo&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;buzz&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;print&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Hello&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        staticBaz&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;static&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;staticBaz&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34; static world!&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이를 통해 코드 중복을 줄이고, 로직을 캡슐화해 인터페이스를 구현하는 클래스로 부터 세부 사항을 숨길 수 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;추상-클래스&#34; &gt;추상 클래스
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b6%94%ec%83%81-%ed%81%b4%eb%9e%98%ec%8a%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;추상 클래스&lt;/code&gt;란, &lt;code&gt;abstract&lt;/code&gt; 키워드와 함께 선언된 &lt;strong&gt;클래스&lt;/strong&gt;를 말합니다.&lt;br&gt;
+&lt;code&gt;추상 메서드&lt;/code&gt;를 포함할 수 있으며, &lt;em&gt;인스턴스화 될 수 없지만&lt;/em&gt; &lt;code&gt;상속&lt;/code&gt;이 &lt;strong&gt;가능&lt;/strong&gt;합니다.&lt;br&gt;
+일반 클래스와 같이 필드, 메서드에 대해 &lt;code&gt;접근 제한자&lt;/code&gt;에 대한 &lt;strong&gt;제한이 없습니다&lt;/strong&gt;.&lt;/p&gt;
+&lt;h4 id=&#34;추상-메서드&#34; &gt;추상 메서드?
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b6%94%ec%83%81-%eb%a9%94%ec%84%9c%eb%93%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;abstract&lt;/code&gt; 키워드와 함께, 구현부 없이 선언된 메서드를 말합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;abstract&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;draw&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;만약 클래스가 &lt;code&gt;추상 메서드&lt;/code&gt;를 포함하는 경우, 반드시 &lt;code&gt;추상 클래스&lt;/code&gt;로 선언되어야 합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;인터페이스 내부에서 &lt;code&gt;default&lt;/code&gt; 또는 &lt;code&gt;static&lt;/code&gt;으로 선언되지 않은 메서드는 암묵적으로 &lt;code&gt;추상 메서드&lt;/code&gt;이기 때문에, &lt;code&gt;abstract&lt;/code&gt; 키워드를 굳이 명시하지 않습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;상속&#34; &gt;상속
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%83%81%ec%86%8d&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;추상 클래스&lt;/code&gt;가 상속된 경우, 자식 클래스는 부모의 모든 &lt;code&gt;추상 메서드&lt;/code&gt;에 대한 &lt;strong&gt;구현&lt;/strong&gt;을 제공해야 합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;그러지 않는다면, 자식 클래스 역시 &lt;code&gt;추상 클래스&lt;/code&gt;로 선언되어야 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;생성자&#34; &gt;생성자?
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%83%9d%ec%84%b1%ec%9e%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;추상 클래스&lt;/code&gt;는 인스턴스화 될 수 없지만, 생성자는 가질 수 있습니다.&lt;br&gt;
+일반 클래스 처럼, &lt;code&gt;추상 클래스&lt;/code&gt;에 생성자를 선언하지 않으면 컴파일러가 기본 생성자를 만들어주거나 또는 직접 기본 생성자를 정의할 수 있습니다.&lt;br&gt;
+이렇게 만들어진 생성자는 자식 클래스의 생성자에서 &lt;code&gt;super()&lt;/code&gt;를 통해 호출할 수 있습니다.&lt;br&gt;
+이를 활용하면 자식 클래스에서 수정할 수 없도록 하고 싶은 값에 대해 초기화를 할 수 있습니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;abstract&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Car&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; distance&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// private 생성자 (접근 불가)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Car&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;int&lt;/span&gt; distance&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;distance&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; distance&lt;span style=&#34;color:#f92672&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// Car의 기본 생성자
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// 모든 자식 클래스의 생성자들이 호출되기 전, 이 생성자를 호출하기 때문에
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// Car의 distance 값은 0으로 초기화 될것임이 보장됨.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Car&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;()&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;this&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        System&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;out&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;println&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;Car default constructor&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;차이점&#34; &gt;차이점
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%a8%ec%9d%b4%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;인터페이스&lt;/code&gt;와 &lt;code&gt;추상 클래스&lt;/code&gt; 모두 인스턴스화 될 수 없고, 구현을 포함하거나 포함하지 않는(&lt;code&gt;추상 메서드&lt;/code&gt;) 메서드들을 보유할 수 있다는 점에서 유사한 점이 많습니다.&lt;br&gt;
+다만, &lt;code&gt;추상 클래스&lt;/code&gt;에서는 &lt;code&gt;static&lt;/code&gt; 또는 &lt;code&gt;final&lt;/code&gt;이 아닌 필드 값을 선언할 수 있습니다.&lt;br&gt;
+또한, &lt;code&gt;public&lt;/code&gt;/&lt;code&gt;protected&lt;/code&gt;/&lt;code&gt;private&lt;/code&gt;로 선언된 &lt;code&gt;구체 메서드&lt;/code&gt;를 선언할 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;구체 메서드(concrete method)&lt;/code&gt;: 완전한 구현을 포함하며, 자식 클래스에서 재정의 가능한 메서드. 즉, &lt;code&gt;추상 메서드&lt;/code&gt;가 아닌 메서드&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;반면, 인터페이스에서는 모든 필드가 &lt;code&gt;public static final&lt;/code&gt;이어야 하며, 모든 메서드는 &lt;code&gt;public&lt;/code&gt; 이어야 합니다.&lt;br&gt;
+또한, &lt;code&gt;클래스&lt;/code&gt;는 추상 클래스든 일반 클래스든 &lt;strong&gt;하나만 상속&lt;/strong&gt;할 수 있지만,   &lt;code&gt;인터페이스&lt;/code&gt;를 구현하는데는 &lt;strong&gt;제한이 없습니다&lt;/strong&gt;.&lt;/p&gt;
+&lt;h3 id=&#34;어떤걸-써야-할까&#34; &gt;어떤걸 써야 할까?
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%96%b4%eb%96%a4%ea%b1%b8-%ec%8d%a8%ec%95%bc-%ed%95%a0%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;추상-클래스를-써야할-때&#34; &gt;추상 클래스를 써야할 때
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b6%94%ec%83%81-%ed%81%b4%eb%9e%98%ec%8a%a4%eb%a5%bc-%ec%8d%a8%ec%95%bc%ed%95%a0-%eb%95%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;관련된 여러 클래스 간 코드를 공유 해야할 때&lt;/li&gt;
+&lt;li&gt;추상 클래스를 상속할 클래스에 공통 메서드/필드가 많거나, &lt;code&gt;public&lt;/code&gt; 이외의 접근 제한자가 필요한 경우&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;static&lt;/code&gt; 또는 &lt;code&gt;final&lt;/code&gt;이 어난 필드를 선언해야 할 때, 해당 필드를 접근/수정할 수 있는 메서드를 정의할 수 있음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;인터페이스를-써야할-때&#34; &gt;인터페이스를 써야할 때
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4%eb%a5%bc-%ec%8d%a8%ec%95%bc%ed%95%a0-%eb%95%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;관련 없는 클래스에서 인터페이스를 구현할 것으로 예상 될 때
+&lt;ul&gt;
+&lt;li&gt;ex) &lt;code&gt;Cloneable&lt;/code&gt;, &lt;code&gt;Comparable&lt;/code&gt;과 같은 인터페이스들은 관련이 없는 클래스들에서 구현되고 있음.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;특정 자료형의 동작을 명세하고 싶지만, 구현에 대해서는 신경쓰지 않는 경우&lt;/li&gt;
+&lt;li&gt;타입의 다중 상속을 활용하고 싶은 경우&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;예시&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;추상-클래스-1&#34; &gt;추상 클래스
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b6%94%ec%83%81-%ed%81%b4%eb%9e%98%ec%8a%a4-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;대표적인 추상 클래스의 활용 예시는 &lt;code&gt;Collection Framework&lt;/code&gt; 내부에 존재하는 &lt;code&gt;Abstract 컬렉션&lt;/code&gt;(&lt;code&gt;AbstractMap&lt;/code&gt;, &lt;code&gt;AbstractList&lt;/code&gt;, &lt;code&gt;AbstractSet&lt;/code&gt; 등)이 있습니다.&lt;br&gt;
+해당 클래스들의 하위 클래스들은 &lt;code&gt;Abstract 컬렉션&lt;/code&gt;이 정의하는 메서드들(&lt;code&gt;get&lt;/code&gt;, &lt;code&gt;put&lt;/code&gt;, &lt;code&gt;isEmpty&lt;/code&gt; 등)을 공유합니다.&lt;/p&gt;
+&lt;h4 id=&#34;인터페이스-1&#34; &gt;인터페이스
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;대표적인 인터페이스의 활용 예시는 &lt;code&gt;Cloneable&lt;/code&gt;, &lt;code&gt;Serializable&lt;/code&gt;, &lt;code&gt;Map&amp;lt;K, V&amp;gt;&lt;/code&gt; 등이 있습니다.&lt;br&gt;
+예시로 이들을 구현하는 &lt;code&gt;HashMap&lt;/code&gt;을 보면, 이 클래스의 인스턴스가 &lt;code&gt;clone()&lt;/code&gt;을 통해 복제할 수 있으며, 직렬화 할 수 있고, &lt;code&gt;Map&lt;/code&gt;에 기대되는 기능들을 가지고 있음을 예상할 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;또한, &lt;code&gt;Map&amp;lt;K, V&amp;gt;&lt;/code&gt;의 경우, &lt;code&gt;merge&lt;/code&gt;, &lt;code&gt;forEach&lt;/code&gt;와 같은 디폴트 메서드를 갖고 있어, 해당 인터페이스를 구현한 오래된 클래스들을 자동적으로 개선했습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;왜-클래스는-단일-상속만-가능한데-인터페이스는-2개-이상-구현이-가능할까&#34; &gt;왜 클래스는 단일 상속만 가능한데, 인터페이스는 2개 이상 구현이 가능할까?
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%99%9c-%ed%81%b4%eb%9e%98%ec%8a%a4%eb%8a%94-%eb%8b%a8%ec%9d%bc-%ec%83%81%ec%86%8d%eb%a7%8c-%ea%b0%80%eb%8a%a5%ed%95%9c%eb%8d%b0-%ec%9d%b8%ed%84%b0%ed%8e%98%ec%9d%b4%ec%8a%a4%eb%8a%94-2%ea%b0%9c-%ec%9d%b4%ec%83%81-%ea%b5%ac%ed%98%84%ec%9d%b4-%ea%b0%80%eb%8a%a5%ed%95%a0%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;상속관계에서 발생할 수 있는 &lt;strong&gt;&lt;code&gt;다이아몬드 문제(또는 마름모 문제)&lt;/code&gt;&lt;/strong&gt; 때문에 단일 상속만 가능합니다.&lt;br&gt;
+&lt;img src=&#34;diamond-problem.png&#34; alt=&#34;diamond-problem.png&#34;&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;출처: &lt;a href=&#34;https://bhawana-gaur.medium.com/how-does-java-provide-support-for-multiple-inheritance-indirectly-4588241126fb&#34;&gt;How does Java provide support for multiple inheritance indirectly? | by Bhawana Gaur | Medium&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;만약 두 개 이상의 클래스를 상속할 수 있게 했다면, 위 그림처럼 자식 클래스는 동일한 시그니처를 갖는 메서드 2개를 물려받게 됩니다.&lt;br&gt;
+이후 자식 클래스에서 해당 메서드를 호출한다면, 둘 중 어느 메서드를 호출하겠다는 것인지 알 수 없는 상황이 발생합니다.&lt;br&gt;
+이러한 문제를 피하고자, &lt;code&gt;Java&lt;/code&gt;에서는 하나의 클래스만 상속할 수 있도록 제한을 두었습니다. &lt;a href=&#34;https://docs.oracle.com/javase/tutorial/java/IandI/multipleinheritance.html&#34;&gt;#&lt;/a&gt;&lt;br&gt;
+인터페이스에는 구현 없이, 메서드에 대한 명세만 존재하기 때문에 인터페이스 간 메서드 명세가 중복되어도 이러한 문제가 발생하지 않아 다중 구현이 가능합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;다만, 디폴트 메서드가 등장한 이후, 앞서 설명한 것 처럼 다중 상속 문제가 발생할 수 있게 되었습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase/tutorial/java/IandI/createinterface.html&#34;&gt;Interfaces (The Java™ Tutorials &amp;gt; Learning the Java Language &amp;gt; Interfaces and Inheritance) (oracle.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase/tutorial/java/IandI/abstract.html&#34;&gt;Abstract Methods and Classes (The Java™ Tutorials &amp;gt; Learning the Java Language &amp;gt; Interfaces and Inheritance) (oracle.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/java-abstract-classes-constructors&#34;&gt;Constructors in Java Abstract Classes | Baeldung&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.javatpoint.com/java-extend-multiple-classes&#34;&gt;Java Extend Multiple Classes - Javatpoint&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase/tutorial/java/IandI/multipleinheritance.html&#34;&gt;Multiple Inheritance of State, Implementation, and Type (The Java™ Tutorials &amp;gt; Learning the Java Language &amp;gt; Interfaces and Inheritance) (oracle.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/java-interface-private-methods&#34;&gt;Private Methods in Java Interfaces | Baeldung&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/difference-between-abstract-class-and-interface-in-java/&#34;&gt;Difference between Abstract Class and Interface in Java - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/java-static-default-methods&#34;&gt;Static and Default Methods in Interfaces in Java | Baeldung&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,2235 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[CS] 문자열 인코딩 알아보기 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="문자열 인코딩?문자열 인코딩이란, 문자열을 컴퓨터가 이해할 수 있는 이진수(바이트 데이터)로 변환하기 위한 방법을 말합니다.
+구체적으로 말하자면 문자열 인코딩은 특정 바이트나 바이트 시퀀스를 특정 문자에 매핑하는 키, 즉 바이트-문자 간의 매핑 집합입니다.
+특정 목적을 위한 문자들(ex. 각 언어별 문자)은 문자열 세트(레퍼토리)로 그룹화 됩니다.
+인코딩 체계를 어떤 것을 사용하느냐에 따라 동일한 바이트 시퀀스에 대해 다른 해석이 가능합니다.
+문자열 세트(Character Set)문자 체계에서 사용되는 문자와 기호의 집합을 말합니다.
+예시로, ASCII 문자열 세트는 영어 텍스트에 필요한 문자와 기호를, ISO-8859-6 문자열 세트의 경우 아랍 문자를 기반으로 하는 여러 언어에 필요한 문자 및 기호를 다룹니다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.538b1869ceb05ae0d55cd41ef8e22ebc151bdc0e0d45b056d5f786d594660177.css" integrity="sha256-U4sYac6wWuDVXNQe&#43;OIuvBUb3A4NRbBW1feG1ZRmAXc=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[CS] 문자열 인코딩 알아보기" />
+<meta property="og:description" content="문자열 인코딩?문자열 인코딩이란, 문자열을 컴퓨터가 이해할 수 있는 이진수(바이트 데이터)로 변환하기 위한 방법을 말합니다.
+구체적으로 말하자면 문자열 인코딩은 특정 바이트나 바이트 시퀀스를 특정 문자에 매핑하는 키, 즉 바이트-문자 간의 매핑 집합입니다.
+특정 목적을 위한 문자들(ex. 각 언어별 문자)은 문자열 세트(레퍼토리)로 그룹화 됩니다.
+인코딩 체계를 어떤 것을 사용하느냐에 따라 동일한 바이트 시퀀스에 대해 다른 해석이 가능합니다.
+문자열 세트(Character Set)문자 체계에서 사용되는 문자와 기호의 집합을 말합니다.
+예시로, ASCII 문자열 세트는 영어 텍스트에 필요한 문자와 기호를, ISO-8859-6 문자열 세트의 경우 아랍 문자를 기반으로 하는 여러 언어에 필요한 문자 및 기호를 다룹니다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/cs/character-encoding/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-03-31T14:58:17+09:00" />
+<meta property="article:modified_time" content="2024-03-31T14:58:17+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[CS] 문자열 인코딩 알아보기"/>
+<meta name="twitter:description" content="문자열 인코딩?문자열 인코딩이란, 문자열을 컴퓨터가 이해할 수 있는 이진수(바이트 데이터)로 변환하기 위한 방법을 말합니다.
+구체적으로 말하자면 문자열 인코딩은 특정 바이트나 바이트 시퀀스를 특정 문자에 매핑하는 키, 즉 바이트-문자 간의 매핑 집합입니다.
+특정 목적을 위한 문자들(ex. 각 언어별 문자)은 문자열 세트(레퍼토리)로 그룹화 됩니다.
+인코딩 체계를 어떤 것을 사용하느냐에 따라 동일한 바이트 시퀀스에 대해 다른 해석이 가능합니다.
+문자열 세트(Character Set)문자 체계에서 사용되는 문자와 기호의 집합을 말합니다.
+예시로, ASCII 문자열 세트는 영어 텍스트에 필요한 문자와 기호를, ISO-8859-6 문자열 세트의 경우 아랍 문자를 기반으로 하는 여러 언어에 필요한 문자 및 기호를 다룹니다."/>
+
+
+
+
+
+
+
+
+
+
+
+<link rel="canonical" href="https://cloudsoswift.github.io/post/develop/cs/character-encoding/">
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="page-wrapper">
+        <div class="container">
+            <header class="common-header">
+                
+                    <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+
+                
+            </header>
+            <main id="main" tabindex="-1">
+                
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[CS] 문자열 인코딩 알아보기</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#문자열-인코딩">문자열 인코딩?</a>
+      <ul>
+        <li><a href="#문자열-세트character-set"><code>문자열 세트(Character Set)</code></a></li>
+        <li><a href="#코드-포인트">코드 포인트</a></li>
+        <li><a href="#종류">종류</a></li>
+      </ul>
+    </li>
+    <li><a href="#base64-인코딩">Base64 인코딩</a>
+      <ul>
+        <li><a href="#사용-이유">사용 이유</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h2 id="문자열-인코딩" >문자열 인코딩?
+<span>
+    <a href="#%eb%ac%b8%ec%9e%90%ec%97%b4-%ec%9d%b8%ec%bd%94%eb%94%a9">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p><code>문자열 인코딩</code>이란, 문자열을 컴퓨터가 이해할 수 있는 <code>이진수</code>(<code>바이트</code> 데이터)로 변환하기 위한 방법을 말합니다.<br>
+<em>구체적으로 말하자면</em> <code>문자열 인코딩</code>은 특정 바이트나 바이트 시퀀스를 특정 문자에 매핑하는 키, 즉 바이트-문자 간의 매핑 집합입니다.<br>
+특정 목적을 위한 문자들(ex. 각 언어별 문자)은 <code>문자열 세트(레퍼토리)</code>로 그룹화 됩니다.<br>
+인코딩 체계를 어떤 것을 사용하느냐에 따라 동일한 <code>바이트 시퀀스</code>에 대해 다른 해석이 가능합니다.</p>
+<h3 id="문자열-세트character-set" ><code>문자열 세트(Character Set)</code>
+<span>
+    <a href="#%eb%ac%b8%ec%9e%90%ec%97%b4-%ec%84%b8%ed%8a%b8character-set">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><strong>문자 체계</strong>에서 사용되는 <strong>문자와 기호의 집합</strong>을 말합니다.<br>
+예시로, <code>ASCII 문자열 세트</code>는 영어 텍스트에 필요한 문자와 기호를, <code>ISO-8859-6 문자열 세트</code>의 경우 아랍 문자를 기반으로 하는 여러 언어에 필요한 문자 및 기호를 다룹니다.<br>
+초기에는 각 국마다 사용하는 언어의 차이로 자체 문자열 세트(ex. 일본어 - EUC-JP, 중국 - Big5, 한국 - KSC5601-87 등)를 개발해 사용했으나, 이후 <code>Unicode</code>가 표준으로 자리잡게 되었습니다.</p>
+<h3 id="코드-포인트" >코드 포인트
+<span>
+    <a href="#%ec%bd%94%eb%93%9c-%ed%8f%ac%ec%9d%b8%ed%8a%b8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>문자열이 인코딩을 거치면 특정 문자에 매핑되는 유일한 식별자인 <code>코드 포인트</code>로 변환되게 됩니다.<br>
+이러한 코드 포인트는 하나 이상의 바이트로 표시되며, 인코딩 별로 주어진 인코딩 집합 내 가능한 모든 코드 포인트의 집합이 인코딩 별 코드스페이스를 구성합니다.</p>
+<h3 id="종류" >종류
+<span>
+    <a href="#%ec%a2%85%eb%a5%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>주로 사용되는 문자열 세트로는 <code>ASCII</code>, <code>ISO 8859</code>, <code>EUC</code>, <code>Unicode</code> 등이 있습니다.</p>
+<h4 id="asciiamerican-standard-code-for-information-interchange" >ASCII(American Standard Code for Information Interchange)
+<span>
+    <a href="#asciiamerican-standard-code-for-information-interchange">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>1963년 처음 발표된 인코딩으로, 256개의 슬롯을 문자, 숫자, 기타 문자로 구분하는 7비트 코드 표준입니다.<br>
+33개의 출력 불가능한 제어 문자와, 95개의 출력 가능한 문자로 이루어져 있습니다.</p>
+<h4 id="iso-8859" >ISO 8859
+<span>
+    <a href="#iso-8859">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>ISO와 IEC의 공동 표준으로, 8비트 코드 표준입니다.<br>
+<code>ASCII</code>에 포함된 95자로는 각 국의 언어에 존재하는 특수한 기호를 사용할 수 없어 이를 해소하고자 여러 <code>ISO 8859</code> 매핑이 개발되었습니다.<br>
+<code>ASCII</code>에서 1비트 확장해 128자의 추가 문자를 할당합니다.</p>
+<h4 id="eucextended-unix-code" >EUC(Extended Unix Code)
+<span>
+    <a href="#eucextended-unix-code">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>한국어, 중국어, 일본어 문자 전산화에 사용되는 8비트 코드 표준입니다.<br>
+ISO 2022 표준에 기반한 구조를 가지고 있으며, EUC-CN(중국어), EUC-JP(일본어), EUC-KR(한국어), EUC-TW(대만) 등이 존재합니다.</p>
+<h4 id="unicode" >Unicode
+<span>
+    <a href="#unicode">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>전 세계 모든 문자를 일관되게 표현하고 처리할 수 있도록 설계된 표준입니다.<br>
+궁극적으로 현존하는 모든 문자 인코딩 방법을 대체하는것을 목표로 하고 있습니다.</p>
+<p><img src="unicode-difference.png" alt="unicode-difference.png"></p>
+<h5 id="utf-8" >UTF-8
+<span>
+    <a href="#utf-8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>유니코드를 위한 가변 길이 문자 인코딩 방식으로, 한 문자에 1바이트~4바이트를 사용합니다.
+<code>U+0000</code>부터 <code>U+007F</code> 까지는 <code>ASCII</code>와 동일해 하위 호환성이 보장됩니다.<br>
+이후 2바이트는 다른 알파벳 블록의 문자를, <code>BMP</code>의 문자에 3바이트, 보조 문자에 4바이트를 사용합니다.<br>
+Java에서는 내부 텍스트 표현에 사용되는 UTF-16를 문자열 직렬화 하기 위해 수정된 UTF-8(Modified UTF-8)을 사용합니다. 주로 객체 직렬화, <code>JNI</code>, <code>DataInput</code>, <code>DataOutput</code>에서 사용합니다.</p>
+<ul>
+<li><code>BMP(Basic Multilingual Plane)</code>: 일반적으로 사용되는 대부분의 문자를 포함한 코드 포인트의 집합입니다.</li>
+</ul>
+<h5 id="utf-16" >UTF-16
+<span>
+    <a href="#utf-16">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>BMP의 모든 문자에 2바이트, 보조 문자에 4바이트를 사용하는 인코딩 방식입니다.</p>
+<h5 id="utf-32" >UTF-32
+<span>
+    <a href="#utf-32">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><p>모든 유니코드 문자를 같은 4바이트 길이로 표현하는 인코딩 방식입니다.</p>
+<h2 id="base64-인코딩" >Base64 인코딩
+<span>
+    <a href="#base64-%ec%9d%b8%ec%bd%94%eb%94%a9">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>Base64 인코딩이란, 이진 데이터를 6비트 단위로 분할한 뒤 ASCII 영역의 문자들로만 이루어진 문자열로 변환하는 인코딩을 말합니다.<br>
+대부분의 문자열 인코딩 방식에서 ASCII 영역을 그대로 유지하기 때문에, 문자열 인코딩 방식의 영향을 받지 않습니다.<br>
+인코딩 후 데이터는, 의미없는 영어와 숫자로 이뤄진 문자열로 변환됩니다.</p>
+<p><img src="base64.png" alt="base64.png"></p>
+<h3 id="사용-이유" >사용 이유
+<span>
+    <a href="#%ec%82%ac%ec%9a%a9-%ec%9d%b4%ec%9c%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>특정 환경에서는 <strong><code>ASCII</code> 문자열로만 데이터를 제한</strong>하는 경우가 있는데, 이때 필요한 데이터를 <code>ASCII</code>로 <strong>위장</strong>해 <strong>제한을 통과</strong>할 수 있습니다.</li>
+<li><strong>호환되지 않는 데이터</strong>를 전송해야할 때, 예를 들어 <strong>텍스트</strong> 메세지에 <strong>이미지를 첨부</strong>해야할 때, 이미지를 Base64 인코딩을 거쳐 텍스트로 함께 보낼 수 있습니다.</li>
+<li><strong>텍스트만 저장할 수 있는 곳(ex. 브라우저 쿠키)</strong> 에 텍스트가 아닌 데이터를 저장해야할 때 인코딩을 거쳐 저장할 수 있습니다.</li>
+</ul>
+<h1 id="참고-문서" >참고 문서
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://developer.mozilla.org/ko/docs/Glossary/UTF-8">UTF-8 - MDN Web Docs 용어 사전: 웹 용어 정의 | MDN (mozilla.org)</a></li>
+<li><a href="https://ko.wikipedia.org/wiki/%EC%9C%A0%EB%8B%88%EC%BD%94%EB%93%9C">유니코드 - 위키백과, 우리 모두의 백과사전 (wikipedia.org)</a></li>
+<li><a href="https://ko.wikipedia.org/wiki/UTF-16">UTF-16 - 위키백과, 우리 모두의 백과사전 (wikipedia.org)</a></li>
+<li><a href="https://www.redhat.com/sysadmin/base64-encoding">Base64 encoding: What sysadmins need to know | Enable Sysadmin (redhat.com)</a></li>
+<li><a href="https://www.freecodecamp.org/news/what-is-base64-encoding/">What is base64 Encoding and Why is it Necessary? (freecodecamp.org)</a></li>
+<li><a href="https://ko.wikipedia.org/wiki/%EB%B2%A0%EC%9D%B4%EC%8A%A464">베이스64 - 위키백과, 우리 모두의 백과사전 (wikipedia.org)</a></li>
+<li><a href="https://ko.wikipedia.org/wiki/%EB%AC%B8%EC%9E%90_%EC%9D%B8%EC%BD%94%EB%94%A9">문자 인코딩 - 위키백과, 우리 모두의 백과사전 (wikipedia.org)</a></li>
+<li><a href="https://www.w3.org/International/getting-started/characters">Character Sets and Encodings (w3.org)</a></li>
+<li><a href="https://www.w3.org/International/articles/definitions-characters/">Character encodings: Essential concepts (w3.org)</a></li>
+<li><a href="https://www.w3.org/International/questions/qa-what-is-encoding">Character encodings for beginners (w3.org)</a></li>
+<li><a href="https://www.geeksforgeeks.org/what-is-character-encoding-system/">What is Character Encoding System? - GeeksforGeeks</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Code_point">Code point - Wikipedia</a></li>
+<li><a href="https://developer.mozilla.org/ko/docs/Glossary/Code_point">코드 포인트 (Code point) - MDN Web Docs 용어 사전: 웹 용어 정의 | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Glossary/Character_set">Character set - MDN Web Docs Glossary: Definitions of Web-related terms | MDN (mozilla.org)</a></li>
+<li><a href="https://nuli.navercorp.com/community/article/1079940">문자 집합(Character Set)과 인코딩(Encoding) (navercorp.com)</a></li>
+<li><a href="https://docs.oracle.com/javase/1.5.0/docs/api/java/io/DataInput.html#modified-utf-8">DataInput (Java 2 Platform SE 5.0) (oracle.com)</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/cs/character-encoding/"><time datetime="2024-03-31">2024-03-31 14:58 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/cs/character-encoding/">https://cloudsoswift.github.io/post/develop/cs/character-encoding/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/cs/">#CS</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/character/">#Character</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/unicode/">#Unicode</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item ">
+            
+                <a href="/post/develop/cs/virtualization/">[CS] 가상화 알아보기 (w. Hypervisor, Docker)</a>
+            
+        </div>
+        <div class="right pagination-item disabled">
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+            </main>
+            
+                <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2026<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+            
+        </div>
+        <aside class="sidebar">
+    <div class="sidebar-widget">
+        <h2 class="sidebar-title">카테고리</h2>
+
+        
+        
+
+           
+              
+             
+
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+
+        
+        
+
+        <ul class="sidebar-categories">
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/algorithm/">algorithm</a>
+                        
+                        <span class="sidebar-category-count">12</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/algorithm/data-structure/">data-structure</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/develop/">develop</a>
+                        
+                        <span class="sidebar-category-count">42</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/cs/">cs</a>
+                                    
+                                    <span class="sidebar-category-count">3</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/database/">database</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/java/">java</a>
+                                    
+                                    <span class="sidebar-category-count">10</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/javascript/">javascript</a>
+                                    
+                                    <span class="sidebar-category-count">11</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/network/">network</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/nodejs/">nodejs</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/os/">OS</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/toy-project/">toy-project</a>
+                                    
+                                    <span class="sidebar-category-count">2</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/etc/">etc</a>
+                        
+                        <span class="sidebar-category-count">2</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/etc/etc/">etc</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/self-development/">self-development</a>
+                        
+                        <span class="sidebar-category-count">1</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/self-development/ril/">RIL</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+        </ul>
+    </div>
+</aside>
+
+    </div>
+</body>
+</html>

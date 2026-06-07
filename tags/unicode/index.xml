@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Unicode on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/unicode/</link>
+    <description>오늘도 개발을 한다. (Unicode)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Sun, 31 Mar 2024 14:58:17 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/unicode/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[CS] 문자열 인코딩 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/cs/character-encoding/</link>
+      <pubDate>Sun, 31 Mar 2024 14:58:17 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/cs/character-encoding/</guid>
+      <description>&lt;h2 id=&#34;문자열-인코딩&#34; &gt;문자열 인코딩?
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%ac%b8%ec%9e%90%ec%97%b4-%ec%9d%b8%ec%bd%94%eb%94%a9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;문자열 인코딩&lt;/code&gt;이란, 문자열을 컴퓨터가 이해할 수 있는 &lt;code&gt;이진수&lt;/code&gt;(&lt;code&gt;바이트&lt;/code&gt; 데이터)로 변환하기 위한 방법을 말합니다.&lt;br&gt;
+&lt;em&gt;구체적으로 말하자면&lt;/em&gt; &lt;code&gt;문자열 인코딩&lt;/code&gt;은 특정 바이트나 바이트 시퀀스를 특정 문자에 매핑하는 키, 즉 바이트-문자 간의 매핑 집합입니다.&lt;br&gt;
+특정 목적을 위한 문자들(ex. 각 언어별 문자)은 &lt;code&gt;문자열 세트(레퍼토리)&lt;/code&gt;로 그룹화 됩니다.&lt;br&gt;
+인코딩 체계를 어떤 것을 사용하느냐에 따라 동일한 &lt;code&gt;바이트 시퀀스&lt;/code&gt;에 대해 다른 해석이 가능합니다.&lt;/p&gt;
+&lt;h3 id=&#34;문자열-세트character-set&#34; &gt;&lt;code&gt;문자열 세트(Character Set)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%ac%b8%ec%9e%90%ec%97%b4-%ec%84%b8%ed%8a%b8character-set&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;strong&gt;문자 체계&lt;/strong&gt;에서 사용되는 &lt;strong&gt;문자와 기호의 집합&lt;/strong&gt;을 말합니다.&lt;br&gt;
+예시로, &lt;code&gt;ASCII 문자열 세트&lt;/code&gt;는 영어 텍스트에 필요한 문자와 기호를, &lt;code&gt;ISO-8859-6 문자열 세트&lt;/code&gt;의 경우 아랍 문자를 기반으로 하는 여러 언어에 필요한 문자 및 기호를 다룹니다.&lt;br&gt;
+초기에는 각 국마다 사용하는 언어의 차이로 자체 문자열 세트(ex. 일본어 - EUC-JP, 중국 - Big5, 한국 - KSC5601-87 등)를 개발해 사용했으나, 이후 &lt;code&gt;Unicode&lt;/code&gt;가 표준으로 자리잡게 되었습니다.&lt;/p&gt;
+&lt;h3 id=&#34;코드-포인트&#34; &gt;코드 포인트
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%bd%94%eb%93%9c-%ed%8f%ac%ec%9d%b8%ed%8a%b8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;문자열이 인코딩을 거치면 특정 문자에 매핑되는 유일한 식별자인 &lt;code&gt;코드 포인트&lt;/code&gt;로 변환되게 됩니다.&lt;br&gt;
+이러한 코드 포인트는 하나 이상의 바이트로 표시되며, 인코딩 별로 주어진 인코딩 집합 내 가능한 모든 코드 포인트의 집합이 인코딩 별 코드스페이스를 구성합니다.&lt;/p&gt;
+&lt;h3 id=&#34;종류&#34; &gt;종류
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a2%85%eb%a5%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;주로 사용되는 문자열 세트로는 &lt;code&gt;ASCII&lt;/code&gt;, &lt;code&gt;ISO 8859&lt;/code&gt;, &lt;code&gt;EUC&lt;/code&gt;, &lt;code&gt;Unicode&lt;/code&gt; 등이 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;asciiamerican-standard-code-for-information-interchange&#34; &gt;ASCII(American Standard Code for Information Interchange)
+&lt;span&gt;
+    &lt;a href=&#34;#asciiamerican-standard-code-for-information-interchange&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;1963년 처음 발표된 인코딩으로, 256개의 슬롯을 문자, 숫자, 기타 문자로 구분하는 7비트 코드 표준입니다.&lt;br&gt;
+33개의 출력 불가능한 제어 문자와, 95개의 출력 가능한 문자로 이루어져 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;iso-8859&#34; &gt;ISO 8859
+&lt;span&gt;
+    &lt;a href=&#34;#iso-8859&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;ISO와 IEC의 공동 표준으로, 8비트 코드 표준입니다.&lt;br&gt;
+&lt;code&gt;ASCII&lt;/code&gt;에 포함된 95자로는 각 국의 언어에 존재하는 특수한 기호를 사용할 수 없어 이를 해소하고자 여러 &lt;code&gt;ISO 8859&lt;/code&gt; 매핑이 개발되었습니다.&lt;br&gt;
+&lt;code&gt;ASCII&lt;/code&gt;에서 1비트 확장해 128자의 추가 문자를 할당합니다.&lt;/p&gt;
+&lt;h4 id=&#34;eucextended-unix-code&#34; &gt;EUC(Extended Unix Code)
+&lt;span&gt;
+    &lt;a href=&#34;#eucextended-unix-code&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;한국어, 중국어, 일본어 문자 전산화에 사용되는 8비트 코드 표준입니다.&lt;br&gt;
+ISO 2022 표준에 기반한 구조를 가지고 있으며, EUC-CN(중국어), EUC-JP(일본어), EUC-KR(한국어), EUC-TW(대만) 등이 존재합니다.&lt;/p&gt;
+&lt;h4 id=&#34;unicode&#34; &gt;Unicode
+&lt;span&gt;
+    &lt;a href=&#34;#unicode&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;전 세계 모든 문자를 일관되게 표현하고 처리할 수 있도록 설계된 표준입니다.&lt;br&gt;
+궁극적으로 현존하는 모든 문자 인코딩 방법을 대체하는것을 목표로 하고 있습니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;unicode-difference.png&#34; alt=&#34;unicode-difference.png&#34;&gt;&lt;/p&gt;
+&lt;h5 id=&#34;utf-8&#34; &gt;UTF-8
+&lt;span&gt;
+    &lt;a href=&#34;#utf-8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;유니코드를 위한 가변 길이 문자 인코딩 방식으로, 한 문자에 1바이트~4바이트를 사용합니다.
+&lt;code&gt;U+0000&lt;/code&gt;부터 &lt;code&gt;U+007F&lt;/code&gt; 까지는 &lt;code&gt;ASCII&lt;/code&gt;와 동일해 하위 호환성이 보장됩니다.&lt;br&gt;
+이후 2바이트는 다른 알파벳 블록의 문자를, &lt;code&gt;BMP&lt;/code&gt;의 문자에 3바이트, 보조 문자에 4바이트를 사용합니다.&lt;br&gt;
+Java에서는 내부 텍스트 표현에 사용되는 UTF-16를 문자열 직렬화 하기 위해 수정된 UTF-8(Modified UTF-8)을 사용합니다. 주로 객체 직렬화, &lt;code&gt;JNI&lt;/code&gt;, &lt;code&gt;DataInput&lt;/code&gt;, &lt;code&gt;DataOutput&lt;/code&gt;에서 사용합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;BMP(Basic Multilingual Plane)&lt;/code&gt;: 일반적으로 사용되는 대부분의 문자를 포함한 코드 포인트의 집합입니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;utf-16&#34; &gt;UTF-16
+&lt;span&gt;
+    &lt;a href=&#34;#utf-16&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;BMP의 모든 문자에 2바이트, 보조 문자에 4바이트를 사용하는 인코딩 방식입니다.&lt;/p&gt;
+&lt;h5 id=&#34;utf-32&#34; &gt;UTF-32
+&lt;span&gt;
+    &lt;a href=&#34;#utf-32&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;모든 유니코드 문자를 같은 4바이트 길이로 표현하는 인코딩 방식입니다.&lt;/p&gt;
+&lt;h2 id=&#34;base64-인코딩&#34; &gt;Base64 인코딩
+&lt;span&gt;
+    &lt;a href=&#34;#base64-%ec%9d%b8%ec%bd%94%eb%94%a9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;Base64 인코딩이란, 이진 데이터를 6비트 단위로 분할한 뒤 ASCII 영역의 문자들로만 이루어진 문자열로 변환하는 인코딩을 말합니다.&lt;br&gt;
+대부분의 문자열 인코딩 방식에서 ASCII 영역을 그대로 유지하기 때문에, 문자열 인코딩 방식의 영향을 받지 않습니다.&lt;br&gt;
+인코딩 후 데이터는, 의미없는 영어와 숫자로 이뤄진 문자열로 변환됩니다.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;base64.png&#34; alt=&#34;base64.png&#34;&gt;&lt;/p&gt;
+&lt;h3 id=&#34;사용-이유&#34; &gt;사용 이유
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%82%ac%ec%9a%a9-%ec%9d%b4%ec%9c%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;특정 환경에서는 &lt;strong&gt;&lt;code&gt;ASCII&lt;/code&gt; 문자열로만 데이터를 제한&lt;/strong&gt;하는 경우가 있는데, 이때 필요한 데이터를 &lt;code&gt;ASCII&lt;/code&gt;로 &lt;strong&gt;위장&lt;/strong&gt;해 &lt;strong&gt;제한을 통과&lt;/strong&gt;할 수 있습니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;호환되지 않는 데이터&lt;/strong&gt;를 전송해야할 때, 예를 들어 &lt;strong&gt;텍스트&lt;/strong&gt; 메세지에 &lt;strong&gt;이미지를 첨부&lt;/strong&gt;해야할 때, 이미지를 Base64 인코딩을 거쳐 텍스트로 함께 보낼 수 있습니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;텍스트만 저장할 수 있는 곳(ex. 브라우저 쿠키)&lt;/strong&gt; 에 텍스트가 아닌 데이터를 저장해야할 때 인코딩을 거쳐 저장할 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;참고-문서&#34; &gt;참고 문서
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/ko/docs/Glossary/UTF-8&#34;&gt;UTF-8 - MDN Web Docs 용어 사전: 웹 용어 정의 | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://ko.wikipedia.org/wiki/%EC%9C%A0%EB%8B%88%EC%BD%94%EB%93%9C&#34;&gt;유니코드 - 위키백과, 우리 모두의 백과사전 (wikipedia.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://ko.wikipedia.org/wiki/UTF-16&#34;&gt;UTF-16 - 위키백과, 우리 모두의 백과사전 (wikipedia.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.redhat.com/sysadmin/base64-encoding&#34;&gt;Base64 encoding: What sysadmins need to know | Enable Sysadmin (redhat.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.freecodecamp.org/news/what-is-base64-encoding/&#34;&gt;What is base64 Encoding and Why is it Necessary? (freecodecamp.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://ko.wikipedia.org/wiki/%EB%B2%A0%EC%9D%B4%EC%8A%A464&#34;&gt;베이스64 - 위키백과, 우리 모두의 백과사전 (wikipedia.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://ko.wikipedia.org/wiki/%EB%AC%B8%EC%9E%90_%EC%9D%B8%EC%BD%94%EB%94%A9&#34;&gt;문자 인코딩 - 위키백과, 우리 모두의 백과사전 (wikipedia.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.w3.org/International/getting-started/characters&#34;&gt;Character Sets and Encodings (w3.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.w3.org/International/articles/definitions-characters/&#34;&gt;Character encodings: Essential concepts (w3.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.w3.org/International/questions/qa-what-is-encoding&#34;&gt;Character encodings for beginners (w3.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/what-is-character-encoding-system/&#34;&gt;What is Character Encoding System? - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Code_point&#34;&gt;Code point - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/ko/docs/Glossary/Code_point&#34;&gt;코드 포인트 (Code point) - MDN Web Docs 용어 사전: 웹 용어 정의 | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/en-US/docs/Glossary/Character_set&#34;&gt;Character set - MDN Web Docs Glossary: Definitions of Web-related terms | MDN (mozilla.org)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://nuli.navercorp.com/community/article/1079940&#34;&gt;문자 집합(Character Set)과 인코딩(Encoding) (navercorp.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.oracle.com/javase/1.5.0/docs/api/java/io/DataInput.html#modified-utf-8&#34;&gt;DataInput (Java 2 Platform SE 5.0) (oracle.com)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

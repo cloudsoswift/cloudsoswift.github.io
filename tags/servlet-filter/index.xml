@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Servlet-Filter on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/servlet-filter/</link>
+    <description>오늘도 개발을 한다. (Servlet-Filter)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Tue, 23 Apr 2024 20:37:04 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/servlet-filter/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[Java] Interceptor와 Servlet Filter 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/java/interceptor-filter/</link>
+      <pubDate>Tue, 23 Apr 2024 20:37:04 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/java/interceptor-filter/</guid>
+      <description>&lt;h2 id=&#34;spring-에서의-interceptor와-servlet-filter&#34; &gt;Spring 에서의 Interceptor와 Servlet Filter
+&lt;span&gt;
+    &lt;a href=&#34;#spring-%ec%97%90%ec%84%9c%ec%9d%98-interceptor%ec%99%80-servlet-filter&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;h3 id=&#34;interceptor&#34; &gt;&lt;code&gt;Interceptor&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#interceptor&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;handlerInterceptor&lt;/code&gt;는 Spring에서 &lt;code&gt;DispatcherServlet&lt;/code&gt;과 &lt;code&gt;Controller&lt;/code&gt; 사이에 존재하는 인터페이스로,  Spring MVC 프레임워크의 일부입니다.
+&lt;code&gt;Interceptor&lt;/code&gt; 인터페이스는 기본적으로 3가지의 디폴트 메서드가 존재하며, 디폴트값으로 prehandle은 true를 반환하고 나머지 두 함수는 아무것도 수행하지 않습니다.&lt;/p&gt;
+&lt;h4 id=&#34;boolean-prehandlehttpservletrequest-request-httpservletresponse-response-object-handler&#34; &gt;&lt;code&gt;boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#boolean-prehandlehttpservletrequest-request-httpservletresponse-response-object-handler&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;HandlerMapping이 적절한 핸들러 객체를 선택한 후, HandlerAdapter가 핸들러를 호출하기 이전에 호출되는 인터셉션 포인트입니다.&lt;br&gt;
+즉, 대상 핸들러를 호출하기 이전 실행됩니다.&lt;br&gt;
+&lt;code&gt;DispatcherServlet&lt;/code&gt;은 핸들러를 마지막에 두고, 여러 개의 인터셉터로 연결된 체인 상에서 핸들러를 처리합니다.&lt;/p&gt;
+&lt;h4 id=&#34;void-posthandlehttpservletrequest-request-httpservletresponse-response-object-handler-nullable-modelandview-modelandview&#34; &gt;&lt;code&gt;void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable ModelAndView modelAndView)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#void-posthandlehttpservletrequest-request-httpservletresponse-response-object-handler-nullable-modelandview-modelandview&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;대상 핸들러 이후 호출되며, &lt;code&gt;DispatcherServlet&lt;/code&gt;에 의해 뷰가 렌더링 되기 전 호출됩니다.
+핸들러가 성공적으로 실행된 뒤, 호출되는 인터셉션 포인트입니다.&lt;br&gt;
+&lt;code&gt;HandlerAdapter&lt;/code&gt;가 핸들러를 호출한 뒤, &lt;code&gt;DispatcherServlet&lt;/code&gt;이 뷰를 렌더링하기 전 호출됩니다.
+preHandle과 달리, 실행 체인의 역순으로 실행됩니다.&lt;/p&gt;
+&lt;h4 id=&#34;void-aftercompletionhttpservletrequest-request-httpservletresponse-response-object-handler-nullable-exception-ex&#34; &gt;&lt;code&gt;void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable Exception ex)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#void-aftercompletionhttpservletrequest-request-httpservletresponse-response-object-handler-nullable-exception-ex&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;요청이 처리되고, 렌더링이 완료될 때 호출되는 콜백 함수 입니다.&lt;br&gt;
+요청이 완료된, 즉 뷰가 렌더링 되고 난 뒤의 콜백 함수입니다. 핸들러의 모든 실행 후 결과에 대해 호출되기 때문에 내부에서 리소스를 정리한다던가의 행위가 가능합니다.&lt;br&gt;
+그리고 &lt;code&gt;preHandle&lt;/code&gt; 메서드가 성공적으로 완료되어, &lt;code&gt;true&lt;/code&gt;를 반환한 경우에만 &lt;code&gt;afterCompletion&lt;/code&gt;이 호출됩니다.&lt;br&gt;
+&lt;code&gt;postHandle&lt;/code&gt;과 마찬가지로, 실행 체인의 역순으로 호출됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;따라서 체인의 첫 번째 인터셉터가 마지막으로 호출됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;등록-방법&#34; &gt;등록 방법
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%93%b1%eb%a1%9d-%eb%b0%a9%eb%b2%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;config-클래스에-등록하기&#34; &gt;Config 클래스에 등록하기
+&lt;span&gt;
+    &lt;a href=&#34;#config-%ed%81%b4%eb%9e%98%ec%8a%a4%ec%97%90-%eb%93%b1%eb%a1%9d%ed%95%98%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;WebMvcConfigurer&lt;/code&gt;를 구현한 클래스에서 아래와 같이 인터셉터를 등록합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;@Configuration&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;WebMvcConfig&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;implements&lt;/span&gt; WebMvcConfigurer &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;@Override&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;public&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;void&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;addInterceptors&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;InterceptorRegistry registry&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        registry&lt;span style=&#34;color:#f92672&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;addInterceptor&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; MyCustomInterceptor&lt;span style=&#34;color:#f92672&#34;&gt;());&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h5 id=&#34;xml-사용&#34; &gt;XML 사용
+&lt;span&gt;
+    &lt;a href=&#34;#xml-%ec%82%ac%ec%9a%a9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;Spring Bean Config 파일 내부에 아래와 같이 인터셉터를 매핑해 등록합니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;beans&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;interceptors&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;interceptor&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;			&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;mapping&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;path=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;/home&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;			&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;beans:bean&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;class=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;com.abc.spring.RequestProcessingTimeInterceptor&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;lt;/beans:bean&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;		&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/interceptor&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/interceptors&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;beans/&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;servlet-filter&#34; &gt;&lt;code&gt;Servlet Filter&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#servlet-filter&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;Servlet Filter&lt;/code&gt;는 &lt;code&gt;Jakarta EE&lt;/code&gt;( 구)&lt;code&gt;java EE&lt;/code&gt; )에 포함된 &lt;code&gt;Java Servlet&lt;/code&gt;의 일부로, 서버로 들어오는 요청이 어떤 서블릿에도 도달하지 못하도록 막거나 응답이 클라이언트에게 도달하지 못하도록 막을 수 있는 인터페이스 입니다.&lt;br&gt;
+주로 인증, 로깅, 이미지 변환 등의 작업을 거치는 용도로 사용됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;추가로, &lt;code&gt;Spring Security&lt;/code&gt; 역시 Filter의 일종이기 때문에 Spring MVC 외부에서 사용 가능합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;메서드&#34; &gt;메서드
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%a9%94%ec%84%9c%eb%93%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;initfilterconfig-config&#34; &gt;&lt;code&gt;init(FilterConfig config)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#initfilterconfig-config&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;Servlet Container가 필터를 인스턴스화 한 후, 한 번만 호출되는 함수입니다.&lt;br&gt;
+만약 &lt;code&gt;init()&lt;/code&gt; 함수에서 &lt;code&gt;ServletException&lt;/code&gt;이 발생하거나, Web Container가 정의한 시간 내에 완료되지 않으면 Filter는 서비스되지 않습니다.&lt;br&gt;
+즉, 해당 필터가 매핑된 모든 요청은 실패하게 됩니다.&lt;/p&gt;
+&lt;h5 id=&#34;dofilterservletrequest-request-servletresponse-response-filterchain-chain&#34; &gt;&lt;code&gt;doFilter(ServletRequest request, ServletResponse response, FilterChain chain)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#dofilterservletrequest-request-servletresponse-response-filterchain-chain&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;클라이언트와 요청된 자원 사이의 체인을 요청과 응답이 통과할 때마다 컨테이너에서 호출되는 함수입니다.&lt;br&gt;
+이 메서드에 전달된 &lt;code&gt;FilterChain&lt;/code&gt;은 필터가 요청/응답을 다음 엔티티로 전달할 수 있도록 해줍니다.&lt;br&gt;
+주로 들어온 요청을 검사하고, &lt;code&gt;request&lt;/code&gt; 또는 &lt;code&gt;response&lt;/code&gt; 객체에 특정 작업을 수행 후 &lt;code&gt;chain.doFilter()&lt;/code&gt;를 통해 체인의 다음 엔티티를 호출하거나 요청에 대한 처리를 더 이어가지 않고 차단할 수 있습니다.&lt;/p&gt;
+&lt;h5 id=&#34;destroy&#34; &gt;&lt;code&gt;destroy()&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#destroy&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;Servlet Container&lt;/code&gt;가 서비스 중이지 않음을 필터에 알리기 위해 한 번만 호출됩니다.&lt;br&gt;
+해당 필터의 &lt;code&gt;doFilter&lt;/code&gt; 메서드를 수행하는 스레드들이 모두 종료되거나 시간 초과 기간이 끝난 후에야 호출됩니다.&lt;br&gt;
+컨테이너가 이 메서드를 호출한 뒤에는, 필터 인스턴스는 다시는 doFilter 메서드를 호출하지 않습니다.&lt;/p&gt;
+&lt;h4 id=&#34;등록-방법-1&#34; &gt;등록 방법
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%93%b1%eb%a1%9d-%eb%b0%a9%eb%b2%95-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;아래와 같이 &lt;code&gt;web.xml&lt;/code&gt;에서 &lt;code&gt;&amp;lt;filter&amp;gt;&lt;/code&gt; 태그와 &lt;code&gt;&amp;lt;filter-mapping&amp;gt;&lt;/code&gt; 태그를 통해 등록할 수 있습니다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&amp;lt;?xml version=&amp;#34;1.0&amp;#34; encoding=&amp;#34;UTF-8&amp;#34;?&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;web-app&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns:xsi=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://www.w3.org/2001/XMLSchema-instance&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         &lt;span style=&#34;color:#a6e22e&#34;&gt;xmlns=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://xmlns.jcp.org/xml/ns/javaee&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         &lt;span style=&#34;color:#a6e22e&#34;&gt;xsi:schemaLocation=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;http://xmlns.jcp.org/xml/ns/javaee 
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;                             http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd&amp;#34;&lt;/span&gt; 
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         &lt;span style=&#34;color:#a6e22e&#34;&gt;id=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;WebApp_ID&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;version=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;4.0&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;filter&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;filter-name&amp;gt;&lt;/span&gt;filter1&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/filter-name&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;filter-class&amp;gt;&lt;/span&gt;com.app.GFGFilter&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/filter-class&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/filter&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;filter-mapping&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;filter-name&amp;gt;&lt;/span&gt;filter1&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/filter-name&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;url-pattern&amp;gt;&lt;/span&gt;/GFGServlet&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/url-pattern&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/filter-mapping&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;   
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;/web-app&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;interceptor와-filter의-차이-밎-사용처&#34; &gt;&lt;code&gt;Interceptor&lt;/code&gt;와 &lt;code&gt;Filter&lt;/code&gt;의 차이 밎 사용처
+&lt;span&gt;
+    &lt;a href=&#34;#interceptor%ec%99%80-filter%ec%9d%98-%ec%b0%a8%ec%9d%b4-%eb%b0%8e-%ec%82%ac%ec%9a%a9%ec%b2%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;h3 id=&#34;filter와-servlet의-차이점&#34; &gt;&lt;code&gt;Filter&lt;/code&gt;와 &lt;code&gt;Servlet&lt;/code&gt;의 차이점
+&lt;span&gt;
+    &lt;a href=&#34;#filter%ec%99%80-servlet%ec%9d%98-%ec%b0%a8%ec%9d%b4%ec%a0%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img src=&#34;Filter-vs-Interceptor.png&#34; alt=&#34;Filter-vs-Interceptor.png&#34;&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;출처: &lt;a href=&#34;https://www.baeldung.com/spring-mvc-handlerinterceptor-vs-filter#key-differences-and-use-cases&#34;&gt;HandlerInterceptors vs. Filters in Spring MVC | Baeldung&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;인터셉터는 필터와 달리 &lt;em&gt;핸들러 자체의 실행을 금지&lt;/em&gt;하는 옵션을 갖고있는 사용자 정의 전/후처리만을 허용합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;반면 필터는 체인을 통해 전달되는 요청/응답 객체의 헤더와 같은 속성을 수정할 수 있습니다.&lt;/li&gt;
+&lt;li&gt;필터는 &lt;code&gt;web.xml&lt;/code&gt;에서 구성되고, &lt;code&gt;HandlerInterceptor&lt;/code&gt;는 &lt;code&gt;ApplicationContext&lt;/code&gt;에서 구성됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;filter를-사용해야하는-상황&#34; &gt;&lt;code&gt;Filter&lt;/code&gt;를 사용해야하는 상황
+&lt;span&gt;
+    &lt;a href=&#34;#filter%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%b4%ec%95%bc%ed%95%98%eb%8a%94-%ec%83%81%ed%99%a9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;Filter&lt;/code&gt;를 사용해야하는 상황은 다음과 같습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;인증&lt;/li&gt;
+&lt;li&gt;로깅/검사&lt;/li&gt;
+&lt;li&gt;이미지/데이터 전처리&lt;/li&gt;
+&lt;li&gt;이외에도 Spring MVC 내부에서 분리하고자 하는 기능들
+즉, &lt;code&gt;Filter&lt;/code&gt;는 &lt;code&gt;Spring MVC&lt;/code&gt; 외부에서 &lt;code&gt;Request&lt;/code&gt;를 조작할 수 있다는 점이 유용한 케이스에 대해 효과적입니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;예시&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;사용자의 locale에 따른 번역을 제공하는 경우&lt;/li&gt;
+&lt;li&gt;권한에 따라 액세스를 허용하거나 거부해야하는 경우&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;interceptor를-사용해야하는-상황&#34; &gt;&lt;code&gt;Interceptor&lt;/code&gt;를 사용해야하는 상황
+&lt;span&gt;
+    &lt;a href=&#34;#interceptor%eb%a5%bc-%ec%82%ac%ec%9a%a9%ed%95%b4%ec%95%bc%ed%95%98%eb%8a%94-%ec%83%81%ed%99%a9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;반면 &lt;code&gt;Interceptor&lt;/code&gt;를 사용하는게 나은 상황은 다음과 같습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;횡단 관심사 문제(애플리케이션 로깅) 처리&lt;/li&gt;
+&lt;li&gt;세부적인 권한 검사&lt;/li&gt;
+&lt;li&gt;Spring Context/Model 조작&lt;/li&gt;
+&lt;li&gt;이외에도 &lt;code&gt;Handler&lt;/code&gt;, &lt;code&gt;ModelAndView&lt;/code&gt; 에 대해 접근해야하는 경우
+즉, &lt;code&gt;Interceptor&lt;/code&gt;는 &lt;code&gt;Handler(Controller)&lt;/code&gt;, &lt;code&gt;ModelAndView&lt;/code&gt;에 접근할 수 있다는 점이 유용한 케이스에 대해 효과적입니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;예시-1&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;사용자의 권한에 따라 다른 메뉴를 노출해야 하는 경우&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://jakarta.ee/specifications/servlet/4.0/apidocs/javax/servlet/filter&#34;&gt;Filter (Jakarta Servlet API documentation)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/HandlerInterceptor.html&#34;&gt;HandlerInterceptor (Spring Framework 6.1.6 API)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://stackoverflow.com/questions/31082981/spring-boot-adding-http-request-interceptors&#34;&gt;java - Spring Boot Adding Http Request Interceptors - Stack Overflow&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/spring-mvc-handlerinterceptor-vs-filter#key-differences-and-use-cases&#34;&gt;HandlerInterceptors vs. Filters in Spring MVC | Baeldung&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/spring-mvc-servlet-filter-vs-handler-interceptor/&#34;&gt;Spring MVC - Servlet Filter vs Handler Interceptor - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,2404 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[podoR] 2. 프로젝트 첫 주차에 알게된 점들 (w. SpEL, Hydration Mismatch, 이벤트 재타게팅) - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="프로젝트 개발을 진행하는 첫 한 주동안, 새롭게 배운 점들을 공유하고자 한다.
+Spring 관련application.yml의 server.servlet.contextPath 에 특정 URL을 설정하면, 해당 URL이 prefix처럼 동작 Spring Security의 기본 redirect uri 구조는 ${URL}/login/oauth2/code/${플랫폼}임 Spring Security 6 이후로(정확히는 5.5인듯? CLIENT_SECRET_POST가 5.5부터 나옴) spring.security.oauth2.client.registration.${플랫폼}.client-authentication-method에 POST 대신 client_secret_post를 사용해야 함. Spring에서 static log(logger객체)를 통해 로그를 찍기 위해서는, 이를 사용할 컨트롤러에 @log4j, @Slf4j와 같은 lombok의 애너테이션을 달아주면 log 객체를 사용할 수 있음 SpEL(Spring Expression Language)// 1. XML based &lt;bean id=&#34;numberGuess&#34; class=&#34;org.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.538b1869ceb05ae0d55cd41ef8e22ebc151bdc0e0d45b056d5f786d594660177.css" integrity="sha256-U4sYac6wWuDVXNQe&#43;OIuvBUb3A4NRbBW1feG1ZRmAXc=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[podoR] 2. 프로젝트 첫 주차에 알게된 점들 (w. SpEL, Hydration Mismatch, 이벤트 재타게팅)" />
+<meta property="og:description" content="프로젝트 개발을 진행하는 첫 한 주동안, 새롭게 배운 점들을 공유하고자 한다.
+Spring 관련application.yml의 server.servlet.contextPath 에 특정 URL을 설정하면, 해당 URL이 prefix처럼 동작 Spring Security의 기본 redirect uri 구조는 ${URL}/login/oauth2/code/${플랫폼}임 Spring Security 6 이후로(정확히는 5.5인듯? CLIENT_SECRET_POST가 5.5부터 나옴) spring.security.oauth2.client.registration.${플랫폼}.client-authentication-method에 POST 대신 client_secret_post를 사용해야 함. Spring에서 static log(logger객체)를 통해 로그를 찍기 위해서는, 이를 사용할 컨트롤러에 @log4j, @Slf4j와 같은 lombok의 애너테이션을 달아주면 log 객체를 사용할 수 있음 SpEL(Spring Expression Language)// 1. XML based &lt;bean id=&#34;numberGuess&#34; class=&#34;org." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/toy-project/podor/02-knowledge-in-first-week/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2026-06-08T08:04:15+09:00" />
+<meta property="article:modified_time" content="2026-06-08T08:04:15+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[podoR] 2. 프로젝트 첫 주차에 알게된 점들 (w. SpEL, Hydration Mismatch, 이벤트 재타게팅)"/>
+<meta name="twitter:description" content="프로젝트 개발을 진행하는 첫 한 주동안, 새롭게 배운 점들을 공유하고자 한다.
+Spring 관련application.yml의 server.servlet.contextPath 에 특정 URL을 설정하면, 해당 URL이 prefix처럼 동작 Spring Security의 기본 redirect uri 구조는 ${URL}/login/oauth2/code/${플랫폼}임 Spring Security 6 이후로(정확히는 5.5인듯? CLIENT_SECRET_POST가 5.5부터 나옴) spring.security.oauth2.client.registration.${플랫폼}.client-authentication-method에 POST 대신 client_secret_post를 사용해야 함. Spring에서 static log(logger객체)를 통해 로그를 찍기 위해서는, 이를 사용할 컨트롤러에 @log4j, @Slf4j와 같은 lombok의 애너테이션을 달아주면 log 객체를 사용할 수 있음 SpEL(Spring Expression Language)// 1. XML based &lt;bean id=&#34;numberGuess&#34; class=&#34;org."/>
+
+
+
+
+
+
+
+
+
+
+
+<link rel="canonical" href="https://cloudsoswift.github.io/post/develop/toy-project/podor/02-knowledge-in-first-week/">
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="page-wrapper">
+        <div class="container">
+            <header class="common-header">
+                
+                    <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+
+                
+            </header>
+            <main id="main" tabindex="-1">
+                
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[podoR] 2. 프로젝트 첫 주차에 알게된 점들 (w. SpEL, Hydration Mismatch, 이벤트 재타게팅)</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#spring-관련">Spring 관련</a>
+      <ul>
+        <li><a href="#spelspring-expression-language">SpEL(Spring Expression Language)</a></li>
+        <li><a href="#springsecurity--oauth2-관련">SpringSecurity / OAuth2 관련</a></li>
+      </ul>
+    </li>
+    <li><a href="#fe-관련">FE 관련</a>
+      <ul>
+        <li><a href="#next-관련">Next 관련</a></li>
+        <li><a href="#js--html-관련">JS / HTML 관련</a></li>
+        <li><a href="#mocking-관련">Mocking 관련</a></li>
+      </ul>
+    </li>
+    <li><a href="#db-관련">DB 관련</a>
+      <ul>
+        <li><a href="#postgresql">PostgreSQL</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <p>프로젝트 개발을 진행하는 첫 한 주동안, 새롭게 배운 점들을 공유하고자 한다.</p>
+<h2 id="spring-관련" >Spring 관련
+<span>
+    <a href="#spring-%ea%b4%80%eb%a0%a8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>application.yml의 <code>server.servlet.contextPath</code> 에 특정 URL을 설정하면, 해당 URL이 prefix처럼 동작</li>
+<li>Spring Security의 기본 redirect uri 구조는 <code>${URL}/login/oauth2/code/${플랫폼}</code>임</li>
+<li>Spring Security 6 이후로(정확히는 5.5인듯? CLIENT_SECRET_POST가 5.5부터 나옴) <code>spring.security.oauth2.client.registration.${플랫폼}.client-authentication-method</code>에 <code>POST</code> 대신 <code>client_secret_post</code>를 사용해야 함.</li>
+<li>Spring에서 static <code>log</code>(logger객체)를 통해 로그를 찍기 위해서는, 이를 사용할 컨트롤러에 <code>@log4j</code>, <code>@Slf4j</code>와 같은 lombok의 애너테이션을 달아주면 <code>log</code> 객체를 사용할 수 있음</li>
+</ul>
+<h3 id="spelspring-expression-language" >SpEL(Spring Expression Language)
+<span>
+    <a href="#spelspring-expression-language">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// 1. XML based
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#f92672">&lt;</span>bean id<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;numberGuess&#34;</span> class<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;org.spring.samples.NumberGuess&#34;</span><span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;</span>property name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;randomNumber&#34;</span> value<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;#{ T(java.lang.Math).random() * 100.0 }&#34;</span><span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;!--</span> other properties <span style="color:#f92672">--&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/</span>bean<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 2. Annotation based
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">FieldValueTestBean</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">@Value</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;#{ systemProperties[&#39;user.region&#39;] }&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">private</span> String defaultLocale<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">setDefaultLocale</span><span style="color:#f92672">(</span>String defaultLocale<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">defaultLocale</span> <span style="color:#f92672">=</span> defaultLocale<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">public</span> String <span style="color:#a6e22e">getDefaultLocale</span><span style="color:#f92672">()</span> 
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">defaultLocale</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><ul>
+<li><a href="https://docs.spring.io/spring-framework/docs/3.0.x/reference/expressions.html">6. Spring Expression Language (SpEL)</a></li>
+<li>런타임 시 <code>객체 그래프(object graph)</code>를 쿼리하고 조작할 수 있는 표현식 언어</li>
+<li><code>기술 중립적인(agnostic) API</code>를 기반으로 하여, OGNL, MVEL, JBoss EL 등 다른 표현식 언어 구현체들과 <code>통합(integrate)</code>할 수 있음</li>
+<li><code>XML</code> 및 <code>애너테이션</code> 모두에서 사용 가능함</li>
+</ul>
+<h3 id="springsecurity--oauth2-관련" >SpringSecurity / OAuth2 관련
+<span>
+    <a href="#springsecurity--oauth2-%ea%b4%80%eb%a0%a8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><code>OAuth2User</code> : OAuth2 로그인 후 인증된 사용자의 정보를 담는 인터페이스로, <code>Map&lt;String, Object&gt;</code> 형태의 <code>Attribute</code>로 사용자 정보를, <code>String</code> 형태의 <code>Name</code>으로 식별자를 가짐(권한 목록인 <code>getAuthorities</code>도 있음)</li>
+<li><code>@EnableMethodSecurity</code>(구 <code>@EnableGlobalMethodSecurity</code>): <code>메서드 수준</code>에서의 권한 모델링
+<ul>
+<li>만약, 특정 도메인에 관한 모든 작업(ex. <code>/{도메인}/{자원ID}</code>)이 권한이 필요하다면, <code>SecurityFilterChain</code>에서 <code>authorizeHttpRequests(... authorize .requestMatchers(&quot;/endpoint&quot;).hasAuthority(&quot;USER&quot;))</code> 와 같은 형태로 <code>요청 기반</code>의 권한 모델링 하면 됨</li>
+</ul>
+</li>
+</ul>
+<h2 id="fe-관련" >FE 관련
+<span>
+    <a href="#fe-%ea%b4%80%eb%a0%a8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="next-관련" >Next 관련
+<span>
+    <a href="#next-%ea%b4%80%eb%a0%a8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><strong><code>client components</code></strong> vs <strong><code>server components</code></strong>
+<ul>
+<li><code>client components</code>를 사용해야 할 때
+<ul>
+<li><code>state</code> 또는 <code>이벤트 핸들러</code>(ex. <code>onClick</code>, <code>onChange</code>)가 필요할 때</li>
+<li><code>생애주기 로직</code>(ex. <code>useEffect</code>)을 사용해야 할 때</li>
+<li><code>브라우저단-전용 API</code>(ex. <code>localStorage</code>, <code>window</code>, &hellip;)가 필요할 때</li>
+<li><code>Custom Hooks</code>가 필요할 때</li>
+</ul>
+</li>
+<li><code>server components</code>를 사용해야 할 때
+<ul>
+<li><em>데이터 소스와 가까이 위치한</em> <code>DB</code> 또는 <code>API</code>로부터 데이터를 <code>fetch</code> 해야할 때</li>
+<li><code>API 키</code>, <code>토큰</code> 등 <strong><code>비밀 정보</code></strong> 를 <em>client에 노출하지 않고</em> 사용해야 할 때</li>
+<li>브라우저로 전송되는 <strong>Javascript 양을 줄여야 할 때</strong> (즉, 미리 데이터를 HTML에 박아놔서 그걸 렌더링하는 스크립트를 줄여야 할 때)</li>
+<li><code>FCP(최초 콘텐츠풀 페인트)</code>를 개선하고, 콘텐츠를 클라이언트에 <code>점진적으로 전송(stream)</code>해야 할 때
+<ul>
+<li><code>FCP</code>: 브라우저가 <code>DOM 콘텐츠</code>의 <strong>가장 첫 조각(비트)를 렌더링</strong>하여, 사용자에게 &lsquo;페이지가 실제로 로드되고 있음&rsquo;을 인식시키는데 <strong>걸리는 시간</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>서버 측
+<ul>
+<li><code>server component</code>는 <code>RSC Payload(React Server Component Payload)</code>라는 특수한 데이터 형식으로 렌더링
+<ul>
+<li><code>RSC Payload</code>: 렌더링된 <code>Server Component</code> 트리를 압축된 Binary 형식으로 표현한 것으로, 클라이언트 측 React에서 브라우저 DOM 업데이트 하는데 사용
+<ul>
+<li><code>server component</code> 렌더링 결과</li>
+<li><code>client component</code>가 <em>렌더링 되어야 할 위치</em> <code>자리표시자(Placeholder)</code> 및 <code>해당 Javascript 파일에 대한 참조</code></li>
+<li><code>server component</code> -&gt; <code>client component</code> 측으로 전달된 모든 <code>props</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>클라이언트 컴포넌트</code>와 <code>RSC Payload</code>는 HTML을 사전-렌더링 하는데 사용</li>
+</ul>
+</li>
+<li>클라이언트 측
+<ul>
+<li><code>HTML</code>을 사용하여 해당 라우트의 <code>비-상호작용 프리뷰</code>를 즉시 표시</li>
+<li><code>RSC Payload</code>를 사용해 <code>Client</code> 및 <code>Server component</code> 트리를 동기화</li>
+<li><code>Javascript</code>를 사용해 <code>Client Component</code>를 Hydrate하고, 상호작용 가능하도록 만듦</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong><code>hydration 불일치</code></strong>
+<ul>
+<li>Zustand persist와 같이, <em><code>브라우저 Storage</code>에서 데이터를 불러와</em> 이를 바탕으로 화면을 렌더링하는 경우
+<ol>
+<li>서버에서 렌더링하여 보낸 HTML 화면</li>
+<li>클라이언트에서 HTML을 받아와 React 코드 실행해 렌더링 (<code>Hydration</code>)</li>
+</ol>
+<ul>
+<li>위 두가지 화면이 불일치하는, <strong><code>Hydration Mismatch (하이드레이션 에러)</code></strong> 문제가 발생하게 됨</li>
+</ul>
+</li>
+<li>이를 막기 위해, <code>마운트 가드(Mount Guard)</code>라는 패턴을 사용
+<ul>
+<li><em>브라우저에 화면이 완전히 붙을 때(Mount)까지는</em> 서버와 똑같이 &lsquo;<strong>기본 상태</strong>(<code>빈 화면</code>이나 <code>스켈레톤 UI</code>)&lsquo;를 보여주고, 브라우저 로드가 끝난 직후에 스토리지를 읽은 진짜 상태를 보여주는 방식</li>
+<li>마운트 가드를 페이지 전체에 적용할 경우, SEO가 불가능하므로, <em>하이드레이션이 이뤄지는</em> <code>부분 컴포넌트</code>에 대해서만 마운트 가드를 씌움</li>
+<li>또한, 인가, 권한 등이 필요한 페이지(ex. 마이 페이지, 결제 내역 등)의 경우 애초에 <em>SEO가 필요 없으므로</em> <code>마운트 가드</code>를 <code>페이지 전체</code>에 씌워도 상관 없음</li>
+</ul>
+</li>
+<li>만약, 서버 사이드에서, <em>클라이언트 측 데이터를 바탕으로</em> Hydration된 HTML을 만들어야 한다면 요청 헤더(및 쿠키)를 통해 필요한 데이터를 전송하고, 그를 바탕으로 렌더링하게 해야 함</li>
+</ul>
+</li>
+<li><strong><code>런타임</code></strong> 에 <code>환경변수 주입</code>하기
+<ul>
+<li>빌드 타임에 환경변수를 주입한다면?
+<ul>
+<li>환경변수 변동 생길경우, 환경별(Dev, Prod, &hellip;)로 빌드 매번 다시 수행</li>
+</ul>
+</li>
+<li><code>Client-side</code> / <code>Server-side</code>에 따라 환경 변수 구분 필요
+<ul>
+<li>Server-side에서 필요한 민감정보는 Client 측에 노출되지 않아야 하므로, <code>Client-side</code> / <code>Server-side</code>에서 필요한 환경변수를 구분해서 저장하는것이 필요</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="js--html-관련" >JS / HTML 관련
+<span>
+    <a href="#js--html-%ea%b4%80%eb%a0%a8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><strong><code>elem.setPointerCapture(pointerId)</code></strong>
+<ul>
+<li><code>pointerId</code>를 갖는 이벤트를 <code>elem</code>에 바인딩
+<ul>
+<li><code>pointerId</code>: <a href="https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent"><code>PointerEvent</code></a>이벤트를 발생시킨 포인터에 할당된 식별자로, 포인팅 장치에 대한 고유 식별자를 뜻함.</li>
+</ul>
+</li>
+<li>이렇게 하면, 동일한 <code>pointerId</code>를 갖는 모든 포인터 이벤트는, 실제 발생 위치와 상관없이 대상으로 <code>elem</code>을 가짐(즉, <code>elem</code>에서 일어난 것처럼 처리)</li>
+<li>주로 요소에 대한 드래그를 놓치지 않기 위해 사용</li>
+</ul>
+</li>
+<li><strong><code>이벤트 재타게팅</code></strong>
+<ul>
+<li><code>Javascript</code>에는 두 가지 종류의 <code>이벤트 재타게팅</code>이 있음</li>
+</ul>
+<ol>
+<li><code>**마우스 이벤트**의 타겟 설정 규칙</code>으로 인한 <code>재타겟팅</code>
+<ul>
+<li>브라우저가 클릭,더블 클릭과 같은 이벤트를 <strong>온전히 인식</strong>하려면, 마우스를 <strong>누를 때</strong>(<code>pointerdown</code>)와 <strong>뗄 때</strong>(<code>pointerup</code>)의 <strong><code>target</code>이 같아야 함</strong>.
+<ul>
+<li>만약 캡처링 등의 문제로 둘의 target이 달라질 경우, 브라우저는 &ldquo;두 요소의 가장 가까운 공통 조상에게 이벤트를 전달한다&quot;라는 규칙을 따름</li>
+</ul>
+<pre tabindex="0"><code>// 1. W3C의 Pointer Events에 대한 Working Draft
+Each implementation will determine the appropriate hysteresis tolerance, but in general SHOULD fire click and dblclick events when the event target of the associated mousedown and mouseup events is the same element with no mouseout or mouseleave events intervening, and SHOULD fire click and dblclick events on **the nearest common inclusive ancestor** when the associated mousedown and mouseup event targets are different.
+(각 구현체는 적절한 히스테리시스 허용 오차(흔들림 등의 이유로 발생한, 마우스를 누르고 떼는 위치의 차이)를 결정하지만, 일반적으로 `mousedown` 및 `mouseup` 이벤트의 대상이, `mouseout` 또는 `mouseleave` 이벤트가 개입되지 않은 상태에서, 그 둘이 동일 요소일 경우 `click` 및 `dblclick` 이벤트를 발생시켜야 한다.
+또한, `mousedown` 및 `mouseup` 이벤트의 대상이 서로 다를 경우 **가장 가까운 공통 상위 조상 요소**에서 `click` 및 `dblclick` 이벤트를 발생시켜야 한다.)
+출처: [Pointer Events](https://www.w3.org/TR/pointerevents/#mouse-event-order)
+</code></pre><pre tabindex="0"><code>// 2. whatwg의 DOM 스펙
+To retarget an object A against an object B, repeat these steps until they return an object:
+
+If one of the following is true
+
+A is not a node (A가 노드가 아니거나)
+A’s root is not a shadow root (A의 루트가 Shadow root가 아니거나)
+B is a node and A’s root is a shadow-including inclusive ancestor of B (B가 노드이고, A의 루트가 B의 shadow를 포함하는 포괄적인 조상인 경우)
+then return A. (A를 반환한다)
+
+Set A to A’s root’s host. (A를 A의 루트의 호스트로 설정한다)
+[DOM Standard](https://dom.spec.whatwg.org/#retarget)
+</code></pre></li>
+</ul>
+</li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components"><code>Web Components</code></a>에서의 <code>이벤트 재타게팅</code>
+<ul>
+<li><code>Web Components</code>: HTML상에서 <strong>재사용가능한</strong> <code>커스텀 UI</code>를 생성 및 활용할 수 있도록 돕는 기술의 집합
+<ul>
+<li><code>Custom Element</code>: 사용자 정의 요소 및 그들의 동작을 정의할 수 있게 해주는 Javascript API 모음</li>
+<li><code>Shadow DOM</code>: 요소에 캡슐화된 <code>Shadow DOM 트리</code>를 연결 및 제어하기 위한 Javascript API 모음</li>
+<li><code>HTML Templates</code>: <code>&lt;template&gt;</code> 및 <code>&lt;slot&gt;</code> 요소를 통해 페이지에 표시되지 않은 마크업 템플릿을 작성할 수 있음</li>
+</ul>
+</li>
+<li>그 중, <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM"><code>Shadow DOM</code></a>이 이 <code>이벤트 재타게팅</code>과 관련 있음
+<ul>
+<li><code>커스텀 엘리먼트</code>의 중요 특징 중 하나인 <strong><code>캡슐화</code></strong> 를 지키기 위해, 페이지 내 코드가 <code>커스텀 엘리먼트</code>의 내부 구현을 수정해 손상시키지 않도록 해야 함.</li>
+<li>이때, <code>Shadow DOM</code>을 사용하면, 요소를 <em>DOM 트리에 연결하되</em>, 트리의 내부구조는 페이지 내 Javascript 및 CSS 코드로부터 숨길 수 있음.
+<ul>
+<li><img src="shadow-dom-tree.png" alt=""></li>
+<li>즉, DOM 트리에는 <code>shadow host</code>만 드러나있고, <code>shadow host</code>를 <code>root</code>로 하는 <code>Shadow DOM 트리</code>는 숨겨져 있는 형태임. (추후 렌더링시에는 합쳐짐)</li>
+</ul>
+</li>
+<li>하지만 이렇게 해도, <code>Shadow DOM 트리</code> 내부 요소에서 발생한 이벤트가 <code>버블링</code> 될 경우, <code>Shadow DOM 트리</code> 외부 요소가 이들의 존재를 알 수 있음.
+<ul>
+<li>따라서, 이를 막고자 <code>Shadow DOM 트리</code> 내부에서 발생한 이벤트가 버블링되어 상위로 전달될 때, <code>Shadow DOM Boundary</code>를 넘으면 <code>Event.target</code>의 값이 리스너의 스코프에 맞춰 변경됨.
+<ul>
+<li>즉, 상위 요소의 리스너의 스코프에서는 <code>Shadow DOM 트리</code> 내부 요소를 알 수 없으므로, <code>Shadow DOM 트리</code>에서 유일하게 외부에 노출된 요소인 <code>shadow host</code>로 target이 변경됨.</li>
+</ul>
+</li>
+<li>이를 <code>이벤트 재타게팅</code>이라고 함.</li>
+<li>이러한 <code>이벤트 재타게팅</code>의 대표적인 예시가 <code>&lt;video&gt;</code> 요소임
+<ul>
+<li>DOM에서는 <code>&lt;video&gt;</code> 요소만 보이지만, <em>실제로 렌더링 될때는</em> 비디오 재생에 필요한 <strong>일련의 버튼 및 제어용 UI</strong>들이 포함되어 있음.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h3 id="mocking-관련" >Mocking 관련
+<span>
+    <a href="#mocking-%ea%b4%80%eb%a0%a8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li>Service Worker파일(mswServiceWorker.js)의 경우, 브라우저단에서 직접 접근해 등록하는 파일이므로 정적 서빙이 필요함
+<ul>
+<li>그래서 <code>public/</code> 폴더에 넣음</li>
+</ul>
+</li>
+<li><code>worker</code>와 <code>server</code>
+<ul>
+<li><code>worker</code>(<code>setupWorker</code>): <code>클라이언트-워커 통신 채널</code>을 준비하여, 브라우저단에서의 API Mocking을 가능하도록 함</li>
+<li><code>server</code>(<code>setupServer</code>): 서비스 워커가 실행될 수 없는 <code>Node.js</code> 환경에서의 동일한 요청 핸들러를 적용하기 위한 브릿지
+<ul>
+<li><code>http</code>와 같은 표준 요청 모듈을 확장해, 외부로 전송되는 요청에 반응(react)</li>
+<li><code>Node.js</code>환경 기반이므로 <code>location</code>, <code>localStorage</code>와 같은 브라우저 전용 API는 사용할 수 없음</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="db-관련" >DB 관련
+<span>
+    <a href="#db-%ea%b4%80%eb%a0%a8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="postgresql" >PostgreSQL
+<span>
+    <a href="#postgresql">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><ul>
+<li><a href="https://develop-tracking.tistory.com/entry/PostgreSQL-%ED%8C%8C%ED%8B%B0%EC%85%94%EB%8B%9D-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C-%EB%B3%B5%ED%95%A9-PK-bigserial%EC%9D%98-%ED%95%A8%EC%A0%95-1100%EA%B1%B4%EC%9D%98-%EC%A4%91%EB%B3%B5-%ED%82%A4-%EC%9E%A5%EC%95%A0-%EB%B6%84%EC%84%9D%EA%B3%BC-%EB%B3%B5%EA%B5%AC">PostgreSQL 파티셔닝 환경에서 복합 PK + bigserial의 함정: 1,100건의 중복 키 장애 분석과 복구</a>
+<ul>
+<li>PK(A, B) (복합 키) != B가 유일하다
+<ul>
+<li>BigSerial과 조합시 중복 가능성 존재</li>
+<li>가령, (시간, BS)를 복합키로 잡았을 경우, BS 값이 파티셔닝, 캐시 동시 참조 등의 이유로 인해 중복될 수 있음</li>
+</ul>
+</li>
+<li>파티션 키는 PK의 일부일 필요가 없다</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/toy-project/podor/02-knowledge-in-first-week/"><time datetime="2026-06-08">2026-06-08 08:04 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/toy-project/podor/02-knowledge-in-first-week/">https://cloudsoswift.github.io/post/develop/toy-project/podor/02-knowledge-in-first-week/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/toyproject/">#ToyProject</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/spring/">#Spring</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/next.js/">#Next.js</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/event-retargeting/">#Event-Retargeting</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/toy-project/podor/01-project-summary-and-db-structure/">[podoR] 1. 프로젝트 개요 및 DB 설계 하기</a></li>
+                
+                <li><a href="/post/develop/javascript/bundler/webpack-and-babel-config/">[Webpack/Vite 파헤치기] 2. Create React App 내부의 의존성과 환경 설정  꺼내기</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/toy-project/podor/01-project-summary-and-db-structure/">[podoR] 1. 프로젝트 개요 및 DB 설계 하기</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+            </main>
+            
+                <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2026<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+            
+        </div>
+        <aside class="sidebar">
+    <div class="sidebar-widget">
+        <h2 class="sidebar-title">카테고리</h2>
+
+        
+        
+
+           
+              
+             
+
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+
+        
+        
+
+        <ul class="sidebar-categories">
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/algorithm/">algorithm</a>
+                        
+                        <span class="sidebar-category-count">12</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/algorithm/data-structure/">data-structure</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/develop/">develop</a>
+                        
+                        <span class="sidebar-category-count">42</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/cs/">cs</a>
+                                    
+                                    <span class="sidebar-category-count">3</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/database/">database</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/java/">java</a>
+                                    
+                                    <span class="sidebar-category-count">10</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/javascript/">javascript</a>
+                                    
+                                    <span class="sidebar-category-count">11</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/network/">network</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/nodejs/">nodejs</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/os/">OS</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/toy-project/">toy-project</a>
+                                    
+                                    <span class="sidebar-category-count">2</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/etc/">etc</a>
+                        
+                        <span class="sidebar-category-count">2</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/etc/etc/">etc</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/self-development/">self-development</a>
+                        
+                        <span class="sidebar-category-count">1</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/self-development/ril/">RIL</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+        </ul>
+    </div>
+</aside>
+
+    </div>
+</body>
+</html>

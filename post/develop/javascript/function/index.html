@@ -1,0 +1,2339 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[Javascript] Function 알아보기 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="Javascript의 Function에 대해Javascript는 일급 함수(first class function)와 람다(lambda)를 지원하는 함수입니다.
+따라서, 함수를 다른 변수처럼 다룰 수 있고, 생성자 Function()를 통해 함수를 생성할 수 있습니다.
+Function의 prototype엔 빌트-인 메서드와 속성들이 존재하는데, 이에 대해 알아보고자 합니다.
+Function의 built-in methodapply(thisArg, argsArray)// thisArg를 넘긴 경우 const abc = { h: 30 } function hh(abc) { return this.h &#43; abc; }; console.log(hh.apply(abc, [30])); // 출력: 60 // thisArg를 넘기지 않은 경우 const numbers = [5, 6, 2, 3, 7]; const max = Math.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.538b1869ceb05ae0d55cd41ef8e22ebc151bdc0e0d45b056d5f786d594660177.css" integrity="sha256-U4sYac6wWuDVXNQe&#43;OIuvBUb3A4NRbBW1feG1ZRmAXc=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[Javascript] Function 알아보기" />
+<meta property="og:description" content="Javascript의 Function에 대해Javascript는 일급 함수(first class function)와 람다(lambda)를 지원하는 함수입니다.
+따라서, 함수를 다른 변수처럼 다룰 수 있고, 생성자 Function()를 통해 함수를 생성할 수 있습니다.
+Function의 prototype엔 빌트-인 메서드와 속성들이 존재하는데, 이에 대해 알아보고자 합니다.
+Function의 built-in methodapply(thisArg, argsArray)// thisArg를 넘긴 경우 const abc = { h: 30 } function hh(abc) { return this.h &#43; abc; }; console.log(hh.apply(abc, [30])); // 출력: 60 // thisArg를 넘기지 않은 경우 const numbers = [5, 6, 2, 3, 7]; const max = Math." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/javascript/function/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-05-09T21:34:59+09:00" />
+<meta property="article:modified_time" content="2024-05-09T21:34:59+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Javascript] Function 알아보기"/>
+<meta name="twitter:description" content="Javascript의 Function에 대해Javascript는 일급 함수(first class function)와 람다(lambda)를 지원하는 함수입니다.
+따라서, 함수를 다른 변수처럼 다룰 수 있고, 생성자 Function()를 통해 함수를 생성할 수 있습니다.
+Function의 prototype엔 빌트-인 메서드와 속성들이 존재하는데, 이에 대해 알아보고자 합니다.
+Function의 built-in methodapply(thisArg, argsArray)// thisArg를 넘긴 경우 const abc = { h: 30 } function hh(abc) { return this.h &#43; abc; }; console.log(hh.apply(abc, [30])); // 출력: 60 // thisArg를 넘기지 않은 경우 const numbers = [5, 6, 2, 3, 7]; const max = Math."/>
+
+
+
+
+
+
+
+
+
+
+
+<link rel="canonical" href="https://cloudsoswift.github.io/post/develop/javascript/function/">
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="page-wrapper">
+        <div class="container">
+            <header class="common-header">
+                
+                    <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+
+                
+            </header>
+            <main id="main" tabindex="-1">
+                
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[Javascript] Function 알아보기</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#javascript의-function에-대해">Javascript의 <code>Function</code>에 대해</a></li>
+    <li><a href="#function의-built-in-method"><code>Function</code>의 built-in method</a>
+      <ul>
+        <li><a href="#applythisarg-argsarray"><code>apply(thisArg, argsArray)</code></a></li>
+        <li><a href="#callthisarg-arg1-arg2-"><code>call(thisArg, arg1, arg2, ...)</code></a></li>
+        <li><a href="#apply와-call의-이점"><code>apply()</code>와 <code>call()</code>의 이점</a></li>
+        <li><a href="#apply와-call의-차이점"><code>apply()</code>와 <code>call()</code>의 차이점</a></li>
+        <li><a href="#bindthisarg-arg1--argn"><code>bind(thisArg, arg1, ..., argN)</code></a></li>
+        <li><a href="#function의-built-in-property"><code>Function</code>의 built-in property</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h2 id="javascript의-function에-대해" >Javascript의 <code>Function</code>에 대해
+<span>
+    <a href="#javascript%ec%9d%98-function%ec%97%90-%eb%8c%80%ed%95%b4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>Javascript는 <code>일급 함수(first class function)</code>와 <code>람다(lambda)</code>를 지원하는 함수입니다.<br>
+따라서, 함수를 다른 변수처럼 다룰 수 있고, 생성자 <code>Function()</code>를 통해 함수를 생성할 수 있습니다.<br>
+<code>Function</code>의 prototype엔 빌트-인 메서드와 속성들이 존재하는데, 이에 대해 알아보고자 합니다.</p>
+<h2 id="function의-built-in-method" ><code>Function</code>의 built-in method
+<span>
+    <a href="#function%ec%9d%98-built-in-method">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="applythisarg-argsarray" ><code>apply(thisArg, argsArray)</code>
+<span>
+    <a href="#applythisarg-argsarray">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// thisArg를 넘긴 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">abc</span> <span style="color:#f92672">=</span> { <span style="color:#a6e22e">h</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">30</span> }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">hh</span>(<span style="color:#a6e22e">abc</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">h</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">abc</span>;
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">hh</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#a6e22e">abc</span>, [<span style="color:#ae81ff">30</span>]));
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 출력: 60
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// thisArg를 넘기지 않은 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">numbers</span> <span style="color:#f92672">=</span> [<span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">7</span>];
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">max</span> <span style="color:#f92672">=</span> Math.<span style="color:#a6e22e">max</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">null</span>, <span style="color:#a6e22e">numbers</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">max</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Expected output: 7
+</span></span></span></code></pre></div><p>주어진 <code>this</code> 값과 인수(array-like 형태의 객체)를 사용해 함수를 호출하고, 호출 결과를 반환합니다.</p>
+<h4 id="매개변수" >매개변수
+<span>
+    <a href="#%eb%a7%a4%ea%b0%9c%eb%b3%80%ec%88%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>thisArg</code>: 함수를 호출하기 위한 <code>this</code> 값으로, 원시 값은 <code>Object</code> 로 변환되며 <code>null</code> 또는 <code>undefined</code>는 <code>strict mode</code>에서 전역 객체(<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis"><code>globalThis</code></a>)로 대체됩니다.</li>
+<li><code>argsArray</code>: 함수를 호출할 때 쓸 인수를 지정하는 <strong><code>array-like</code></strong> 객체입니다. 생략 가능합니다.
+<ul>
+<li>여기서 말하는 <code>array-like</code> 객체란, 1) <code>length</code> 속성을 갖고 있고, 2) <code>0</code>~<code>length-1</code> 범위의 정수 index property가 있는 객체를 말합니다.
+<ul>
+<li>예를 들어 <code>{'length': 2, '0': 'abc', '1': 'abcd'}</code>와 같은 객체도 <code>array-like</code> 하다고 할 수 있습니다.</li>
+</ul>
+</li>
+<li>이외에도 전달된 인수값을 함수 내부에서 접근 가능한 <code>array-like</code> 객체인 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/arguments"><code>arguments</code></a>도 사용 가능합니다.</li>
+</ul>
+</li>
+</ul>
+<h3 id="callthisarg-arg1-arg2-" ><code>call(thisArg, arg1, arg2, ...)</code>
+<span>
+    <a href="#callthisarg-arg1-arg2-">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Product</span>(<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">year</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">name</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">year</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">2024</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">Food</span>(<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">year</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">Product</span>.<span style="color:#a6e22e">call</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">year</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">type</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;음식&#34;</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Food</span>(<span style="color:#e6db74">&#39;김치&#39;</span>, <span style="color:#e6db74">&#39;2024&#39;</span>).<span style="color:#a6e22e">name</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 출력: &#34;김치&#34;
+</span></span></span></code></pre></div><p>주어진 <code>this</code> 값과 1개 이상의 인수들을 사용해 함수를 호출하고, 호출 결과를 반환합니다.</p>
+<h4 id="매개변수-1" >매개변수
+<span>
+    <a href="#%eb%a7%a4%ea%b0%9c%eb%b3%80%ec%88%98-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>thisArg</code>: 함수를 호출하기 위한 <code>this</code> 값으로, 원시 값은 <code>Object</code> 로 변환되며 <code>null</code> 또는 <code>undefined</code>는 <code>strict mode</code>에서 전역 객체로 대체됩니다.</li>
+<li><code>arg1, ..., argN</code>: 함수를 호출할 때 쓸 인수들입니다. 생략할 수 있습니다.</li>
+</ul>
+<h3 id="apply와-call의-이점" ><code>apply()</code>와 <code>call()</code>의 이점
+<span>
+    <a href="#apply%ec%99%80-call%ec%9d%98-%ec%9d%b4%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="메서드의-유틸리티-함수화" >메서드의 유틸리티 함수화
+<span>
+    <a href="#%eb%a9%94%ec%84%9c%eb%93%9c%ec%9d%98-%ec%9c%a0%ed%8b%b8%eb%a6%ac%ed%8b%b0-%ed%95%a8%ec%88%98%ed%99%94">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>함수 내부에서 <code>this</code>를 사용하는 경우, 해당 함수를 객체의 <code>property</code>로 두고 사용해야 합니다.<br>
+하지만, <code>apply()</code>나 <code>call()</code>을 사용하게 되면, 해당 함수를 <code>property</code>로 연결하지 않고 <code>thisArg</code>로 객체를 넘겨도 정상 동작하게 됩니다. 이는 객체의 <code>prototype</code>을 변경하지 않아도 됨을 의미합니다.<br>
+즉, 특정 객체의 메서드를 유틸리티 함수처럼 사용할 수 있게 됩니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// array-like한 객체에서 map을 사용하는 방법
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">callback</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">a</span>) =&gt; <span style="color:#a6e22e">a</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 기존의 map
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>[<span style="color:#ae81ff">1</span>].<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">callback</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// [2]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// array-like 객체에 map 사용
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>Array.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">map</span>.<span style="color:#a6e22e">call</span>({<span style="color:#a6e22e">length</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">1</span>, <span style="color:#e6db74">&#39;0&#39;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;abc&#39;</span>}, <span style="color:#a6e22e">callback</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// [abc1]
+</span></span></span></code></pre></div><h4 id="함수-short-cut-만들기" >함수 short-cut 만들기
+<span>
+    <a href="#%ed%95%a8%ec%88%98-short-cut-%eb%a7%8c%eb%93%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>특정 객체나 <code>prototype</code>에 선언된 함수를 변수에 저장해두고 사용하고 싶을 수 있습니다. 따라서 <code>해당함수.call</code>을 변수에 저장해 일반 함수로 호출하려고 할 것입니다.<br>
+그러나 <code>call</code>의 경우 <code>this</code>값(호출해야 하는 함수)도 필요하기 때문에 호출할 수 없습니다. 이러한 경우 <code>bind()</code>를 통해 함수를 <code>call()</code>의 <code>this</code>값에 바인딩 할 수 있습니다.<br>
+아래에서는 <code>Function.prototype.call</code>에 <code>Array.prototype.slice</code>를 바인딩해, 추가적인 call 호출을 줄였습니다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">let</span> <span style="color:#a6e22e">slice</span> <span style="color:#f92672">=</span> Array.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">slice</span>.<span style="color:#a6e22e">call</span>;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">slice</span>([<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>], <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Uncaught TypeError: slice is not a function
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">slice</span> <span style="color:#f92672">=</span> Function.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">call</span>.<span style="color:#a6e22e">bind</span>(Array.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">slice</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">slice</span>([<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">3</span>], <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// [2]
+</span></span></span></code></pre></div><h3 id="apply와-call의-차이점" ><code>apply()</code>와 <code>call()</code>의 차이점
+<span>
+    <a href="#apply%ec%99%80-call%ec%9d%98-%ec%b0%a8%ec%9d%b4%ec%a0%90">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>apply()</code>와 <code>call()</code>은 거의 동일하지만, <code>call</code>은 함수에 넘길 인수를 개별적인 list로 넘기지만, <code>apply</code>는 인수들을 하나의 객체(주로 <code>Array</code>)에 담아 전달합니다.</p>
+<h4 id="예시" >예시
+<span>
+    <a href="#%ec%98%88%ec%8b%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>call</code>: <code>func.call(this, &quot;eat&quot;, &quot;bananas&quot;)</code></li>
+<li><code>apply</code>:  <code>func.apply(this, [&quot;eat&quot;, &quot;bananas&quot;])</code></li>
+</ul>
+<h3 id="bindthisarg-arg1--argn" ><code>bind(thisArg, arg1, ..., argN)</code>
+<span>
+    <a href="#bindthisarg-arg1--argn">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">obj</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">x</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">40</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">getX</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">y</span>, <span style="color:#a6e22e">z</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">x</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">y</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">z</span>;
+</span></span><span style="display:flex;"><span>  },
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">unboundGetX</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">obj</span>.<span style="color:#a6e22e">getX</span>;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">unboundGetX</span>()); <span style="color:#75715e">// 이 함수는 전역 스코프 상에서 호출됩니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 출력: NaN
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">boundGetX</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">unboundGetX</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">obj</span>, <span style="color:#ae81ff">1</span>); <span style="color:#75715e">// getX 함수에 obj를 this로 바인딩하고, 첫 번째 인자(y)를 1로 대체합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">boundGetX</span>(<span style="color:#ae81ff">10</span>));
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 출력: 51
+</span></span></span></code></pre></div><p><code>Function</code> 인스턴스에 주어진 <code>thisArg</code>로 <code>this</code> 키워드를 세팅하고, 주어진 <code>arg</code>들을 인수로 고정한 새로운 <code>function</code>을 반환합니다.</p>
+<h4 id="매개변수-2" >매개변수
+<span>
+    <a href="#%eb%a7%a4%ea%b0%9c%eb%b3%80%ec%88%98-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>thisArg</code>: 바인딩된 함수가 호출될 때 지정될 <code>this</code> 값으로, 원시 값은 <code>Object</code> 로 변환되며 <code>null</code> 또는 <code>undefined</code>는 <code>strict mode</code>에서 전역 객체로 대체됩니다. <code>new</code> 연산자를 사용해 바인딩된 함수를 생성할 경우 이 값은 무시됩니다.</li>
+<li><code>arg1, ..., argN</code>: 바인딩 된 함수에서 쓸 인수들입니다. 생략할 수 있습니다.</li>
+</ul>
+<h4 id="설명" >설명
+<span>
+    <a href="#%ec%84%a4%eb%aa%85">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>bind()</code> 함수는 새로운 바인딩 된 함수를 만들어내게 됩니다.<br>
+바인딩 된 함수를 호출하게 되면, 래핑된 <code>타겟 함수(target function)</code>가 호출됩니다.<br>
+<code>bind()</code>의 인자로 전달된 <code>thisArg</code>와 <code>arg</code>들을 내부 상태로 저장합니다.<br>
+간단하게 설명하면, <code>const boundFn = fn.bind(thisArg, arg1, arg2)</code>는 <code>const boundFn = (...restArgs) =&gt; fn.call(thisArg, arg1, arg2, ...restArgs)</code>와 호출시 동일한 효과를 갖습니다. (<code>boundFn</code> 생성시에는 다릅니다.)</p>
+<h5 id="바인드-연결" >바인드 연결
+<span>
+    <a href="#%eb%b0%94%ec%9d%b8%eb%93%9c-%ec%97%b0%ea%b2%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">boundFn</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">fn</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#a6e22e">thisArg</span>, <span style="color:#a6e22e">arg1</span>, <span style="color:#a6e22e">arg2</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">boundFn2</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">boundFn</span>.<span style="color:#a6e22e">bind</span>({<span style="color:#a6e22e">abc</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;abc&#34;</span>}, <span style="color:#a6e22e">arg3</span>); <span style="color:#75715e">// {abc: &#34;abc&#34;}는 무시됨
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">boundFn2</span>(<span style="color:#ae81ff">10</span>); 
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// boundFn2가 호출되면, boundFn가 호출되고, 이는 다시 fn을 호출합니다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// fn이 최종적으로 받게되는 인수는 순서대로 &#34;boundFn에 바인딩 된 인자&#34;, &#34;boundFn2에 바인딩 된 인자&#34;, &#34;boundFn2가 받은 인자&#34;가 됩니다.
+</span></span></span></code></pre></div><p>이렇게 바인딩 된 함수는, <code>bind()</code>를 통해 또 다른 바인딩 된 함수를 만들어낼 수 있습니다.   이때, 새롭게 바인딩 된 <code>thisArg</code> 값은 무시됩니다. 바인딩 대상 함수가 이미 바운드 된 <code>this</code>가 존재하기 때문입니다.</p>
+<h5 id="new-키워드를-통한-생성" ><code>new</code> 키워드를 통한 생성
+<span>
+    <a href="#new-%ed%82%a4%ec%9b%8c%eb%93%9c%eb%a5%bc-%ed%86%b5%ed%95%9c-%ec%83%9d%ec%84%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Base</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">constructor</span>(...<span style="color:#a6e22e">args</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#66d9ef">new</span>.<span style="color:#a6e22e">target</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">Base</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">args</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">BoundBase</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Base</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">null</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">new</span> <span style="color:#a6e22e">BoundBase</span>(<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">4</span>); <span style="color:#75715e">// true, [1, 2, 3, 4]
+</span></span></span></code></pre></div><p>타겟 함수가 생성 가능한 경우, <code>new</code> 키워드를 통해 바인딩 된 함수를 만들어 낼 수 있습니다. 이렇게 하면 타겟 함수가 대신 생성된 것 처럼 동작합니다.<br>
+다만, 주어진 <code>arg</code> 들은 타겟 함수에 제공되지만, <code>thisArg</code> 값은 무시됩니다.</p>
+<ul>
+<li><code>Reflect.construct</code>의 매개변수에 <code>thisArg</code>가 없는 것에서 볼 수 있듯, 함수 생성시 자체적으로 <code>this</code> 값을 준비하기 때문입니다.</li>
+</ul>
+<p>바인딩 된 함수가 직접 생성될 경우, <code>new.target</code>이 타겟 함수가 됩니다.<br>
+또한, <code>instanceof</code>를 사용할 경우에도 타겟 함수로 취급됩니다.</p>
+<h5 id="상속-불가" >상속 불가
+<span>
+    <a href="#%ec%83%81%ec%86%8d-%eb%b6%88%ea%b0%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h5><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Derived</span> <span style="color:#66d9ef">extends</span> <span style="color:#66d9ef">class</span> {}.<span style="color:#a6e22e">bind</span>(<span style="color:#66d9ef">null</span>) {}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// TypeError: Class extends value does not have valid prototype property undefined
+</span></span></span></code></pre></div><p>바인딩 된 함수에는 <code>prototype</code> 속성이 없으며, 상속의 대상이 될 수 없습니다.</p>
+<h3 id="function의-built-in-property" ><code>Function</code>의 built-in property
+<span>
+    <a href="#function%ec%9d%98-built-in-property">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>Function</code>의 빌트-인 속성으로 함수에 전달된 인수를 반환하는 <code>arguments</code>, 이 함수를 호출한 함수를 반환하는 <code>caller</code>가 있지만, 모두 표준이 아니며 <code>deprecated</code> 되었습니다.</p>
+<h1 id="참고-문서" >참고 문서
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0-%eb%ac%b8%ec%84%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/apply">Function.prototype.apply() - JavaScript | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind">Function.prototype.bind() - JavaScript | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call">Function.prototype.call() - JavaScript | MDN (mozilla.org)</a></li>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/Function">Function() constructor - JavaScript | MDN (mozilla.org)</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/javascript/function/"><time datetime="2024-05-09">2024-05-09 21:34 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/javascript/function/">https://cloudsoswift.github.io/post/develop/javascript/function/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/function/">#Function</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/javascript/promise-async/">[Javascript] Javascript의 비동기 작업 알아보기 (w. Promise, async)</a></li>
+                
+                <li><a href="/post/develop/javascript/map-vs-object/">[Javascript] Map과 Object, 뭘 써야 할까?</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item ">
+            
+                <a href="/post/develop/javascript/event-bubbling-capturing/">[Javascript] 이벤트 전파 단계(버블링과 캡처링) 알아보기</a>
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/javascript/promise-async/">[Javascript] Javascript의 비동기 작업 알아보기 (w. Promise, async)</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+            </main>
+            
+                <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2026<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+            
+        </div>
+        <aside class="sidebar">
+    <div class="sidebar-widget">
+        <h2 class="sidebar-title">카테고리</h2>
+
+        
+        
+
+           
+              
+             
+
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+
+        
+        
+
+        <ul class="sidebar-categories">
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/algorithm/">algorithm</a>
+                        
+                        <span class="sidebar-category-count">12</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/algorithm/data-structure/">data-structure</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/develop/">develop</a>
+                        
+                        <span class="sidebar-category-count">42</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/cs/">cs</a>
+                                    
+                                    <span class="sidebar-category-count">3</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/database/">database</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/java/">java</a>
+                                    
+                                    <span class="sidebar-category-count">10</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/javascript/">javascript</a>
+                                    
+                                    <span class="sidebar-category-count">11</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/network/">network</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/nodejs/">nodejs</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/os/">OS</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/toy-project/">toy-project</a>
+                                    
+                                    <span class="sidebar-category-count">2</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/etc/">etc</a>
+                        
+                        <span class="sidebar-category-count">2</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/etc/etc/">etc</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/self-development/">self-development</a>
+                        
+                        <span class="sidebar-category-count">1</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/self-development/ril/">RIL</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+        </ul>
+    </div>
+</aside>
+
+    </div>
+</body>
+</html>

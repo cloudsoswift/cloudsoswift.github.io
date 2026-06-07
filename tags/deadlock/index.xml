@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Deadlock on 오늘도 개발을 한다.</title>
+    <link>https://cloudsoswift.github.io/tags/deadlock/</link>
+    <description>오늘도 개발을 한다. (Deadlock)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>ko-kr</language>
+    <lastBuildDate>Wed, 22 May 2024 14:54:22 +0900</lastBuildDate>
+    
+    <atom:link href="https://cloudsoswift.github.io/tags/deadlock/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>[OS] 교착상태(Deadlock) 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/os/deadlock/</link>
+      <pubDate>Wed, 22 May 2024 14:54:22 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/os/deadlock/</guid>
+      <description>&lt;h2 id=&#34;deadlock&#34; &gt;Deadlock
+&lt;span&gt;
+    &lt;a href=&#34;#deadlock&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;교착상태(Deadlock)&lt;/code&gt;이란, 둘 이상의 프로세스들이 서로의 작업 진행을 가로막는 상태를 말합니다.&lt;br&gt;
+주로 각 프로세스들이 자원을 보유하고 있는 상태에서, 서로의 자원을 획득하기 위해 무한정 기다리며 프로세스가 block되는 상황을 말합니다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;예시) 자원 R₁, R₂과 프로세스 P₁, P₂이 존재하는 상황&lt;br&gt;
+이렇게 된다면 P₁,은 R₂를 획득할 때 까지 작업을 진행하지 않고 무한정 대기하게 되고, P₂는 R₁을 획득할 때 까지 무한정 대기하게 됩니다.
+&lt;img src=&#34;deadlock-example.png&#34; alt=&#34;deadlock-example.png&#34;&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;시스템-모델&#34; &gt;시스템 모델
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%8b%9c%ec%8a%a4%ed%85%9c-%eb%aa%a8%eb%8d%b8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;OS에서 프로세스는 자원을 사용하기 위해 다음과 같은 규약을 거칩니다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;Request(요청)&lt;/code&gt;&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;요청이 즉시 허용되지 않으면, 자원을 사용할 수 있을 때 까지 &lt;strong&gt;대기&lt;/strong&gt;합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;Use(사용)&lt;/code&gt;&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;Release(방출)&lt;/code&gt;&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;자원&#34; &gt;자원
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%ec%9b%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;교착상태에서 &lt;code&gt;자원(Resource)&lt;/code&gt;은 다음과 같은 조건을 갖습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;한 번에 한 프로세스만 사용할 수 있습니다.&lt;/li&gt;
+&lt;li&gt;소프트웨어나 하드웨어일 수 있습니다.
+&lt;ul&gt;
+&lt;li&gt;예시) CPU 사이클, 메모리 공간,  프린터, 시스템 테이블, DB 엔트리 등..&lt;/li&gt;
+&lt;li&gt;위처럼 각 자원들은 &lt;code&gt;타입&lt;/code&gt;($R_i$)을 가지며,  각 타입의 자원은 다수의 동등한 인스턴스 $W_{i}$로 구성됩니다.
+&lt;ul&gt;
+&lt;li&gt;따라서 한 타입에 대한 요청은 해당 카테고리의 자원 중 어느 자원에서든 동일하게 충족될 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;요청 -&amp;gt; 할당 -&amp;gt; 사용 -&amp;gt; 방출 의 과정을 거칩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;선점-가능한-자원-preemptable-resources&#34; &gt;선점 가능한 자원 (Preemptable Resources)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%a0%ec%a0%90-%ea%b0%80%eb%8a%a5%ed%95%9c-%ec%9e%90%ec%9b%90-preemptable-resources&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;공유 가능한 자원(Sharable Resources)&lt;/code&gt;을 말하며, 프로세스로부터 부작용 없이 회수할 수 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;선점-불가능한-자원-nonpreemptable-resources&#34; &gt;선점 불가능한 자원 (Nonpreemptable Resources)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%a0%ec%a0%90-%eb%b6%88%ea%b0%80%eb%8a%a5%ed%95%9c-%ec%9e%90%ec%9b%90-nonpreemptable-resources&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;code&gt;공유 불가능한 자원(Non-Sharable Resources)&lt;/code&gt;을 말하며, 이를 회수할 경우 프로세스는 실패하게 됩니다.
+일반적으로 교착상태에서는 &lt;code&gt;선점 불가능한 자원&lt;/code&gt;이 포함되어 문제를 일으키게 됩니다.&lt;/p&gt;
+&lt;h2 id=&#34;deadlock-이-동작하기-위한-4가지-조건&#34; &gt;Deadlock 이 동작하기 위한 4가지 조건
+&lt;span&gt;
+    &lt;a href=&#34;#deadlock-%ec%9d%b4-%eb%8f%99%ec%9e%91%ed%95%98%ea%b8%b0-%ec%9c%84%ed%95%9c-4%ea%b0%80%ec%a7%80-%ec%a1%b0%ea%b1%b4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;교착상태가 발생하려면, 다음 &lt;strong&gt;4가지 필요조건&lt;/strong&gt;들이 &lt;strong&gt;동시&lt;/strong&gt;에 성립해야 합니다.
+만약 이 조건 중 하나라도 성립하지 않는다면, 데드락은 발생하지 않습니다.&lt;/p&gt;
+&lt;h3 id=&#34;mutual-exclusion상호-배제&#34; &gt;&lt;code&gt;Mutual Exclusion(상호 배제)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#mutual-exclusion%ec%83%81%ed%98%b8-%eb%b0%b0%ec%a0%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;하나의 자원은 &lt;strong&gt;오직 한 프로세스&lt;/strong&gt;만 사용할 수 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;hold-and-wait점유한-채-대기&#34; &gt;&lt;code&gt;Hold and Wait(점유한 채 대기)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#hold-and-wait%ec%a0%90%ec%9c%a0%ed%95%9c-%ec%b1%84-%eb%8c%80%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;프로세스는 &lt;em&gt;하나 이상의 자원을 보유한 채&lt;/em&gt;로 다른 프로세스가 보유하고 있는 자원을 획득하기 위해 &lt;strong&gt;기다립니다&lt;/strong&gt;.&lt;/p&gt;
+&lt;h3 id=&#34;no-preemption-of-resources선점-불가능한-자원&#34; &gt;&lt;code&gt;No Preemption of Resources(선점 불가능한 자원)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#no-preemption-of-resources%ec%84%a0%ec%a0%90-%eb%b6%88%ea%b0%80%eb%8a%a5%ed%95%9c-%ec%9e%90%ec%9b%90&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;자원은 &lt;em&gt;일시적&lt;/em&gt;으로 &lt;strong&gt;방출될 수 없습니다&lt;/strong&gt;.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;자원은 해당 자원을 &lt;strong&gt;소유한 프로세스&lt;/strong&gt;가 &lt;strong&gt;작업을 완료&lt;/strong&gt;한 뒤, &lt;strong&gt;자발적으로 방출&lt;/strong&gt;할 때만 방출될 수 있습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;circular-wait순환-대기&#34; &gt;&lt;code&gt;Circular Wait(순환 대기)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#circular-wait%ec%88%9c%ed%99%98-%eb%8c%80%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;대기 프로세스의 집합인 ${P_0, P_1, &amp;hellip;, P_n, P_0}$ 이 있을 때 $P_0$은 $P_1$이 보유한 자원을 요청한 뒤 대기하고, $P_1$은 $P_2$가 보유한 자원을 요청한 뒤 대기하고, &amp;hellip;, $P_n$은 $P_0$이 보유한 자원을 요청한 뒤 대기하고 있어야 합니다.&lt;/p&gt;
+&lt;h2 id=&#34;그렇다면-3가지만-충족하면-왜-deadlock-이-발생하지-않을까&#34; &gt;그렇다면 3가지만 충족하면 왜 Deadlock 이 발생하지 않을까?
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b7%b8%eb%a0%87%eb%8b%a4%eb%a9%b4-3%ea%b0%80%ec%a7%80%eb%a7%8c-%ec%b6%a9%ec%a1%b1%ed%95%98%eb%a9%b4-%ec%99%9c-deadlock-%ec%9d%b4-%eb%b0%9c%ec%83%9d%ed%95%98%ec%a7%80-%ec%95%8a%ec%9d%84%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;4가지 조건이 모두 충족&lt;/code&gt;&lt;/strong&gt; 되어야 &lt;strong&gt;교착상태가 성립&lt;/strong&gt;할 수 있기 때문입니다.&lt;br&gt;
+만약 후술할 &lt;strong&gt;예방 방법&lt;/strong&gt;을 통해, 각각의 조건들을 성립하지 않도록 했을 때도 교착상태가 성립하는지를 살펴본다면 그 이유를 알 수 있습니다.&lt;/p&gt;
+&lt;h2 id=&#34;deadlock-예방-방법&#34; &gt;Deadlock 예방 방법
+&lt;span&gt;
+    &lt;a href=&#34;#deadlock-%ec%98%88%eb%b0%a9-%eb%b0%a9%eb%b2%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;하기할 4가지 조건에 대한 예방 방법들은, 모두 &lt;strong&gt;&lt;code&gt;자원 사용을 제한&lt;/code&gt;&lt;/strong&gt; 하기 때문에 &lt;code&gt;자원 사용률(Resource Utilization)&lt;/code&gt;, &lt;code&gt;시스템 처리량(System throughput)&lt;/code&gt;이 떨어진다는 단점이 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;mutual-exclusion상호-배제-1&#34; &gt;&lt;code&gt;Mutual Exclusion(상호 배제)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#mutual-exclusion%ec%83%81%ed%98%b8-%eb%b0%b0%ec%a0%9c-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;자원의-동시-접근-허용&#34; &gt;자원의 &lt;code&gt;동시 접근&lt;/code&gt; 허용
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%ec%9b%90%ec%9d%98-%eb%8f%99%ec%8b%9c-%ec%a0%91%ea%b7%bc-%ed%97%88%ec%9a%a9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;하나의 자원을 여러 프로세스가 &lt;strong&gt;동시 접근&lt;/strong&gt;할 수 있게 된다면, 다른 프로세스가 &lt;em&gt;해당 자원의 방출을 기다리지 않아도 되므로&lt;/em&gt; 교착상태가 발생하지 않습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;다만, 특정 자원은 근본적으로 공유가 불가능할 수 있어 예방책이 될 수 없습니다.
+&lt;ul&gt;
+&lt;li&gt;ex) 프린터와 같은 자원은 공유가 불가능합니다. (한 번에 한 프로세스의 출력만 처리)&lt;/li&gt;
+&lt;li&gt;따라서, 자원을 실제로 요청하는 프로세스를 가능한 적게 만들어야 합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;hold-and-wait점유한-채-대기-1&#34; &gt;&lt;code&gt;Hold and Wait(점유한 채 대기)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#hold-and-wait%ec%a0%90%ec%9c%a0%ed%95%9c-%ec%b1%84-%eb%8c%80%ea%b8%b0-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;하기한 두 방식 모두 &lt;code&gt;낮은 자원 활용율&lt;/code&gt;을 보이며, &lt;code&gt;기아(Starvation&lt;/code&gt;가 발생할 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;기아(Starvation)&lt;/code&gt;: 프로세스가 작업을 처리하는데 필요한 자원을 지속적으로 거부당하는 문제&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;방법-1-자원을-보유하지-않을때만-자원을-요청할-수-있도록-제한&#34; &gt;방법 1) 자원을 &lt;code&gt;보유하지 않을때만 자원을 요청&lt;/code&gt;할 수 있도록 제한
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%a9%eb%b2%95-1-%ec%9e%90%ec%9b%90%ec%9d%84-%eb%b3%b4%ec%9c%a0%ed%95%98%ec%a7%80-%ec%95%8a%ec%9d%84%eb%95%8c%eb%a7%8c-%ec%9e%90%ec%9b%90%ec%9d%84-%ec%9a%94%ec%b2%ad%ed%95%a0-%ec%88%98-%ec%9e%88%eb%8f%84%eb%a1%9d-%ec%a0%9c%ed%95%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h4 id=&#34;방법-2-프로세스-시작-전-모든-자원을-일괄-요청하고-할당하도록-제한&#34; &gt;방법 2) 프로세스 &lt;code&gt;시작 전 모든 자원을 일괄 요청&lt;/code&gt;하고 할당하도록 제한
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%a9%eb%b2%95-2-%ed%94%84%eb%a1%9c%ec%84%b8%ec%8a%a4-%ec%8b%9c%ec%9e%91-%ec%a0%84-%eb%aa%a8%eb%93%a0-%ec%9e%90%ec%9b%90%ec%9d%84-%ec%9d%bc%ea%b4%84-%ec%9a%94%ec%b2%ad%ed%95%98%ea%b3%a0-%ed%95%a0%eb%8b%b9%ed%95%98%eb%8f%84%eb%a1%9d-%ec%a0%9c%ed%95%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h4 id=&#34;예시&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;ex) &lt;code&gt;DVD drive&lt;/code&gt;의 파일을 디스크로 복사한 뒤, &lt;code&gt;disk file&lt;/code&gt;들을 정렬하고, &lt;code&gt;printer&lt;/code&gt;로 출력할 경우,&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;방법 1) 먼저 &lt;code&gt;{DVD Drive, disk file}&lt;/code&gt;을 요청해 작업을 수행합니다. 이후 두 자원을 방출하고, &lt;code&gt;{disk file, printer}&lt;/code&gt;를 요청해 작업을 수행합니다.&lt;/li&gt;
+&lt;li&gt;방법 2) 실행 전 &lt;code&gt;{DVD Drive, disk file, printer}&lt;/code&gt;를 일괄 요청합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;no-preemption-of-resources선점-불가능한-자원-1&#34; &gt;&lt;code&gt;No Preemption of Resources(선점 불가능한 자원)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#no-preemption-of-resources%ec%84%a0%ec%a0%90-%eb%b6%88%ea%b0%80%eb%8a%a5%ed%95%9c-%ec%9e%90%ec%9b%90-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;요청한-자원-획득-불가시-보유중인-자원을-일시적으로-방출&#34; &gt;요청한 자원 획득 불가시 보유중인 자원을 일시적으로 방출
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9a%94%ec%b2%ad%ed%95%9c-%ec%9e%90%ec%9b%90-%ed%9a%8d%eb%93%9d-%eb%b6%88%ea%b0%80%ec%8b%9c-%eb%b3%b4%ec%9c%a0%ec%a4%91%ec%9d%b8-%ec%9e%90%ec%9b%90%ec%9d%84-%ec%9d%bc%ec%8b%9c%ec%a0%81%ec%9c%bc%eb%a1%9c-%eb%b0%a9%ec%b6%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ol&gt;
+&lt;li&gt;&lt;em&gt;자원을 보유하고 있는&lt;/em&gt; 프로세스가, 요청한 자원을 &lt;em&gt;&lt;strong&gt;즉시 할당&lt;/strong&gt;받을 수 없는 경우&lt;/em&gt; 현재 &lt;strong&gt;보유중인 모든 자원을 방출&lt;/strong&gt;합니다.&lt;/li&gt;
+&lt;li&gt;선점된 자원(방금 요청한 자원)은 (요청한) 프로세스의 대기 자원 리스트에 추가됩니다.&lt;/li&gt;
+&lt;li&gt;프로세스는 이전에 보유하고 있던 자원과 새로 요청한 자원 모두 획득할 수 있을때만 재개됩니다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h4 id=&#34;주의사항&#34; &gt;주의사항
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a3%bc%ec%9d%98%ec%82%ac%ed%95%ad&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;위 방식은 &lt;code&gt;CPU&lt;/code&gt;, &lt;code&gt;memory space&lt;/code&gt; 등 &lt;code&gt;상태의 보존/환원&lt;/code&gt;이 가능한 자원에만 적용할 수 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;따라서 &lt;code&gt;printer&lt;/code&gt;와 같은 자원에는 적용할 수 없습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;circular-wait순환-대기-1&#34; &gt;&lt;code&gt;Circular Wait(순환 대기)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#circular-wait%ec%88%9c%ed%99%98-%eb%8c%80%ea%b8%b0-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;모든-자원-타입에-total-ordering총-순서-부여하고-오름차순으로만-요청&#34; &gt;모든 자원 타입에 &lt;code&gt;total ordering(총 순서)&lt;/code&gt; 부여하고, 오름차순으로만 요청
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%aa%a8%eb%93%a0-%ec%9e%90%ec%9b%90-%ed%83%80%ec%9e%85%ec%97%90-total-ordering%ec%b4%9d-%ec%88%9c%ec%84%9c-%eb%b6%80%ec%97%ac%ed%95%98%ea%b3%a0-%ec%98%a4%eb%a6%84%ec%b0%a8%ec%88%9c%ec%9c%bc%eb%a1%9c%eb%a7%8c-%ec%9a%94%ec%b2%ad&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;각 자원에 매겨진 순서가 $F(R_n)$ 라고 한다면, 프로세스가 $R_j$를 요청할 경우 해당 프로세스는 $F(R_i) \ge F(R_j)$를 만족하는 모든 자원 $R_i$를 방출해야 합니다.&lt;/p&gt;
+&lt;h4 id=&#34;주의사항-1&#34; &gt;주의사항
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%a3%bc%ec%9d%98%ec%82%ac%ed%95%ad-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;em&gt;순서를 정하는 자체로는 예방할 수 없으므로&lt;/em&gt;, 프로그램이 &lt;strong&gt;순서를 지켜 요청하도록 강제&lt;/strong&gt;해야 합니다.&lt;/p&gt;
+&lt;h2 id=&#34;-deadlock을-회피하는-방법&#34; &gt;+ Deadlock을 회피하는 방법
+&lt;span&gt;
+    &lt;a href=&#34;#-deadlock%ec%9d%84-%ed%9a%8c%ed%94%bc%ed%95%98%eb%8a%94-%eb%b0%a9%eb%b2%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;자원을 요청할 때 마다, &lt;code&gt;자원 할당 상태&lt;/code&gt;를 검사해 &lt;strong&gt;교착상태가 없는&lt;/strong&gt; &lt;strong&gt;&lt;code&gt;안전한 상태&lt;/code&gt;가 보장&lt;/strong&gt;되면 자원을 할당하고, 그렇지 않으면 &lt;code&gt;대기&lt;/code&gt;합니다.&lt;/p&gt;
+&lt;h3 id=&#34;자원-할당-상태&#34; &gt;자원 할당 상태
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%ec%9b%90-%ed%95%a0%eb%8b%b9-%ec%83%81%ed%83%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;가용 자원 개수&lt;/li&gt;
+&lt;li&gt;할당된 자원개수&lt;/li&gt;
+&lt;li&gt;사전 정보
+&lt;ul&gt;
+&lt;li&gt;각 프로세스가 요청할 &lt;em&gt;자원 유형별&lt;/em&gt; &lt;strong&gt;최대 개수&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;안전한-상태safe-state&#34; &gt;안전한 상태(safe state)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%95%88%ec%a0%84%ed%95%9c-%ec%83%81%ed%83%9csafe-state&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;모든 프로세스에 대해, &lt;code&gt;교착상태를 유발하지 않는 자원 할당 순서&lt;/code&gt;가 존재하는 상태.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;안전한 순서(safe sequence)&lt;/code&gt;가 존재하면, 시스템은 safe state에 있다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;안전한-순서safe-sequence&#34; &gt;안전한 순서(safe sequence)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%95%88%ec%a0%84%ed%95%9c-%ec%88%9c%ec%84%9csafe-sequence&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;현재 자원 할당 상태에서, 다음 조건이 성립하면 ${P_1, P_2, &amp;hellip;, P_{i-1}, P_i, &amp;hellip;, P_n}$은 safe sequence 입니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;프로세스 $P_i$의 향후 자원 요청은 (현재 가용 자원 개수 + $P_i$ 앞에 있는(즉, $P_j(j &amp;lt; i)$인) 모든 프로세스가 보유한 자원 총수) 를 만족할 수 있다.
+&lt;ul&gt;
+&lt;li&gt;만약 요청 자원이 가용하지 않으면, $P_i$는 $P_{j(j&amp;lt;i)}$가 종료할때 까지 대기&lt;/li&gt;
+&lt;li&gt;$P_j$가 완료되면, $P_i$는 필요한 자원을 획득/실행/반환/종료&lt;/li&gt;
+&lt;li&gt;$P_i$가 완료되면, $P_{i+1}$은 필요한 자원 얻을 수 있고, &amp;hellip;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;예시-1&#34; &gt;예시
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%98%88%ec%8b%9c-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;&lt;img src=&#34;safe-sequence-example.png&#34; alt=&#34;safe-sequence-example.png&#34;&gt;&lt;/p&gt;
+&lt;h4 id=&#34;기본-사실&#34; &gt;기본 사실
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b8%b0%eb%b3%b8-%ec%82%ac%ec%8b%a4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ol&gt;
+&lt;li&gt;만약 시스템이 &lt;code&gt;안전한 상태&lt;/code&gt;면, 교착상태는 일어나지 않음.&lt;/li&gt;
+&lt;li&gt;만약 시스템이 &lt;code&gt;안전한 상태&lt;/code&gt;가 &lt;strong&gt;아니라면&lt;/strong&gt;(&lt;code&gt;unsafe state&lt;/code&gt;), 교착상태가 일어날 수 있음.&lt;/li&gt;
+&lt;li&gt;교착상태를 회피한다면, 시스템이 &lt;code&gt;unsafe state&lt;/code&gt;가 되지 &lt;strong&gt;않음을 보장&lt;/strong&gt;함.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3 id=&#34;교착상태-회피-알고리즘&#34; &gt;교착상태 회피 알고리즘
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b5%90%ec%b0%a9%ec%83%81%ed%83%9c-%ed%9a%8c%ed%94%bc-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;교착상태를 회피하는 알고리즘으로는 &lt;code&gt;자원 할당 그래프 알고리즘&lt;/code&gt;과 &lt;code&gt;은행원 알고리즘&lt;/code&gt;이 있습니다.&lt;br&gt;
+둘의 차이점으로는 &lt;code&gt;자원 할당 그래프 알고리즘&lt;/code&gt;은 각 자원 타입이 &lt;strong&gt;오직 하나&lt;/strong&gt;의 &lt;code&gt;instance&lt;/code&gt;를 가지는 경우 사용되고, &lt;code&gt;은행원 알고리즘&lt;/code&gt;은 각 자원 타입이 &lt;strong&gt;여러 개&lt;/strong&gt;의 &lt;code&gt;instance&lt;/code&gt;를 가지는 경우 사용된다는 점이 있습니다.&lt;/p&gt;
+&lt;h4 id=&#34;자원-할당-그래프-알고리즘-rag-algorithm&#34; &gt;&lt;code&gt;자원 할당 그래프 알고리즘 (RAG Algorithm)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%ec%9b%90-%ed%95%a0%eb%8b%b9-%ea%b7%b8%eb%9e%98%ed%94%84-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98-rag-algorithm&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;자원 요청 및 할당 관계를 나타내는 &lt;code&gt;자원 할당 그래프&lt;/code&gt;를 활용해 교착상태를 회피하고자 하는 알고리즘입니다.&lt;/p&gt;
+&lt;h5 id=&#34;자원-할당-그래프resource-allocation-graph&#34; &gt;&lt;code&gt;자원 할당 그래프(Resource Allocation Graph)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%ec%9b%90-%ed%95%a0%eb%8b%b9-%ea%b7%b8%eb%9e%98%ed%94%84resource-allocation-graph&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;img src=&#34;RAG.png&#34; alt=&#34;RAG.png&#34;&gt;
+위처럼 각 프로세스와 자원 타입 별 요청/할당 관계를 나타내는 그래프를 말합니다.&lt;br&gt;
+그래프에서 &lt;strong&gt;&lt;code&gt;사이클&lt;/code&gt;&lt;/strong&gt; 이 발생한 경우, 만약 자원 타입별로 &lt;strong&gt;인스턴스가 하나&lt;/strong&gt;라면 &lt;strong&gt;교착상태&lt;/strong&gt;가 &lt;strong&gt;발생&lt;/strong&gt;하고, 여러 인스턴스가 존재하면 &lt;strong&gt;교착상태가 발생할 가능성&lt;/strong&gt;이 있습니다.&lt;/p&gt;
+&lt;h5 id=&#34;회피-방법&#34; &gt;회피 방법
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%9a%8c%ed%94%bc-%eb%b0%a9%eb%b2%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;자원 할당 그래프 알고리즘은, 자원 할당 그래프에 프로세스가 요청할 것으로 예상되는 자원을 잇는 &lt;strong&gt;&lt;code&gt;예약 간선&lt;/code&gt;&lt;/strong&gt; 을 추가로 사용하는 알고리즘입니다 &lt;code&gt;예약 간선&lt;/code&gt;은 점선으로 표시됩니다.&lt;br&gt;
+간선 간의 변화는 다음과 같이 진행됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;프로세스 실행 시, 모든 예약 간선을 표시&lt;/li&gt;
+&lt;li&gt;자원 요청시, 예약 간선 -&amp;gt; 요청 간선으로 변환&lt;/li&gt;
+&lt;li&gt;자원 방출시, 할당 간선 -&amp;gt; 예약 간선으로 변환&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;RAG-Algorithm.png&#34; alt=&#34;RAG-Algorithm.png&#34;&gt;
+프로세스 $P_i$가 자원 $R_j$를 요청했을 때, 요청 간선 -&amp;gt; &lt;code&gt;할당 간선&lt;/code&gt;으로 변환해도 &lt;strong&gt;cycle이 형성되지 않는다면&lt;/strong&gt; 요청을 허용합니다.&lt;/p&gt;
+&lt;h4 id=&#34;은행원-알고리즘-bankers-algorithm&#34; &gt;&lt;code&gt;은행원 알고리즘 (Banker&#39;s Algorithm)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%80%ed%96%89%ec%9b%90-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98-bankers-algorithm&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;h5 id=&#34;은행원-알고리즘을-위한-자료구조&#34; &gt;은행원 알고리즘을 위한 &lt;code&gt;자료구조&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9d%80%ed%96%89%ec%9b%90-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98%ec%9d%84-%ec%9c%84%ed%95%9c-%ec%9e%90%eb%a3%8c%ea%b5%ac%ec%a1%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;은행원 알고리즘을 설명하기 위해서는, 먼저 자원 할당 상태를 나타내는 자료구조에 대한 이해가 필요합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;아래서 나오는 ${R, m}$은 자원 타입과 그 개수를 의미하며, ${P, n}$은 프로세스와 그 개수를 의미합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Available[m]&lt;/td&gt;
+&lt;td&gt;현재 가용 개수&lt;/td&gt;
+&lt;td&gt;Available[i] = k&lt;/td&gt;
+&lt;td&gt;현재 $R_i$ 자원 k개 가용&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Max[n, m]&lt;/td&gt;
+&lt;td&gt;최대 요청 개수&lt;br/&gt;(사전 정보)&lt;/td&gt;
+&lt;td&gt;Max[i,j] = k&lt;/td&gt;
+&lt;td&gt;$P_i$가 최대 k개의 $R_j$를 요청 가능&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Allocation[n, m]&lt;/td&gt;
+&lt;td&gt;현재 할당 개수&lt;/td&gt;
+&lt;td&gt;Allocation[i, j]=k&lt;/td&gt;
+&lt;td&gt;현재 $P_i$가 k개의 $R_j$를 사용 중&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Need[n, m]&lt;/td&gt;
+&lt;td&gt;미래 요청 개수&lt;/td&gt;
+&lt;td&gt;Need[i, j]=k&lt;/td&gt;
+&lt;td&gt;향후 $P_i$가 k개의 $R_j$를 요청 가능&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;ul&gt;
+&lt;li&gt;Need[i, j] = Max[i,j] - Allocation[i,j]&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h5 id=&#34;자원-요청-방식&#34; &gt;자원 요청 방식
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%ec%9b%90-%ec%9a%94%ec%b2%ad-%eb%b0%a9%ec%8b%9d&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;blockquote&gt;
+&lt;p&gt;$Request_i$ : 프로세스 $P_i$의 요청 벡터&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ol&gt;
+&lt;li&gt;$Request_i &amp;gt; Need_i$ 이면 &lt;code&gt;Error&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;$Request_i &amp;gt; Available$ 이면, &lt;code&gt;waiting&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;$P_i$에게 자원 할당을 가정하고, 새로운 자원할당상태를 계산합니다.
+&lt;ul&gt;
+&lt;li&gt;Available = Available + $Request_i$&lt;/li&gt;
+&lt;li&gt;$Allocation_i$ = $Allocation_i$ + $Request_i$&lt;/li&gt;
+&lt;li&gt;$Need_i$ = $Need_i$ + $Request_i$&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;계산한 새로운 자원할당상태가 safe state인지 검사합니다. (&lt;code&gt;Safety Algorithm&lt;/code&gt; 사용)
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;safe state&lt;/code&gt;인 경우, 해당 자원을 $P_i$에게 할당&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;unsafe state&lt;/code&gt;인 경우, $P_i$는 &lt;strong&gt;대기&lt;/strong&gt;하고 &lt;strong&gt;이전 자원 할당 상태&lt;/strong&gt;를 &lt;strong&gt;복구&lt;/strong&gt;(환원)함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h5 id=&#34;안정성-알고리즘safety-algorithm&#34; &gt;&lt;code&gt;안정성 알고리즘(Safety Algorithm)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%95%88%ec%a0%95%ec%84%b1-%ec%95%8c%ea%b3%a0%eb%a6%ac%ec%a6%98safety-algorithm&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;&lt;code&gt;안전한 순서(safe sequence)&lt;/code&gt;를 찾기위한 알고리즘으로, 다음과 같은 순서로 진행됩니다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;길이 m짜리 벡터 &lt;code&gt;Work[m]&lt;/code&gt;과 길이 n짜리 벡터 &lt;code&gt;Finish[n]&lt;/code&gt;을 가정. 다음과 같이 초기화
+&lt;ul&gt;
+&lt;li&gt;Work = Available&lt;/li&gt;
+&lt;li&gt;Finish[i] = false (for all i)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;아래 명령을 반복합니다.
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;Finish[i] = false&lt;/code&gt; 이면서, $Need_i \le Work$를 만족하는 i를 찾습니다.
+&lt;ul&gt;
+&lt;li&gt;찾은 경우, 아래 연산을 수행하고 2.1로 돌아갑니다.
+&lt;ul&gt;
+&lt;li&gt;Finish[i] = true;&lt;/li&gt;
+&lt;li&gt;Work = Work + $Allocation_i$;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;찾지 못한 경우, 3으로 갑니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;ul&gt;
+&lt;li&gt;이를 코드로 나타내면 아래와 같습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;while (true) {
+	// 현재 가용한 자원으로 할당 가능한 프로세스 검색
+	find i that satisfies (Finish[i] = false) &amp;amp;&amp;amp; (Need_i &amp;lt;= Work)
+
+// 발견 시, P_i 종료(로 가정) 및 자원 방출
+	if (found) {
+		Finish[i] = true;
+		Work = Work + Allocation_i;
+	} else {
+		break; // 더 이상 할당할 수 없는 경우
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;li&gt;모든 i에 대해 &lt;code&gt;Finish[i] = true&lt;/code&gt;를 만족하면, 시스템은 &lt;code&gt;safe state&lt;/code&gt; 입니다.
+&lt;ul&gt;
+&lt;li&gt;하나라도 &lt;code&gt;Finish[i] = false&lt;/code&gt;라면, 시스템은 &lt;strong&gt;교착상태&lt;/strong&gt; 입니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h5 id=&#34;참고-사항&#34; &gt;참고 사항
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0-%ec%82%ac%ed%95%ad&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;안정성 알고리즘&lt;/code&gt;은 $O(mn^2)$의 시간 복잡도를 갖습니다.&lt;/li&gt;
+&lt;li&gt;프로세스는 최대 자원 요구량을 사전에 거의 알지 못합니다.&lt;/li&gt;
+&lt;li&gt;프로세스 수는 새로운 사용자가 로그인/아웃함에 따라 동적으로 변합니다.&lt;/li&gt;
+&lt;li&gt;가용하리라 생각된 자원이 갑자기 사라질 수 있습니다.&lt;/li&gt;
+&lt;li&gt;실제로 은행원 알고리즘을 사용해 교착상태를 회피하는 시스템은 거의 없습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;교착상태-회복&#34; &gt;교착상태 회복
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b5%90%ec%b0%a9%ec%83%81%ed%83%9c-%ed%9a%8c%eb%b3%b5&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;교착상태로부터 회복하는 방법은 교착상태의 프로세스를 &lt;code&gt;강제 종료&lt;/code&gt;, &lt;code&gt;자원 회수&lt;/code&gt; 두 가지 방법이 존재합니다.&lt;/p&gt;
+&lt;h3 id=&#34;강제-종료aborting&#34; &gt;&lt;code&gt;강제 종료(Aborting)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b0%95%ec%a0%9c-%ec%a2%85%eb%a3%8caborting&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;강제 종료하는 방법은 2가지 방법이 있습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;모든 교착상태의 프로세스를 종료 -&amp;gt; 재실행 비용 발생&lt;/li&gt;
+&lt;li&gt;교착상태가 제거될 때 까지 하나씩 종료 -&amp;gt; 종료시 마다 교착상태 탐지 알고리즘 실행&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;희생자victim-프로세스-선정-기준&#34; &gt;희생자(Victim) 프로세스 선정 기준
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%9d%ac%ec%83%9d%ec%9e%90victim-%ed%94%84%eb%a1%9c%ec%84%b8%ec%8a%a4-%ec%84%a0%ec%a0%95-%ea%b8%b0%ec%a4%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;프로세스 우선순위&lt;/li&gt;
+&lt;li&gt;사용한 자원 유형 및 수&lt;/li&gt;
+&lt;li&gt;종료되어야 할 프로세스 수&lt;/li&gt;
+&lt;li&gt;실행한 총 시간, 완료까지 필요한 시간&lt;/li&gt;
+&lt;li&gt;완료까지 추가로 필요한 자원 수&lt;/li&gt;
+&lt;li&gt;프로세스 유형(대화형 or 일괄처리)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;자원-강제-회수preemption&#34; &gt;&lt;code&gt;자원 강제 회수(Preemption)&lt;/code&gt;
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%9e%90%ec%9b%90-%ea%b0%95%ec%a0%9c-%ed%9a%8c%ec%88%98preemption&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;교착상태 사이클이 무너질 때 까지, 교착상태의 프로세스로 부터 자원을 회수한 뒤 다른 프로세스에 할당하는 방식입니다.&lt;/p&gt;
+&lt;h4 id=&#34;고려-사항&#34; &gt;고려 사항
+&lt;span&gt;
+    &lt;a href=&#34;#%ea%b3%a0%eb%a0%a4-%ec%82%ac%ed%95%ad&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;희생자 프로세스 선택
+&lt;ul&gt;
+&lt;li&gt;비용 최소화(보유 자원 수, 총 실행 시간 등)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;프로세스 롤백 위치
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;safe state&lt;/code&gt;로 롤백한 뒤, 해당 상태로 재시작&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;기아(Starvation)&lt;/code&gt;에 대한 고려
+&lt;ul&gt;
+&lt;li&gt;같은 프로세스가 계속 희생자로 선택될 수 있으므로, 롤백 횟수를 비용에 포함해 고려&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;왜-현대-os는-deadlock을-처리하지-않을까&#34; &gt;왜 현대 OS는 Deadlock을 처리하지 않을까?
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%99%9c-%ed%98%84%eb%8c%80-os%eb%8a%94-deadlock%ec%9d%84-%ec%b2%98%eb%a6%ac%ed%95%98%ec%a7%80-%ec%95%8a%ec%9d%84%ea%b9%8c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;Windows, UNIX와 같은 현대 운영체제에서는 의도적으로 &lt;code&gt;교착상태를 무시(Deadlock Ignorance)&lt;/code&gt;하기 때문입니다.&lt;br&gt;
+이처럼 특정한 문제를 문제 없는 것처럼 무시하는 방식을 &lt;code&gt;타조 알고리즘(Ostrich algorithm)&lt;/code&gt; 이라고 합니다.&lt;br&gt;
+OS에서 교착상태를 무시하는 이유는 보통 다음과 같은 경우가 일반적이기 때문입니다.&lt;br&gt;
+첫째, 교착상태가 발생하는 경우가 &lt;strong&gt;매우 드문 경우&lt;/strong&gt;&lt;br&gt;
+둘째, 교착상태를 &lt;strong&gt;감지 또는 방지&lt;/strong&gt;하기 위해 발생하는 &lt;strong&gt;지속적인 오버헤드&lt;/strong&gt; &amp;gt; 교착상태가 발생하도록 방치한 뒤 &lt;strong&gt;필요한 경우 재부팅하는 비용&lt;/strong&gt; 인 경우&lt;br&gt;
+다만, 교착상태를 무시할 경우 문제를 파악하기 어렵고, 특정한 경우 시스템이 불안정해질 수 있습니다.&lt;br&gt;
+또한, 데이터 손실 또는 다른 심각한 문제를 일으킬 수 있기 때문에 복잡한 시스템의 경우, 신중한 구현이 필요합니다.&lt;/p&gt;
+&lt;h2 id=&#34;wait-free와-lock-free&#34; &gt;Wait Free와 Lock Free
+&lt;span&gt;
+    &lt;a href=&#34;#wait-free%ec%99%80-lock-free&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;h3 id=&#34;wait-free와-lock-free-1&#34; &gt;&lt;code&gt;Wait free&lt;/code&gt;와 &lt;code&gt;Lock free&lt;/code&gt;?
+&lt;span&gt;
+    &lt;a href=&#34;#wait-free%ec%99%80-lock-free-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;code&gt;wait free&lt;/code&gt;와 &lt;code&gt;lock free&lt;/code&gt;란 논-블로킹 자료 구조 레벨을 말합니다.&lt;/p&gt;
+&lt;h5 id=&#34;논블로킹&#34; &gt;논블로킹?
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;다중 스레드 환경에서 한 스레드의 실패/중단이 다른 스레드의 실패/중단을 유발하지 않는 알고리즘을 &lt;code&gt;논-블로킹&lt;/code&gt;이라고 합니다.&lt;br&gt;
+논-블로킹 알고리즘은 시스템 전체 진행률이 보장되는 경우 &lt;code&gt;lock free&lt;/code&gt;이며, 스레드 별 진행률 역시 보장되는 경우 &lt;code&gt;wait free&lt;/code&gt;하다고 할 수 있습니다.&lt;/p&gt;
+&lt;h5 id=&#34;논블로킹-등장-배경&#34; &gt;논블로킹 등장 배경
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9-%eb%93%b1%ec%9e%a5-%eb%b0%b0%ea%b2%bd&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h5&gt;&lt;p&gt;이러한 논-블로킹 방식이 등장하게 된 이유는, 기존의 락 기반 동시성 처리 방식이 스레드 차단을 유발하기 때문입니다.&lt;br&gt;
+기존의 경우, 공유 자원에 대해 락을 획득했어야 했고, 다른 스레드가 보유한 락을 획득하기 위해서는 락이 해제될 때까지 차단되어야 했습니다.&lt;br&gt;
+만약 스레드가 실시간 작업을 수행하거나, 우선순위가 높은 작업을 수행하고 있었다면 이러한 차단은 바람직하지 않은 방식입니다. 또한 교착상태와 같은 오류가 발생할 수 있습니다.&lt;/p&gt;
+&lt;h3 id=&#34;논블로킹-레벨&#34; &gt;논블로킹 레벨
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%85%bc%eb%b8%94%eb%a1%9c%ed%82%b9-%eb%a0%88%eb%b2%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;p&gt;&lt;img src=&#34;non-blocking-level.png&#34; alt=&#34;non-blocking-level.png&#34;&gt;&lt;/p&gt;
+&lt;h4 id=&#34;obstruction-free&#34; &gt;Obstruction-Free
+&lt;span&gt;
+    &lt;a href=&#34;#obstruction-free&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;가장 약한 수준의 논블로킹 레벨로, 항상 다른 모든 스레드가 &lt;code&gt;일시중단(Suspended)&lt;/code&gt;된 경우에만 스레드의 진행이 보장되어야 합니다.&lt;br&gt;
+이는 다른 모든 스레드들이 일시중단되어도, 현재 스레드가 기아상태에 빠지지 않음을 의미합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;만약 스레드가 락을 기다리고 있는데, 해당 락을 보유한 스레드가 일시중단된다면 현재 스레드는 이를 영원히 기다리게 됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;lock-free&#34; &gt;Lock-Free
+&lt;span&gt;
+    &lt;a href=&#34;#lock-free&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;항상 적어도 하나 이상의 쓰레드가 실행중임을 보장받는 레벨을 말합니다.&lt;br&gt;
+아무 스레드도 중단되지 않아도 기아 상태가 아닌 스레드가 하나 이상 있음이 보장됩니다.&lt;br&gt;
+언제든지 적어도 하나 이상의 스레드가 작업을 진행할 수 있는 경우를 의미합니다. 이때 다른 스레드들은 기아 상태에 빠질 수 있습니다.&lt;br&gt;
+개별 스레드가 중단될 수 있지만, 시스템 전체의 처리량을 보장합니다.&lt;br&gt;
+프로그램이 충분히 오래 실행될 때, 스레드 중 하나 이상이 진행중이라면 해당 알고리즘은 &lt;code&gt;lock free&lt;/code&gt; 알고리즘입니다.&lt;/p&gt;
+&lt;h4 id=&#34;wait-free&#34; &gt;Wait-Free
+&lt;span&gt;
+    &lt;a href=&#34;#wait-free&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;p&gt;시스템 전체에 기아 상태인 스레드 없이 모든 스레드가 작업중인 경우를 말합니다.&lt;br&gt;
+모든 스레드가 유한한 수의 단계 후에 진행되도록 보장되는 경우, 즉 &amp;lsquo;비합리적으로 많은&amp;rsquo; 수의 단계 동안 스레드가 기아 상태에 빠지지 않는 경우를 의미합니다.&lt;br&gt;
+모든 &lt;code&gt;Wait-Free&lt;/code&gt;는 &lt;code&gt;Lock-Free&lt;/code&gt;입니다. (반대는 성립 X)&lt;/p&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;학부 전공 강의 &amp;lsquo;운영체제&amp;rsquo; 강의 자료&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.geeksforgeeks.org/introduction-of-deadlock-in-operating-system/&#34;&gt;Introduction of Deadlock in Operating System - GeeksforGeeks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/cs/os-deadlock&#34;&gt;Deadlock: What It Is, How to Detect, Handle and Prevent? | Baeldung on Computer Science&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://uclab.khu.ac.kr/lectures/2006_1_os/os-ch08_deadlocks.pdf&#34;&gt;os-ch08_deadlocks.pdf (khu.ac.kr)&lt;/a&gt; &amp;laquo;&amp;lt; 많이 참고함&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cs.uic.edu/~jbell/CourseNotes/OperatingSystems/7_Deadlocks.html&#34;&gt;Operating Systems: Deadlocks (uic.edu)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/cs/ostrich-algorithm&#34;&gt;The Ostrich Algorithm | Baeldung on Computer Science&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Ostrich_algorithm&#34;&gt;Ostrich algorithm - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.baeldung.com/lock-free-programming&#34;&gt;Introduction to Lock-Free Data Structures with Java Examples | Baeldung&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Non-blocking_algorithm&#34;&gt;Non-blocking algorithm - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://narakit.tistory.com/194&#34;&gt;[C++ Thread] Lock-Free Programming - (1) Lock Free ? / Lock Free Stack (tistory.com)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://hexoul.github.io/process-sync&#34;&gt;프로세스 동기화의 블로킹 방식 (hexoul.github.io)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
