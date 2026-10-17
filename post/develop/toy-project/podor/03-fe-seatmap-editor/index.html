@@ -1,0 +1,2835 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[podoR] 3. FE 좌석맵 에디터 구현과 트러블 슈팅 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론왜 좌석맵 에디터/뷰어를 개발했는가 &lsquo;서비스 구현에 필요한 섹션/좌석 맵&lsquo;을 등록/수정 할 수 있는 에디터가 필요하다 판단 이때, 에디터는 다음과 같은 기능을 수행할 수 있어야 함 공연장마다 다른 구조와 좌석 배치를 구현하고, 이를 추후 수정할 수 있어야 함 어떤 좌석을 예매했는지를 매치시킬 좌석 엔티티를 DB에 등록할 수 있어야 함 이 글에서는 어떻게 요구사항 -&gt; 기능을 도출하고, 겪은 문제들을 어떻게 해결했는지 정리하고자 함 핵심 설계 사항섹션 맵 -&gt; 좌석 맵으로 이어지는 2단계 구조 티케팅시 진입 단계를 두 단계로 나누어, 예매라는 핵심 로직에 도달하는 시간을 지연시킴 SVG 기반의 섹션/좌석 시각화 &lt;canvas&gt; 기반과 svg 기반 중 고민했으나, svg 기반이 더 이점이 많다고 판단함 DOM 기반으로 처리할 수 있는 svg와 달리, &lt;canvas&gt;는 렌더된 요소에 대해 좌표 계산 및 이벤트 처리 로직을 직접 작성해주어야 한다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.538b1869ceb05ae0d55cd41ef8e22ebc151bdc0e0d45b056d5f786d594660177.css" integrity="sha256-U4sYac6wWuDVXNQe&#43;OIuvBUb3A4NRbBW1feG1ZRmAXc=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[podoR] 3. FE 좌석맵 에디터 구현과 트러블 슈팅" />
+<meta property="og:description" content="서론왜 좌석맵 에디터/뷰어를 개발했는가 &lsquo;서비스 구현에 필요한 섹션/좌석 맵&lsquo;을 등록/수정 할 수 있는 에디터가 필요하다 판단 이때, 에디터는 다음과 같은 기능을 수행할 수 있어야 함 공연장마다 다른 구조와 좌석 배치를 구현하고, 이를 추후 수정할 수 있어야 함 어떤 좌석을 예매했는지를 매치시킬 좌석 엔티티를 DB에 등록할 수 있어야 함 이 글에서는 어떻게 요구사항 -&gt; 기능을 도출하고, 겪은 문제들을 어떻게 해결했는지 정리하고자 함 핵심 설계 사항섹션 맵 -&gt; 좌석 맵으로 이어지는 2단계 구조 티케팅시 진입 단계를 두 단계로 나누어, 예매라는 핵심 로직에 도달하는 시간을 지연시킴 SVG 기반의 섹션/좌석 시각화 &lt;canvas&gt; 기반과 svg 기반 중 고민했으나, svg 기반이 더 이점이 많다고 판단함 DOM 기반으로 처리할 수 있는 svg와 달리, &lt;canvas&gt;는 렌더된 요소에 대해 좌표 계산 및 이벤트 처리 로직을 직접 작성해주어야 한다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/toy-project/podor/03-fe-seatmap-editor/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2026-10-17T12:18:29+09:00" />
+<meta property="article:modified_time" content="2026-10-17T12:18:29+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[podoR] 3. FE 좌석맵 에디터 구현과 트러블 슈팅"/>
+<meta name="twitter:description" content="서론왜 좌석맵 에디터/뷰어를 개발했는가 &lsquo;서비스 구현에 필요한 섹션/좌석 맵&lsquo;을 등록/수정 할 수 있는 에디터가 필요하다 판단 이때, 에디터는 다음과 같은 기능을 수행할 수 있어야 함 공연장마다 다른 구조와 좌석 배치를 구현하고, 이를 추후 수정할 수 있어야 함 어떤 좌석을 예매했는지를 매치시킬 좌석 엔티티를 DB에 등록할 수 있어야 함 이 글에서는 어떻게 요구사항 -&gt; 기능을 도출하고, 겪은 문제들을 어떻게 해결했는지 정리하고자 함 핵심 설계 사항섹션 맵 -&gt; 좌석 맵으로 이어지는 2단계 구조 티케팅시 진입 단계를 두 단계로 나누어, 예매라는 핵심 로직에 도달하는 시간을 지연시킴 SVG 기반의 섹션/좌석 시각화 &lt;canvas&gt; 기반과 svg 기반 중 고민했으나, svg 기반이 더 이점이 많다고 판단함 DOM 기반으로 처리할 수 있는 svg와 달리, &lt;canvas&gt;는 렌더된 요소에 대해 좌표 계산 및 이벤트 처리 로직을 직접 작성해주어야 한다."/>
+
+
+
+
+
+
+
+
+
+
+
+<link rel="canonical" href="https://cloudsoswift.github.io/post/develop/toy-project/podor/03-fe-seatmap-editor/">
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="page-wrapper">
+        <div class="container">
+            <header class="common-header">
+                
+                    <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+
+                
+            </header>
+            <main id="main" tabindex="-1">
+                
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[podoR] 3. FE 좌석맵 에디터 구현과 트러블 슈팅</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#서론">서론</a></li>
+    <li><a href="#핵심-설계-사항">핵심 설계 사항</a></li>
+    <li><a href="#핵심-기능">핵심 기능</a>
+      <ul>
+        <li><a href="#섹션-편집sectioneditor">섹션 편집(<code>SectionEditor</code>)</a></li>
+        <li><a href="#섹션-내-좌석-배치하기seateditor">섹션 내 좌석 배치하기(<code>SeatEditor</code>)</a></li>
+        <li><a href="#섹션좌석-맵-저장불러오기">섹션/좌석 맵 저장/불러오기</a></li>
+        <li><a href="#뷰어">뷰어</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h2 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>왜 <code>좌석맵 에디터/뷰어</code>를 개발했는가
+<ul>
+<li>&lsquo;서비스 구현에 필요한 <code>섹션/좌석 맵</code>&lsquo;을 등록/수정 할 수 있는 에디터가 필요하다 판단</li>
+<li>이때, 에디터는 다음과 같은 기능을 수행할 수 있어야 함
+<ul>
+<li><em>공연장마다 다른</em> <code>구조</code>와 <code>좌석 배치</code>를 구현하고, 이를 추후 수정할 수 있어야 함</li>
+<li><em>어떤 좌석을 예매했는지</em>를 매치시킬 좌석 엔티티를 DB에 등록할 수 있어야 함</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>이 글에서는 어떻게 요구사항 -&gt; 기능을 도출하고, 겪은 문제들을 어떻게 해결했는지 정리하고자 함</li>
+</ul>
+<h2 id="핵심-설계-사항" >핵심 설계 사항
+<span>
+    <a href="#%ed%95%b5%ec%8b%ac-%ec%84%a4%ea%b3%84-%ec%82%ac%ed%95%ad">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li><code>섹션 맵</code> -&gt; <code>좌석 맵</code>으로 이어지는 2단계 구조
+<ul>
+<li>티케팅시 진입 단계를 두 단계로 나누어, 예매라는 핵심 로직에 도달하는 시간을 지연시킴</li>
+</ul>
+</li>
+<li><strong><code>SVG</code></strong> 기반의 섹션/좌석 시각화
+<ul>
+<li><code>&lt;canvas&gt;</code> 기반과 <code>svg</code> 기반 중 고민했으나, <code>svg</code> 기반이 더 이점이 많다고 판단함
+<ol>
+<li>DOM 기반으로 처리할 수 있는 <code>svg</code>와 달리, <code>&lt;canvas&gt;</code>는 렌더된 요소에 대해 좌표 계산 및 이벤트 처리 로직을 직접 작성해주어야 한다.</li>
+<li><code>&lt;canvas&gt;</code>의 강점은 많은 객체를 렌더링하는데에 있는데, 이미 섹션 단위로 좌석을 쪼개기 때문에 렌더링할 양이 많지 않다(많아야 한 섹션 당 몇 천좌석가량)</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><code>JSON</code> 기반의 데이터 저장
+<ul>
+<li><code>섹션/좌석 맵</code>을 <code>DB</code>에 저장할 수 있는 형태로 <code>직렬화</code>/<code>역직렬화</code>하기 위해서는 <code>JSON</code>형태로 저장해야 함</li>
+</ul>
+</li>
+</ul>
+<h2 id="핵심-기능" >핵심 기능
+<span>
+    <a href="#%ed%95%b5%ec%8b%ac-%ea%b8%b0%eb%8a%a5">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><ul>
+<li>컴포넌트 설계</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-markdown" data-lang="markdown"><span style="display:flex;"><span>/admin/venues/[seq]/seatmap  (page.tsx)
+</span></span><span style="display:flex;"><span>└── SeatmapStudio ─────────────────────────── useState ×6
+</span></span><span style="display:flex;"><span>    │
+</span></span><span style="display:flex;"><span>    ├── SeatmapRegisterBar ────────────────── useState: status, showJson
+</span></span><span style="display:flex;"><span>    │
+</span></span><span style="display:flex;"><span>    ├── SectionEditor ─────────────────────── useReducer(editorReducer)
+</span></span><span style="display:flex;"><span>    │   ├── EditorToolbar                     (상태 없음)
+</span></span><span style="display:flex;"><span>    │   ├── EditorCanvas ──────────────────── useState: view, panning
+</span></span><span style="display:flex;"><span>    │   │   │                                 useRef: svg, drag, viewRef,
+</span></span><span style="display:flex;"><span>    │   │   │                                        suppressClick, lastAnchorClick, lastHandleClick
+</span></span><span style="display:flex;"><span>    │   │   ├── BackgroundLayer               (상태 없음)
+</span></span><span style="display:flex;"><span>    │   │   ├── SectionShape × N              (상태 없음)
+</span></span><span style="display:flex;"><span>    │   │   └── DraftLayer                    (상태 없음)
+</span></span><span style="display:flex;"><span>    │   └── JsonPanel ────────────────────── useState: draft, error, prevExported
+</span></span><span style="display:flex;"><span>    │
+</span></span><span style="display:flex;"><span>    └── SeatEditor  (editing 일 때만) ──────── useReducer(seatEditorReducer)
+</span></span><span style="display:flex;"><span>        │            key={section.id}
+</span></span><span style="display:flex;"><span>        ├── SeatToolbar                       (상태 없음)
+</span></span><span style="display:flex;"><span>        ├── SeatCanvas ───────────────────── useState: view, panning, hoveredId, marquee
+</span></span><span style="display:flex;"><span>        │                                     useRef: svg, drag, viewRef
+</span></span><span style="display:flex;"><span>        └── SeatJsonPanel ────────────────── useState: boundary, error
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/admin/events/[eventId]/seats  (page.tsx)
+</span></span><span style="display:flex;"><span>└── EventSeatPlanEditor ───────────────────── useState ×7   ← 별도 트리. 편집기 컴포넌트를 공유하지 않고
+</span></span><span style="display:flex;"><span>                                               seatmapApi/seatGeometry 만 재사용해 좌석맵을 &#34;읽어서&#34; 소비
+</span></span></code></pre></div><h3 id="섹션-편집sectioneditor" >섹션 편집(<code>SectionEditor</code>)
+<span>
+    <a href="#%ec%84%b9%ec%85%98-%ed%8e%b8%ec%a7%91sectioneditor">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="필요-요구사항" >필요 요구사항
+<span>
+    <a href="#%ed%95%84%ec%9a%94-%ec%9a%94%ea%b5%ac%ec%82%ac%ed%95%ad">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>찍은 점들을 이어 다각형(Polygon) 형태의 섹션을 그리는 기능</li>
+<li>점들을 잇는 선을 곡선으로 바꿀 수 있는 <code>펜 툴</code> 형태의 기능</li>
+</ul>
+<h4 id="실제-설계" >실제 설계
+<span>
+    <a href="#%ec%8b%a4%ec%a0%9c-%ec%84%a4%ea%b3%84">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>SeatEditor</code>: 툴바, 캔버스 등 하위 컴포넌트에 <code>상태(editorReducer) 전파</code></li>
+<li><code>EditorCanvas</code>: 메인 캔버스 <code>svg</code>(<code>EditorCanvas.svgRef</code>)에서 섹션 그리기, 드래그 등 <code>이벤트 처리</code>
+<ul>
+<li>현재 그리고 있는 다각형(<code>DraftLayer</code>), 배경화면(<code>BackgroundLayer</code>), 완성한 섹션들(<code>SectionShape</code>) 등은 하위 레이어 컴포넌트로 분리</li>
+</ul>
+</li>
+<li><code>editorReducer</code>: &lsquo;현재까지 그린 섹션(<code>sections[]</code>)&rsquo;, &lsquo;현재 잇고있는 점들(<code>draft[]</code>)&rsquo;, &lsquo;사용중인 도구(<code>tool</code>)&rsquo; 등 상태 관리</li>
+<li><code>JsonPanel</code>: <code>JSON</code> 내보내기(복사/다운로드)/불러오기</li>
+</ul>
+<h4 id="핵심-코드" >핵심 코드
+<span>
+    <a href="#%ed%95%b5%ec%8b%ac-%ec%bd%94%eb%93%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>EditorCanvas</code>에서 앵커/핸들 클릭 처리 로직</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-typescript" data-lang="typescript"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">beginAnchorDrag</span>(
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">e</span>: <span style="color:#66d9ef">React.PointerEvent</span>,
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">sectionId</span>: <span style="color:#66d9ef">string</span>,
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">anchorId</span>: <span style="color:#66d9ef">string</span>,
+</span></span><span style="display:flex;"><span>) {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">shouldPan</span>(<span style="color:#a6e22e">e</span>)) <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">startPan</span>(<span style="color:#a6e22e">e</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">button</span> <span style="color:#f92672">!==</span> <span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">stopPropagation</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">suppressClickRef</span>.<span style="color:#a6e22e">current</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 더블클릭: 곡선 앵커면 직선화, 코너면 곡선화 토글.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">now</span> <span style="color:#f92672">=</span> Date.<span style="color:#a6e22e">now</span>();
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">prev</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lastAnchorClickRef</span>.<span style="color:#a6e22e">current</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">prev</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">prev</span>.<span style="color:#a6e22e">anchorId</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">anchorId</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">now</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">prev</span>.<span style="color:#a6e22e">time</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">DBL_MS</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">lastAnchorClickRef</span>.<span style="color:#a6e22e">current</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">dragRef</span>.<span style="color:#a6e22e">current</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">sec</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">sections</span>.<span style="color:#a6e22e">find</span>((<span style="color:#a6e22e">s</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">id</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">sectionId</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">a</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">sec</span><span style="color:#f92672">?</span>.<span style="color:#a6e22e">anchors</span>.<span style="color:#a6e22e">find</span>((<span style="color:#a6e22e">an</span>) <span style="color:#f92672">=&gt;</span> <span style="color:#a6e22e">an</span>.<span style="color:#a6e22e">id</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">anchorId</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">hasHandles</span> <span style="color:#f92672">=</span> <span style="color:#f92672">!!</span>(<span style="color:#a6e22e">a</span> <span style="color:#f92672">&amp;&amp;</span> (<span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">handleIn</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">handleOut</span>));
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">dispatch</span>({
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">type</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">hasHandles</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#34;STRAIGHTEN_ANCHOR&#34;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;SMOOTH_ANCHOR&#34;</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">sectionId</span>,
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">anchorId</span>,
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">lastAnchorClickRef</span>.<span style="color:#a6e22e">current</span> <span style="color:#f92672">=</span> { <span style="color:#a6e22e">anchorId</span>, <span style="color:#a6e22e">time</span>: <span style="color:#66d9ef">now</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">svgRef</span>.<span style="color:#a6e22e">current</span><span style="color:#f92672">?</span>.<span style="color:#a6e22e">setPointerCapture</span>(<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">pointerId</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">dragRef</span>.<span style="color:#a6e22e">current</span> <span style="color:#f92672">=</span> { <span style="color:#a6e22e">kind</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;anchor&#34;</span>, <span style="color:#a6e22e">sectionId</span>, <span style="color:#a6e22e">anchorId</span> };
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">beginHandleDrag</span>(
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">e</span>: <span style="color:#66d9ef">React.PointerEvent</span>,
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">sectionId</span>: <span style="color:#66d9ef">string</span>,
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">anchorId</span>: <span style="color:#66d9ef">string</span>,
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">side</span>: <span style="color:#66d9ef">HandleSide</span>,
+</span></span><span style="display:flex;"><span>) {
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">shouldPan</span>(<span style="color:#a6e22e">e</span>)) <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">startPan</span>(<span style="color:#a6e22e">e</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">button</span> <span style="color:#f92672">!==</span> <span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">stopPropagation</span>();
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">suppressClickRef</span>.<span style="color:#a6e22e">current</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 같은 핸들을 더블클릭하면 해당 변을 직선화(핸들 제거).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">now</span> <span style="color:#f92672">=</span> Date.<span style="color:#a6e22e">now</span>();
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">prev</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lastHandleClickRef</span>.<span style="color:#a6e22e">current</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">prev</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">prev</span>.<span style="color:#a6e22e">anchorId</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">anchorId</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">prev</span>.<span style="color:#a6e22e">side</span> <span style="color:#f92672">===</span> <span style="color:#a6e22e">side</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">now</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">prev</span>.<span style="color:#a6e22e">time</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">DBL_MS</span>
+</span></span><span style="display:flex;"><span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">lastHandleClickRef</span>.<span style="color:#a6e22e">current</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">dragRef</span>.<span style="color:#a6e22e">current</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">dispatch</span>({ <span style="color:#66d9ef">type</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;REMOVE_HANDLE&#34;</span>, <span style="color:#a6e22e">sectionId</span>, <span style="color:#a6e22e">anchorId</span>, <span style="color:#a6e22e">side</span> });
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">lastHandleClickRef</span>.<span style="color:#a6e22e">current</span> <span style="color:#f92672">=</span> { <span style="color:#a6e22e">anchorId</span>, <span style="color:#a6e22e">side</span>, <span style="color:#a6e22e">time</span>: <span style="color:#66d9ef">now</span> };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">svgRef</span>.<span style="color:#a6e22e">current</span><span style="color:#f92672">?</span>.<span style="color:#a6e22e">setPointerCapture</span>(<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">pointerId</span>);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">dragRef</span>.<span style="color:#a6e22e">current</span> <span style="color:#f92672">=</span> { <span style="color:#a6e22e">kind</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;handle&#34;</span>, <span style="color:#a6e22e">sectionId</span>, <span style="color:#a6e22e">anchorId</span>, <span style="color:#a6e22e">side</span> };
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="발생한-문제-및-해결" >발생한 문제 및 해결
+<span>
+    <a href="#%eb%b0%9c%ec%83%9d%ed%95%9c-%eb%ac%b8%ec%a0%9c-%eb%b0%8f-%ed%95%b4%ea%b2%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>곡선 핸들 <strong><code>더블 클릭</code></strong> 시 직선화(핸들 삭제) 안되는 문제
+<ul>
+<li>섹션의 점 중 하나를 더블 클릭했을때 <code>곡선 앵커</code> &lt;-&gt; <code>코너 앵커</code>로 변환하는 로직(<code>EditorCanvas.beginAnchorDrag</code>)을 구현했음</li>
+<li>이를 섹션 폴리곤(<code>SectionShape</code>)의 컨트롤 핸들(<code>&lt;rect&gt;</code>)에서 캡처하도록 했으나, 다음과 같은 이유로 클릭 떼기(<code>pointerup</code>)시 다른 태그에서 이벤트가 트리거됨
+<ol>
+<li>핸들의 칠해지지 않은 구역을 클릭했을 경우 해당 위치의 요소에 이벤트가 트리거 됨(<code>svg</code>의 기본 값이 <code>pointer-events: visiblePainted</code>(정확히는 <code>pointer-events: auto</code>)로 동작하기 때문)</li>
+<li>메인 캔버스 <code>svg</code>에서 <code>setPointerCapture</code>로 포인트 캡처를 걸고 있었음
+<ul>
+<li><code>핸들 드래그</code>, <code>섹션 드래그</code> 등 포인터가 대상 요소 밖으로 나가도 이벤트를 처리할 수 있도록 하기 위함</li>
+</ul>
+</li>
+</ol>
+</li>
+<li>이로 인해, 곡선 핸들 <code>클릭</code> / <code>더블클릭</code>이 모두 캡처 대상인 <code>svg</code>로 보내짐
+<ul>
+<li>이렇게 될 경우, <code>click</code>, <code>dblclick</code>의 target이 <code>svg</code>가 되므로 이벤트는 <code>svg</code> 위로만 <code>버블링</code>되고, <em>svg의 자식</em>인 <code>rect</code>로 내려가지 못함</li>
+<li>따라서 <code>rect</code>에 <code>onDoubleClick</code>으로 설정해둔 핸들러가 트리거되지 못함</li>
+<li>실제 이벤트 흐름
+<ol>
+<li><code>pointerdown</code> - <code>rect</code>
+<ul>
+<li><code>rect</code>의 <code>onPointDown</code>으로 연결된 <code>beginHandleDrag</code>가 호출되면서, <code>svg.setPointerCapture()</code>가 수행됨</li>
+</ul>
+</li>
+<li><code>pointerup</code> - <code>svg</code> (포인터가 <code>rect</code>위에 있어도 <code>svg</code>로 이벤트가 감)</li>
+<li><code>click</code> - <code>svg</code> (<code>down</code>은 <code>rect</code>, <code>up</code>은 <code>svg</code>-&gt; 공통 조상이 <code>svg</code>이고 캡처 대상도 <code>svg</code>이므로 <code>svg</code>로 이벤트 감)</li>
+<li><code>dblclick</code> - <code>svg</code> (위와 동일한 이유)</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>따라서 <code>더블 클릭</code> 로직을 처리하기 위해 다음과 같은 대안을 이용
+<ul>
+<li><em>마지막에 클릭된 핸들</em>인 <code>lastHandleClickRef</code>를 별도로 두고, 동일한 핸들을 <code>300ms</code> 이내(임의 기준) 다시 클릭했을 경우 핸들을 제거하도록 함</li>
+</ul>
+</li>
+<li>또한 위와 동일한 이유로, <code>click</code> 이벤트가 <code>svg</code>의 <code>onClick</code> 핸들러(<code>handleClick</code>)으로 들어와 처리되는 문제가 발생함
+<ul>
+<li><code>svg</code>의 <code>handleClick</code>은 &lsquo;배경 클릭&rsquo;만 처리하고 있어 <code>핸들 클릭</code>이 &lsquo;배경 클릭&rsquo;으로 처리되게 됨</li>
+<li>이를 막고자, <code>state.tool</code>이 <code>pen</code> 도구일때의 <code>점 찍기/도형 닫기</code>만 <code>click</code>으로 처리하고, 배경 클릭 이벤트는 <code>handleBackgroundPointerDown</code>에서 처리하도록 분리</li>
+<li>그리고, <code>앵커</code>/<code>핸들</code>/<code>도형</code> 을 누른 뒤 <code>svg</code>로 올라오는 <code>click</code>을 <code>점 찍기</code>로 인식하지 않도록 막는 플래그인 <code>suppressClickRef</code>를 추가
+<ul>
+<li><code>캡처</code> 때문이든, <code>버블링</code> 때문이든 하위요소의 <code>click</code> 이벤트는 결국 <code>svg</code>로 올라올 수 밖에 없으므로, 해당 요소들의 이벤트 핸들러(<code>begin*</code>)에서 <code>suppressClickRef = true</code>로 설정하도록 함</li>
+<li>이후 <code>svg</code>의 <code>handleClick</code>에서 이 값이 <code>true</code>이면 <code>click</code> 이벤트를 무시하도록 설정함
+(빈 캔버스에 대해 누른 것은 <code>handleBackgroundPointerDown</code>에서 <code>suppressClickRef=false</code>로 하도록 하여, <code>점 찍기/도형 닫기</code>를 정상적으로 수행하도록 함)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="섹션-내-좌석-배치하기seateditor" >섹션 내 좌석 배치하기(<code>SeatEditor</code>)
+<span>
+    <a href="#%ec%84%b9%ec%85%98-%eb%82%b4-%ec%a2%8c%ec%84%9d-%eb%b0%b0%ec%b9%98%ed%95%98%ea%b8%b0seateditor">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="필요-요구사항-1" >필요 요구사항
+<span>
+    <a href="#%ed%95%84%ec%9a%94-%ec%9a%94%ea%b5%ac%ec%82%ac%ed%95%ad-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>섹션 내에 <code>N * M</code> 또는 <code>1 * M</code> 을 여러개 배치하는 형태로 벌크로 좌석을 배치하는 기능</li>
+<li>섹션 모양과 좌석간 간격 수치에 맞게 배치할 좌석 위치를 계산하는 기능</li>
+</ul>
+<h4 id="설계-방안" >설계 방안
+<span>
+    <a href="#%ec%84%a4%ea%b3%84-%eb%b0%a9%ec%95%88">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>SeatEditor</code>: 툴바, 캔버스 등 하위 컴포넌트에 상태(<code>seatEditorReducer</code>) 전파</li>
+<li><code>SeatCanvas</code>: 메인 캔버스 <code>svg</code>(<code>SeatCanvas.svgRef</code>)에서 좌석 채우기, 좌석 선택(클릭 및 드래그), 좌석 비활성화 등 <code>이벤트 처리</code>
+<ul>
+<li>현재 배치된 좌석들(<code>state.seats.map((...))</code>), 상태 패널(사용좌석/전체좌석, 선택된 좌석 수, 호버 좌석 정보) 등의 하위 요소들을 포함 (가짓수가 많지 않아 별도 컴포넌트로 분리하진 않음)</li>
+</ul>
+</li>
+<li><code>seatEditorReducer</code>: &lsquo;현재 섹션(<code>section</code>)&rsquo;, &lsquo;좌석 배열(<code>seats[]</code>)&rsquo;, &lsquo;선택된 좌석들 id 배열(<code>selectedIds[]</code>)&rsquo;</li>
+<li><code>SeatJsonPanel</code>: <code>SectionEditor</code>에서 받아온 Section 정보를 불러오고, JSON 형태의 좌석 배치 정보를 내보내기(복사/다운로드)/불러오기</li>
+</ul>
+<h4 id="핵심-코드-1" >핵심 코드
+<span>
+    <a href="#%ed%95%b5%ec%8b%ac-%ec%bd%94%eb%93%9c-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>seatGeometry.ts</code>에서 <code>Coons Patch</code> 계산하는 로직</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">coons</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">u</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">number</span>, <span style="color:#a6e22e">v</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">number</span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">Point</span> =&gt; {
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 1. 윗변-아랫변 보간
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">p</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lerp</span>(<span style="color:#a6e22e">topF</span>(<span style="color:#a6e22e">u</span>), <span style="color:#a6e22e">bottomF</span>(<span style="color:#a6e22e">u</span>), <span style="color:#a6e22e">v</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 2. + 왼쪽 변-오른쪽 변 보간
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">q</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lerp</span>(<span style="color:#a6e22e">leftF</span>(<span style="color:#a6e22e">v</span>), <span style="color:#a6e22e">rightF</span>(<span style="color:#a6e22e">v</span>), <span style="color:#a6e22e">u</span>);
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 3. - 코너 4개 쌍선형 보간
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">bx</span> <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>      (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">u</span>) <span style="color:#f92672">*</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">v</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">P00</span>.<span style="color:#a6e22e">x</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">u</span> <span style="color:#f92672">*</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">v</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">P10</span>.<span style="color:#a6e22e">x</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>      (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">u</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">v</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">P01</span>.<span style="color:#a6e22e">x</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">u</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">v</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">P11</span>.<span style="color:#a6e22e">x</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">by</span> <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>      (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">u</span>) <span style="color:#f92672">*</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">v</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">P00</span>.<span style="color:#a6e22e">y</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">u</span> <span style="color:#f92672">*</span> (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">v</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">P10</span>.<span style="color:#a6e22e">y</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>      (<span style="color:#ae81ff">1</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">u</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">v</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">P01</span>.<span style="color:#a6e22e">y</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">u</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">v</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">P11</span>.<span style="color:#a6e22e">y</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> { <span style="color:#a6e22e">x</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">x</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">q</span>.<span style="color:#a6e22e">x</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">bx</span>, <span style="color:#a6e22e">y</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">y</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">q</span>.<span style="color:#a6e22e">y</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">by</span> };
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><h4 id="발생한-문제-및-해결-1" >발생한 문제 및 해결
+<span>
+    <a href="#%eb%b0%9c%ec%83%9d%ed%95%9c-%eb%ac%b8%ec%a0%9c-%eb%b0%8f-%ed%95%b4%ea%b2%b0-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>좌석 자동 배치시, <code>곡선 처리</code> 문제
+<ul>
+<li>초기 설계 당시에는 <code>직사각형 형태의 섹션</code>만 고려했으나, 일반적으로 <code>공연장의 섹션</code>들은 대부분 <strong>기울어져 있거나, 부채꼴로 휘어있음</strong>을 발견 (특히 돔 형태의 공연장)
+<ul>
+<li>따라서 섹션을 그릴때 <code>곡선</code>도 사용할 수 있도록 <strong>개선해야 했음</strong></li>
+</ul>
+</li>
+<li>이로인해, 섹션 내에 <code>좌석을 자동으로 그려주는 기능</code>에서 <code>좌석 레이아웃 및 위치 계산</code> 로직의 수정이 필요해짐</li>
+<li>[기존의 방식]
+<ul>
+<li><code>섹션의 너비</code> $\times$ <code>높이</code> 를 구한 뒤, 사용자가 지정한 <code>가로/세로 간격</code>만큼 떨어지게 좌석들을 배치</li>
+</ul>
+</li>
+<li>[수정한 방식]
+<ul>
+<li>정사각형 격자를 구부리고 늘려서, 목표로하는 기울어지거나, 부채꼴로 휜 섹션 모양으로 만든다는 것이 토대가 되는 아이디어
+<strong>[요약]</strong>
+<ul>
+<li>먼저, 정사각형 내에서의 위치를 $(u, v) (0 \le u, v \le 1)$ 로 나타냄
+<ul>
+<li>0에서 1로 가까워질수록, <code>u</code>는 행 내에서 좌-&gt;우, <code>v</code>는 앞줄-&gt;뒷줄로 진행</li>
+</ul>
+</li>
+<li>그리고 정사각형의 네 변을 <code>섹션의 각 네 변</code>(<code>top</code>, <code>right</code>, <code>bottom</code>, <code>left</code>)에 대응시킴</li>
+<li>이렇게 하면, <code>v(열)</code>를 고정하고, <code>u</code>를 <code>0-&gt;1</code>로 움직인 선이 <strong>하나의 좌석 행</strong>이 됨
+<strong>[계산 과정]</strong></li>
+</ul>
+<ol>
+<li>섹션의 코너 4개 찾기(<code>detectCorners</code>)
+<ul>
+<li>앵커가 정확히 4개라면 그대로 사용하고, 그 이상이라면 <strong>꺾이는 정도</strong>(<code>(이전 앵커-&gt;현재 방향)</code>, <code>(현재 앵커-&gt;다음 방향)</code>의 <strong>각도차</strong>)가 가장 높은 4개를 코너로 사용</li>
+</ul>
+</li>
+<li>코너 사이를 이을 4개의 변 만들기(<code>chainBetween</code>, <code>sampleSegment</code>)
+<ul>
+<li>코너 <code>i</code>에서 코너 <code>j</code>까지 이어지는 루프를 따라가며, 앵커 사이의 구간을 점으로 등분함(현재 코드에서는 임의로 12등분)
+<ul>
+<li><code>직선</code>은 그냥 두 점 사이를 등분</li>
+<li><code>곡선</code>은 앞 앵커의 <code>handleOut</code>과 뒷 앵커의 <code>handleIn</code>을 제어점으로 하는, 3차 베지에 곡선을 등분(<code>cubicAt</code>)</li>
+</ul>
+</li>
+<li>이러한 처리를 거치기 때문에, 곡선이 섞여있어도 네 변이 모두 <code>폴리라인(여러 개의 작은 선들로 이루어진 선)</code>으로 만들 수 있고, 추후 계산시 곡선/직선 여부를 신경쓰지 않아도 됨</li>
+</ul>
+</li>
+<li>어느 방향을 <strong><code>행 방향</code></strong> 으로 할 지 결정하기(<code>straightness</code>)
+<ul>
+<li>4개의 코너로는 두 가지 방향이 가능
+<ol>
+<li><code>0-1</code> / <code>2-3</code> 변 쌍이 위아래</li>
+<li><code>1-2</code> / <code>3-0</code> 변 쌍이 위아래
+<ul>
+<li>이 경우, <code>코너 배열</code>을 한 칸 회전시킴</li>
+</ul>
+</li>
+</ol>
+</li>
+<li>이를 판단하기 위해, <code>변 쌍의 휨 정도</code>를 계산하여 더 많이 휜 쌍을 위-아래로 선택함
+<ul>
+<li>해당 기능의 목적이 <code>&quot;부채꼴 형태&quot;의 섹션</code> 지원이므로, <code>앞줄</code>/<code>뒷줄</code>이 휘어있는 <code>부채꼴</code> 형태를 생각하면 더 많이 휜쪽을 선택하는 것이 맞음</li>
+<li>이때, 휜 정도는 <code>양끝 점의 직선 거리 / 실제 선 길이</code>로 계산함 (1이면 직선, 작을 수록 휨 정도 ↑)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>각 변에 대해, &ldquo;&rsquo;<code>0~1 비율(t)</code>에 대해, 대응되는 점 위치&rsquo;를 반환하는 <code>함수</code>&ldquo;를 생성(<code>arcSampler</code>)
+<ul>
+<li><em>베지에 곡선의 매개변수</em>인 <code>t</code>가 곡선 위에서 <code>등간격(간격이 동일)</code>이 <strong>아니기 때문</strong>에 이러한 함수가 필요
+<ul>
+<li><code>곡률이 큰 구간</code>에선 점이 <strong>촘촘히 배치</strong>되어있고, <code>완만한 곳</code>에는 <strong>듬성듬성 배치</strong>되게 됨</li>
+<li>따라서, 점들을 <code>일정한 간격</code>으로 배치하기 위해 다음과 같이 <strong><code>보간</code></strong> 을 수행를 수행</li>
+</ul>
+</li>
+<li><code>변들 구성하는 점들(pts[])</code>을 인자로 받아, <code>(t) =&gt; pts[]</code> 형태의 함수를 생성
+<ol>
+<li><code>pts[0]</code>부터 각 점까지의 누적 거리표(<code>cum</code>)를 만듦</li>
+<li>비율 <code>t</code>를 받으면, 그 위치에 대응되는 지점의 <code>좌표를 반환</code>하는 <code>(t) =&gt; pts[]</code> 형태의 함수를 생성 및 반환
+<ul>
+<li>먼저, 비율 <code>t</code>를 가야할 거리 <code>d</code>로 변환</li>
+<li>이후, <code>d</code>가 몇 번째 구간에 속하는지 구한 뒤, 구간 길이를 구간 내에서 <code>보간</code>
+<img src="coons-patch.png" alt=""></li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><code>Coons patch</code>를 이용해 내부 좌표 계산(<code>coons(u, v)</code>)
+<ul>
+<li><code>Coons patch</code>란, <em>네 지점을 교차</em>하는 <code>네 개의 곡선</code>이 주어질 때, <code>네 곡선을 지나는 곡면</code>을 구하는 보간 문제에 사용되는 솔루션임
+<ul>
+<li>수학적으로, <code>(u, v) 짜리 정사각형</code>의 <code>네 변</code>이 주어진 <code>네 곡선</code>에 붙도록 내부 점을 만드는 함수임</li>
+<li>코드에서는, <code>generateSeats</code>에서 <code>u</code>와 <code>v</code>를 점진적으로 증가시키면서 <code>coons(u, v)</code>를 반복적으로 호출</li>
+</ul>
+</li>
+<li>보간은 크게 세 단계로 진행됨
+<ol>
+<li>[<code>top(u)</code>과 <code>bottom(u)</code> 사이를 <code>v</code>만큼 보간] (세로 방향 보간)
+<ul>
+<li>같은 <code>u</code> 위치의 <code>위 변 점</code>과 <code>아래 변 점</code>을 직선으로 잇고, 그 사이를 <code>v</code>만큼 감</li>
+<li><code>위아래 변</code> 모양은 <strong>그대로 반영</strong>되지만, <code>좌우 끝</code>은 <em>코너끼리 이은 직선</em>이 됨(즉, 좌우 변이 휜 경우 어긋남)</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>[<code>left(v)</code>와 <code>right(v)</code> 사이를 <code>u</code>만큼 보간] (가로 방향 보간)</li>
+</ul>
+<ul>
+<li>방향만 바꿔, 같은 <code>v</code> 위치의 <code>왼쪽 변 점</code>과 <code>오른쪽 변 점</code>을 직선으로 잇고, 그 사이를 <code>u</code>만큼 감</li>
+<li>위아래 변이 휜 경우 어긋남</li>
+</ul>
+</li>
+<li>
+<ul>
+<li>[ 네 코너만으로 만든 <code>쌍선형 보간</code> ] (중복 보정)</li>
+<li><code>쌍선형 보간</code>이란, <code>한 방향</code>으로 <em>선형 보간을 먼저 수행</em>한 뒤, <code>다른 방향</code>으로 <strong>보간을 다시 수행</strong>하는 것을 의미</li>
+<li>코드에서는 x, y에 대해 네 코너와의 가중합을 계산함</li>
+<li><code>쌍선형 보간</code>을 <strong>빼주는 이유</strong>
+<ul>
+<li>위 <code>1번</code>, <code>2번</code> 값은 <code>한 쌍의 변만 반영</code>한 값이므로, 그냥 더하게 되면 네 코너가 <strong>두 번씩 세어짐</strong>
+<ul>
+<li>ex) (0, 0)인 경우
+<pre tabindex="0"><code>p = lerp(topF(0), bottomF(0), 0) = P00
+q = lerp(leftF(0), rightF(0), 0) = leftF(0) = sLeftRev(1) = c0 = P00
+bx = P00
+=&gt; P00 + P00 - P00 = P00
+</code></pre></li>
+</ul>
+</li>
+<li>이러한 중복을 제거해주기 위해, <code>쌍선형 보간</code>을 빼주는 것</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+</li>
+<li>행 수와 열 수 정하기</li>
+<li>각 좌석 후보가 섹션 안에 있는지 내부 판정(<code>레이 캐스팅</code>, <code>pointInPolygon</code>) 및 번호 매기기</li>
+<li>저장시 행 라벨 붙이기(<code>allSeatsForSave</code>)</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="섹션좌석-맵-저장불러오기" >섹션/좌석 맵 저장/불러오기
+<span>
+    <a href="#%ec%84%b9%ec%85%98%ec%a2%8c%ec%84%9d-%eb%a7%b5-%ec%a0%80%ec%9e%a5%eb%b6%88%eb%9f%ac%ec%98%a4%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="필요-요구사항-2" >필요 요구사항
+<span>
+    <a href="#%ed%95%84%ec%9a%94-%ec%9a%94%ea%b5%ac%ec%82%ac%ed%95%ad-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>저장한 뒤 다시 편집할 때, 저장된 상태를 복원하는 기능</li>
+<li>저장했을때, 예매 시스템에서 사용될 좌석 목록(<code>seat</code> 테이블) 생성하는 기능</li>
+<li>재저장시 기존 좌석과 충돌하지 않도록 저장하는 기능</li>
+</ul>
+<h4 id="설계-방안-1" >설계 방안
+<span>
+    <a href="#%ec%84%a4%ea%b3%84-%eb%b0%a9%ec%95%88-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>JsonPanel</code>: <code>editorReducer</code>의 <code>section</code>을 주입받아 <code>JSON</code> 형태로 시각화 및 복사/다운로드, 불러오기 기능 제공</li>
+<li><code>SeatJsonPanel</code>: <code>seatEditorReducer</code>의 <code>seats</code>를 주입받아 <code>JSON</code> 형태로 시각화 및 복사/다운로드, 불러오기 기능 제공</li>
+</ul>
+<h4 id="핵심-코드-2" >핵심 코드
+<span>
+    <a href="#%ed%95%b5%ec%8b%ac-%ec%bd%94%eb%93%9c-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>SeatJsonPanel</code>에서 좌석 목록을 사용할 좌석들로만 정규화하는 함수 <code>compactUsedSeats</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 저장용 좌석 목록(사용 좌석만)으로 정규화한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * - 행: 사용 좌석이 있는 행만 위-&gt;아래로 모아 A,B,C… 재부여(빈 앞행/중간행으로 인한 결번 없음).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * - 열 번호: 생성 시 번호 유지(미사용 좌석으로 인한 결번은 그대로 둠).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">compactUsedSeats</span>(
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">seats</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Seat</span>[],
+</span></span><span style="display:flex;"><span>)<span style="color:#f92672">:</span> { <span style="color:#a6e22e">gridRow</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">number</span>; <span style="color:#a6e22e">row</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">string</span>; <span style="color:#a6e22e">number</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">number</span> }[] {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">used</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">seats</span>.<span style="color:#a6e22e">filter</span>((<span style="color:#a6e22e">s</span>) =&gt; <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">available</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">rowsPresent</span> <span style="color:#f92672">=</span> [...<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Set</span>(<span style="color:#a6e22e">used</span>.<span style="color:#a6e22e">map</span>((<span style="color:#a6e22e">s</span>) =&gt; <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">gridRow</span>))].<span style="color:#a6e22e">sort</span>(
+</span></span><span style="display:flex;"><span>    (<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>) =&gt; <span style="color:#a6e22e">a</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">b</span>,
+</span></span><span style="display:flex;"><span>  );
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">labelByRow</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Map</span>(<span style="color:#a6e22e">rowsPresent</span>.<span style="color:#a6e22e">map</span>((<span style="color:#a6e22e">gr</span>, <span style="color:#a6e22e">i</span>) =&gt; [<span style="color:#a6e22e">gr</span>, <span style="color:#a6e22e">rowLabel</span>(<span style="color:#a6e22e">i</span>)]));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">used</span>
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">slice</span>()
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">sort</span>((<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>) =&gt; <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">gridRow</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">gridRow</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">number</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">number</span>)
+</span></span><span style="display:flex;"><span>    .<span style="color:#a6e22e">map</span>((<span style="color:#a6e22e">s</span>) =&gt; ({
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">gridRow</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">gridRow</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">row</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">labelByRow</span>.<span style="color:#a6e22e">get</span>(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">gridRow</span>) <span style="color:#f92672">??</span> <span style="color:#e6db74">&#34;A&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">number</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">number</span>,
+</span></span><span style="display:flex;"><span>    }));
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li><code>SeatmapStudio</code>에서 <code>Section</code>과 <code>Seats</code> 편집 데이터를 하나의 객체로 직렬화하는 함수 <code>buildSeatmapPayload</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">/**
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * SectionEditor 의 섹션 배치와 SeatEditor 의 섹션별 좌석을 하나의 등록 JSON 으로 합친다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * - layoutJson: 에디터 작업 문서(SeatmapDoc) 전체를 직렬화(섹션+좌석) → 재진입 시 복원용.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * - seats: 사용 좌석만 평면화(섹션 이름 기준) → 티켓팅용 Seat 테이블 투영.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * 이미 삭제된 섹션의 좌석은 seats 투영에서 제외한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">buildSeatmapPayload</span>(
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sections</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Section</span>[],
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">seatsBySection</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Record</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">string</span>, <span style="color:#a6e22e">Seat</span>[]<span style="color:#f92672">&gt;</span>,
+</span></span><span style="display:flex;"><span>)<span style="color:#f92672">:</span> <span style="color:#a6e22e">SeatmapPayload</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">nameById</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Map</span>(<span style="color:#a6e22e">sections</span>.<span style="color:#a6e22e">map</span>((<span style="color:#a6e22e">s</span>) =&gt; [<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">name</span>]));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">seats</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">SeatmapSeatItem</span>[] <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">sectionId</span>, <span style="color:#a6e22e">sectionSeats</span>] <span style="color:#66d9ef">of</span> Object.<span style="color:#a6e22e">entries</span>(<span style="color:#a6e22e">seatsBySection</span>)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">nameById</span>.<span style="color:#a6e22e">get</span>(<span style="color:#a6e22e">sectionId</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">name</span>) <span style="color:#66d9ef">continue</span>; <span style="color:#75715e">// 삭제된 섹션은 건너뛴다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">r</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">allSeatsForSave</span>(<span style="color:#a6e22e">sectionSeats</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">seats</span>.<span style="color:#a6e22e">push</span>({
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">section</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">name</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rowNumber</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">row</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">seatNumber</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">number</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">isAvailable</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">available</span>, <span style="color:#75715e">// 비가용 좌석도 isAvailable=false 로 저장
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      });
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">doc</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">SeatmapDoc</span> <span style="color:#f92672">=</span> { <span style="color:#a6e22e">version</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">sections</span>, <span style="color:#a6e22e">seatsBySection</span> };
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> { <span style="color:#a6e22e">layoutJson</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>(<span style="color:#a6e22e">doc</span>), <span style="color:#a6e22e">seats</span> };
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="발생한-문제" >발생한 문제
+<span>
+    <a href="#%eb%b0%9c%ec%83%9d%ed%95%9c-%eb%ac%b8%ec%a0%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>부모에게 상태 올릴때 무한 루프 발생 문제
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// SectionEditor.tsx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">useEffect</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">onSectionsChange</span><span style="color:#f92672">?</span>.(<span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">sections</span>);
+</span></span><span style="display:flex;"><span>}, [<span style="color:#a6e22e">state</span>.<span style="color:#a6e22e">sections</span>, <span style="color:#a6e22e">onSectionsChange</span>]);   <span style="color:#75715e">// ← 콜백이 의존성에 들어간다
+</span></span></span></code></pre></div><ul>
+<li>섹션을 실시간으로 올리기 위해, 자식의 <code>effect</code>에서 부모 콜백을 호출하도록함</li>
+<li>이때, 부모가 콜백을 <code>인라인 함수</code>로 넘기면, 매 렌더마다 새 참조가 만들어져 <code>effect 실행 -&gt; 부모 setState -&gt; 부모 리렌더 -&gt; 새 함수 콜백으로 넘김 -&gt; effect 재 실행</code>이라는 루프가 발생</li>
+<li>이를 해결하고자, <code>useCallback</code>을 사용하여, 콜백 함수를 <code>캐싱</code>하여 사용
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// SectionEditor 의 effect 에서 호출되므로 참조가 안정적이어야 한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">handleSectionsChange</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">useCallback</span>((<span style="color:#a6e22e">next</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Section</span>[]) =&gt; <span style="color:#a6e22e">setSections</span>(<span style="color:#a6e22e">next</span>), []);
+</span></span></code></pre></div></li>
+</ul>
+</li>
+</ul>
+<h3 id="뷰어" >뷰어
+<span>
+    <a href="#%eb%b7%b0%ec%96%b4">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="필요-요구사항-3" >필요 요구사항
+<span>
+    <a href="#%ed%95%84%ec%9a%94-%ec%9a%94%ea%b5%ac%ec%82%ac%ed%95%ad-3">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>섹션 맵/좌석 맵 <code>JSON</code> 데이터를 받아, 이를 편집할 때의 배치와 똑같이 시각화하는 기능</li>
+<li>섹션을 선택했을 때, 좌석맵을 시각화하는 기능</li>
+<li>섹션 별 잔여 좌석 수를 표시하는 기능</li>
+<li>판매 중인 좌석/선점중인 좌석/판매된 좌석을 구분하여 표시하는 기능</li>
+</ul>
+<h4 id="설계-방안-2" >설계 방안
+<span>
+    <a href="#%ec%84%a4%ea%b3%84-%eb%b0%a9%ec%95%88-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>SeatViewClient</code>: 섹션 선택 여부(<code>section === undefined</code>)에 따라, 받아온 <code>layoutJson</code>을 기반으로 Section을 시각화하거나, 섹션 내 좌석(<code>sectionSeats</code>)을 시각화
+<ul>
+<li>별도의 페이지 이동 없이 한 화면에서 <code>Section Viewer</code>와 <code>SeatMap Viewer</code>를 전환</li>
+<li><code>layoutJson</code>과 좌석 정보는 <code>useSeatViewPolling</code>를 통해 불러옴</li>
+</ul>
+</li>
+<li><code>useSeatViewPolling</code>: 최초 스냅샷 수신 후, 변경 번호(<code>cursor</code>) 기반으로 <em>변경분만 수신</em>하는 <code>증분 폴링</code> 형태로 특정 이벤트의 좌석 상태를 지속적으로 갱신하는 <code>훅</code></li>
+</ul>
+<h4 id="핵심-코드-3" >핵심 코드
+<span>
+    <a href="#%ed%95%b5%ec%8b%ac-%ec%bd%94%eb%93%9c-3">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li><code>useSeatViewPoilling</code>의 <code>useEffect</code> 내부의 폴링 로직</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// useSeatViewPolling.ts
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">seats</span>, <span style="color:#a6e22e">setSeats</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">Map</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">number</span>, <span style="color:#a6e22e">SeatViewSeat</span><span style="color:#f92672">&gt;&gt;</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Map</span>());
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> [<span style="color:#a6e22e">heldSeats</span>, <span style="color:#a6e22e">setHeldSeats</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">useState</span><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">number</span>[]<span style="color:#f92672">&gt;</span>([]);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 단조증가하는 변경번호 cursor
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">cursorRef</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">useRef</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">poll</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>	  <span style="color:#75715e">// 변경분만 받아오기
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">ch</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">getSeatViewChanges</span>(<span style="color:#a6e22e">eventId</span>, <span style="color:#a6e22e">cursorRef</span>.<span style="color:#a6e22e">current</span>, <span style="color:#a6e22e">section</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">alive</span>) <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">ch</span>.<span style="color:#a6e22e">seats</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">setSeats</span>((<span style="color:#a6e22e">prev</span>) =&gt; {
+</span></span><span style="display:flex;"><span>         <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">next</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Map</span>(<span style="color:#a6e22e">prev</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">s</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">ch</span>.<span style="color:#a6e22e">seats</span>) <span style="color:#a6e22e">next</span>.<span style="color:#a6e22e">set</span>(<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">eventSeatSeq</span>, <span style="color:#a6e22e">s</span>);   <span style="color:#75715e">// 변경분만 덮어쓴다
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">next</span>;
+</span></span><span style="display:flex;"><span>      });
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">setHeldSeats</span>(<span style="color:#a6e22e">ch</span>.<span style="color:#a6e22e">heldSeats</span> <span style="color:#f92672">??</span> []);     <span style="color:#75715e">// 선점은 매번 최신 집합으로 &#34;대체&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">cursorRef</span>.<span style="color:#a6e22e">current</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ch</span>.<span style="color:#a6e22e">cursor</span>;
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">catch</span> {
+</span></span><span style="display:flex;"><span>     <span style="color:#75715e">// 일시 오류는 다음 주기에 재시도
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  } <span style="color:#66d9ef">finally</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">alive</span>) <span style="color:#a6e22e">timer</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">setTimeout</span>(<span style="color:#a6e22e">poll</span>, <span style="color:#a6e22e">intervalMs</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li>위 로직에서 <code>판매상태(SOLD)</code>와 <code>선점상태(held)</code>를 다르게 다루는 것이 핵심임
+<ul>
+<li><code>판매(SOLD)</code>
+<ul>
+<li><code>증분 머지</code> 형태로 갱신 - 커서 이후만 덮어씀</li>
+<li>한 번 판매되고 나면 되돌아가는 일이 드물기 때문</li>
+</ul>
+</li>
+<li><code>선점(held)</code>
+<ul>
+<li><code>전체 교체</code>형태로 갱신 - 매 폴링마다 새 배열로 교체</li>
+<li><code>선점</code>은 5분의 <code>TTL</code>로 생겼다가 사라졌다 하기 때문에, 증분으로는 <code>선점이 풀렸다</code>는 것을 표현할 수 없음</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="발생한-문제-1" >발생한 문제
+<span>
+    <a href="#%eb%b0%9c%ec%83%9d%ed%95%9c-%eb%ac%b8%ec%a0%9c-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ul>
+<li>좌석 선점에 성공한 뒤, 결제 페이지로 이동하지 못하는 버그
+<ul>
+<li>좌석 선택 후, 결제하기 버튼을 눌렀는데 <em>결제 페이지로 넘어가지 못할 경우</em> <code>아무것도 할 수 없는 상태</code>가 되는 버그가 발생</li>
+<li>[원인]
+<ul>
+<li>좌석 선점에 성공할 경우, 그 좌석은 서버에서 <code>held</code>가 되고, <em>다음 폴링</em>에서 <code>클릭 불가</code>로 바뀜</li>
+<li>그러나 클라이언트 측의 <code>selected</code>에는 그대로 남아있음.</li>
+<li>선택을 해제하기 위해서는, 다시 좌석을 눌러야 하는데, 누를수가 없음
+<ul>
+<li><code>const clickable = !sold &amp;&amp; !held; // 선점된 순간 내가 선택한 것도 못 지움</code></li>
+<li>결제 바는 <code>selected.size &gt; 0</code>일때 뜨기 때문에, 선택을 풀 수 없는 현 상황에서는 결제 바가 영원히 남게됨</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[해결 방안]
+<ul>
+<li><em>선점에 성공하고 난 뒤</em>, <code>내 선택을 비우도록</code> 수정함
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">await</span> <span style="color:#a6e22e">holdSeats</span>(<span style="color:#a6e22e">eventId</span>, <span style="color:#a6e22e">seqs</span>);
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 선점되면 그 좌석은 클릭 불가(held)가 되어 선택 해제할 수 없음.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 따라서, `선택`을 비워 &#34;결제 바만 남고 빠져나올 수 없는&#34; 상태를 막는다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">setSelected</span>(<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Set</span>());
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">router</span>.<span style="color:#a6e22e">push</span>(<span style="color:#e6db74">`/events/</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">eventId</span><span style="color:#e6db74">}</span><span style="color:#e6db74">/seats/payment?seats=</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">seqs</span>.<span style="color:#a6e22e">join</span>(<span style="color:#e6db74">&#34;,&#34;</span>)<span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span></code></pre></div></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="참고" >참고
+<span>
+    <a href="#%ec%b0%b8%ea%b3%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><ul>
+<li><a href="https://codingapple.com/blog/bezier-curve/">베지어 곡선 직접 만져보기</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Coons_patch">Coons patch - Wikipedia</a></li>
+<li><a href="https://www.rose-hulman.edu/~finn/CCLI/Notes/day31.pdf">MA 323 Geometric Modelling Course Notes: Day 31 Blended and Ruled Surfaces Coons Patches</a></li>
+</ul>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/toy-project/podor/03-fe-seatmap-editor/"><time datetime="2026-10-17">2026-10-17 12:18 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/toy-project/podor/03-fe-seatmap-editor/">https://cloudsoswift.github.io/post/develop/toy-project/podor/03-fe-seatmap-editor/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/toyproject/">#ToyProject</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/next.js/">#Next.js</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/javascript/">#Javascript</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/toy-project/podor/02-knowledge-in-first-week/">[podoR] 2. 프로젝트 첫 주차에 알게된 점들 (w. SpEL, Hydration Mismatch, 이벤트 재타게팅)</a></li>
+                
+                <li><a href="/post/develop/javascript/axios/interceptor-deadlock/">[axios] Refresh Token 자동 재발급 Interceptor로 인한 데드락 및 해결 (w. 널 병합 연산자)</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/toy-project/podor/02-knowledge-in-first-week/">[podoR] 2. 프로젝트 첫 주차에 알게된 점들 (w. SpEL, Hydration Mismatch, 이벤트 재타게팅)</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+            </main>
+            
+                <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2026<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+            
+        </div>
+        <aside class="sidebar">
+    <div class="sidebar-widget">
+        <h2 class="sidebar-title">카테고리</h2>
+
+        
+        
+
+           
+              
+             
+
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+
+        
+        
+
+        <ul class="sidebar-categories">
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/algorithm/">algorithm</a>
+                        
+                        <span class="sidebar-category-count">12</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/algorithm/data-structure/">data-structure</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/develop/">develop</a>
+                        
+                        <span class="sidebar-category-count">44</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/cs/">cs</a>
+                                    
+                                    <span class="sidebar-category-count">3</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/database/">database</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/java/">java</a>
+                                    
+                                    <span class="sidebar-category-count">10</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/javascript/">javascript</a>
+                                    
+                                    <span class="sidebar-category-count">12</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/network/">network</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/nodejs/">nodejs</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/os/">OS</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/toy-project/">toy-project</a>
+                                    
+                                    <span class="sidebar-category-count">3</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/etc/">etc</a>
+                        
+                        <span class="sidebar-category-count">2</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/etc/etc/">etc</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/self-development/">self-development</a>
+                        
+                        <span class="sidebar-category-count">1</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/self-development/ril/">RIL</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+        </ul>
+    </div>
+</aside>
+
+    </div>
+</body>
+</html>

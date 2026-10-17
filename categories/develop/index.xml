@@ -6,10 +6,719 @@
     <description>오늘도 개발을 한다. (develop)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Mon, 21 Sep 2026 01:09:47 +0900</lastBuildDate>
+    <lastBuildDate>Sat, 17 Oct 2026 12:18:29 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/categories/develop/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[podoR] 3. FE 좌석맵 에디터 구현과 트러블 슈팅</title>
+      <link>https://cloudsoswift.github.io/post/develop/toy-project/podor/03-fe-seatmap-editor/</link>
+      <pubDate>Sat, 17 Oct 2026 12:18:29 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/toy-project/podor/03-fe-seatmap-editor/</guid>
+      <description>&lt;h2 id=&#34;서론&#34; &gt;서론
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%9c%eb%a1%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;왜 &lt;code&gt;좌석맵 에디터/뷰어&lt;/code&gt;를 개발했는가
+&lt;ul&gt;
+&lt;li&gt;&amp;lsquo;서비스 구현에 필요한 &lt;code&gt;섹션/좌석 맵&lt;/code&gt;&amp;lsquo;을 등록/수정 할 수 있는 에디터가 필요하다 판단&lt;/li&gt;
+&lt;li&gt;이때, 에디터는 다음과 같은 기능을 수행할 수 있어야 함
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;공연장마다 다른&lt;/em&gt; &lt;code&gt;구조&lt;/code&gt;와 &lt;code&gt;좌석 배치&lt;/code&gt;를 구현하고, 이를 추후 수정할 수 있어야 함&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;어떤 좌석을 예매했는지&lt;/em&gt;를 매치시킬 좌석 엔티티를 DB에 등록할 수 있어야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이 글에서는 어떻게 요구사항 -&amp;gt; 기능을 도출하고, 겪은 문제들을 어떻게 해결했는지 정리하고자 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;핵심-설계-사항&#34; &gt;핵심 설계 사항
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%b5%ec%8b%ac-%ec%84%a4%ea%b3%84-%ec%82%ac%ed%95%ad&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;섹션 맵&lt;/code&gt; -&amp;gt; &lt;code&gt;좌석 맵&lt;/code&gt;으로 이어지는 2단계 구조
+&lt;ul&gt;
+&lt;li&gt;티케팅시 진입 단계를 두 단계로 나누어, 예매라는 핵심 로직에 도달하는 시간을 지연시킴&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;SVG&lt;/code&gt;&lt;/strong&gt; 기반의 섹션/좌석 시각화
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;canvas&amp;gt;&lt;/code&gt; 기반과 &lt;code&gt;svg&lt;/code&gt; 기반 중 고민했으나, &lt;code&gt;svg&lt;/code&gt; 기반이 더 이점이 많다고 판단함
+&lt;ol&gt;
+&lt;li&gt;DOM 기반으로 처리할 수 있는 &lt;code&gt;svg&lt;/code&gt;와 달리, &lt;code&gt;&amp;lt;canvas&amp;gt;&lt;/code&gt;는 렌더된 요소에 대해 좌표 계산 및 이벤트 처리 로직을 직접 작성해주어야 한다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;canvas&amp;gt;&lt;/code&gt;의 강점은 많은 객체를 렌더링하는데에 있는데, 이미 섹션 단위로 좌석을 쪼개기 때문에 렌더링할 양이 많지 않다(많아야 한 섹션 당 몇 천좌석가량)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;JSON&lt;/code&gt; 기반의 데이터 저장
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;섹션/좌석 맵&lt;/code&gt;을 &lt;code&gt;DB&lt;/code&gt;에 저장할 수 있는 형태로 &lt;code&gt;직렬화&lt;/code&gt;/&lt;code&gt;역직렬화&lt;/code&gt;하기 위해서는 &lt;code&gt;JSON&lt;/code&gt;형태로 저장해야 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;핵심-기능&#34; &gt;핵심 기능
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%b5%ec%8b%ac-%ea%b8%b0%eb%8a%a5&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;컴포넌트 설계&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-markdown&#34; data-lang=&#34;markdown&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/admin/venues/[seq]/seatmap  (page.tsx)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;└── SeatmapStudio ─────────────────────────── useState ×6
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    │
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ├── SeatmapRegisterBar ────────────────── useState: status, showJson
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    │
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ├── SectionEditor ─────────────────────── useReducer(editorReducer)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    │   ├── EditorToolbar                     (상태 없음)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    │   ├── EditorCanvas ──────────────────── useState: view, panning
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    │   │   │                                 useRef: svg, drag, viewRef,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    │   │   │                                        suppressClick, lastAnchorClick, lastHandleClick
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    │   │   ├── BackgroundLayer               (상태 없음)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    │   │   ├── SectionShape × N              (상태 없음)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    │   │   └── DraftLayer                    (상태 없음)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    │   └── JsonPanel ────────────────────── useState: draft, error, prevExported
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    │
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    └── SeatEditor  (editing 일 때만) ──────── useReducer(seatEditorReducer)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        │            key={section.id}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        ├── SeatToolbar                       (상태 없음)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        ├── SeatCanvas ───────────────────── useState: view, panning, hoveredId, marquee
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        │                                     useRef: svg, drag, viewRef
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        └── SeatJsonPanel ────────────────── useState: boundary, error
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;/admin/events/[eventId]/seats  (page.tsx)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;└── EventSeatPlanEditor ───────────────────── useState ×7   ← 별도 트리. 편집기 컴포넌트를 공유하지 않고
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                                               seatmapApi/seatGeometry 만 재사용해 좌석맵을 &amp;#34;읽어서&amp;#34; 소비
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;섹션-편집sectioneditor&#34; &gt;섹션 편집(&lt;code&gt;SectionEditor&lt;/code&gt;)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%b9%ec%85%98-%ed%8e%b8%ec%a7%91sectioneditor&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;필요-요구사항&#34; &gt;필요 요구사항
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%84%ec%9a%94-%ec%9a%94%ea%b5%ac%ec%82%ac%ed%95%ad&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;찍은 점들을 이어 다각형(Polygon) 형태의 섹션을 그리는 기능&lt;/li&gt;
+&lt;li&gt;점들을 잇는 선을 곡선으로 바꿀 수 있는 &lt;code&gt;펜 툴&lt;/code&gt; 형태의 기능&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;실제-설계&#34; &gt;실제 설계
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%8b%a4%ec%a0%9c-%ec%84%a4%ea%b3%84&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;SeatEditor&lt;/code&gt;: 툴바, 캔버스 등 하위 컴포넌트에 &lt;code&gt;상태(editorReducer) 전파&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;EditorCanvas&lt;/code&gt;: 메인 캔버스 &lt;code&gt;svg&lt;/code&gt;(&lt;code&gt;EditorCanvas.svgRef&lt;/code&gt;)에서 섹션 그리기, 드래그 등 &lt;code&gt;이벤트 처리&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;현재 그리고 있는 다각형(&lt;code&gt;DraftLayer&lt;/code&gt;), 배경화면(&lt;code&gt;BackgroundLayer&lt;/code&gt;), 완성한 섹션들(&lt;code&gt;SectionShape&lt;/code&gt;) 등은 하위 레이어 컴포넌트로 분리&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;editorReducer&lt;/code&gt;: &amp;lsquo;현재까지 그린 섹션(&lt;code&gt;sections[]&lt;/code&gt;)&amp;rsquo;, &amp;lsquo;현재 잇고있는 점들(&lt;code&gt;draft[]&lt;/code&gt;)&amp;rsquo;, &amp;lsquo;사용중인 도구(&lt;code&gt;tool&lt;/code&gt;)&amp;rsquo; 등 상태 관리&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;JsonPanel&lt;/code&gt;: &lt;code&gt;JSON&lt;/code&gt; 내보내기(복사/다운로드)/불러오기&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;핵심-코드&#34; &gt;핵심 코드
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%b5%ec%8b%ac-%ec%bd%94%eb%93%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;EditorCanvas&lt;/code&gt;에서 앵커/핸들 클릭 처리 로직&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-typescript&#34; data-lang=&#34;typescript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;beginAnchorDrag&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;React.PointerEvent&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;sectionId&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;anchorId&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;shouldPan&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;)) &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;startPan&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;button&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;stopPropagation&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;suppressClickRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 더블클릭: 곡선 앵커면 직선화, 코너면 곡선화 토글.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Date.&lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;prev&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;lastAnchorClickRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;prev&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;prev&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;anchorId&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;===&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;anchorId&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;prev&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;time&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;DBL_MS&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;lastAnchorClickRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;dragRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sec&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;state&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;sections&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;find&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;id&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;===&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sectionId&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;sec&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;anchors&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;find&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;an&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;=&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;an&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;id&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;===&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;anchorId&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;hasHandles&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!!&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;handleIn&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;handleOut&lt;/span&gt;));
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;dispatch&lt;/span&gt;({
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#66d9ef&#34;&gt;type&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;hasHandles&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;STRAIGHTEN_ANCHOR&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;SMOOTH_ANCHOR&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;sectionId&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#a6e22e&#34;&gt;anchorId&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;lastAnchorClickRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;anchorId&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;time&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;now&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;svgRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;setPointerCapture&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;pointerId&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dragRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;anchor&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;sectionId&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;anchorId&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;beginHandleDrag&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;React.PointerEvent&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;sectionId&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;anchorId&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;string&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;side&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;HandleSide&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;shouldPan&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;)) &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;startPan&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;button&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!==&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;stopPropagation&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;suppressClickRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;true&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 같은 핸들을 더블클릭하면 해당 변을 직선화(핸들 제거).
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; Date.&lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt;();
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;prev&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;lastHandleClickRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;prev&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;prev&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;anchorId&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;===&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;anchorId&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;prev&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;side&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;===&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;side&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;amp;&amp;amp;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;now&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;prev&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;time&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;DBL_MS&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;lastHandleClickRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;dragRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;null&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;dispatch&lt;/span&gt;({ &lt;span style=&#34;color:#66d9ef&#34;&gt;type&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;REMOVE_HANDLE&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;sectionId&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;anchorId&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;side&lt;/span&gt; });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;lastHandleClickRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;anchorId&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;side&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;time&lt;/span&gt;: &lt;span style=&#34;color:#66d9ef&#34;&gt;now&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;svgRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;setPointerCapture&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;e&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;pointerId&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;dragRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;kind&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;handle&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;sectionId&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;anchorId&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;side&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;발생한-문제-및-해결&#34; &gt;발생한 문제 및 해결
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%9c%ec%83%9d%ed%95%9c-%eb%ac%b8%ec%a0%9c-%eb%b0%8f-%ed%95%b4%ea%b2%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;곡선 핸들 &lt;strong&gt;&lt;code&gt;더블 클릭&lt;/code&gt;&lt;/strong&gt; 시 직선화(핸들 삭제) 안되는 문제
+&lt;ul&gt;
+&lt;li&gt;섹션의 점 중 하나를 더블 클릭했을때 &lt;code&gt;곡선 앵커&lt;/code&gt; &amp;lt;-&amp;gt; &lt;code&gt;코너 앵커&lt;/code&gt;로 변환하는 로직(&lt;code&gt;EditorCanvas.beginAnchorDrag&lt;/code&gt;)을 구현했음&lt;/li&gt;
+&lt;li&gt;이를 섹션 폴리곤(&lt;code&gt;SectionShape&lt;/code&gt;)의 컨트롤 핸들(&lt;code&gt;&amp;lt;rect&amp;gt;&lt;/code&gt;)에서 캡처하도록 했으나, 다음과 같은 이유로 클릭 떼기(&lt;code&gt;pointerup&lt;/code&gt;)시 다른 태그에서 이벤트가 트리거됨
+&lt;ol&gt;
+&lt;li&gt;핸들의 칠해지지 않은 구역을 클릭했을 경우 해당 위치의 요소에 이벤트가 트리거 됨(&lt;code&gt;svg&lt;/code&gt;의 기본 값이 &lt;code&gt;pointer-events: visiblePainted&lt;/code&gt;(정확히는 &lt;code&gt;pointer-events: auto&lt;/code&gt;)로 동작하기 때문)&lt;/li&gt;
+&lt;li&gt;메인 캔버스 &lt;code&gt;svg&lt;/code&gt;에서 &lt;code&gt;setPointerCapture&lt;/code&gt;로 포인트 캡처를 걸고 있었음
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;핸들 드래그&lt;/code&gt;, &lt;code&gt;섹션 드래그&lt;/code&gt; 등 포인터가 대상 요소 밖으로 나가도 이벤트를 처리할 수 있도록 하기 위함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;이로 인해, 곡선 핸들 &lt;code&gt;클릭&lt;/code&gt; / &lt;code&gt;더블클릭&lt;/code&gt;이 모두 캡처 대상인 &lt;code&gt;svg&lt;/code&gt;로 보내짐
+&lt;ul&gt;
+&lt;li&gt;이렇게 될 경우, &lt;code&gt;click&lt;/code&gt;, &lt;code&gt;dblclick&lt;/code&gt;의 target이 &lt;code&gt;svg&lt;/code&gt;가 되므로 이벤트는 &lt;code&gt;svg&lt;/code&gt; 위로만 &lt;code&gt;버블링&lt;/code&gt;되고, &lt;em&gt;svg의 자식&lt;/em&gt;인 &lt;code&gt;rect&lt;/code&gt;로 내려가지 못함&lt;/li&gt;
+&lt;li&gt;따라서 &lt;code&gt;rect&lt;/code&gt;에 &lt;code&gt;onDoubleClick&lt;/code&gt;으로 설정해둔 핸들러가 트리거되지 못함&lt;/li&gt;
+&lt;li&gt;실제 이벤트 흐름
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;pointerdown&lt;/code&gt; - &lt;code&gt;rect&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;rect&lt;/code&gt;의 &lt;code&gt;onPointDown&lt;/code&gt;으로 연결된 &lt;code&gt;beginHandleDrag&lt;/code&gt;가 호출되면서, &lt;code&gt;svg.setPointerCapture()&lt;/code&gt;가 수행됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;pointerup&lt;/code&gt; - &lt;code&gt;svg&lt;/code&gt; (포인터가 &lt;code&gt;rect&lt;/code&gt;위에 있어도 &lt;code&gt;svg&lt;/code&gt;로 이벤트가 감)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;click&lt;/code&gt; - &lt;code&gt;svg&lt;/code&gt; (&lt;code&gt;down&lt;/code&gt;은 &lt;code&gt;rect&lt;/code&gt;, &lt;code&gt;up&lt;/code&gt;은 &lt;code&gt;svg&lt;/code&gt;-&amp;gt; 공통 조상이 &lt;code&gt;svg&lt;/code&gt;이고 캡처 대상도 &lt;code&gt;svg&lt;/code&gt;이므로 &lt;code&gt;svg&lt;/code&gt;로 이벤트 감)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;dblclick&lt;/code&gt; - &lt;code&gt;svg&lt;/code&gt; (위와 동일한 이유)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;따라서 &lt;code&gt;더블 클릭&lt;/code&gt; 로직을 처리하기 위해 다음과 같은 대안을 이용
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;마지막에 클릭된 핸들&lt;/em&gt;인 &lt;code&gt;lastHandleClickRef&lt;/code&gt;를 별도로 두고, 동일한 핸들을 &lt;code&gt;300ms&lt;/code&gt; 이내(임의 기준) 다시 클릭했을 경우 핸들을 제거하도록 함&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;또한 위와 동일한 이유로, &lt;code&gt;click&lt;/code&gt; 이벤트가 &lt;code&gt;svg&lt;/code&gt;의 &lt;code&gt;onClick&lt;/code&gt; 핸들러(&lt;code&gt;handleClick&lt;/code&gt;)으로 들어와 처리되는 문제가 발생함
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;svg&lt;/code&gt;의 &lt;code&gt;handleClick&lt;/code&gt;은 &amp;lsquo;배경 클릭&amp;rsquo;만 처리하고 있어 &lt;code&gt;핸들 클릭&lt;/code&gt;이 &amp;lsquo;배경 클릭&amp;rsquo;으로 처리되게 됨&lt;/li&gt;
+&lt;li&gt;이를 막고자, &lt;code&gt;state.tool&lt;/code&gt;이 &lt;code&gt;pen&lt;/code&gt; 도구일때의 &lt;code&gt;점 찍기/도형 닫기&lt;/code&gt;만 &lt;code&gt;click&lt;/code&gt;으로 처리하고, 배경 클릭 이벤트는 &lt;code&gt;handleBackgroundPointerDown&lt;/code&gt;에서 처리하도록 분리&lt;/li&gt;
+&lt;li&gt;그리고, &lt;code&gt;앵커&lt;/code&gt;/&lt;code&gt;핸들&lt;/code&gt;/&lt;code&gt;도형&lt;/code&gt; 을 누른 뒤 &lt;code&gt;svg&lt;/code&gt;로 올라오는 &lt;code&gt;click&lt;/code&gt;을 &lt;code&gt;점 찍기&lt;/code&gt;로 인식하지 않도록 막는 플래그인 &lt;code&gt;suppressClickRef&lt;/code&gt;를 추가
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;캡처&lt;/code&gt; 때문이든, &lt;code&gt;버블링&lt;/code&gt; 때문이든 하위요소의 &lt;code&gt;click&lt;/code&gt; 이벤트는 결국 &lt;code&gt;svg&lt;/code&gt;로 올라올 수 밖에 없으므로, 해당 요소들의 이벤트 핸들러(&lt;code&gt;begin*&lt;/code&gt;)에서 &lt;code&gt;suppressClickRef = true&lt;/code&gt;로 설정하도록 함&lt;/li&gt;
+&lt;li&gt;이후 &lt;code&gt;svg&lt;/code&gt;의 &lt;code&gt;handleClick&lt;/code&gt;에서 이 값이 &lt;code&gt;true&lt;/code&gt;이면 &lt;code&gt;click&lt;/code&gt; 이벤트를 무시하도록 설정함
+(빈 캔버스에 대해 누른 것은 &lt;code&gt;handleBackgroundPointerDown&lt;/code&gt;에서 &lt;code&gt;suppressClickRef=false&lt;/code&gt;로 하도록 하여, &lt;code&gt;점 찍기/도형 닫기&lt;/code&gt;를 정상적으로 수행하도록 함)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;섹션-내-좌석-배치하기seateditor&#34; &gt;섹션 내 좌석 배치하기(&lt;code&gt;SeatEditor&lt;/code&gt;)
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%b9%ec%85%98-%eb%82%b4-%ec%a2%8c%ec%84%9d-%eb%b0%b0%ec%b9%98%ed%95%98%ea%b8%b0seateditor&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;필요-요구사항-1&#34; &gt;필요 요구사항
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%84%ec%9a%94-%ec%9a%94%ea%b5%ac%ec%82%ac%ed%95%ad-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;섹션 내에 &lt;code&gt;N * M&lt;/code&gt; 또는 &lt;code&gt;1 * M&lt;/code&gt; 을 여러개 배치하는 형태로 벌크로 좌석을 배치하는 기능&lt;/li&gt;
+&lt;li&gt;섹션 모양과 좌석간 간격 수치에 맞게 배치할 좌석 위치를 계산하는 기능&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;설계-방안&#34; &gt;설계 방안
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%a4%ea%b3%84-%eb%b0%a9%ec%95%88&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;SeatEditor&lt;/code&gt;: 툴바, 캔버스 등 하위 컴포넌트에 상태(&lt;code&gt;seatEditorReducer&lt;/code&gt;) 전파&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;SeatCanvas&lt;/code&gt;: 메인 캔버스 &lt;code&gt;svg&lt;/code&gt;(&lt;code&gt;SeatCanvas.svgRef&lt;/code&gt;)에서 좌석 채우기, 좌석 선택(클릭 및 드래그), 좌석 비활성화 등 &lt;code&gt;이벤트 처리&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;현재 배치된 좌석들(&lt;code&gt;state.seats.map((...))&lt;/code&gt;), 상태 패널(사용좌석/전체좌석, 선택된 좌석 수, 호버 좌석 정보) 등의 하위 요소들을 포함 (가짓수가 많지 않아 별도 컴포넌트로 분리하진 않음)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;seatEditorReducer&lt;/code&gt;: &amp;lsquo;현재 섹션(&lt;code&gt;section&lt;/code&gt;)&amp;rsquo;, &amp;lsquo;좌석 배열(&lt;code&gt;seats[]&lt;/code&gt;)&amp;rsquo;, &amp;lsquo;선택된 좌석들 id 배열(&lt;code&gt;selectedIds[]&lt;/code&gt;)&amp;rsquo;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;SeatJsonPanel&lt;/code&gt;: &lt;code&gt;SectionEditor&lt;/code&gt;에서 받아온 Section 정보를 불러오고, JSON 형태의 좌석 배치 정보를 내보내기(복사/다운로드)/불러오기&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;핵심-코드-1&#34; &gt;핵심 코드
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%b5%ec%8b%ac-%ec%bd%94%eb%93%9c-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;seatGeometry.ts&lt;/code&gt;에서 &lt;code&gt;Coons Patch&lt;/code&gt; 계산하는 로직&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;coons&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;u&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;number&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;number&lt;/span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Point&lt;/span&gt; =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// 1. 윗변-아랫변 보간
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;lerp&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;topF&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;u&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;bottomF&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;u&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// 2. + 왼쪽 변-오른쪽 변 보간
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;q&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;lerp&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;leftF&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;rightF&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;u&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#75715e&#34;&gt;// 3. - 코너 4개 쌍선형 보간
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;bx&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;u&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;P00&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;x&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;u&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;P10&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;x&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;u&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;P01&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;x&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;u&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;P11&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;x&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;by&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;u&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;P00&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;y&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;u&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;P10&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;y&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      (&lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;u&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;P01&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;y&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;u&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;v&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;P11&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;y&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;x&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;x&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;q&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;x&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;bx&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;y&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;y&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;q&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;y&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;by&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;};
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;발생한-문제-및-해결-1&#34; &gt;발생한 문제 및 해결
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%9c%ec%83%9d%ed%95%9c-%eb%ac%b8%ec%a0%9c-%eb%b0%8f-%ed%95%b4%ea%b2%b0-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;좌석 자동 배치시, &lt;code&gt;곡선 처리&lt;/code&gt; 문제
+&lt;ul&gt;
+&lt;li&gt;초기 설계 당시에는 &lt;code&gt;직사각형 형태의 섹션&lt;/code&gt;만 고려했으나, 일반적으로 &lt;code&gt;공연장의 섹션&lt;/code&gt;들은 대부분 &lt;strong&gt;기울어져 있거나, 부채꼴로 휘어있음&lt;/strong&gt;을 발견 (특히 돔 형태의 공연장)
+&lt;ul&gt;
+&lt;li&gt;따라서 섹션을 그릴때 &lt;code&gt;곡선&lt;/code&gt;도 사용할 수 있도록 &lt;strong&gt;개선해야 했음&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이로인해, 섹션 내에 &lt;code&gt;좌석을 자동으로 그려주는 기능&lt;/code&gt;에서 &lt;code&gt;좌석 레이아웃 및 위치 계산&lt;/code&gt; 로직의 수정이 필요해짐&lt;/li&gt;
+&lt;li&gt;[기존의 방식]
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;섹션의 너비&lt;/code&gt; $\times$ &lt;code&gt;높이&lt;/code&gt; 를 구한 뒤, 사용자가 지정한 &lt;code&gt;가로/세로 간격&lt;/code&gt;만큼 떨어지게 좌석들을 배치&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;[수정한 방식]
+&lt;ul&gt;
+&lt;li&gt;정사각형 격자를 구부리고 늘려서, 목표로하는 기울어지거나, 부채꼴로 휜 섹션 모양으로 만든다는 것이 토대가 되는 아이디어
+&lt;strong&gt;[요약]&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;먼저, 정사각형 내에서의 위치를 $(u, v) (0 \le u, v \le 1)$ 로 나타냄
+&lt;ul&gt;
+&lt;li&gt;0에서 1로 가까워질수록, &lt;code&gt;u&lt;/code&gt;는 행 내에서 좌-&amp;gt;우, &lt;code&gt;v&lt;/code&gt;는 앞줄-&amp;gt;뒷줄로 진행&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;그리고 정사각형의 네 변을 &lt;code&gt;섹션의 각 네 변&lt;/code&gt;(&lt;code&gt;top&lt;/code&gt;, &lt;code&gt;right&lt;/code&gt;, &lt;code&gt;bottom&lt;/code&gt;, &lt;code&gt;left&lt;/code&gt;)에 대응시킴&lt;/li&gt;
+&lt;li&gt;이렇게 하면, &lt;code&gt;v(열)&lt;/code&gt;를 고정하고, &lt;code&gt;u&lt;/code&gt;를 &lt;code&gt;0-&amp;gt;1&lt;/code&gt;로 움직인 선이 &lt;strong&gt;하나의 좌석 행&lt;/strong&gt;이 됨
+&lt;strong&gt;[계산 과정]&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ol&gt;
+&lt;li&gt;섹션의 코너 4개 찾기(&lt;code&gt;detectCorners&lt;/code&gt;)
+&lt;ul&gt;
+&lt;li&gt;앵커가 정확히 4개라면 그대로 사용하고, 그 이상이라면 &lt;strong&gt;꺾이는 정도&lt;/strong&gt;(&lt;code&gt;(이전 앵커-&amp;gt;현재 방향)&lt;/code&gt;, &lt;code&gt;(현재 앵커-&amp;gt;다음 방향)&lt;/code&gt;의 &lt;strong&gt;각도차&lt;/strong&gt;)가 가장 높은 4개를 코너로 사용&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;코너 사이를 이을 4개의 변 만들기(&lt;code&gt;chainBetween&lt;/code&gt;, &lt;code&gt;sampleSegment&lt;/code&gt;)
+&lt;ul&gt;
+&lt;li&gt;코너 &lt;code&gt;i&lt;/code&gt;에서 코너 &lt;code&gt;j&lt;/code&gt;까지 이어지는 루프를 따라가며, 앵커 사이의 구간을 점으로 등분함(현재 코드에서는 임의로 12등분)
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;직선&lt;/code&gt;은 그냥 두 점 사이를 등분&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;곡선&lt;/code&gt;은 앞 앵커의 &lt;code&gt;handleOut&lt;/code&gt;과 뒷 앵커의 &lt;code&gt;handleIn&lt;/code&gt;을 제어점으로 하는, 3차 베지에 곡선을 등분(&lt;code&gt;cubicAt&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이러한 처리를 거치기 때문에, 곡선이 섞여있어도 네 변이 모두 &lt;code&gt;폴리라인(여러 개의 작은 선들로 이루어진 선)&lt;/code&gt;으로 만들 수 있고, 추후 계산시 곡선/직선 여부를 신경쓰지 않아도 됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;어느 방향을 &lt;strong&gt;&lt;code&gt;행 방향&lt;/code&gt;&lt;/strong&gt; 으로 할 지 결정하기(&lt;code&gt;straightness&lt;/code&gt;)
+&lt;ul&gt;
+&lt;li&gt;4개의 코너로는 두 가지 방향이 가능
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;0-1&lt;/code&gt; / &lt;code&gt;2-3&lt;/code&gt; 변 쌍이 위아래&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;1-2&lt;/code&gt; / &lt;code&gt;3-0&lt;/code&gt; 변 쌍이 위아래
+&lt;ul&gt;
+&lt;li&gt;이 경우, &lt;code&gt;코너 배열&lt;/code&gt;을 한 칸 회전시킴&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;li&gt;이를 판단하기 위해, &lt;code&gt;변 쌍의 휨 정도&lt;/code&gt;를 계산하여 더 많이 휜 쌍을 위-아래로 선택함
+&lt;ul&gt;
+&lt;li&gt;해당 기능의 목적이 &lt;code&gt;&amp;quot;부채꼴 형태&amp;quot;의 섹션&lt;/code&gt; 지원이므로, &lt;code&gt;앞줄&lt;/code&gt;/&lt;code&gt;뒷줄&lt;/code&gt;이 휘어있는 &lt;code&gt;부채꼴&lt;/code&gt; 형태를 생각하면 더 많이 휜쪽을 선택하는 것이 맞음&lt;/li&gt;
+&lt;li&gt;이때, 휜 정도는 &lt;code&gt;양끝 점의 직선 거리 / 실제 선 길이&lt;/code&gt;로 계산함 (1이면 직선, 작을 수록 휨 정도 ↑)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;각 변에 대해, &amp;ldquo;&amp;rsquo;&lt;code&gt;0~1 비율(t)&lt;/code&gt;에 대해, 대응되는 점 위치&amp;rsquo;를 반환하는 &lt;code&gt;함수&lt;/code&gt;&amp;ldquo;를 생성(&lt;code&gt;arcSampler&lt;/code&gt;)
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;베지에 곡선의 매개변수&lt;/em&gt;인 &lt;code&gt;t&lt;/code&gt;가 곡선 위에서 &lt;code&gt;등간격(간격이 동일)&lt;/code&gt;이 &lt;strong&gt;아니기 때문&lt;/strong&gt;에 이러한 함수가 필요
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;곡률이 큰 구간&lt;/code&gt;에선 점이 &lt;strong&gt;촘촘히 배치&lt;/strong&gt;되어있고, &lt;code&gt;완만한 곳&lt;/code&gt;에는 &lt;strong&gt;듬성듬성 배치&lt;/strong&gt;되게 됨&lt;/li&gt;
+&lt;li&gt;따라서, 점들을 &lt;code&gt;일정한 간격&lt;/code&gt;으로 배치하기 위해 다음과 같이 &lt;strong&gt;&lt;code&gt;보간&lt;/code&gt;&lt;/strong&gt; 을 수행를 수행&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;변들 구성하는 점들(pts[])&lt;/code&gt;을 인자로 받아, &lt;code&gt;(t) =&amp;gt; pts[]&lt;/code&gt; 형태의 함수를 생성
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;pts[0]&lt;/code&gt;부터 각 점까지의 누적 거리표(&lt;code&gt;cum&lt;/code&gt;)를 만듦&lt;/li&gt;
+&lt;li&gt;비율 &lt;code&gt;t&lt;/code&gt;를 받으면, 그 위치에 대응되는 지점의 &lt;code&gt;좌표를 반환&lt;/code&gt;하는 &lt;code&gt;(t) =&amp;gt; pts[]&lt;/code&gt; 형태의 함수를 생성 및 반환
+&lt;ul&gt;
+&lt;li&gt;먼저, 비율 &lt;code&gt;t&lt;/code&gt;를 가야할 거리 &lt;code&gt;d&lt;/code&gt;로 변환&lt;/li&gt;
+&lt;li&gt;이후, &lt;code&gt;d&lt;/code&gt;가 몇 번째 구간에 속하는지 구한 뒤, 구간 길이를 구간 내에서 &lt;code&gt;보간&lt;/code&gt;
+&lt;img src=&#34;coons-patch.png&#34; alt=&#34;&#34;&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Coons patch&lt;/code&gt;를 이용해 내부 좌표 계산(&lt;code&gt;coons(u, v)&lt;/code&gt;)
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Coons patch&lt;/code&gt;란, &lt;em&gt;네 지점을 교차&lt;/em&gt;하는 &lt;code&gt;네 개의 곡선&lt;/code&gt;이 주어질 때, &lt;code&gt;네 곡선을 지나는 곡면&lt;/code&gt;을 구하는 보간 문제에 사용되는 솔루션임
+&lt;ul&gt;
+&lt;li&gt;수학적으로, &lt;code&gt;(u, v) 짜리 정사각형&lt;/code&gt;의 &lt;code&gt;네 변&lt;/code&gt;이 주어진 &lt;code&gt;네 곡선&lt;/code&gt;에 붙도록 내부 점을 만드는 함수임&lt;/li&gt;
+&lt;li&gt;코드에서는, &lt;code&gt;generateSeats&lt;/code&gt;에서 &lt;code&gt;u&lt;/code&gt;와 &lt;code&gt;v&lt;/code&gt;를 점진적으로 증가시키면서 &lt;code&gt;coons(u, v)&lt;/code&gt;를 반복적으로 호출&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;보간은 크게 세 단계로 진행됨
+&lt;ol&gt;
+&lt;li&gt;[&lt;code&gt;top(u)&lt;/code&gt;과 &lt;code&gt;bottom(u)&lt;/code&gt; 사이를 &lt;code&gt;v&lt;/code&gt;만큼 보간] (세로 방향 보간)
+&lt;ul&gt;
+&lt;li&gt;같은 &lt;code&gt;u&lt;/code&gt; 위치의 &lt;code&gt;위 변 점&lt;/code&gt;과 &lt;code&gt;아래 변 점&lt;/code&gt;을 직선으로 잇고, 그 사이를 &lt;code&gt;v&lt;/code&gt;만큼 감&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;위아래 변&lt;/code&gt; 모양은 &lt;strong&gt;그대로 반영&lt;/strong&gt;되지만, &lt;code&gt;좌우 끝&lt;/code&gt;은 &lt;em&gt;코너끼리 이은 직선&lt;/em&gt;이 됨(즉, 좌우 변이 휜 경우 어긋남)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;ul&gt;
+&lt;li&gt;[&lt;code&gt;left(v)&lt;/code&gt;와 &lt;code&gt;right(v)&lt;/code&gt; 사이를 &lt;code&gt;u&lt;/code&gt;만큼 보간] (가로 방향 보간)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;ul&gt;
+&lt;li&gt;방향만 바꿔, 같은 &lt;code&gt;v&lt;/code&gt; 위치의 &lt;code&gt;왼쪽 변 점&lt;/code&gt;과 &lt;code&gt;오른쪽 변 점&lt;/code&gt;을 직선으로 잇고, 그 사이를 &lt;code&gt;u&lt;/code&gt;만큼 감&lt;/li&gt;
+&lt;li&gt;위아래 변이 휜 경우 어긋남&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;ul&gt;
+&lt;li&gt;[ 네 코너만으로 만든 &lt;code&gt;쌍선형 보간&lt;/code&gt; ] (중복 보정)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;쌍선형 보간&lt;/code&gt;이란, &lt;code&gt;한 방향&lt;/code&gt;으로 &lt;em&gt;선형 보간을 먼저 수행&lt;/em&gt;한 뒤, &lt;code&gt;다른 방향&lt;/code&gt;으로 &lt;strong&gt;보간을 다시 수행&lt;/strong&gt;하는 것을 의미&lt;/li&gt;
+&lt;li&gt;코드에서는 x, y에 대해 네 코너와의 가중합을 계산함&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;쌍선형 보간&lt;/code&gt;을 &lt;strong&gt;빼주는 이유&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;위 &lt;code&gt;1번&lt;/code&gt;, &lt;code&gt;2번&lt;/code&gt; 값은 &lt;code&gt;한 쌍의 변만 반영&lt;/code&gt;한 값이므로, 그냥 더하게 되면 네 코너가 &lt;strong&gt;두 번씩 세어짐&lt;/strong&gt;
+&lt;ul&gt;
+&lt;li&gt;ex) (0, 0)인 경우
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;p = lerp(topF(0), bottomF(0), 0) = P00
+q = lerp(leftF(0), rightF(0), 0) = leftF(0) = sLeftRev(1) = c0 = P00
+bx = P00
+=&amp;gt; P00 + P00 - P00 = P00
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;이러한 중복을 제거해주기 위해, &lt;code&gt;쌍선형 보간&lt;/code&gt;을 빼주는 것&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;행 수와 열 수 정하기&lt;/li&gt;
+&lt;li&gt;각 좌석 후보가 섹션 안에 있는지 내부 판정(&lt;code&gt;레이 캐스팅&lt;/code&gt;, &lt;code&gt;pointInPolygon&lt;/code&gt;) 및 번호 매기기&lt;/li&gt;
+&lt;li&gt;저장시 행 라벨 붙이기(&lt;code&gt;allSeatsForSave&lt;/code&gt;)&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;섹션좌석-맵-저장불러오기&#34; &gt;섹션/좌석 맵 저장/불러오기
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%b9%ec%85%98%ec%a2%8c%ec%84%9d-%eb%a7%b5-%ec%a0%80%ec%9e%a5%eb%b6%88%eb%9f%ac%ec%98%a4%ea%b8%b0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;필요-요구사항-2&#34; &gt;필요 요구사항
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%84%ec%9a%94-%ec%9a%94%ea%b5%ac%ec%82%ac%ed%95%ad-2&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;저장한 뒤 다시 편집할 때, 저장된 상태를 복원하는 기능&lt;/li&gt;
+&lt;li&gt;저장했을때, 예매 시스템에서 사용될 좌석 목록(&lt;code&gt;seat&lt;/code&gt; 테이블) 생성하는 기능&lt;/li&gt;
+&lt;li&gt;재저장시 기존 좌석과 충돌하지 않도록 저장하는 기능&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;설계-방안-1&#34; &gt;설계 방안
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%a4%ea%b3%84-%eb%b0%a9%ec%95%88-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;JsonPanel&lt;/code&gt;: &lt;code&gt;editorReducer&lt;/code&gt;의 &lt;code&gt;section&lt;/code&gt;을 주입받아 &lt;code&gt;JSON&lt;/code&gt; 형태로 시각화 및 복사/다운로드, 불러오기 기능 제공&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;SeatJsonPanel&lt;/code&gt;: &lt;code&gt;seatEditorReducer&lt;/code&gt;의 &lt;code&gt;seats&lt;/code&gt;를 주입받아 &lt;code&gt;JSON&lt;/code&gt; 형태로 시각화 및 복사/다운로드, 불러오기 기능 제공&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;핵심-코드-2&#34; &gt;핵심 코드
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%b5%ec%8b%ac-%ec%bd%94%eb%93%9c-2&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;SeatJsonPanel&lt;/code&gt;에서 좌석 목록을 사용할 좌석들로만 정규화하는 함수 &lt;code&gt;compactUsedSeats&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/**
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt; * 저장용 좌석 목록(사용 좌석만)으로 정규화한다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt; * - 행: 사용 좌석이 있는 행만 위-&amp;gt;아래로 모아 A,B,C… 재부여(빈 앞행/중간행으로 인한 결번 없음).
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt; * - 열 번호: 생성 시 번호 유지(미사용 좌석으로 인한 결번은 그대로 둠).
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt; */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;compactUsedSeats&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;seats&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Seat&lt;/span&gt;[],
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;gridRow&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;number&lt;/span&gt;; &lt;span style=&#34;color:#a6e22e&#34;&gt;row&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;string&lt;/span&gt;; &lt;span style=&#34;color:#a6e22e&#34;&gt;number&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;number&lt;/span&gt; }[] {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;used&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;seats&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;filter&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;) =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;available&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;rowsPresent&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [...&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Set&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;used&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;map&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;) =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;gridRow&lt;/span&gt;))].&lt;span style=&#34;color:#a6e22e&#34;&gt;sort&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    (&lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;b&lt;/span&gt;) =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;b&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  );
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;labelByRow&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Map&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;rowsPresent&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;map&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;gr&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;i&lt;/span&gt;) =&amp;gt; [&lt;span style=&#34;color:#a6e22e&#34;&gt;gr&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;rowLabel&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;i&lt;/span&gt;)]));
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;used&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .&lt;span style=&#34;color:#a6e22e&#34;&gt;slice&lt;/span&gt;()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .&lt;span style=&#34;color:#a6e22e&#34;&gt;sort&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;b&lt;/span&gt;) =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;gridRow&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;b&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;gridRow&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;||&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;a&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;number&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;-&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;b&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;number&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    .&lt;span style=&#34;color:#a6e22e&#34;&gt;map&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;) =&amp;gt; ({
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;gridRow&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;gridRow&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;row&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;labelByRow&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;get&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;gridRow&lt;/span&gt;) &lt;span style=&#34;color:#f92672&#34;&gt;??&lt;/span&gt; &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;A&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;number&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;number&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }));
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;SeatmapStudio&lt;/code&gt;에서 &lt;code&gt;Section&lt;/code&gt;과 &lt;code&gt;Seats&lt;/code&gt; 편집 데이터를 하나의 객체로 직렬화하는 함수 &lt;code&gt;buildSeatmapPayload&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;/**
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt; * SectionEditor 의 섹션 배치와 SeatEditor 의 섹션별 좌석을 하나의 등록 JSON 으로 합친다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt; * - layoutJson: 에디터 작업 문서(SeatmapDoc) 전체를 직렬화(섹션+좌석) → 재진입 시 복원용.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt; * - seats: 사용 좌석만 평면화(섹션 이름 기준) → 티켓팅용 Seat 테이블 투영.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt; * 이미 삭제된 섹션의 좌석은 seats 투영에서 제외한다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt; */&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;export&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;buildSeatmapPayload&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;sections&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Section&lt;/span&gt;[],
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;seatsBySection&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Record&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;string&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;Seat&lt;/span&gt;[]&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;)&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;SeatmapPayload&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;nameById&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Map&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;sections&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;map&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;) =&amp;gt; [&lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;id&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt;]));
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;seats&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;SeatmapSeatItem&lt;/span&gt;[] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [];
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; [&lt;span style=&#34;color:#a6e22e&#34;&gt;sectionId&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;sectionSeats&lt;/span&gt;] &lt;span style=&#34;color:#66d9ef&#34;&gt;of&lt;/span&gt; Object.&lt;span style=&#34;color:#a6e22e&#34;&gt;entries&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;seatsBySection&lt;/span&gt;)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;nameById&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;get&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;sectionId&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;continue&lt;/span&gt;; &lt;span style=&#34;color:#75715e&#34;&gt;// 삭제된 섹션은 건너뛴다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;of&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;allSeatsForSave&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;sectionSeats&lt;/span&gt;)) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;seats&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;push&lt;/span&gt;({
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;section&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;name&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;rowNumber&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;row&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;seatNumber&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;number&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#a6e22e&#34;&gt;isAvailable&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;r&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;available&lt;/span&gt;, &lt;span style=&#34;color:#75715e&#34;&gt;// 비가용 좌석도 isAvailable=false 로 저장
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;      });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;doc&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;SeatmapDoc&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;version&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;sections&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;seatsBySection&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; { &lt;span style=&#34;color:#a6e22e&#34;&gt;layoutJson&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;JSON&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;stringify&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;doc&lt;/span&gt;), &lt;span style=&#34;color:#a6e22e&#34;&gt;seats&lt;/span&gt; };
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;발생한-문제&#34; &gt;발생한 문제
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%9c%ec%83%9d%ed%95%9c-%eb%ac%b8%ec%a0%9c&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;부모에게 상태 올릴때 무한 루프 발생 문제
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// SectionEditor.tsx
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;useEffect&lt;/span&gt;(() =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#a6e22e&#34;&gt;onSectionsChange&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;?&lt;/span&gt;.(&lt;span style=&#34;color:#a6e22e&#34;&gt;state&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;sections&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}, [&lt;span style=&#34;color:#a6e22e&#34;&gt;state&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;sections&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;onSectionsChange&lt;/span&gt;]);   &lt;span style=&#34;color:#75715e&#34;&gt;// ← 콜백이 의존성에 들어간다
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;섹션을 실시간으로 올리기 위해, 자식의 &lt;code&gt;effect&lt;/code&gt;에서 부모 콜백을 호출하도록함&lt;/li&gt;
+&lt;li&gt;이때, 부모가 콜백을 &lt;code&gt;인라인 함수&lt;/code&gt;로 넘기면, 매 렌더마다 새 참조가 만들어져 &lt;code&gt;effect 실행 -&amp;gt; 부모 setState -&amp;gt; 부모 리렌더 -&amp;gt; 새 함수 콜백으로 넘김 -&amp;gt; effect 재 실행&lt;/code&gt;이라는 루프가 발생&lt;/li&gt;
+&lt;li&gt;이를 해결하고자, &lt;code&gt;useCallback&lt;/code&gt;을 사용하여, 콜백 함수를 &lt;code&gt;캐싱&lt;/code&gt;하여 사용
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// SectionEditor 의 effect 에서 호출되므로 참조가 안정적이어야 한다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;handleSectionsChange&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;useCallback&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;next&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;:&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Section&lt;/span&gt;[]) =&amp;gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;setSections&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;next&lt;/span&gt;), []);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;뷰어&#34; &gt;뷰어
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b7%b0%ec%96%b4&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;h4 id=&#34;필요-요구사항-3&#34; &gt;필요 요구사항
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%84%ec%9a%94-%ec%9a%94%ea%b5%ac%ec%82%ac%ed%95%ad-3&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;섹션 맵/좌석 맵 &lt;code&gt;JSON&lt;/code&gt; 데이터를 받아, 이를 편집할 때의 배치와 똑같이 시각화하는 기능&lt;/li&gt;
+&lt;li&gt;섹션을 선택했을 때, 좌석맵을 시각화하는 기능&lt;/li&gt;
+&lt;li&gt;섹션 별 잔여 좌석 수를 표시하는 기능&lt;/li&gt;
+&lt;li&gt;판매 중인 좌석/선점중인 좌석/판매된 좌석을 구분하여 표시하는 기능&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;설계-방안-2&#34; &gt;설계 방안
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%84%a4%ea%b3%84-%eb%b0%a9%ec%95%88-2&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;SeatViewClient&lt;/code&gt;: 섹션 선택 여부(&lt;code&gt;section === undefined&lt;/code&gt;)에 따라, 받아온 &lt;code&gt;layoutJson&lt;/code&gt;을 기반으로 Section을 시각화하거나, 섹션 내 좌석(&lt;code&gt;sectionSeats&lt;/code&gt;)을 시각화
+&lt;ul&gt;
+&lt;li&gt;별도의 페이지 이동 없이 한 화면에서 &lt;code&gt;Section Viewer&lt;/code&gt;와 &lt;code&gt;SeatMap Viewer&lt;/code&gt;를 전환&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;layoutJson&lt;/code&gt;과 좌석 정보는 &lt;code&gt;useSeatViewPolling&lt;/code&gt;를 통해 불러옴&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;useSeatViewPolling&lt;/code&gt;: 최초 스냅샷 수신 후, 변경 번호(&lt;code&gt;cursor&lt;/code&gt;) 기반으로 &lt;em&gt;변경분만 수신&lt;/em&gt;하는 &lt;code&gt;증분 폴링&lt;/code&gt; 형태로 특정 이벤트의 좌석 상태를 지속적으로 갱신하는 &lt;code&gt;훅&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;핵심-코드-3&#34; &gt;핵심 코드
+&lt;span&gt;
+    &lt;a href=&#34;#%ed%95%b5%ec%8b%ac-%ec%bd%94%eb%93%9c-3&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;useSeatViewPoilling&lt;/code&gt;의 &lt;code&gt;useEffect&lt;/code&gt; 내부의 폴링 로직&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// useSeatViewPolling.ts
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; [&lt;span style=&#34;color:#a6e22e&#34;&gt;seats&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;setSeats&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;useState&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;Map&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;number&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;SeatViewSeat&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&amp;gt;&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Map&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; [&lt;span style=&#34;color:#a6e22e&#34;&gt;heldSeats&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;setHeldSeats&lt;/span&gt;] &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;useState&lt;/span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;number&lt;/span&gt;[]&lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt;([]);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 단조증가하는 변경번호 cursor
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;cursorRef&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;useRef&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;async&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;function&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;poll&lt;/span&gt;() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#66d9ef&#34;&gt;try&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	  &lt;span style=&#34;color:#75715e&#34;&gt;// 변경분만 받아오기
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ch&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;getSeatViewChanges&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;eventId&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;cursorRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;section&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#f92672&#34;&gt;!&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;alive&lt;/span&gt;) &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;ch&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;seats&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;length&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span style=&#34;color:#ae81ff&#34;&gt;0&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      &lt;span style=&#34;color:#a6e22e&#34;&gt;setSeats&lt;/span&gt;((&lt;span style=&#34;color:#a6e22e&#34;&gt;prev&lt;/span&gt;) =&amp;gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;         &lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;next&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Map&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;prev&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;for&lt;/span&gt; (&lt;span style=&#34;color:#66d9ef&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;of&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ch&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;seats&lt;/span&gt;) &lt;span style=&#34;color:#a6e22e&#34;&gt;next&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;set&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;eventSeatSeq&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;s&lt;/span&gt;);   &lt;span style=&#34;color:#75715e&#34;&gt;// 변경분만 덮어쓴다
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;        &lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;next&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      });
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;setHeldSeats&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;ch&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;heldSeats&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;??&lt;/span&gt; []);     &lt;span style=&#34;color:#75715e&#34;&gt;// 선점은 매번 최신 집합으로 &amp;#34;대체&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#a6e22e&#34;&gt;cursorRef&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;current&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;ch&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;cursor&lt;/span&gt;;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  } &lt;span style=&#34;color:#66d9ef&#34;&gt;catch&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;     &lt;span style=&#34;color:#75715e&#34;&gt;// 일시 오류는 다음 주기에 재시도
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;  } &lt;span style=&#34;color:#66d9ef&#34;&gt;finally&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;alive&lt;/span&gt;) &lt;span style=&#34;color:#a6e22e&#34;&gt;timer&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;setTimeout&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;poll&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;intervalMs&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;위 로직에서 &lt;code&gt;판매상태(SOLD)&lt;/code&gt;와 &lt;code&gt;선점상태(held)&lt;/code&gt;를 다르게 다루는 것이 핵심임
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;판매(SOLD)&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;증분 머지&lt;/code&gt; 형태로 갱신 - 커서 이후만 덮어씀&lt;/li&gt;
+&lt;li&gt;한 번 판매되고 나면 되돌아가는 일이 드물기 때문&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;선점(held)&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;전체 교체&lt;/code&gt;형태로 갱신 - 매 폴링마다 새 배열로 교체&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;선점&lt;/code&gt;은 5분의 &lt;code&gt;TTL&lt;/code&gt;로 생겼다가 사라졌다 하기 때문에, 증분으로는 &lt;code&gt;선점이 풀렸다&lt;/code&gt;는 것을 표현할 수 없음&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;발생한-문제-1&#34; &gt;발생한 문제
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%9c%ec%83%9d%ed%95%9c-%eb%ac%b8%ec%a0%9c-1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h4&gt;&lt;ul&gt;
+&lt;li&gt;좌석 선점에 성공한 뒤, 결제 페이지로 이동하지 못하는 버그
+&lt;ul&gt;
+&lt;li&gt;좌석 선택 후, 결제하기 버튼을 눌렀는데 &lt;em&gt;결제 페이지로 넘어가지 못할 경우&lt;/em&gt; &lt;code&gt;아무것도 할 수 없는 상태&lt;/code&gt;가 되는 버그가 발생&lt;/li&gt;
+&lt;li&gt;[원인]
+&lt;ul&gt;
+&lt;li&gt;좌석 선점에 성공할 경우, 그 좌석은 서버에서 &lt;code&gt;held&lt;/code&gt;가 되고, &lt;em&gt;다음 폴링&lt;/em&gt;에서 &lt;code&gt;클릭 불가&lt;/code&gt;로 바뀜&lt;/li&gt;
+&lt;li&gt;그러나 클라이언트 측의 &lt;code&gt;selected&lt;/code&gt;에는 그대로 남아있음.&lt;/li&gt;
+&lt;li&gt;선택을 해제하기 위해서는, 다시 좌석을 눌러야 하는데, 누를수가 없음
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;const clickable = !sold &amp;amp;&amp;amp; !held; // 선점된 순간 내가 선택한 것도 못 지움&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;결제 바는 &lt;code&gt;selected.size &amp;gt; 0&lt;/code&gt;일때 뜨기 때문에, 선택을 풀 수 없는 현 상황에서는 결제 바가 영원히 남게됨&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;[해결 방안]
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;선점에 성공하고 난 뒤&lt;/em&gt;, &lt;code&gt;내 선택을 비우도록&lt;/code&gt; 수정함
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-javascript&#34; data-lang=&#34;javascript&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;await&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;holdSeats&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;eventId&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;seqs&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 선점되면 그 좌석은 클릭 불가(held)가 되어 선택 해제할 수 없음.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;// 따라서, `선택`을 비워 &amp;#34;결제 바만 남고 빠져나올 수 없는&amp;#34; 상태를 막는다.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;setSelected&lt;/span&gt;(&lt;span style=&#34;color:#66d9ef&#34;&gt;new&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;Set&lt;/span&gt;());
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;router&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;push&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;`/events/&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;eventId&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;/seats/payment?seats=&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;seqs&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;join&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;,&amp;#34;&lt;/span&gt;)&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt;&lt;span style=&#34;color:#e6db74&#34;&gt;`&lt;/span&gt;);
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1 id=&#34;참고&#34; &gt;참고
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%b0%b8%ea%b3%a0&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h1&gt;&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://codingapple.com/blog/bezier-curve/&#34;&gt;베지어 곡선 직접 만져보기&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://en.wikipedia.org/wiki/Coons_patch&#34;&gt;Coons patch - Wikipedia&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.rose-hulman.edu/~finn/CCLI/Notes/day31.pdf&#34;&gt;MA 323 Geometric Modelling Course Notes: Day 31 Blended and Ruled Surfaces Coons Patches&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>[axios] Refresh Token 자동 재발급 Interceptor로 인한 데드락 및 해결 (w. 널 병합 연산자)</title>
