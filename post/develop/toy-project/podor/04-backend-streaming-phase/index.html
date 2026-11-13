@@ -1,0 +1,3034 @@
+<!DOCTYPE html>
+
+
+<html lang="ko-kr" data-theme="">
+<head>
+    
+        
+<meta charset="utf-8">
+<meta name="HandheldFriendly" content="True">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer-when-downgrade">
+
+<title>[podoR] 4. 백엔드 스트리밍 구조 및 흐름 정리하기 - 오늘도 개발을 한다.</title>
+
+<meta name="description" content="서론최근 podoR에 추가한 스트리밍 기능에 대해, 대략적인 구조와 그 흐름을 정리하고자 한다.
+아키텍처송출자의 스트리밍부터, 이를 서버에서 처리하고 수신자에게 전달하기 까지의 흐름을 구성하는 요소는 다섯가지이다. 송출자(Host) PC OBS Studio등의 프로그램을 이용해, RTMP 프로토콜로 영상을 전송한다. MediaMTX 컨테이너 송출자의 RTMP 데이터를 받는 미디어 서버. 송출이 시작될 때, 끝날 때 스크립트를 실행한다. ffmpeg MediaMTX 컨테이너와 Spring 컨테이너 두 곳에서 사용된다. MediaMTX 컨테이너에서는 RTMP 데이터를 HLS 파일로 바꾼다. Spring 컨테이너에서는 HLS 조각(.ts)을 VOD(mp4)로 조합한다.">
+
+
+
+
+
+<link rel="icon" type="image/x-icon" href="https://cloudsoswift.github.io/favicon.ico">
+<link rel="apple-touch-icon-precomposed" href="https://cloudsoswift.github.io/favicon.png">
+
+
+
+
+    
+
+
+
+<style>
+  body {
+    visibility: hidden;
+    opacity: 0;
+  }
+</style>
+
+<noscript>
+  <style>
+    body {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
+</noscript>
+
+
+
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <link rel="stylesheet" href="https://cloudsoswift.github.io/css/style.min.538b1869ceb05ae0d55cd41ef8e22ebc151bdc0e0d45b056d5f786d594660177.css" integrity="sha256-U4sYac6wWuDVXNQe&#43;OIuvBUb3A4NRbBW1feG1ZRmAXc=">
+    
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+    
+    
+        
+    
+    
+
+    
+        <script src="https://cloudsoswift.github.io/js/script.min.74bf1a3fcf1af396efa4acf3e660e876b61a2153ab9cbe1893ac24ea6d4f94ee.js" type="text/javascript" charset="utf-8" integrity="sha256-dL8aP88a85bvpKzz5mDodrYaIVOrnL4Yk6wk6m1PlO4="></script>
+    
+
+
+
+
+
+
+
+<meta property="og:title" content="[podoR] 4. 백엔드 스트리밍 구조 및 흐름 정리하기" />
+<meta property="og:description" content="서론최근 podoR에 추가한 스트리밍 기능에 대해, 대략적인 구조와 그 흐름을 정리하고자 한다.
+아키텍처송출자의 스트리밍부터, 이를 서버에서 처리하고 수신자에게 전달하기 까지의 흐름을 구성하는 요소는 다섯가지이다. 송출자(Host) PC OBS Studio등의 프로그램을 이용해, RTMP 프로토콜로 영상을 전송한다. MediaMTX 컨테이너 송출자의 RTMP 데이터를 받는 미디어 서버. 송출이 시작될 때, 끝날 때 스크립트를 실행한다. ffmpeg MediaMTX 컨테이너와 Spring 컨테이너 두 곳에서 사용된다. MediaMTX 컨테이너에서는 RTMP 데이터를 HLS 파일로 바꾼다. Spring 컨테이너에서는 HLS 조각(.ts)을 VOD(mp4)로 조합한다." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://cloudsoswift.github.io/post/develop/toy-project/podor/04-backend-streaming-phase/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2026-11-13T09:46:23+09:00" />
+<meta property="article:modified_time" content="2026-11-13T09:46:23+09:00" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[podoR] 4. 백엔드 스트리밍 구조 및 흐름 정리하기"/>
+<meta name="twitter:description" content="서론최근 podoR에 추가한 스트리밍 기능에 대해, 대략적인 구조와 그 흐름을 정리하고자 한다.
+아키텍처송출자의 스트리밍부터, 이를 서버에서 처리하고 수신자에게 전달하기 까지의 흐름을 구성하는 요소는 다섯가지이다. 송출자(Host) PC OBS Studio등의 프로그램을 이용해, RTMP 프로토콜로 영상을 전송한다. MediaMTX 컨테이너 송출자의 RTMP 데이터를 받는 미디어 서버. 송출이 시작될 때, 끝날 때 스크립트를 실행한다. ffmpeg MediaMTX 컨테이너와 Spring 컨테이너 두 곳에서 사용된다. MediaMTX 컨테이너에서는 RTMP 데이터를 HLS 파일로 바꾼다. Spring 컨테이너에서는 HLS 조각(.ts)을 VOD(mp4)로 조합한다."/>
+
+
+
+
+
+
+
+
+
+
+
+<link rel="canonical" href="https://cloudsoswift.github.io/post/develop/toy-project/podor/04-backend-streaming-phase/">
+
+
+    
+</head>
+<body>
+    <a class="skip-main" href="#main">Skip to main content</a>
+    <div class="page-wrapper">
+        <div class="container">
+            <header class="common-header">
+                
+                    <div class="header-top">
+    <h1 class="site-title">
+    <a href="/">오늘도 개발을 한다.</a>
+</h1>
+    <ul class="social-icons">
+
+
+    
+        <li>
+            <a href="https://gohugo.io/documentation/" title="Docs" rel="me">
+                <span class="inline-svg" >
+
+
+
+
+    
+
+
+</span>
+
+            </a>
+        </li>
+    
+
+    
+        
+        
+        <li>
+            <a href="https://github.com/cloudsoswift" title="Github" rel="me">
+            <span class="inline-svg" >
+
+
+
+
+    
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><path fill="currentColor" d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+
+</span>
+
+            </a>
+        </li>
+    
+
+
+
+
+</ul>
+</div>
+
+    <nav>
+        
+        
+        <a class="" href="https://cloudsoswift.github.io/about/" title="">About</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/tags/" title="">태그</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/post/" title="">글 목록</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/develop" title="">개발</a>
+        
+        <a class="" href="https://cloudsoswift.github.io/categories/etc" title="">기타</a>
+        
+    </nav>
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+
+
+
+                
+            </header>
+            <main id="main" tabindex="-1">
+                
+    
+
+    <article class="post h-entry">
+        <div class="post-header">
+            <header>
+                <h1 class="p-name post-title">[podoR] 4. 백엔드 스트리밍 구조 및 흐름 정리하기</h1>
+
+                
+            </header>
+        </div>
+        
+
+
+
+
+<nav id="TableOfContents">
+  <ul>
+    <li><a href="#아키텍처">아키텍처</a></li>
+    <li><a href="#흐름">흐름</a>
+      <ul>
+        <li><a href="#1-스트림-키-발급">1. 스트림 키 발급</a></li>
+        <li><a href="#2-호스트가-송출한-미디어-수신하기">2. 호스트가 송출한 미디어 수신하기</a></li>
+        <li><a href="#3-영상-처리---mediamtx-훅-스크립트">3. 영상 처리 - MediaMTX 훅 스크립트</a></li>
+        <li><a href="#4-라이브-시청">4. 라이브 시청</a></li>
+        <li><a href="#5-종료-후-vod-생성">5. 종료 후 VOD 생성</a></li>
+      </ul>
+    </li>
+    <li><a href="#트러블슈팅">트러블슈팅</a>
+      <ul>
+        <li><a href="#hls-생성-시-gpu-선택-문제">HLS 생성 시 <code>GPU 선택</code> 문제</a></li>
+        <li><a href="#media-인가-관련-문제"><code>/media/</code> 인가 관련 문제</a></li>
+        <li><a href="#모든-media-요청이-403forbidden">모든 <code>/media/</code> 요청이 <code>403(Forbidden)</code></a></li>
+        <li><a href="#모든-media-요청이-500internal-server-error">모든 <code>/media/</code> 요청이 <code>500(Internal Server Error)</code></a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+
+        <div class="content e-content">
+            <h1 id="서론" >서론
+<span>
+    <a href="#%ec%84%9c%eb%a1%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h1><p>최근 podoR에 추가한 스트리밍 기능에 대해, 대략적인 구조와 그 흐름을 정리하고자 한다.</p>
+<h2 id="아키텍처" >아키텍처
+<span>
+    <a href="#%ec%95%84%ed%82%a4%ed%85%8d%ec%b2%98">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>송출자의 스트리밍부터, 이를 서버에서 처리하고 수신자에게 전달하기 까지의 흐름을 구성하는 요소는 다섯가지이다.
+<img src="./streaming-architecture.png" alt="streaming-architecture"></p>
+<ol>
+<li>송출자(Host) PC
+<ul>
+<li><code>OBS Studio</code>등의 프로그램을 이용해, <code>RTMP</code> 프로토콜로 영상을 전송한다.</li>
+</ul>
+</li>
+<li><code>MediaMTX</code> 컨테이너
+<ul>
+<li>송출자의 <code>RTMP</code> 데이터를 받는 미디어 서버. 송출이 시작될 때, 끝날 때 스크립트를 실행한다.</li>
+</ul>
+</li>
+<li><code>ffmpeg</code>
+<ul>
+<li><code>MediaMTX</code> 컨테이너와 <code>Spring</code> 컨테이너 두 곳에서 사용된다.</li>
+<li><code>MediaMTX</code> 컨테이너에서는 <code>RTMP</code> 데이터를 <code>HLS</code> 파일로 바꾼다.</li>
+<li><code>Spring</code> 컨테이너에서는 <code>HLS 조각(.ts)</code>을 <code>VOD(mp4)</code>로 조합한다.</li>
+</ul>
+</li>
+<li><code>Spring</code> 컨테이너
+<ul>
+<li><code>스트림 키</code>, <code>방송 상태</code>, <code>관람 권한</code> 등 스트리밍 서비스과 관련된 요소들을 처리한다.</li>
+</ul>
+</li>
+<li><code>nginx</code> 컨테이너
+<ul>
+<li><code>HLS</code> 파일을 정적 파일로 제공하되, 요청마다 <strong><code>사용자의 권한</code></strong> 을 <code>Spring 컨테이너</code>로부터 확인 받는다.</li>
+</ul>
+</li>
+</ol>
+<p>구성을 보면 알 수 있듯 <code>영상 데이터</code>는 <code>Spring 서비스</code>를 <em>거치지 않으며</em>, <code>송출 허가 요청</code>, <code>영상 파일 접근 권한 확인</code> 등의 짧은 HTTP 요청만 처리한다.<br>
+(다만, <em>스트림이 종료된 뒤에는</em> 이를 <code>감지</code>해 디스크에 남은 <code>HLS 조각</code>들을 합쳐 <code>VOD</code>를 만든다.)</p>
+<h2 id="흐름" >흐름
+<span>
+    <a href="#%ed%9d%90%eb%a6%84">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><h3 id="1-스트림-키-발급" >1. 스트림 키 발급
+<span>
+    <a href="#1-%ec%8a%a4%ed%8a%b8%eb%a6%bc-%ed%82%a4-%eb%b0%9c%ea%b8%89">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>호스트가 스트림 관리 페이지(<code>/host/events/{eventId}/stream</code>)에 진입할 경우, 스트림 키 조회 API(<code>GET /host/events/{eventId}/stream</code>)가 호출된다.<br>
+이 API는 <code>해당 이벤트의 소유자(HOST)</code>와 <code>관리자(ADMIN)</code>만 호출할 수 있도록 설정되어 있다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"> </span><span style="color:#75715e">// StreamHostController
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> <span style="color:#a6e22e">@GetMapping</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/stream-key&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"> </span><span style="color:#a6e22e">@PreAuthorize</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;@eventSecurity.isOwner(#eventId) or hasRole(&#39;ADMIN&#39;)&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span> <span style="color:#66d9ef">public</span> ResponseEntity<span style="color:#f92672">&lt;</span>StreamKeyResponse<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">getStreamKey</span><span style="color:#f92672">(</span><span style="color:#a6e22e">@PathVariable</span> String eventId<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	 <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span> <span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>만약 키가 아직 없다면, 즉석에서 만들어서 <code>event.stream_key</code> 컬럼으로 저장한다.<br>
+(JPA의 <code>더티 체킹</code>으로 인해 자동으로 <code>update</code> 쿼리 호출)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> String <span style="color:#a6e22e">newKey</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">byte</span><span style="color:#f92672">[]</span> bytes <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#66d9ef">byte</span><span style="color:#f92672">[</span><span style="color:#ae81ff">32</span><span style="color:#f92672">];</span>
+</span></span><span style="display:flex;"><span>	RANDOM<span style="color:#f92672">.</span><span style="color:#a6e22e">nextBytes</span><span style="color:#f92672">(</span>bytes<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> Base64<span style="color:#f92672">.</span><span style="color:#a6e22e">getUrlEncoder</span><span style="color:#f92672">().</span><span style="color:#a6e22e">withoutPadding</span><span style="color:#f92672">().</span><span style="color:#a6e22e">encodeToString</span><span style="color:#f92672">(</span>bytes<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>키 값은 의미없는 Base64 포맷의 43자짜리 키로, 발급해도 DB에 등록되는 것 말고는 별도의 이벤트는 발생하지 않는다.<br>
+<code>MediaMTX</code> 컨테이너는 <code>&quot;^live/(.+)$&quot;</code> 경로(즉, <code>live/*</code>)에 대해 받을 준비만 해놓고, 실제로 요청이 들어오면 <code>/scripts/on-ready.sh</code>에 작성된 로직대로 <code>Spring 서버</code>에 &lsquo;이 <code>스트림 키</code>가 유효한가&rsquo;를 질의한다. (<code>POST /api/internal/stream/started</code>)</p>
+<blockquote>
+<p>정확히는, 해당 <em>스트림 키를 갖는 Event</em>를 찾는 질의를 통해 유효성을 검증함.<br>
+<code>StreamLifecycleService.started</code>에서 <code>findByKey</code>를 호출.</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># on-ready.sh</span>
+</span></span><span style="display:flex;"><span>KEY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>MTX_PATH#live/<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -f: 응답 코드 400인 경우 오류 코드 22와 함께 응답 본문이 전혀 출력되지 않도록 설정</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -s: silent mode. 진행률 표시기, 참고 메시지, 경고 등을 표시하지 않음</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -S: 오류 표시. -s와 함께 사용시 curl이 실패할 경우 오류 메시지 표시</span>
+</span></span><span style="display:flex;"><span>RESP<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>curl -fsS --retry <span style="color:#ae81ff">10</span> --retry-delay <span style="color:#ae81ff">3</span> --retry-all-errors -X POST <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -H <span style="color:#e6db74">&#34;X-Internal-Token: </span><span style="color:#e6db74">${</span>STREAM_INTERNAL_TOKEN<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -H <span style="color:#e6db74">&#34;Content-Type: application/json&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -d <span style="color:#e6db74">&#34;{\&#34;streamKey\&#34;:\&#34;</span><span style="color:#e6db74">${</span>KEY<span style="color:#e6db74">}</span><span style="color:#e6db74">\&#34;}&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SPRING_URL<span style="color:#e6db74">}</span><span style="color:#e6db74">/api/internal/stream/started&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 위 경로로 요청을 보낸 결과를 표준 출력으로 출력한 뒤, 그 값을 인자로 받아</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># jq(명령줄 기반의 JSON 프로세서)로 JSON 문자열 대신 표준 출력으로 직접 출력되도록 함</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 그리고 그 중 키 [outputDir]의 값을 OUT이라는 변수에 할당</span>
+</span></span><span style="display:flex;"><span>OUT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>printf <span style="color:#e6db74">&#39;%s&#39;</span> <span style="color:#e6db74">&#34;</span>$RESP<span style="color:#e6db74">&#34;</span> | jq -r .outputDir<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -p: 경로에 있는 상위 디렉터리가 없는 경우 해당 디렉터리와 함께 상위 디렉터리를 생성하고, 디렉터리가 이미 존재해도 오류 발생시키지 않음</span>
+</span></span><span style="display:flex;"><span>mkdir -p <span style="color:#e6db74">&#34;</span>$OUT<span style="color:#e6db74">/src&#34;</span> <span style="color:#e6db74">&#34;</span>$OUT<span style="color:#e6db74">/480p&#34;</span>
+</span></span></code></pre></div><p>키는 노출될 경우, <code>POST /stream-key/reissue</code> API를 통해 재발급 할 수 있으며, 방송중일 경우(<code>LIVE | INTERRUPTED</code>) 이러한 재발급은 <code>409 Conflict</code>로 실패한다.</p>
+<blockquote>
+<p>&lsquo;동일한 <code>스트림 키</code>로 송출 중단 후 재송출&rsquo; 동작을 지원하기 위해서는 기존 키로 재접속 할 수 있어야 하기 때문</p>
+</blockquote>
+<p>outputDir은 <code>StreamProperties에 설정된 mediaRoot</code> + <code>/hls/</code> + <code>event.getEventId()</code> + <code>/</code> + <code>sessionNo</code></p>
+<h3 id="2-호스트가-송출한-미디어-수신하기" >2. 호스트가 송출한 미디어 수신하기
+<span>
+    <a href="#2-%ed%98%b8%ec%8a%a4%ed%8a%b8%ea%b0%80-%ec%86%a1%ec%b6%9c%ed%95%9c-%eb%af%b8%eb%94%94%ec%96%b4-%ec%88%98%ec%8b%a0%ed%95%98%ea%b8%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p>호스트 측에서 <code>OBS Studio</code>와 같은 툴을 이용해 스트림을 시작하면, 프로그램은 <code>rtmp://&lt;서버 주소&gt;:1935/live/&lt;스트림 키&gt;</code>로 접속한다.</p>
+<blockquote>
+<p><code>1935</code>번 포트는 전통적으로 <em>Adobe Flash를 비롯한 애플리케이션</em>에서 RTMP 통신을 위해 사용됨</p>
+</blockquote>
+<p>이 통신은 <code>nginx</code>를 거치지 않고 바로 <code>MediaMTX</code> 컨테이너로 전송된다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># mediamtx.yaml</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># RTMP 수신만 받도록 하고, 나머지는 비활성화한다.</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">rtmp</span>: <span style="color:#66d9ef">yes</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">rtsp</span>: <span style="color:#66d9ef">no</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">hls</span>: <span style="color:#66d9ef">no</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">webrtc</span>: <span style="color:#66d9ef">no</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">srt</span>: <span style="color:#66d9ef">no</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">moq</span>: <span style="color:#66d9ef">no</span> <span style="color:#75715e"># v1.21부터 기본으로 켜지는 MoQ 서버는 사용하지 않을 예정이므로 비활성화</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">authMethod</span>: <span style="color:#ae81ff">http         </span> <span style="color:#75715e"># 허가 판단을 HTTP 로 밖에 맡긴다</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">authHTTPExclude</span>:
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">action</span>: <span style="color:#ae81ff">api</span>
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">action</span>: <span style="color:#ae81ff">metrics</span>
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">action</span>: <span style="color:#ae81ff">pprof</span>
+</span></span></code></pre></div><p>그리고 <code>HLS</code>을 제공하는 역할은 <code>nginx</code>에서 수행하도록 할 것이기 때문에, <code>MediaMTX</code>에서는 클라이언트측으로 출력하지 않고, <code>RTMP</code> 수신만 하도록 설정했다.<br>
+또한, 인증을 활성화하되(<code>authMethod</code>), <code>외부 HTTP 서버</code>(즉, Spring 서버)를 통해 진행하도록 했다.<br>
+따라서, <code>MediaMTX</code>에서는 새 연결 요청이 들어올 때 마다 <code>authHTTPAddress</code>로 설정된 주소로 인증을 요청한다. <a href="https://mediamtx.org/docs/references/configuration-file">참고 - mediaMTX Configuration</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># ...</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">      MTX_AUTHHTTPADDRESS</span>: <span style="color:#ae81ff">http://spring:8080/api/internal/stream/publish-auth?token=${STREAM_INTERNAL_TOKEN}</span>
+</span></span></code></pre></div><blockquote>
+<p>이때, 이 <code>authHTTPAddress</code>는 <code>docker-compsoe.yml</code>에서 <code>MTX_AUTHHTTPADDRESS</code>라는 환경변수로 주입한다.</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{ <span style="color:#f92672">&#34;action&#34;</span>: <span style="color:#e6db74">&#34;publish&#34;</span>, <span style="color:#f92672">&#34;path&#34;</span>: <span style="color:#e6db74">&#34;live/&lt;스트림 키&gt;&#34;</span>, <span style="color:#f92672">&#34;ip&#34;</span>: <span style="color:#e6db74">&#34;100.x.x.x&#34;</span>, <span style="color:#f92672">&#34;protocol&#34;</span>: <span style="color:#e6db74">&#34;rtmp&#34;</span>, <span style="color:#960050;background-color:#1e0010">...</span> }
+</span></span></code></pre></div><p>해당 URL로 <code>MediaMTX</code>는 다음과 같은 포맷(<a href="https://mediamtx.org/docs/features/authentication#external-http-server">참고</a>)의 <code>JSON</code>을 <code>POST</code> 요청으로 전송하며, 응답 코드가 <code>2XX</code>이면 허가, 그 외에는 연결을 끊는다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// StreamInternalController.java
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">@PostMapping</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/publish-auth&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> ResponseEntity<span style="color:#f92672">&lt;</span>Void<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">publishAuth</span><span style="color:#f92672">(</span><span style="color:#a6e22e">@RequestBody</span> PublishAuthRequest request<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">boolean</span> allowed <span style="color:#f92672">=</span> lifecycleService<span style="color:#f92672">.</span><span style="color:#a6e22e">authorize</span><span style="color:#f92672">(</span>request<span style="color:#f92672">,</span> LocalDateTime<span style="color:#f92672">.</span><span style="color:#a6e22e">now</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> ResponseEntity<span style="color:#f92672">.</span><span style="color:#a6e22e">status</span><span style="color:#f92672">(</span>allowed <span style="color:#f92672">?</span> HttpStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">OK</span> <span style="color:#f92672">:</span> HttpStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">UNAUTHORIZED</span><span style="color:#f92672">).</span><span style="color:#a6e22e">build</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// StreamLifecycleService.java
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">@Transactional</span><span style="color:#f92672">(</span>readOnly <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">boolean</span> <span style="color:#a6e22e">authorize</span><span style="color:#f92672">(</span>PublishAuthRequest req<span style="color:#f92672">,</span> LocalDateTime now<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span><span style="color:#e6db74">&#34;read&#34;</span><span style="color:#f92672">.</span><span style="color:#a6e22e">equals</span><span style="color:#f92672">(</span>req<span style="color:#f92672">.</span><span style="color:#a6e22e">action</span><span style="color:#f92672">()))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> LOOPBACK<span style="color:#f92672">.</span><span style="color:#a6e22e">contains</span><span style="color:#f92672">(</span>req<span style="color:#f92672">.</span><span style="color:#a6e22e">ip</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(!</span><span style="color:#e6db74">&#34;publish&#34;</span><span style="color:#f92672">.</span><span style="color:#a6e22e">equals</span><span style="color:#f92672">(</span>req<span style="color:#f92672">.</span><span style="color:#a6e22e">action</span><span style="color:#f92672">()))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// (1) 회차 조회
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Optional<span style="color:#f92672">&lt;</span>Event<span style="color:#f92672">&gt;</span> found <span style="color:#f92672">=</span> keyOf<span style="color:#f92672">(</span>req<span style="color:#f92672">.</span><span style="color:#a6e22e">path</span><span style="color:#f92672">()).</span><span style="color:#a6e22e">flatMap</span><span style="color:#f92672">(</span>eventRepository<span style="color:#f92672">::</span>findByStreamKeyAndDeletedDateIsNull<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>found<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        Event event <span style="color:#f92672">=</span> found<span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// (2) 스트리밍 상태 검사(PUBLISHABLE = `SCHEDULED`, `LIVE`, `INTERRUPTED`로 이뤄진 EnumSet)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> PUBLISHABLE<span style="color:#f92672">.</span><span style="color:#a6e22e">contains</span><span style="color:#f92672">(</span>event<span style="color:#f92672">.</span><span style="color:#a6e22e">effectiveStreamStatus</span><span style="color:#f92672">())</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// (3) 송출 가능 시간 정책 검사
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#f92672">&amp;&amp;</span> publishPolicy<span style="color:#f92672">.</span><span style="color:#a6e22e">allows</span><span style="color:#f92672">(</span>event<span style="color:#f92672">,</span> now<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">&amp;&amp;</span> eventRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">countByStreamStatusInAndSeqNot</span><span style="color:#f92672">(</span>ACTIVE<span style="color:#f92672">,</span> event<span style="color:#f92672">.</span><span style="color:#a6e22e">getSeq</span><span style="color:#f92672">())</span> <span style="color:#f92672">&lt;</span> props<span style="color:#f92672">.</span><span style="color:#a6e22e">maxConcurrent</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>그리고 <code>Spring 서버</code>의 <code>POST api/internal/stream/publish-auth</code>에서는 4가지 요소를 모두 만족할 경우만 <code>200</code> 응답을 돌려준다.</p>
+<ol>
+<li><code>json</code>의 <code>path</code>에서 <code>live/</code>를 떼고 남은 <code>스트림 키</code>로 삭제되지 않은 회차가 있는지 (<code>findByStreamKeyAndDeletedDateIsNull</code>)</li>
+<li>해당 회차의 스트리밍 상태가 <code>SCHEDULED</code>, <code>LIVE</code>, <code>INTERRUPTED</code> 중 하나인지</li>
+<li>송출 가능 시간 정책(<code>StreamPublishPolicy</code>)을 통과하는지</li>
+</ol>
+<blockquote>
+<p>현재 구현에서는 항상 통과하도록 설정함</p>
+</blockquote>
+<ol start="4">
+<li><em>해당 회차를 제외하고</em> 지금 송출중인 회자의 수가 <code>stream.max-concurrent</code>(<code>props.maxConcurrent</code>) 미만인지</li>
+</ol>
+<blockquote>
+<p>현재 테스트중인 서버에서는 성능이 좋지 않아 동시 방송을 하나로 제한함</p>
+</blockquote>
+<p>또한, <code>MediaMTX</code> 이외의 외부에서 <code>/api/internal</code>로 접근하지 못하도록 <code>nginx</code>에서 <code>404</code>로 막도록 처리하며, <code>Spring</code>의 <code>InternalTokenInterceptor</code>를 통해 요청이 진짜 <code>MediaMTX</code>로부터 온 것인지 검사하기 위한 값(<code>X-Internal-Token</code>)을 검사토록 함.</p>
+<blockquote>
+<p>이를 통해 외부로부터의 접속 차단은 물론, 내부 도커 네트워크의 컨테이너가 임의로 접근하는 경우도 차단함</p>
+</blockquote>
+<h3 id="3-영상-처리---mediamtx-훅-스크립트" >3. 영상 처리 - MediaMTX 훅 스크립트
+<span>
+    <a href="#3-%ec%98%81%ec%83%81-%ec%b2%98%eb%a6%ac---mediamtx-%ed%9b%85-%ec%8a%a4%ed%81%ac%eb%a6%bd%ed%8a%b8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># mediamtx.yml</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">paths</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># 송출자의 {rtmp://&lt;host&gt;/live, 스트림 키 {key}} -&gt; path로 변환시 `live/{key}`</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;~^live/(.+)$&#34;</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 송출이 시작되면 Spring 서버에 세션을 만들고 `ffmpeg`를 이용해 HLS 출력을  생성한다(스크립트가 ffmpeg 로 exec).</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># (1.21 에서 runOnReady/runOnNotReady 가 runOnAvailable/runOnUnavailable 로 이름이 바뀌었다)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">runOnAvailable</span>: <span style="color:#ae81ff">/scripts/on-ready.sh</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">runOnAvailableRestart</span>: <span style="color:#66d9ef">no</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 송출이 끊기면 Spring 에 알린다(INTERRUPTED, 유예 시간 뒤 종료 확정).</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">runOnUnavailable</span>: <span style="color:#ae81ff">/scripts/on-not-ready.sh</span>
+</span></span></code></pre></div><p>허가를 받은 받은 송출이 들어오기 시작하면, <code>MediaMTX</code>는 해당 <code>path</code>를 <code>사용 가능(available)</code>로 표시한 뒤, 설정된 훅을 실행한다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># on-ready.sh</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">KEY=&#34;${MTX_PATH#live/}&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -f: 응답 코드 400인 경우 오류 코드 22와 함께 응답 본문이 전혀 출력되지 않도록 설정</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -s: silent mode. 진행률 표시기, 참고 메시지, 경고 등을 표시하지 않음</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -S: 오류 표시. -s와 함께 사용시 curl이 실패할 경우 오류 메시지 표시</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Spring 서버가 재기동중 일 수 있는 상황을 고려해 3초 간격으로 10번까지 재시도한다.</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">RESP=$(curl -fsS --retry 10 --retry-delay 3 --retry-all-errors -X POST \</span>
+</span></span><span style="display:flex;"><span>  -<span style="color:#ae81ff">H &#34;X-Internal-Token: ${STREAM_INTERNAL_TOKEN}&#34; \</span>
+</span></span><span style="display:flex;"><span>  -<span style="color:#ae81ff">H &#34;Content-Type: application/json&#34; \</span>
+</span></span><span style="display:flex;"><span>  -<span style="color:#ae81ff">d &#34;{\&#34;streamKey\&#34;:\&#34;${KEY}\&#34;}&#34; \</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;${SPRING_URL}/api/internal/stream/started&#34;</span><span style="color:#ae81ff">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 위 경로로 요청을 보낸 결과를 표준 출력으로 출력한 뒤, 그 값을 인자로 받아</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># jq(명령줄 기반의 JSON 프로세서)로 JSON 문자열 대신 표준 출력으로 직접 출력되도록 함</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 그리고 그 중 키 [outputDir]의 값을 OUT이라는 변수에 할당</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">OUT=$(printf &#39;%s&#39; &#34;$RESP&#34; | jq -r .outputDir)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -p: 경로에 있는 상위 디렉터리가 없는 경우 해당 디렉터리와 함께 상위 디렉터리를 생성하고, 디렉터리가 이미 존재해도 오류 발생시키지 않음</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">mkdir -p &#34;$OUT/src&#34; &#34;$OUT/480p&#34;</span>
+</span></span></code></pre></div><ol>
+<li><code>Spring 서버</code>에 스트리밍 시작을 알리고, 출력 폴더를 받아온다.
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> StreamStartedResponse <span style="color:#a6e22e">started</span><span style="color:#f92672">(</span>String streamKey<span style="color:#f92672">,</span> LocalDateTime now<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    Event event <span style="color:#f92672">=</span> findByKey<span style="color:#f92672">(</span>streamKey<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 1. 방송 상태를 `LIVE`로 바꾼다. (조건부 상태 전이)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> changed <span style="color:#f92672">=</span> eventRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">transitStreamStatus</span><span style="color:#f92672">(</span>event<span style="color:#f92672">.</span><span style="color:#a6e22e">getSeq</span><span style="color:#f92672">(),</span> STARTABLE<span style="color:#f92672">,</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">,</span> StreamStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">LIVE</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>changed <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> ResponseStatusException<span style="color:#f92672">(</span>HttpStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">CONFLICT</span><span style="color:#f92672">,</span> <span style="color:#e6db74">&#34;송출을 시작할 수 없는 상태입니다.&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 2. 직전 세션이 있는지 조회한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Optional<span style="color:#f92672">&lt;</span>StreamSession<span style="color:#f92672">&gt;</span> previous <span style="color:#f92672">=</span> sessionRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">findTopByEvent_SeqOrderBySessionNoDesc</span><span style="color:#f92672">(</span>event<span style="color:#f92672">.</span><span style="color:#a6e22e">getSeq</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 만약 있다면, 닫는다. (`stopped`가 유실된 이전 세션은 지금 끊긴 것으로 닫는다)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    previous<span style="color:#f92672">.</span><span style="color:#a6e22e">ifPresent</span><span style="color:#f92672">(</span>s <span style="color:#f92672">-&gt;</span> s<span style="color:#f92672">.</span><span style="color:#a6e22e">end</span><span style="color:#f92672">(</span>now<span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 3. stream_session에 새 행(session_no의 경우, 직전의 값에 1을 추가한 값)을 만든다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> sessionNo <span style="color:#f92672">=</span> previous<span style="color:#f92672">.</span><span style="color:#a6e22e">map</span><span style="color:#f92672">(</span>s <span style="color:#f92672">-&gt;</span> s<span style="color:#f92672">.</span><span style="color:#a6e22e">getSessionNo</span><span style="color:#f92672">()</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span><span style="color:#f92672">).</span><span style="color:#a6e22e">orElse</span><span style="color:#f92672">(</span><span style="color:#ae81ff">1</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>    sessionRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">save</span><span style="color:#f92672">(</span>StreamSession<span style="color:#f92672">.</span><span style="color:#a6e22e">start</span><span style="color:#f92672">(</span>eventRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">getReferenceById</span><span style="color:#f92672">(</span>event<span style="color:#f92672">.</span><span style="color:#a6e22e">getSeq</span><span style="color:#f92672">()),</span> sessionNo<span style="color:#f92672">,</span> now<span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 4. 출력 폴더 `/media/hls/{eventId}/{sessionNo}`를 응답으로 돌려준다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    String outputDir <span style="color:#f92672">=</span> props<span style="color:#f92672">.</span><span style="color:#a6e22e">mediaRoot</span><span style="color:#f92672">()</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/hls/&#34;</span> <span style="color:#f92672">+</span> event<span style="color:#f92672">.</span><span style="color:#a6e22e">getEventId</span><span style="color:#f92672">()</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/&#34;</span> <span style="color:#f92672">+</span> sessionNo<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> StreamStartedResponse<span style="color:#f92672">(</span>event<span style="color:#f92672">.</span><span style="color:#a6e22e">getEventId</span><span style="color:#f92672">(),</span> sessionNo<span style="color:#f92672">,</span> outputDir<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><ul>
+<li><code>POST /api/internal/stream/started</code>에 위와같이 <code>streamKey</code>를 전송하면, <code>Spring 서버</code>는 하나의 트랜잭션 안에서 다음과 같이 로직을 처리한다.</li>
+</ul>
+</li>
+<li><code>인코더</code>를 선택한다.
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># Intel GPU(i915/xe(Tigerlake 이후 플랫폼의 그래픽 드라이버)) 렌더 노드를 찾는다. 다른 GPU(예: NVIDIA)가 함께 있으면 renderD128 이 Intel 이</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 아닐 수 있고, 번호는 부팅마다 동적할당되기 때문에, 바뀔 수 있다. 사용자가 `STREAM_VAAPI_DEVICE`를 주면 그 값을 쓴다.</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">find_intel_render_node() {</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">for node in /dev/dri/renderD*; do</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">driver=$(basename &#34;$(readlink -f &#34;/sys/class/drm/$(basename &#34;$node&#34;)/device/driver&#34;)&#34; 2&gt;/dev/null || true)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">if [ &#34;$driver&#34; = &#34;i915&#34; ] || [ &#34;$driver&#34; = &#34;xe&#34; ]; then</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#ae81ff">echo &#34;$node&#34;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#ae81ff">return 0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">fi</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">done</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">return 1</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 인코더</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">if [ &#34;${STREAM_ENCODER:-vaapi}&#34; = &#34;vaapi&#34; ]; then DEVICE=&#34;${STREAM_VAAPI_DEVICE:-$(find_intel_render_node || echo /dev/dri/renderD128)}&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">echo &#34;on-ready: VAAPI device $DEVICE&#34; &gt;&amp;2</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">HW=&#34;-vaapi_device $DEVICE&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">V1=&#34;-filter:v:1 format=nv12,hwupload,scale_vaapi=w=-2:h=480 -c:v:1 h264_vaapi&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">else</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">HW=&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">V1=&#34;-filter:v:1 scale=-2:480 -c:v:1 libx264 -preset veryfast&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">fi</span>
+</span></span></code></pre></div><ul>
+<li>현재 사용중인 서버(노트북)의 경우, 내장 그래픽으로 <code>Interl UHD Graphics 630</code>이 탑재되어 있어, 인텔의 하드웨어 동영상 가속 라이브러리인 <code>VAAPI(Video Acceleration API)</code>를 사용하여 내장된 <code>Intel Quick Sync Video</code> 기능을 사용한다.
+<ul>
+<li>가용한 인텔 내장 GPU가 있는 경우, <code>h264_vaapi</code>, 그렇지 않은 경우 <code>libx264</code> 를 이용해 인코딩을 진행한다. (둘 다 <code>H.264</code> 인코딩)</li>
+<li>현재 서비스에서는 <code>원본화질</code>, <code>480p</code> 두 가지의 화질을 제공하려하기 때문에, 원본영상을 <code>480p</code>로 <code>인코딩</code>하는데에 <code>GPU</code>를 사용한다</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>비디오</code>를 생성한다.
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># -hls_list_size 0 + event: 조각을 지우지 않는다(처음부터 되감기 가능, VOD 재료).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shellcheck disable=SC2086</span>
+</span></span><span style="display:flex;"><span>exec ffmpeg -hide_banner -loglevel warning $HW -i <span style="color:#e6db74">&#34;</span>$IN<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -map 0:v:0 -map 0:a:0 -map 0:v:0 -map 0:a:0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -c:v:0 copy -c:a:0 copy <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  $V1 -b:v:1 1M -maxrate:v:1 1200k -bufsize:v:1 2M -g:v:1 <span style="color:#ae81ff">60</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -c:a:1 aac -b:a:1 96k <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -f hls -hls_time <span style="color:#ae81ff">2</span> -hls_list_size <span style="color:#ae81ff">0</span> -hls_playlist_type event -hls_flags independent_segments <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -var_stream_map <span style="color:#e6db74">&#34;v:0,a:0,name:src v:1,a:1,name:480p&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -master_pl_name master.m3u8 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -hls_segment_filename <span style="color:#e6db74">&#34;</span>$OUT<span style="color:#e6db74">/%v/%05d.ts&#34;</span> <span style="color:#e6db74">&#34;</span>$OUT<span style="color:#e6db74">/%v/index.m3u8&#34;</span>
+</span></span></code></pre></div><ul>
+<li>원본 영상(<code>rtmp://127.0.0.1:1935/live/&lt;키&gt;</code>)을 <code>ffmpeg</code> 에 입력으로 제공하여, <code>원본 화질(v0, a0)</code>과 <code>480p(v1, a1)</code> 두가지 출력을 만들어 낸다.
+<ul>
+<li><code>원본(v0, a0)</code>은 <code>copy</code>로 <code>디코딩/재인코딩</code> 없이 그대로 복사한다.</li>
+<li><code>저화질 버전(v1, a1)</code>은 비디오의 경우 디코딩 후 <code>480p</code>로 재인코딩(비트레이트 1M ), 오디오의 경우 <code>AAC 96k</code>로 재인코딩한다.</li>
+</ul>
+</li>
+<li>이후 <code>hls 포맷</code>으로 출력을 생성하되, <code>원본</code>은 <code>.../{sessionNo}/src/</code>에, <code>저화질 버전</code>은 <code>.../{sessionNo}/480p/</code>에 저장한다.</li>
+<li>또한, <code>.../{sessionNo}/</code>에 두 화질 목록을 갖는 <code>master.m3u8</code>을 생성하는데, 수신자는 이를 받아 <code>hls.js</code>에서 네트워크 상태에 따라 둘을 오가도록 한다.
+<ul>
+<li>화질 이동시 끊김을 방지하기 위해, <code>키프레임 간격</code>을 2초로 맞추도록 규칙을 세웠다. (즉, 2초마다 화질별 폴더에 <code>.ts</code> 파일이 추가된다.)
+<ul>
+<li><code>480p</code>의 경우 <a href="https://en.wikipedia.org/wiki/Group_of_pictures"><code>GOP(Group Of Pictures)</code></a>가 <code>60</code>(<code>30fps</code> 기준 <code>2초</code>)이고, 원본은 복사만 하고 있으므로 송출시에 호스트에게 키프레임 간격을 2초로 설정할 것을 안내한다.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>또한, <code>hls 조각 파일</code>을 지우지 않고 <code>재생 목록에 계속 추가</code>하며(<code>-hls_list_size 0)</code>, 조각은 <code>재생 목록의 맨 뒤에만 추가</code>하고 기존 조각은 절대 삭제하지 않도록 한다.(<code>-hls_playlist_type event</code>)
+<ul>
+<li>이를 통해 사용자는 <em>방송 중에도</em> <code>이전으로 되감을 수 있게되고</code>, 조각들이 그대로 남아있으므로 추후 <code>VOD를 만드는데에 재료</code>로 사용할 수 있다.</li>
+</ul>
+</li>
+<li>그리고, <code>exec</code>를 통해 <code>ffmpeg</code>을 실행함으로써, <code>MediaMTX</code>의 송출이 끝났을 때 <code>훅 프로세스</code>(<code>on-ready.sh</code>를 실행하고 있는 프로세스)에게 보내는 종료 신호가 <code>ffmpeg</code>에도 닿도록한다.
+<ul>
+<li>이렇게 하지 않을 경우, <code>ffmpeg</code>의 종료는 <code>MediaMTX</code>-<code>ffmpeg</code>간 <code>RTMP</code> 연결이 닫히는 시점에 의존하게 된다. (따라서 직관적으로 <code>ffmpeg</code>에 종료 신호가 직접 닿게 <code>exec</code>를 이용해 프로세스를 띄운다.)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="4-라이브-시청" >4. 라이브 시청
+<span>
+    <a href="#4-%eb%9d%bc%ec%9d%b4%eb%b8%8c-%ec%8b%9c%ec%b2%ad">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>HLS</code> 포맷의 경우, 반복적으로 정적 파일을 서버에서 받는 구조다 보니 <code>nginx</code> 하나만으로 이를 제공하도록 한다.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span>    <span style="color:#a6e22e">@GetMapping</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/events/{eventId}/stream&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> ResponseEntity<span style="color:#f92672">&lt;</span>StreamViewResponse<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">view</span><span style="color:#f92672">(</span><span style="color:#a6e22e">@PathVariable</span> String eventId<span style="color:#f92672">,</span> Authentication authentication<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        Long userSeq <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>Long<span style="color:#f92672">)</span> authentication<span style="color:#f92672">.</span><span style="color:#a6e22e">getPrincipal</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 사용자가 해당 공연 회차에 대해 결제한 좌석이 있는지 조회한 뒤, 가능하다면 관람에 필요한 정보 담은 DTO 생성
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        StreamViewResponse body <span style="color:#f92672">=</span> viewService<span style="color:#f92672">.</span><span style="color:#a6e22e">view</span><span style="color:#f92672">(</span>userSeq<span style="color:#f92672">,</span> eventId<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        ResponseCookie cookie <span style="color:#f92672">=</span> ResponseCookie<span style="color:#f92672">.</span><span style="color:#a6e22e">from</span><span style="color:#f92672">(</span>COOKIE<span style="color:#f92672">,</span> signer<span style="color:#f92672">.</span><span style="color:#a6e22e">sign</span><span style="color:#f92672">(</span>userSeq<span style="color:#f92672">,</span> eventId<span style="color:#f92672">,</span> Instant<span style="color:#f92672">.</span><span style="color:#a6e22e">now</span><span style="color:#f92672">().</span><span style="color:#a6e22e">plus</span><span style="color:#f92672">(</span>COOKIE_TTL<span style="color:#f92672">)))</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">.</span><span style="color:#a6e22e">path</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/media/&#34;</span><span style="color:#f92672">).</span><span style="color:#a6e22e">httpOnly</span><span style="color:#f92672">(</span><span style="color:#66d9ef">true</span><span style="color:#f92672">).</span><span style="color:#a6e22e">secure</span><span style="color:#f92672">(</span><span style="color:#66d9ef">true</span><span style="color:#f92672">).</span><span style="color:#a6e22e">sameSite</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Strict&#34;</span><span style="color:#f92672">).</span><span style="color:#a6e22e">maxAge</span><span style="color:#f92672">(</span>COOKIE_TTL<span style="color:#f92672">).</span><span style="color:#a6e22e">build</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> ResponseEntity<span style="color:#f92672">.</span><span style="color:#a6e22e">ok</span><span style="color:#f92672">().</span><span style="color:#a6e22e">header</span><span style="color:#f92672">(</span>HttpHeaders<span style="color:#f92672">.</span><span style="color:#a6e22e">SET_COOKIE</span><span style="color:#f92672">,</span> cookie<span style="color:#f92672">.</span><span style="color:#a6e22e">toString</span><span style="color:#f92672">()).</span><span style="color:#a6e22e">body</span><span style="color:#f92672">(</span>body<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>관람 페이지(<code>app/events/[eventId]/stream</code>)에서는 5초마다 관람 상태(<code>GET /api/events/{eventId}/stream</code>)를 받아온다.</p>
+<blockquote>
+<p>TODO: 지금은 소규모 서비스를 상정했기 때문에 큰 부하는 아니지만, 사용자별로 5초마다 DB 요청이 발생하게 되므로 추후 수정이 필요하다.</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{ <span style="color:#f92672">&#34;status&#34;</span>: <span style="color:#e6db74">&#34;LIVE&#34;</span>, <span style="color:#f92672">&#34;vodStatus&#34;</span>: <span style="color:#e6db74">&#34;NONE&#34;</span> ,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;liveUrl&#34;</span>: <span style="color:#e6db74">&#34;/media/hls/{eventId}/2/master.m3u8&#34;</span>, <span style="color:#f92672">&#34;vodUrl&#34;</span>: <span style="color:#66d9ef">null</span> }
+</span></span></code></pre></div><p>해당 API에서는 사용자가 <code>해당 회차에 결제한 좌석</code>이 있는지 확인하고, 없다면 403을, 있다면 위와 같은 응답을 돌려준다.</p>
+<blockquote>
+<p>스트리밍이 종료됐다면, 위와 반대로 <code>vodStatus</code>, <code>vodUrl</code>이 유효한 값을 가짐</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Set-Cookie: podor_media<span style="color:#f92672">=</span>&lt;payload&gt;.&lt;HMAC&gt;; Path<span style="color:#f92672">=</span>/media/; Max-Age<span style="color:#f92672">=</span>600; HttpOnly; Secure; SameSite<span style="color:#f92672">=</span>Strict
+</span></span></code></pre></div><p>또한, 위와 함께 응답 헤더에 <code>SET-COOKIE</code>로 관람 쿠키 <code>podor_media</code>을 함께 담아 보낸다.</p>
+<blockquote>
+<p>이 쿠키는 <code>/media/</code>에 한정되어 있으며, 수명이 10분이긴 하지만 매 폴링(<code>/api/events/{eventId}/stream</code>)마다 갱신된다.</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>    <span style="color:#75715e"># HLS(/media/hls/{eventId}/{sessionNo}/…) · VOD(/media/vod/{eventId}.mp4)</span>
+</span></span><span style="display:flex;"><span>    location /media/ <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        set $media_uri $uri;   <span style="color:#75715e"># rewrite 단계(auth_request보다 먼저 진행함). 정규화된 경로를 하위 요청에 넘기기 위해 보관한다.</span>
+</span></span><span style="display:flex;"><span>        auth_request /_media_auth; <span style="color:#75715e"># 정적 파일들을 제공하기 전, Spring 서버에 묻는다.</span>
+</span></span><span style="display:flex;"><span>        alias /srv/media/; <span style="color:#75715e"># 위 인증을 통과할 경우, `media` 볼륨의 파일을 그대로 제공한다.</span>
+</span></span><span style="display:flex;"><span>        types <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            application/vnd.apple.mpegurl m3u8;
+</span></span><span style="display:flex;"><span>            video/mp2t                    ts;
+</span></span><span style="display:flex;"><span>            video/mp4                     mp4;
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        add_header Cache-Control $media_cache_control; <span style="color:#75715e"># .m3u8 파일은 계속 갱신되므로 no-cache로 캐싱하지 않는다.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span></code></pre></div><p><code>nginx</code>에서는 <code>/media/</code>에 위치한 파일들(<code>.m3u8</code>, <code>.ts</code>)을 내주기 전, 요청에 대한 인증을 수행한다.</p>
+<ul>
+<li><code>Spring 서버</code>의 <code>GET /api/internal/media/authorize</code>에 <code>원래 경로</code>(<code>X-Original-URI</code>)와 <code>관람 쿠키</code>를 담아 보낸다.
+<ul>
+<li>해당 API에서는 <code>쿠키 서명 및 수명</code> 검사,  <code>URI</code> 포맷(<code>/media/hls/{eventId}/…</code> 또는 <code>/media/vod/{eventId}.mp4</code>) 검사, <code>URI</code>의 <code>eventId</code>와 <code>쿠키</code>의 <code>eventId</code> 일치 여부 검사를 수행한다.
+<ul>
+<li>즉, 비교적 짧은 시간내에 빈번한 <code>조각/재생목록 요청</code>에서는 <em><code>DB</code>를 거치지않고</em> <strong>쿠키 서명만 검사</strong>하도록하고, 덜 빈번한 <code>관람 상태 요청</code>에서 <em><code>DB</code>까지 거친 검증</em>을 수행하도록 한다.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>프론트엔드 측의 <code>hls.js</code>는 인가를 통과해 <code>/meida/</code> 내에 접근이 가능해지면, 받아온 <code>조각/재생목록</code> 파일을 이용해 영상을 재생한다.
+<code>hls.js</code>가 이를 처리하는 과정은 다음과 같다.</p>
+<ol>
+<li>먼저, <code>master.m3u8</code>을 받아 두 화질(<code>src</code>, <code>480p</code>)과 각 대역폭을 알게 된다.</li>
+<li>화질을 고르고 그 <code>index.m3u8</code>을 받는다. 목록에 <code>#EXT-X-ENDLIST</code>가 없으면 &ldquo;아직 끝나지 않은 라이브&quot;로 판단한다.</li>
+<li><code>라이브 끝(최신 조각)</code>에서 <em>조각 3개쯤 뒤부터</em> 재생을 시작한다.</li>
+<li><strong>조각 길이(2초)마다 <code>index.m3u8</code>을 다시 받는다.</strong> <code>ffmpeg</code>가 그사이 추가한 조각이 목록에 나타나면 받아서 버퍼 뒤에 잇는다.</li>
+<li>다운로드 속도를 재서 <code>원본</code>과 <code>480p</code> 사이를 자동으로 오간다(<code>ABR, Adaptive Bitrate Streaming</code> <a href="https://en.wikipedia.org/wiki/Adaptive_bitrate_streaming">참고</a>).</li>
+</ol>
+<h3 id="5-종료-후-vod-생성" >5. 종료 후 VOD 생성
+<span>
+    <a href="#5-%ec%a2%85%eb%a3%8c-%ed%9b%84-vod-%ec%83%9d%ec%84%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><img src="./streaming-state.png" alt="streaming-state">
+이 서비스에서 방송 상태를 4가지로 관리한다.</p>
+<ul>
+<li>송출 전(<code>SCHEDULED</code>)</li>
+<li>방송 중(<code>LIVE</code>)</li>
+<li>끊김/재접속 대기(<code>INTERRUPTED</code>)</li>
+<li>방송 종료(<code>ENDED</code>)</li>
+</ul>
+<p><code>인터넷 문제</code> 또는 OBS 등 <code>송출 프로그램 문제</code>로 인해 방송이 잠깐 끊길때마다 <code>VOD</code>가 만들어지면 곤란하기 때문에 <code>3분(stream.interrupt-grace)</code> 정도의 텀을 두고 <code>호스트의 재접속</code>을 기다린다.</p>
+<h4 id="runonunavailable-끊김-감지" ><code>runOnUnavailable</code>: 끊김 감지
+<span>
+    <a href="#runonunavailable-%eb%81%8a%ea%b9%80-%ea%b0%90%ec%a7%80">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>스트리밍 송출 <em>연결이 끊겼을 때</em>, <code>MediaMTX</code>는 다음 작업들을 수행한다.</p>
+<ul>
+<li><code>runOnAvailable</code> 훅의 프로세스(즉, <code>on-ready.sh</code>를 수행하던 프로세스가 띄운 <code>ffmpeg</code> 프로세스)를 종료한다. <code>ffmpeg</code> 프로세스는 해당 세션의 <code>재생목록을 마무리한 뒤 종료</code>한다.</li>
+<li><code>runOnUnavailable</code> 훅에 연결된 <code>on-not-ready.sh</code> 스크립트를 실행한다. 이 스크립트는 <code>P[^1]OST /api/internal/stream/stopped</code>에 요청을 보낸다.
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// StreamInternalController.java
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">@PostMapping</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/stopped&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> ResponseEntity<span style="color:#f92672">&lt;</span>Void<span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">stopped</span><span style="color:#f92672">(</span><span style="color:#a6e22e">@RequestBody</span> StreamCallbackRequest request<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        lifecycleService<span style="color:#f92672">.</span><span style="color:#a6e22e">stopped</span><span style="color:#f92672">(</span>request<span style="color:#f92672">.</span><span style="color:#a6e22e">streamKey</span><span style="color:#f92672">(),</span> LocalDateTime<span style="color:#f92672">.</span><span style="color:#a6e22e">now</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> ResponseEntity<span style="color:#f92672">.</span><span style="color:#a6e22e">noContent</span><span style="color:#f92672">().</span><span style="color:#a6e22e">build</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// StreamLifecycleService.java
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">stopped</span><span style="color:#f92672">(</span>String streamKey<span style="color:#f92672">,</span> LocalDateTime now<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        Optional<span style="color:#f92672">&lt;</span>Event<span style="color:#f92672">&gt;</span> found <span style="color:#f92672">=</span> eventRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">findByStreamKeyAndDeletedDateIsNull</span><span style="color:#f92672">(</span>streamKey<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>found<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        Long seq <span style="color:#f92672">=</span> found<span style="color:#f92672">.</span><span style="color:#a6e22e">get</span><span style="color:#f92672">().</span><span style="color:#a6e22e">getSeq</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 유예 만료 판정(`StreamLifecycleService.endExpired`)이 마지막 세션의 `ended_at`을 보므로(이때, `eventRepository.findInterruptedSince`를 사용)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#75715e">// 스트림 상태 갱신보다 먼저 ended_at 값을 기록한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	    sessionRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">findTopByEvent_SeqOrderBySessionNoDesc</span><span style="color:#f92672">(</span>seq<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#f92672">.</span><span style="color:#a6e22e">ifPresent</span><span style="color:#f92672">(</span>s <span style="color:#f92672">-&gt;</span> s<span style="color:#f92672">.</span><span style="color:#a6e22e">end</span><span style="color:#f92672">(</span>now<span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span>        sessionRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">flush</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 조건부 상태전이를 통해, 해당 스트림의 상태를 `INTERRUPTED`로 변경한다.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        eventRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">transitStreamStatus</span><span style="color:#f92672">(</span>seq<span style="color:#f92672">,</span> List<span style="color:#f92672">.</span><span style="color:#a6e22e">of</span><span style="color:#f92672">(</span>StreamStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">LIVE</span><span style="color:#f92672">),</span> <span style="color:#66d9ef">false</span><span style="color:#f92672">,</span> StreamStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">INTERRUPTED</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        Event after <span style="color:#f92672">=</span> eventRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">findById</span><span style="color:#f92672">(</span>seq<span style="color:#f92672">).</span><span style="color:#a6e22e">orElseThrow</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>after<span style="color:#f92672">.</span><span style="color:#a6e22e">getStreamStatus</span><span style="color:#f92672">()</span> <span style="color:#f92672">==</span> StreamStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">ENDED</span> <span style="color:#f92672">&amp;&amp;</span> after<span style="color:#f92672">.</span><span style="color:#a6e22e">getVodStatus</span><span style="color:#f92672">()</span> <span style="color:#f92672">==</span> VodStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">NONE</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            vodRequester<span style="color:#f92672">.</span><span style="color:#a6e22e">requestBuild</span><span style="color:#f92672">(</span>seq<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span></code></pre></div><ul>
+<li><code>Spring 서버</code>는 마지막 세션의 <code>ended_at</code>을 기록하고 상태를 <code>LIVE → INTERRUPTED</code>로 바꾼다.</li>
+</ul>
+</li>
+</ul>
+<h4 id="interrupted-방송-재개-유예-시간" ><code>INTERRUPTED</code>: 방송 재개 유예 시간
+<span>
+    <a href="#interrupted-%eb%b0%a9%ec%86%a1-%ec%9e%ac%ea%b0%9c-%ec%9c%a0%ec%98%88-%ec%8b%9c%ea%b0%84">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>INTERRUPTED</code> 상태일 경우, <code>stream.interrupt-grace</code>분 동안 동일한 <code>스트림 키</code>로의 재송출이 허용된다.<br>
+이 경우, 위에서 설명한 <code>&quot;2. 호스트가 송출한 미디어 수신하기&quot;</code>, <code>&quot;3. 영상 처리 - MediaMTX 훅 스크립트&quot;</code> 과정이 다시 이뤄진다.<br>
+<code>stream.interrupt-grace</code>분 안에 재송출이 이뤄지지 않을 경우, <em>30초마다 동작</em>하는 <code>StreamInterruptScheduler</code>가 이를 정리한다.<br>
+(해당 스케줄러는 그 시점을 기준으로 <code>lifecycleService.endExpired()</code>를 호출한다)<br>
+만약 호스트가 직접 <code>방송 종료</code>버튼을 눌렀을 경우,</p>
+<blockquote>
+<p>즉, <code>POST /events/{eventId}/stream/end</code>로 요청을 보내, <code>lifecycleService.endByHost()</code>가 호출되었을 때 <br/></p>
+</blockquote>
+<p><em>유예를 기다리지 않고</em> 바로 <code>ENDED</code>로 만든 뒤, <code>VOD 생성</code>을 요청한다.</p>
+<h4 id="transitstreamstatus-조건부-스트리밍-상태-갱신" ><code>transitStreamStatus</code>: 조건부 스트리밍 상태 갱신
+<span>
+    <a href="#transitstreamstatus-%ec%a1%b0%ea%b1%b4%eb%b6%80-%ec%8a%a4%ed%8a%b8%eb%a6%ac%eb%b0%8d-%ec%83%81%ed%83%9c-%ea%b0%b1%ec%8b%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>현재 코드에서 <code>StreamStatus</code>를 수정하는 곳은 3곳이다.</p>
+<ul>
+<li><code>MediaMTX 콜백</code>: <code>on-not-ready.sh</code>의 <code>POST /api/internal/stream/stopped</code>(<code>StreamHostController.end()</code>) 요청</li>
+<li><code>유예 스케줄러 (endExpired)</code>: <code>StreamInterruptScheduler.endExpired()</code></li>
+<li><code>호스트의 종료 버튼</code>: <code>POST /events/{eventId}/stream/end</code> 요청(<code>StreamInternalController.stopped()</code> 호출)</li>
+</ul>
+<p>궁극적으로 위 케이스들은 모두 <code>eventRepository.transitStreamStatus</code>를 호출해 <code>조건부 상태 전이</code>를 통해 <code>StreamStatus</code>를 갱신한다.<br>
+이때, <code>DB</code>가 <code>행 잠금</code>으로 순서를 정해 주므로 <em>별도의 <code>분산 락</code> 없이</em>  충돌하는 두 요청 중 하나만 성공한다.</p>
+<blockquote>
+<p>ex) <em>유예가 끝나는 순간</em> 호스트가 <code>재접속</code>하면 스케줄러는 <code>ENDED</code>로, 콜백은 <code>LIVE</code>로 바꾸려 하는 충돌 발생</p>
+</blockquote>
+<h4 id="transitvodstatus-조건부-vod-상태-갱신" ><code>transitVodStatus</code>: 조건부 VOD 상태 갱신
+<span>
+    <a href="#transitvodstatus-%ec%a1%b0%ea%b1%b4%eb%b6%80-vod-%ec%83%81%ed%83%9c-%ea%b0%b1%ec%8b%a0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// VodService.java
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">requestBuild</span><span style="color:#f92672">(</span>Long eventSeq<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 조건부 상태 전이 시도
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Integer changed <span style="color:#f92672">=</span> tx<span style="color:#f92672">.</span><span style="color:#a6e22e">execute</span><span style="color:#f92672">(</span>s <span style="color:#f92672">-&gt;</span> eventRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">transitVodStatus</span><span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span>                eventSeq<span style="color:#f92672">,</span> List<span style="color:#f92672">.</span><span style="color:#a6e22e">of</span><span style="color:#f92672">(</span>VodStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">NONE</span><span style="color:#f92672">,</span> VodStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">FAILED</span><span style="color:#f92672">),</span> VodStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">PROCESSING</span><span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 갱신 실패한 경우, 즉, 경쟁에서 진 후발 요청들
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>changed <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span> <span style="color:#f92672">||</span> changed <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        submitAfterCommit<span style="color:#f92672">(</span>eventSeq<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span></code></pre></div><p><code>VOD 상태</code>도 마찬가지로, <code>NONE/FAILED -&gt; PROCESSING</code>로 <code>조건부 상태 전이</code>를 통해 갱신에 성공한 경우에만 <code>VOD 생성 작업</code>을 요청한다.</p>
+<blockquote>
+<p>이를 통해 <code>스트리밍 종료 신호</code>가 여러 번 도착해도, <strong><code>VOD</code>는 한 번만</strong> 만든다.</p>
+</blockquote>
+<h4 id="vod-생성" >VOD 생성
+<span>
+    <a href="#vod-%ec%83%9d%ec%84%b1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><ol>
+<li><em>VOD 상태 갱신에 성공한 후</em>, 즉 커밋이 끝난 이후(<code>afterCommit</code>) <code>VOD 생성 작업(VodService.build())</code>을 수행하도록 <code>vodExecutor</code>에 작업을 등록</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// vodService.java
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">submitAfterCommit</span><span style="color:#f92672">(</span>Long eventSeq<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>TransactionSynchronizationManager<span style="color:#f92672">.</span><span style="color:#a6e22e">isSynchronizationActive</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>			TransactionSynchronizationManager<span style="color:#f92672">.</span><span style="color:#a6e22e">registerSynchronization</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> TransactionSynchronization<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">@Override</span>
+</span></span><span style="display:flex;"><span>				<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">afterCommit</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>					executor<span style="color:#f92672">.</span><span style="color:#a6e22e">execute</span><span style="color:#f92672">(()</span> <span style="color:#f92672">-&gt;</span> build<span style="color:#f92672">(</span>eventSeq<span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span>				<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#f92672">});</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>			executor<span style="color:#f92672">.</span><span style="color:#a6e22e">execute</span><span style="color:#f92672">(()</span> <span style="color:#f92672">-&gt;</span> build<span style="color:#f92672">(</span>eventSeq<span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// VodExecutorConfig.java
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#75715e">/** VOD 변환 전용 스레드 풀. 디스크 I/O 가 큰 작업이라 한 번에 하나만 돌도록 설정. */</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">@Bean</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;vodExecutor&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">public</span> ThreadPoolTaskExecutor <span style="color:#a6e22e">vodExecutor</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>		ThreadPoolTaskExecutor executor <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ThreadPoolTaskExecutor<span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>		executor<span style="color:#f92672">.</span><span style="color:#a6e22e">setCorePoolSize</span><span style="color:#f92672">(</span><span style="color:#ae81ff">1</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>		executor<span style="color:#f92672">.</span><span style="color:#a6e22e">setMaxPoolSize</span><span style="color:#f92672">(</span><span style="color:#ae81ff">1</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>		executor<span style="color:#f92672">.</span><span style="color:#a6e22e">setQueueCapacity</span><span style="color:#f92672">(</span><span style="color:#ae81ff">100</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>		executor<span style="color:#f92672">.</span><span style="color:#a6e22e">setThreadNamePrefix</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;vod-&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>		executor<span style="color:#f92672">.</span><span style="color:#a6e22e">initialize</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> executor<span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">}</span>
+</span></span></code></pre></div><ul>
+<li>이때, 만약 <em>트랜잭션이 진행중인 경우(즉, 아직 VOD 상태 변경 커밋이 완료되지 않은 경우)</em> <code>TransactionSynchronizationManager</code>에 <strong>커밋 이후 수행되는 콜백</strong>(<code>afterCommit</code>)을 등록한다.</li>
+</ul>
+<blockquote>
+<p><a href="https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/transaction/support/TransactionSynchronizationManager.html">TransactionSynchronizationManager</a>: <em>스레드별</em> <code>리소스</code> 및 <code>트랜잭션 동기화</code>를 관리하는 중앙 관리자. <em><code>트랜잭션</code>이 작업을 수행하는 동안</em> 이와 관련된 자원(<em><code>JDBC 커넥션</code> 같은</em>)을 <strong>하나의 <code>컨텍스트</code>에서 관리</strong> 한다.</p>
+</blockquote>
+<ol start="2">
+<li><code>VOD 생성</code> 작업 수행</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// VodService.java
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">build</span><span style="color:#f92672">(</span>Long eventSeq<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// 1. 해당 공연의 hls 조각 디렉토리 찾기
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Event event <span style="color:#f92672">=</span> eventRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">findById</span><span style="color:#f92672">(</span>eventSeq<span style="color:#f92672">).</span><span style="color:#a6e22e">orElse</span><span style="color:#f92672">(</span><span style="color:#66d9ef">null</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>event <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span><span style="color:#f92672">;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        String eventId <span style="color:#f92672">=</span> event<span style="color:#f92672">.</span><span style="color:#a6e22e">getEventId</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>        Path root <span style="color:#f92672">=</span> Path<span style="color:#f92672">.</span><span style="color:#a6e22e">of</span><span style="color:#f92672">(</span>props<span style="color:#f92672">.</span><span style="color:#a6e22e">mediaRoot</span><span style="color:#f92672">());</span>
+</span></span><span style="display:flex;"><span>        Path hlsDir <span style="color:#f92672">=</span> root<span style="color:#f92672">.</span><span style="color:#a6e22e">resolve</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;hls&#34;</span><span style="color:#f92672">).</span><span style="color:#a6e22e">resolve</span><span style="color:#f92672">(</span>eventId<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// 2. 공연의 스트리밍 세션별로 `src` 폴더 위치를 List로 모으기
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            List<span style="color:#f92672">&lt;</span>Path<span style="color:#f92672">&gt;</span> segments <span style="color:#f92672">=</span> collectSegments<span style="color:#f92672">(</span>hlsDir<span style="color:#f92672">,</span> sessionRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">findAllByEvent_SeqOrderBySessionNoAsc</span><span style="color:#f92672">(</span>eventSeq<span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>segments<span style="color:#f92672">.</span><span style="color:#a6e22e">isEmpty</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> IOException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;no segments under &#34;</span> <span style="color:#f92672">+</span> hlsDir<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>            Path vodDir <span style="color:#f92672">=</span> Files<span style="color:#f92672">.</span><span style="color:#a6e22e">createDirectories</span><span style="color:#f92672">(</span>root<span style="color:#f92672">.</span><span style="color:#a6e22e">resolve</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;vod&#34;</span><span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span>            Path tmp <span style="color:#f92672">=</span> vodDir<span style="color:#f92672">.</span><span style="color:#a6e22e">resolve</span><span style="color:#f92672">(</span>eventId <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;.mp4.tmp&#34;</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// 3. ffmpeg를 이용해 `concat demuxer` 방식으로 영상을 잇기
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            ffmpegRunner<span style="color:#f92672">.</span><span style="color:#a6e22e">concatToMp4</span><span style="color:#f92672">(</span>segments<span style="color:#f92672">,</span> tmp<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// 4. 만들어진 파일은 정해진 VOD 위치 포맷에 맞는 곳으로 이동
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            Files<span style="color:#f92672">.</span><span style="color:#a6e22e">move</span><span style="color:#f92672">(</span>tmp<span style="color:#f92672">,</span> vodDir<span style="color:#f92672">.</span><span style="color:#a6e22e">resolve</span><span style="color:#f92672">(</span>eventId <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;.mp4&#34;</span><span style="color:#f92672">),</span>
+</span></span><span style="display:flex;"><span>                    StandardCopyOption<span style="color:#f92672">.</span><span style="color:#a6e22e">REPLACE_EXISTING</span><span style="color:#f92672">,</span> StandardCopyOption<span style="color:#f92672">.</span><span style="color:#a6e22e">ATOMIC_MOVE</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// 5. VOD가 준비됐음을 event 컬럼에 조건부 상태 전이를 이용해 갱신
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            markVod<span style="color:#f92672">(</span>eventSeq<span style="color:#f92672">,</span> VodStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">READY</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// 6. 사용한 hls 조각 디렉토리들을 삭제
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            deleteRecursively<span style="color:#f92672">(</span>hlsDir<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>Exception e<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            log<span style="color:#f92672">.</span><span style="color:#a6e22e">error</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;VOD build failed: event={}&#34;</span><span style="color:#f92672">,</span> eventId<span style="color:#f92672">,</span> e<span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>            markVod<span style="color:#f92672">(</span>eventSeq<span style="color:#f92672">,</span> VodStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">FAILED</span><span style="color:#f92672">);</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span></code></pre></div><ul>
+<li>이후, <code>FfmpegRunner</code> 라는 커스텀 러너에서 <code>ffmpeg</code> 프로세스를 띄워 <code>hls 조각 파일(.ts)</code>들을 이어붙이는 <code>concatenation</code> 진행한다.
+<ul>
+<li>이때, <a href="https://trac.ffmpeg.org/wiki/Concatenate#demuxer"><code>concat demuxer</code></a>라는 방식을 사용하는데, 이는 <code>파일 목록</code> 및 <code>지시어</code>로 이뤄진 <code>텍스트 파일</code>을 읽고 그들을  마치 &lsquo;<em>모든 패킷이 하나로 다중화 된 것 처럼 이를 디멀티플렉싱 하는것</em>&lsquo;처럼, 차례대로 잇는 방식이다. <a href="https://ffmpeg.org/ffmpeg-formats.html#concat">공식 문서</a>
+<ul>
+<li><code>디멀티플렉서</code>: 하나의 입력 신호를 받아, 여러 개의 출력선 중 하나를 선택해 출력하는 회로</li>
+</ul>
+</li>
+<li>이렇게 <code>concat</code>할 때, <em>재인코딩을 수행하지 않도록 해</em> 빠르게 작업 속도를 빠르게 한다.
+<ul>
+<li>또한, <code>+faststart</code> 옵션을 주어 인덱스 역할을 하는 <a href="https://developer.apple.com/documentation/quicktime-file-format/movie_atom">moov</a> 를 앞에 두어, <em>영상을 전부 받기 전부터</em> 브라우저가 <code>재생</code> 및 <code>탐색</code>을 진행할 수 있도록 한다.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>이어서 <code>concat</code>한 임시 파일을 <em>정해진 포맷에 따른</em> <code>vod 위치</code>(<code>/media/vod/{eventId}.mp4</code>)로 이동시킨 뒤, 사용한 <code>HLS 폴더</code>들을 지운다.</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// VodService.java
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">/** 서버 재시작으로 PROCESSING 에 멈춘 작업을 다시 돌린다. */</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">@EventListener</span><span style="color:#f92672">(</span>ApplicationReadyEvent<span style="color:#f92672">.</span><span style="color:#a6e22e">class</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">resumePending</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>Event event <span style="color:#f92672">:</span> eventRepository<span style="color:#f92672">.</span><span style="color:#a6e22e">findAllByVodStatus</span><span style="color:#f92672">(</span>VodStatus<span style="color:#f92672">.</span><span style="color:#a6e22e">PROCESSING</span><span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            Long seq <span style="color:#f92672">=</span> event<span style="color:#f92672">.</span><span style="color:#a6e22e">getSeq</span><span style="color:#f92672">();</span>
+</span></span><span style="display:flex;"><span>            executor<span style="color:#f92672">.</span><span style="color:#a6e22e">execute</span><span style="color:#f92672">(()</span> <span style="color:#f92672">-&gt;</span> build<span style="color:#f92672">(</span>seq<span style="color:#f92672">));</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span></code></pre></div><ul>
+<li>만약 변환 도중 서버가 재시작되어 <code>PROCESSING</code> 상태로 남은 회차가 있을 수 있으므로, <code>기동 직후</code>(<code>ApplicationReadyEvent</code>) 이러한 회차를 찾아 <code>VOD 생성을 재요청</code>한다.</li>
+</ul>
+<ol start="3">
+<li>시청자의 <code>VOD 폴링 및 시청</code></li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#75715e">// StreamViewer.tsx
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">default</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">StreamViewer</span>({ <span style="color:#a6e22e">eventId</span> }<span style="color:#f92672">:</span> { <span style="color:#a6e22e">eventId</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">string</span> }) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// 5초 간격으로 스트리밍 정보를 폴링하는 훅
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">view</span>, <span style="color:#a6e22e">forbidden</span>, <span style="color:#a6e22e">error</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">useStreamView</span>(<span style="color:#a6e22e">eventId</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">forbidden</span>) <span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">Notice</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">예매한</span> <span style="color:#a6e22e">관객만</span> <span style="color:#a6e22e">볼</span> <span style="color:#a6e22e">수</span> <span style="color:#a6e22e">있습니다</span>.<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/Notice&gt;;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">view</span>) <span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">Notice</span><span style="color:#f92672">&gt;</span>{<span style="color:#a6e22e">error</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#34;방송 정보를 불러오지 못했습니다.&#34;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;불러오는 중...&#34;</span>}<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/Notice&gt;;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">switch</span> (<span style="color:#a6e22e">view</span>.<span style="color:#a6e22e">status</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;SCHEDULED&#34;</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">Notice</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">방송</span> <span style="color:#a6e22e">준비중입니다</span>.<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/Notice&gt;;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;INTERRUPTED&#34;</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">Notice</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">방송이</span> <span style="color:#a6e22e">잠시</span> <span style="color:#a6e22e">중단되었습니다</span>.<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/Notice&gt;;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;LIVE&#34;</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">view</span>.<span style="color:#a6e22e">liveUrl</span> <span style="color:#f92672">?</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">LivePlayer</span> <span style="color:#a6e22e">url</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">view</span>.<span style="color:#a6e22e">liveUrl</span>} <span style="color:#f92672">/&gt;</span> <span style="color:#f92672">:</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">Notice</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">방송</span> <span style="color:#a6e22e">준비중입니다</span>.<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/Notice&gt;;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;ENDED&#34;</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// 스트리밍이 종료되었으며, VOD가 준비된 경우
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">view</span>.<span style="color:#a6e22e">vodStatus</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;READY&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">view</span>.<span style="color:#a6e22e">vodUrl</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// VOD 영상을 렌더링
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> (
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">video</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">data</span><span style="color:#f92672">-</span><span style="color:#a6e22e">testid</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;vod-video&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span>{<span style="color:#a6e22e">view</span>.<span style="color:#a6e22e">vodUrl</span>}
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">controls</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">playsInline</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">className</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;aspect-video w-full rounded-xl bg-black&#34;</span>
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>        );
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">view</span>.<span style="color:#a6e22e">vodStatus</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;FAILED&#34;</span>) <span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">Notice</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">VOD</span> <span style="color:#a6e22e">를</span> <span style="color:#a6e22e">준비하지</span> <span style="color:#a6e22e">못했습니다</span>.<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/Notice&gt;;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">Notice</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">VOD</span> <span style="color:#a6e22e">준비중입니다</span>.<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/Notice&gt;;</span>
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ul>
+<li><em>스트리밍이 종료된 이후에도</em>, 시청자는 주기적으로 스트리밍 상태를 폴링한다.</li>
+<li>만약, VOD가 준비된 경우, 해당 <code>VOD URL</code>을 <code>src</code>로 하는 <code>&lt;video&gt;</code> 엘리먼트를 렌더링한다.</li>
+</ul>
+<h2 id="트러블슈팅" >트러블슈팅
+<span>
+    <a href="#%ed%8a%b8%eb%9f%ac%eb%b8%94%ec%8a%88%ed%8c%85">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h2><p>이러한 서비스를 구현하며, 겪은 몇 가지 문제와 그 원인, 그리고 어떻게 해결했는지를 공유하려 한다.<br>
+아래 문제들은 모두 <code>Spring</code>/<code>Next.js</code> 단위 테스트에서는 잡히지 않았으며, <em>nginx에서 Tomcat으로</em>, <em>컨테이너에서 GPU로 넘어갈 때</em> 처럼 환경의 경계를 넘어갈 때 발생했다.</p>
+<h3 id="hls-생성-시-gpu-선택-문제" >HLS 생성 시 <code>GPU 선택</code> 문제
+<span>
+    <a href="#hls-%ec%83%9d%ec%84%b1-%ec%8b%9c-gpu-%ec%84%a0%ed%83%9d-%eb%ac%b8%ec%a0%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="문제" >문제
+<span>
+    <a href="#%eb%ac%b8%ec%a0%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>mediaMTX.yml</code>을 비롯해 송출/송출중단에 대응되는 스크립트들을 세팅했음에도, <code>HLS 파일</code>들이 만들어지지 않아 재생에 실패했다.</p>
+<h4 id="원인" >원인
+<span>
+    <a href="#%ec%9b%90%ec%9d%b8">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># 이전 `on-ready.sh`</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 480p 인코더. 원본(v:0)은 재인코딩 없이 그대로 복사한다.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>STREAM_ENCODER<span style="color:#66d9ef">:-</span>vaapi<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;vaapi&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  HW<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-vaapi_device /dev/dri/renderD128&#34;</span>
+</span></span><span style="display:flex;"><span>  V1<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-filter:v:1 format=nv12,hwupload,scale_vaapi=w=-2:h=480 -c:v:1 h264_vaapi&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>  HW<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>  V1<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-filter:v:1 scale=-2:480 -c:v:1 libx264 -preset veryfast&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span></code></pre></div><p>송출 스크립트(<code>on-ready.sh</code>)에서 <code>GPU 노드</code>가 올바르게 잡히지 않아 발생한 문제였다.<br>
+서버로 사용한 PC에는 <code>내장 GPU</code>, <code>외장 GPU</code> 두 가지가 있었는데, <code>내장 GPU</code> 일 것이라고 생각한 <code>renderD128</code> 노드가 <a href="https://en.wikipedia.org/wiki/Nouveau_(software)">nouveau</a> 드라이버를 사용하는 <code>외장 GPU</code>였다.<br>
+이로 인해 <code>VAAPI</code> 초기화에 실패했고, <code>ffmpeg</code> 프로세스가 바로 죽어버렸다.</p>
+<h4 id="해결" >해결
+<span>
+    <a href="#%ed%95%b4%ea%b2%b0">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Intel GPU(i915) 렌더 노드를 찾는다. 다른 GPU(예: NVIDIA)가 함께 있으면 renderD128 이 Intel 이</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 아닐 수 있고, 번호는 부팅마다 바뀔 수 있다. STREAM_VAAPI_DEVICE 를 주면 그 값을 쓴다.</span>
+</span></span><span style="display:flex;"><span>find_intel_render_node<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> node in /dev/dri/renderD*; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    driver<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>basename <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>readlink -f <span style="color:#e6db74">&#34;/sys/class/drm/</span><span style="color:#66d9ef">$(</span>basename <span style="color:#e6db74">&#34;</span>$node<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">/device/driver&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> 2&gt;/dev/null <span style="color:#f92672">||</span> true<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$driver<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;i915&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$driver<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;xe&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>      echo <span style="color:#e6db74">&#34;</span>$node<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 480p 인코더. 원본(v:0)은 재인코딩 없이 그대로 복사한다.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>STREAM_ENCODER<span style="color:#66d9ef">:-</span>vaapi<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;vaapi&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  DEVICE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>STREAM_VAAPI_DEVICE<span style="color:#66d9ef">:-$(</span>find_intel_render_node <span style="color:#f92672">||</span> echo /dev/dri/renderD128<span style="color:#66d9ef">)</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;on-available: VAAPI device </span>$DEVICE<span style="color:#e6db74">&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  HW<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-hwaccel vaapi -hwaccel_device </span>$DEVICE<span style="color:#e6db74"> -hwaccel_output_format vaapi&#34;</span>
+</span></span><span style="display:flex;"><span>  V1<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-filter:v:1 scale_vaapi=w=-2:h=480 -c:v:1 h264_vaapi&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>  HW<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>  V1<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-filter:v:1 scale=-2:480 -c:v:1 libx264 -preset veryfast&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span></code></pre></div><p><code>ffmpeg</code>에서 사용할 <code>GPU</code> 노드를 세팅하기 전, 미리 <code>Intel GPU</code> 렌더 노드가 무엇인지 찾는 로직을 선행하도록 수정했다.
+<code>/sys/class/drm/renderD*/device/driver</code>가 <a href="https://docs.kernel.org/gpu/i915.html">i915</a>인 노드를 자동으로 찾도록 하여, 이러한 에러를 방지할 수 있었다.</p>
+<h3 id="media-인가-관련-문제" ><code>/media/</code> 인가 관련 문제
+<span>
+    <a href="#media-%ec%9d%b8%ea%b0%80-%ea%b4%80%eb%a0%a8-%eb%ac%b8%ec%a0%9c">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><p><code>HLS</code>, <code>VOD</code> 파일들이 저장되어있는 <code>/media/</code> 폴더에 대한 접근 권한 검사를 <code>nginx</code>과 연결하는 과정에서 두 가지 오류가 발생했다.</p>
+<h3 id="모든-media-요청이-403forbidden" >모든 <code>/media/</code> 요청이 <code>403(Forbidden)</code>
+<span>
+    <a href="#%eb%aa%a8%eb%93%a0-media-%ec%9a%94%ec%b2%ad%ec%9d%b4-403forbidden">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="문제-1" >문제
+<span>
+    <a href="#%eb%ac%b8%ec%a0%9c-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># nginx.conf</span>
+</span></span><span style="display:flex;"><span>	location <span style="color:#f92672">=</span> /_media_auth <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        internal;
+</span></span><span style="display:flex;"><span>        proxy_pass http://spring_backend/api/internal/media/authorize;
+</span></span><span style="display:flex;"><span>        proxy_pass_request_body off;
+</span></span><span style="display:flex;"><span>        proxy_set_header Content-Length <span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>        proxy_set_header X-Original-URI $uri; <span style="color:#75715e"># &lt;- 문제 지점</span>
+</span></span><span style="display:flex;"><span>        proxy_http_version 1.1;
+</span></span><span style="display:flex;"><span>        proxy_set_header Connection <span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>	
+</span></span><span style="display:flex;"><span>    location /media/ <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        auth_request /_media_auth;
+</span></span><span style="display:flex;"><span>        alias /srv/media/;
+</span></span><span style="display:flex;"><span>        types <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            application/vnd.apple.mpegurl m3u8;
+</span></span><span style="display:flex;"><span>            video/mp2t                    ts;
+</span></span><span style="display:flex;"><span>            video/mp4                     mp4;
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        add_header Cache-Control $media_cache_control;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>호스트 PC의 <code>/srv/media/</code>과 연결한 <code>location /media/</code>에 접근하려 할 경우 <code>403 에러</code>가 발생했다.</p>
+<h4 id="원인-1" >원인
+<span>
+    <a href="#%ec%9b%90%ec%9d%b8-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p><code>/media/</code> 접근에 필요한 <code>auth_request</code>인 <code>/_media_auth</code>에서, 원래 요청의 경로를 의미하는 <code>X-Original-URI</code>헤더에 <code>$uri</code>값을 할당했었다.<br>
+그러나 이는 <em><code>원래 요청의 경로</code>가 아니라</em> 요청 내에서 <code>정규화 된 현재 URI</code>, 즉 <code>/_media_auth</code> 자신이었다. <a href="https://nginx.org/en/docs/http/ngx_http_core_module.html#var_uri">참고 - ngx_http_core_module</a><br>
+이로 인해 <code>Spring</code>에서는 <code>X-Original-URI: /_media_auth</code>을 받으니, URI가 <code>/media/hls/...</code> 또는 <code>/media/vod/...</code>여야 한다는 형식 검사에서 걸려 항상 <code>403 에러</code>를 반환했다.</p>
+<h4 id="해결-1" >해결
+<span>
+    <a href="#%ed%95%b4%ea%b2%b0-1">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>    location /media/ <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>		set $media_uri $uri;   <span style="color:#75715e"># `rewrite` 단계(`access` 단계인 `auth_request`보다 먼저 진행됨). 정규화된 경로를 하위 요청에 넘기기 위해 변수로 저장한다.</span>
+</span></span><span style="display:flex;"><span>        auth_request /_media_auth;
+</span></span><span style="display:flex;"><span>        alias /srv/media/;
+</span></span><span style="display:flex;"><span>        types <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>            application/vnd.apple.mpegurl m3u8;
+</span></span><span style="display:flex;"><span>            video/mp2t                    ts;
+</span></span><span style="display:flex;"><span>            video/mp4                     mp4;
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        add_header Cache-Control $media_cache_control;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span></code></pre></div><p><code>auth_request</code> 요청을 보내기 전에 <code>set</code>을 이용해 변수로 <code>현재 URI</code>를 저장해, <code>auth_request</code>와 공유하도록 수정했다.<br>
+이는 <code>nginx</code>가 <code>HTTP 요청</code>을 단계별로 처리한다는 점을 이용한 것이다.<br>
+<a href="https://nginx.org/en/docs/dev/development_guide.html#http_phases">공식 문서</a>에 따르면, <code>nginx</code>의 HTTP 요청은 11개의 <code>Phase</code>를 거친다. 이 중, <code>rewrite 명령문</code> 및 <code>set</code>과 같은 <code>변수 연산</code>은 <code>NGX_HTTP_REWRITE_PHASE</code>에서 이뤄지고, <code>auth_request</code>와 같이 요청에 대한 <code>사용자의 인가</code> 여부를 조회하는 <code>NGX_HTTP_ACCESS_PHASE</code>는 그 이후에 진행된다.<br>
+따라서 <code>/media/</code>의 하위 요청인 <code>auth_request</code>(<code>/_media_auth</code>)가 만들어지기 전, <code>set</code>이 먼저 수행되며, 또한 <code>하위 요청</code>과 <code>부모 요청</code>은 <code>변수 공간</code>을 공유하기 때문에 부모 요청에서 <code>set</code>으로 기록한 변수를 <em>하위 요청에서 접근할 수 있다</em>.</p>
+<blockquote>
+<p>&hellip; A subrequest looks like a normal request, but shares some data with its parent. In particular, all fields related to client input are shared because a subrequest does not receive any other input from the client.<br />
+(<em><code>하위 요청</code>은 일반 요청과 비슷해 보이지만</em>, <code>상위 요청</code>과 <strong>일부 데이터를 공유</strong>합니다. 특히, 하위 요청은 클라이언트로부터 다른 입력을 받지 않기 때문에 <strong>클라이언트 입력과 관련된 모든 필드가 공유</strong>됩니다.) <br />
+<a href="https://nginx.org/en/docs/dev/development_guide.html#http_subrequests">출처</a></p>
+</blockquote>
+<p>이를 활용해, 부모 요청에서 현재 uri를 <code>$media_uri</code>라는 변수에 저장하고, 하위 요청에서 이를 사용(<code>proxy_set_header X-Original-URI $media_uri</code>)하게 하였다.</p>
+<blockquote>
+<p><code>전체 원본 URI</code> 값인 <code>$request_uri</code>도 있기 하지만, 이는 <code>디코딩 전의 원문</code> 값이기 때문에 그대로 가져다 쓰면 공격당할 위험이 있어 쓰지 않았다.<br>
+(ex. 공격자가 A 공연만 결제한 상태로 <code>/media/hls/A/1/%2e%2e/%2e%2e/B/1/master.m3u8</code>처럼 요청한다고 할 경우, <code>Spring 서버</code>에서는 <code>/media/hls/...</code> 포맷을 통과하므로 넘어가지만, <code>nginx</code>에서 해당 경로 파일을 찾기위해 <code>%2e</code>(URL 인코딩 된 <code>.</code>)을 디코딩 할 경우 B 공연의 파일을 내주게 된다.)</p>
+</blockquote>
+<h3 id="모든-media-요청이-500internal-server-error" >모든 <code>/media/</code> 요청이 <code>500(Internal Server Error)</code>
+<span>
+    <a href="#%eb%aa%a8%eb%93%a0-media-%ec%9a%94%ec%b2%ad%ec%9d%b4-500internal-server-error">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h3><h4 id="문제-2" >문제
+<span>
+    <a href="#%eb%ac%b8%ec%a0%9c-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><p>이번엔 <code>/media/</code>로 접근시, <code>auth_request</code>과정에서 <code>500 에러</code> 가 발생했다.</p>
+<h4 id="원인-2" >원인
+<span>
+    <a href="#%ec%9b%90%ec%9d%b8-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># nginx.conf</span>
+</span></span><span style="display:flex;"><span>upstream spring_backend <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    server spring:8080;
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e"># ...</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>server <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    location <span style="color:#f92672">=</span> /_media_auth <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        internal;
+</span></span><span style="display:flex;"><span>        proxy_pass http://spring_backend/api/internal/media/authorize;
+</span></span><span style="display:flex;"><span>        proxy_pass_request_body off;
+</span></span><span style="display:flex;"><span>        proxy_set_header Content-Length <span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># proxy_set_header Host {값} &lt; 이렇게 명시적으로 지정하지 않으면</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e"># nginx는 upstream 이름을 담아 보낸다.</span>
+</span></span><span style="display:flex;"><span>        proxy_set_header X-Original-URI $media_uri;
+</span></span><span style="display:flex;"><span>        proxy_http_version 1.1;
+</span></span><span style="display:flex;"><span>        proxy_set_header Connection <span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e"># ...</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>서버 측에서 <code>/media/</code>내의 파일을 내주기 전 수행하는 <code>auth_request</code> 하위 요청(<code>/_media_auth</code>)의 <code>Host</code>가 지정되어있지 않아, <code>nginx</code>는 <code>$proxy_host</code> 값, 즉 <code>upstream 이름</code>(<code>spring_backend</code>)으로 보냈다.</p>
+<blockquote>
+<p><a href="https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/#passing-request-headers">공식문서</a>에 따르면 <code>프록시된 요청</code>에 대해, 사용자가 <code>proxy_set_header Host</code>를 직접 명시하지 않을 경우, <code>Host</code>로 <code>$proxy_host</code> 값을 설정한다.<br>
+이는 <code>proxy_pass</code> 문에 명시된 <code>프록시 서버의 이름과 포트</code>이며(<a href="https://nginx.org/en/docs/http/ngx_http_proxy_module.html#variables">참고</a>), 따라서 <code>http://spring_backend/api/internal/media/authorize</code> 중 서버 이름인 <code>spring_backend</code>가 <code>Host</code>로 설정된다.</p>
+</blockquote>
+<p><code>_</code> 가 든 <code>Host</code>를 담은 요청을 받게된 <code>Tomcat</code>은 <em><code>밑줄</code>을 허용하지 않는</em> <code>호스트명 규칙(RFC 952/1035/1123)</code>으로 인해 <code>400</code>으로 요청을 거부했고, <code>auth_request</code>에서는 <em><code>2xx</code>/<code>401</code>/<code>403</code>이외의 응답</em>은 <code>500</code>으로 <strong>바꾸어 반환</strong>하기 때문에 사용자측에서 <code>500 에러</code>를 받게 되었다.</p>
+<blockquote>
+<p><a href="https://www.rfc-editor.org/rfc/rfc952.html">RFC 952 - 미국 국방부 인터넷 호스트 테이블 사양, 1985</a>: <code>호스트 이름</code>을 <code>알파벳(A-Z)</code>, <code>숫자(0-9)</code>, <code>마이너스 기호(-)</code>, <code>마침표(.)</code>로 구성된 최대 24자 길이의 문자열로 가정함. (첫 번째 문자는 반드시 알파벳)<br />
+<a href="https://www.rfc-editor.org/rfc/rfc1035.html">RFC 1035 - 도메인 이름 구현 및 사양, 1987</a>: 도메인을 구성하는 <code>라벨</code>은 <code>ARPANET 호스트 이름 규칙</code>(<code>RFC 952</code>)을 따라야 함. 즉, 라벨은 문자로 시작해야 하며, 문자로 끝날 수도 있고 숫자로 끝날 수도 있어야 하며, 중간에는 문자,숫자 및 하이픈만 포함되어야 함. <br />
+<a href="https://www.rfc-editor.org/rfc/rfc1123.html#page-13">RFC 1123 - 인터넷 호스트에 대한 요구 사항, 1989</a>: <code>RFC-952</code>에서 <code>첫 번째 문자</code>가 <code>알파벳</code>이어야 한다는 제한을 완화하여, <code>알파벳</code> 또는 <code>숫자</code>중 하나를 사용할 수 있도록 함. <br /></p>
+</blockquote>
+<p><a href="https://tomcat.apache.org/tomcat-8.5-doc/changelog.html">Tomcat 8.5.31</a>부터, 모든 커넥터에 대해 <code>host name</code>과 <code>port</code>에 대한 엄격한 유효성 검사를 활성화 했으며, 유효하지 않은 <code>host name</code> 및 <code>port</code>가 포함된 요청은 <em><code>400</code>응답과 함께 거부</em>하도록 함. <a href="https://knowledge.broadcom.com/external/article/236367/wac-error-the-character-is-never-valid.html">실제 사례 - The character [_] is never valid in a domain name.</a></p>
+<blockquote>
+<p><code>Tomcat 8.5.31 (markt) &gt; Coyote</code> <br />
+Enable strict validation of the provided <code>host name</code> and <code>port</code> for all connectors. <code>Requests with invalid host names and/or ports</code> will be <code>rejected with a 400 response</code>. (모든 커넥터에 대해 지정된 호스트 이름과 포트에 대한 엄격한 유효성 검사를 활성화합니다. 유효하지 않은 호스트 이름 및/또는 포트가 포함된 요청은 400 응답과 함께 거부됩니다.)<br>
+출처: <a href="https://tomcat.apache.org/tomcat-8.5-doc/changelog.html">https://tomcat.apache.org/tomcat-8.5-doc/changelog.html</a></p>
+</blockquote>
+<h4 id="해결-2" >해결
+<span>
+    <a href="#%ed%95%b4%ea%b2%b0-2">
+        <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
+    </a>
+</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># nginx.conf</span>
+</span></span><span style="display:flex;"><span>server <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    location <span style="color:#f92672">=</span> /_media_auth <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        internal;
+</span></span><span style="display:flex;"><span>        proxy_pass http://spring_backend/api/internal/media/authorize;
+</span></span><span style="display:flex;"><span>        proxy_pass_request_body off;
+</span></span><span style="display:flex;"><span>        proxy_set_header Content-Length <span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>        proxy_set_header Host $host; <span style="color:#75715e"># 추가</span>
+</span></span><span style="display:flex;"><span>        proxy_set_header X-Original-URI $media_uri;
+</span></span><span style="display:flex;"><span>        proxy_http_version 1.1;
+</span></span><span style="display:flex;"><span>        proxy_set_header Connection <span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e"># ...</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>이를 방지하기 위해, <code>auth_request</code> 하위 요청(<code>/_media_auth</code>)의 <code>proxy header Host</code>에 값을 세팅해주도록 설정하였다.</p>
+
+        </div>
+        
+
+    
+
+
+
+<div class="post-info">
+    
+        <div class="post-date dt-published">
+            <a class="u-url" href="/post/develop/toy-project/podor/04-backend-streaming-phase/"><time datetime="2026-11-13">2026-11-13 09:46 KST</time></a>
+            
+        </div>
+    
+
+    <a class="post-hidden-url u-url" href="https://cloudsoswift.github.io/post/develop/toy-project/podor/04-backend-streaming-phase/">https://cloudsoswift.github.io/post/develop/toy-project/podor/04-backend-streaming-phase/</a>
+    <a href="https://cloudsoswift.github.io/" class="p-name p-author post-hidden-author h-card" rel="me">cloudsoswift</a>
+
+
+    <div class="post-taxonomies">
+        
+            <ul class="post-categories">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/categories/develop/">develop</a></li>
+                
+            </ul>
+        
+        
+            <ul class="post-tags">
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/toyproject/">#ToyProject</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/nginx/">#Nginx</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/spring/">#Spring</a></li>
+                
+                    
+                    <li><a href="https://cloudsoswift.github.io/tags/ffmpeg/">#Ffmpeg</a></li>
+                
+            </ul>
+        
+        
+    </div>
+</div>
+
+    </article>
+
+    
+        
+        
+            <h3 class="read-next-title">Read next</h3>
+            <ul class="read-next-posts">
+                
+                <li><a href="/post/develop/toy-project/podor/02-knowledge-in-first-week/">[podoR] 2. 프로젝트 첫 주차에 알게된 점들 (w. SpEL, Hydration Mismatch, 이벤트 재타게팅)</a></li>
+                
+                <li><a href="/post/develop/toy-project/podor/03-fe-seatmap-editor/">[podoR] 3. FE 좌석맵 에디터 구현과 트러블 슈팅</a></li>
+                
+            </ul>
+        
+    
+
+    
+        
+    
+    
+    <div class="pagination post-pagination">
+        <div class="left pagination-item disabled">
+            
+        </div>
+        <div class="right pagination-item ">
+            
+                <a href="/post/develop/toy-project/podor/03-fe-seatmap-editor/">[podoR] 3. FE 좌석맵 에디터 구현과 트러블 슈팅</a>
+            
+        </div>
+    </div>
+
+
+
+
+    
+
+    
+        
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
+<script src="https://giscus.app/client.js"
+        data-repo="cloudsoswift/cloudsoswift.github.io"
+        data-repo-id="R_kgDOIx-DaQ"
+        data-category="Announcements"
+        data-category-id="DIC_kwDOIx-Dac4CUdFI"
+        data-mapping="og:title"
+        data-strict="0"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="en"
+        crossorigin="anonymous"
+        
+        async>
+</script>
+
+    
+
+            </main>
+            
+                <footer class="common-footer">
+    
+    
+
+    <div class="common-footer-bottom">
+        
+        <div class="copyright">
+            <p>© cloudsoswift, 2026<br>
+            Powered by <a target="_blank" rel="noopener noreferrer" href="https://gohugo.io/">Hugo</a>, theme <a target="_blank" rel="noopener noreferrer" href="https://github.com/mitrichius/hugo-theme-anubis">Anubis</a>.<br>
+            
+            </p>  
+        </div> 
+
+        
+
+    
+
+
+
+
+    <button class="theme-switcher">
+        Dark theme
+    </button>
+
+
+<script>
+const STORAGE_KEY = 'user-color-scheme'
+const defaultTheme = "light"
+
+let currentTheme
+let switchButton
+let autoDefinedScheme = window.matchMedia('(prefers-color-scheme: dark)')
+
+const autoChangeScheme = e => {
+    currentTheme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', currentTheme)
+    changeButtonText()
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    switchButton = document.querySelector('.theme-switcher')
+    currentTheme = detectCurrentScheme()
+    if (currentTheme == 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark')
+    }
+    if (currentTheme == 'auto') {
+        autoChangeScheme(autoDefinedScheme);
+        autoDefinedScheme.addListener(autoChangeScheme);
+    }
+
+    if (switchButton) {
+        changeButtonText()
+        switchButton.addEventListener('click', switchTheme, false)
+    }
+  
+    showContent()
+})
+
+function detectCurrentScheme() {
+    if (localStorage !== null && localStorage.getItem(STORAGE_KEY)) {
+        return localStorage.getItem(STORAGE_KEY)
+    } 
+    if (defaultTheme) {
+        return defaultTheme
+    } 
+    if (!window.matchMedia) {
+        return 'light'
+    } 
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        return 'dark'
+    }
+    return 'light'
+}
+
+function changeButtonText()
+{   
+    if (switchButton) {
+        switchButton.textContent = currentTheme == 'dark' ?  "Light theme" : "Dark theme"
+    }
+}
+
+function switchTheme(e) {
+    if (currentTheme == 'dark') {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'light')
+        document.documentElement.setAttribute('data-theme', 'light')
+        currentTheme = 'light'
+    } else {
+        if (localStorage !== null)
+            localStorage.setItem(STORAGE_KEY, 'dark')
+        document.documentElement.setAttribute('data-theme', 'dark')
+        currentTheme = 'dark'
+    }
+    changeButtonText()
+}
+
+function showContent() {
+    document.body.style.visibility = 'visible';
+    document.body.style.opacity = 1;
+}
+</script>
+
+   
+    </div>
+
+    <p class="h-card vcard">
+
+    <a href=https://cloudsoswift.github.io/ class="p-name u-url url fn" rel="me">cloudsoswift</a> 
+
+    
+
+     
+        <img class="u-photo" src="/img/avatar.png" />
+    
+</p> 
+</footer>
+
+            
+        </div>
+        <aside class="sidebar">
+    <div class="sidebar-widget">
+        <h2 class="sidebar-title">카테고리</h2>
+
+        
+        
+
+           
+              
+             
+
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                    
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                        
+                        
+                        
+                    
+                
+            
+        
+            
+                
+                
+                
+                
+                
+                
+                
+                    
+                    
+                    
+
+                    
+                    
+                    
+                
+            
+        
+
+        
+        
+
+        <ul class="sidebar-categories">
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/algorithm/">algorithm</a>
+                        
+                        <span class="sidebar-category-count">12</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/algorithm/data-structure/">data-structure</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/develop/">develop</a>
+                        
+                        <span class="sidebar-category-count">45</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/cs/">cs</a>
+                                    
+                                    <span class="sidebar-category-count">3</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/database/">database</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/java/">java</a>
+                                    
+                                    <span class="sidebar-category-count">10</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/javascript/">javascript</a>
+                                    
+                                    <span class="sidebar-category-count">12</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/network/">network</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/nodejs/">nodejs</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/os/">OS</a>
+                                    
+                                    <span class="sidebar-category-count">5</span>
+                                </li>
+                            
+                                <li>
+                                    
+                                        <a href="/post/develop/toy-project/">toy-project</a>
+                                    
+                                    <span class="sidebar-category-count">4</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/etc/">etc</a>
+                        
+                        <span class="sidebar-category-count">2</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/etc/etc/">etc</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+                <li class="sidebar-cat-group">
+                    <div class="sidebar-cat-parent">
+                        
+                            <a href="/categories/self-development/">self-development</a>
+                        
+                        <span class="sidebar-category-count">1</span>
+                    </div>
+
+                    
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                        
+                        
+                    
+                    
+                        <ul class="sidebar-subcategories">
+                            
+                                <li>
+                                    
+                                        <a href="/post/self-development/ril/">RIL</a>
+                                    
+                                    <span class="sidebar-category-count">1</span>
+                                </li>
+                            
+                        </ul>
+                    
+                </li>
+            
+        </ul>
+    </div>
+</aside>
+
+    </div>
+</body>
+</html>
