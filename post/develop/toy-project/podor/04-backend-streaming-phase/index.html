@@ -13,7 +13,7 @@
 <title>[podoR] 4. 백엔드 스트리밍 구조 및 흐름 정리하기 - 오늘도 개발을 한다.</title>
 
 <meta name="description" content="서론최근 podoR에 추가한 스트리밍 기능에 대해, 대략적인 구조와 그 흐름을 정리하고자 한다.
-아키텍처송출자의 스트리밍부터, 이를 서버에서 처리하고 수신자에게 전달하기 까지의 흐름을 구성하는 요소는 다섯가지이다. 송출자(Host) PC OBS Studio등의 프로그램을 이용해, RTMP 프로토콜로 영상을 전송한다. MediaMTX 컨테이너 송출자의 RTMP 데이터를 받는 미디어 서버. 송출이 시작될 때, 끝날 때 스크립트를 실행한다. ffmpeg MediaMTX 컨테이너와 Spring 컨테이너 두 곳에서 사용된다. MediaMTX 컨테이너에서는 RTMP 데이터를 HLS 파일로 바꾼다. Spring 컨테이너에서는 HLS 조각(.ts)을 VOD(mp4)로 조합한다.">
+11월 19일 업데이트) ffmpeg에서 원본 화질의 BANDWIDTH 인식할 수 있게 명시적으로 비트레이트 지정한 내용을 추가했다. 아키텍처송출자의 스트리밍부터, 이를 서버에서 처리하고 수신자에게 전달하기 까지의 흐름을 구성하는 요소는 다섯가지이다. 송출자(Host) PC OBS Studio등의 프로그램을 이용해, RTMP 프로토콜로 영상을 전송한다. MediaMTX 컨테이너 송출자의 RTMP 데이터를 받는 미디어 서버. 송출이 시작될 때, 끝날 때 스크립트를 실행한다. ffmpeg MediaMTX 컨테이너와 Spring 컨테이너 두 곳에서 사용된다.">
 
 
 
@@ -94,7 +94,7 @@
 
 <meta property="og:title" content="[podoR] 4. 백엔드 스트리밍 구조 및 흐름 정리하기" />
 <meta property="og:description" content="서론최근 podoR에 추가한 스트리밍 기능에 대해, 대략적인 구조와 그 흐름을 정리하고자 한다.
-아키텍처송출자의 스트리밍부터, 이를 서버에서 처리하고 수신자에게 전달하기 까지의 흐름을 구성하는 요소는 다섯가지이다. 송출자(Host) PC OBS Studio등의 프로그램을 이용해, RTMP 프로토콜로 영상을 전송한다. MediaMTX 컨테이너 송출자의 RTMP 데이터를 받는 미디어 서버. 송출이 시작될 때, 끝날 때 스크립트를 실행한다. ffmpeg MediaMTX 컨테이너와 Spring 컨테이너 두 곳에서 사용된다. MediaMTX 컨테이너에서는 RTMP 데이터를 HLS 파일로 바꾼다. Spring 컨테이너에서는 HLS 조각(.ts)을 VOD(mp4)로 조합한다." />
+11월 19일 업데이트) ffmpeg에서 원본 화질의 BANDWIDTH 인식할 수 있게 명시적으로 비트레이트 지정한 내용을 추가했다. 아키텍처송출자의 스트리밍부터, 이를 서버에서 처리하고 수신자에게 전달하기 까지의 흐름을 구성하는 요소는 다섯가지이다. 송출자(Host) PC OBS Studio등의 프로그램을 이용해, RTMP 프로토콜로 영상을 전송한다. MediaMTX 컨테이너 송출자의 RTMP 데이터를 받는 미디어 서버. 송출이 시작될 때, 끝날 때 스크립트를 실행한다. ffmpeg MediaMTX 컨테이너와 Spring 컨테이너 두 곳에서 사용된다." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://cloudsoswift.github.io/post/develop/toy-project/podor/04-backend-streaming-phase/" /><meta property="article:section" content="post" />
 <meta property="article:published_time" content="2026-11-13T09:46:23+09:00" />
@@ -103,7 +103,7 @@
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="[podoR] 4. 백엔드 스트리밍 구조 및 흐름 정리하기"/>
 <meta name="twitter:description" content="서론최근 podoR에 추가한 스트리밍 기능에 대해, 대략적인 구조와 그 흐름을 정리하고자 한다.
-아키텍처송출자의 스트리밍부터, 이를 서버에서 처리하고 수신자에게 전달하기 까지의 흐름을 구성하는 요소는 다섯가지이다. 송출자(Host) PC OBS Studio등의 프로그램을 이용해, RTMP 프로토콜로 영상을 전송한다. MediaMTX 컨테이너 송출자의 RTMP 데이터를 받는 미디어 서버. 송출이 시작될 때, 끝날 때 스크립트를 실행한다. ffmpeg MediaMTX 컨테이너와 Spring 컨테이너 두 곳에서 사용된다. MediaMTX 컨테이너에서는 RTMP 데이터를 HLS 파일로 바꾼다. Spring 컨테이너에서는 HLS 조각(.ts)을 VOD(mp4)로 조합한다."/>
+11월 19일 업데이트) ffmpeg에서 원본 화질의 BANDWIDTH 인식할 수 있게 명시적으로 비트레이트 지정한 내용을 추가했다. 아키텍처송출자의 스트리밍부터, 이를 서버에서 처리하고 수신자에게 전달하기 까지의 흐름을 구성하는 요소는 다섯가지이다. 송출자(Host) PC OBS Studio등의 프로그램을 이용해, RTMP 프로토콜로 영상을 전송한다. MediaMTX 컨테이너 송출자의 RTMP 데이터를 받는 미디어 서버. 송출이 시작될 때, 끝날 때 스크립트를 실행한다. ffmpeg MediaMTX 컨테이너와 Spring 컨테이너 두 곳에서 사용된다."/>
 
 
 
@@ -266,6 +266,9 @@
     </a>
 </span>
 </h1><p>최근 podoR에 추가한 스트리밍 기능에 대해, 대략적인 구조와 그 흐름을 정리하고자 한다.</p>
+<ul>
+<li>11월 19일 업데이트) <code>ffmpeg</code>에서 <code>원본 화질</code>의 <code>BANDWIDTH</code> 인식할 수 있게 명시적으로 비트레이트 지정한 내용을 추가했다.</li>
+</ul>
 <h2 id="아키텍처" >아키텍처
 <span>
     <a href="#%ec%95%84%ed%82%a4%ed%85%8d%ec%b2%98">
@@ -338,7 +341,7 @@
 <p>정확히는, 해당 <em>스트림 키를 갖는 Event</em>를 찾는 질의를 통해 유효성을 검증함.<br>
 <code>StreamLifecycleService.started</code>에서 <code>findByKey</code>를 호출.</p>
 </blockquote>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># on-ready.sh</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># on-available.sh</span>
 </span></span><span style="display:flex;"><span>KEY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>MTX_PATH#live/<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># -f: 응답 코드 400인 경우 오류 코드 22와 함께 응답 본문이 전혀 출력되지 않도록 설정</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># -s: silent mode. 진행률 표시기, 참고 메시지, 경고 등을 표시하지 않음</span>
@@ -436,7 +439,7 @@
 <li><em>해당 회차를 제외하고</em> 지금 송출중인 회자의 수가 <code>stream.max-concurrent</code>(<code>props.maxConcurrent</code>) 미만인지</li>
 </ol>
 <blockquote>
-<p>현재 테스트중인 서버에서는 성능이 좋지 않아 동시 방송을 하나로 제한함</p>
+<p>현재 테스트중인 서버에서는 성능이 좋지 않아 동시 방송을 셋으로 제한함</p>
 </blockquote>
 <p>또한, <code>MediaMTX</code> 이외의 외부에서 <code>/api/internal</code>로 접근하지 못하도록 <code>nginx</code>에서 <code>404</code>로 막도록 처리하며, <code>Spring</code>의 <code>InternalTokenInterceptor</code>를 통해 요청이 진짜 <code>MediaMTX</code>로부터 온 것인지 검사하기 위한 값(<code>X-Internal-Token</code>)을 검사토록 함.</p>
 <blockquote>
@@ -454,12 +457,12 @@
 </span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;~^live/(.+)$&#34;</span>:
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 송출이 시작되면 Spring 서버에 세션을 만들고 `ffmpeg`를 이용해 HLS 출력을  생성한다(스크립트가 ffmpeg 로 exec).</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e"># (1.21 에서 runOnReady/runOnNotReady 가 runOnAvailable/runOnUnavailable 로 이름이 바뀌었다)</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">runOnAvailable</span>: <span style="color:#ae81ff">/scripts/on-ready.sh</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">runOnAvailable</span>: <span style="color:#ae81ff">/scripts/on-available.sh</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#f92672">runOnAvailableRestart</span>: <span style="color:#66d9ef">no</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 송출이 끊기면 Spring 에 알린다(INTERRUPTED, 유예 시간 뒤 종료 확정).</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">runOnUnavailable</span>: <span style="color:#ae81ff">/scripts/on-not-ready.sh</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">runOnUnavailable</span>: <span style="color:#ae81ff">/scripts/on-not-available.sh</span>
 </span></span></code></pre></div><p>허가를 받은 받은 송출이 들어오기 시작하면, <code>MediaMTX</code>는 해당 <code>path</code>를 <code>사용 가능(available)</code>로 표시한 뒤, 설정된 훅을 실행한다.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># on-ready.sh</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#75715e"># on-available.sh</span>
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">KEY=&#34;${MTX_PATH#live/}&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># -f: 응답 코드 400인 경우 오류 코드 22와 함께 응답 본문이 전혀 출력되지 않도록 설정</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># -s: silent mode. 진행률 표시기, 참고 메시지, 경고 등을 표시하지 않음</span>
@@ -515,40 +518,59 @@
 </span></span><span style="display:flex;"><span>}
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># 인코더</span>
-</span></span><span style="display:flex;"><span><span style="color:#ae81ff">if [ &#34;${STREAM_ENCODER:-vaapi}&#34; = &#34;vaapi&#34; ]; then DEVICE=&#34;${STREAM_VAAPI_DEVICE:-$(find_intel_render_node || echo /dev/dri/renderD128)}&#34;</span>
-</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">echo &#34;on-ready: VAAPI device $DEVICE&#34; &gt;&amp;2</span>
-</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">HW=&#34;-vaapi_device $DEVICE&#34;</span>
-</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">V1=&#34;-filter:v:1 format=nv12,hwupload,scale_vaapi=w=-2:h=480 -c:v:1 h264_vaapi&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">if [ &#34;${STREAM_ENCODER:-vaapi}&#34; = &#34;vaapi&#34; ]; then</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">DEVICE=&#34;${STREAM_VAAPI_DEVICE:-$(find_intel_render_node || echo /dev/dri/renderD128)}&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">echo &#34;on-available: VAAPI device $DEVICE&#34; &gt;&amp;2</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">HW=&#34;-hwaccel vaapi -hwaccel_device $DEVICE -hwaccel_output_format vaapi&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">V1=&#34;-filter:v:1 fps=30,scale_vaapi=w=-2:h=480 -c:v:1 h264_vaapi&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">else</span>
-</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">HW=&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>  <span style="color:#ae81ff">V1=&#34;-filter:v:1 scale=-2:480 -c:v:1 libx264 -preset veryfast&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">HW=&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">V1=&#34;-filter:v:1 fps=30,scale=-2:480 -c:v:1 libx264 -preset veryfast&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">fi</span>
 </span></span></code></pre></div><ul>
 <li>현재 사용중인 서버(노트북)의 경우, 내장 그래픽으로 <code>Interl UHD Graphics 630</code>이 탑재되어 있어, 인텔의 하드웨어 동영상 가속 라이브러리인 <code>VAAPI(Video Acceleration API)</code>를 사용하여 내장된 <code>Intel Quick Sync Video</code> 기능을 사용한다.
 <ul>
-<li>가용한 인텔 내장 GPU가 있는 경우, <code>h264_vaapi</code>, 그렇지 않은 경우 <code>libx264</code> 를 이용해 인코딩을 진행한다. (둘 다 <code>H.264</code> 인코딩)</li>
-<li>현재 서비스에서는 <code>원본화질</code>, <code>480p</code> 두 가지의 화질을 제공하려하기 때문에, 원본영상을 <code>480p</code>로 <code>인코딩</code>하는데에 <code>GPU</code>를 사용한다</li>
+<li>가용한 인텔 내장 GPU가 있는 경우, <code>h264_vaapi</code>, 그렇지 않은 경우 <code>libx264</code> 를 이용해 인코딩을 진행한다. (둘 다 <code>H.264</code> 인코딩)
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># 이전의 코드</span>
+</span></span><span style="display:flex;"><span>HW<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-vaapi_device </span>$DEVICE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>V1<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-filter:v:1 format=nv12,hwupload,scale_vaapi=w=-2:h=480 -c:v:1 h264_vaapi&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 바뀐 코드</span>
+</span></span><span style="display:flex;"><span>HW<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-hwaccel vaapi -hwaccel_device </span>$DEVICE<span style="color:#e6db74"> -hwaccel_output_format vaapi&#34;</span>
+</span></span><span style="display:flex;"><span>V1<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-filter:v:1 scale_vaapi=w=-2:h=480 -c:v:1 h264_vaapi&#34;</span>
+</span></span></code></pre></div><ul>
+<li><strong>수정)</strong> 이때, 이전의 경우 CPU를 이용해 디코딩 후, 디코딩한 프레임을 내장 GPU로 업로드(<code>hwupload</code>)하는 형태였으나, CPU 부담을 덜기 위해 GPU에서 디코딩 및 축소까지 모두 처리하는 형태(<code>-hwaccel -hwaccel_output_format vaapi</code>)로 수정했다.</li>
+<li>이를 통해 스트림 당 CPU 사용율이 117%에서 22%로 줄어들고, Video는 12% 증가했다.(CPU 부하를 줄이고, 내장 GPU 부하로 이를 옮김)</li>
+</ul>
+</li>
+<li>현재 서비스에서는 <code>원본화질</code>, <code>480p</code> 두 가지의 화질을 제공하려하기 때문에, 원본영상을 <code>480p</code>로 <code>인코딩</code>하는데에 <code>GPU</code>를 사용한다.</li>
 </ul>
 </li>
 </ul>
 </li>
 <li><code>비디오</code>를 생성한다.
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># -hls_list_size 0 + event: 조각을 지우지 않는다(처음부터 되감기 가능, VOD 재료).</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># shellcheck disable=SC2086</span>
 </span></span><span style="display:flex;"><span>exec ffmpeg -hide_banner -loglevel warning $HW -i <span style="color:#e6db74">&#34;</span>$IN<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -map 0:v:0 -map 0:a:0 -map 0:v:0 -map 0:a:0 <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -c:v:0 copy -c:a:0 copy <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  $V1 -b:v:1 1M -maxrate:v:1 1200k -bufsize:v:1 2M -g:v:1 <span style="color:#ae81ff">60</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -c:a:1 aac -b:a:1 96k <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -f hls -hls_time <span style="color:#ae81ff">2</span> -hls_list_size <span style="color:#ae81ff">0</span> -hls_playlist_type event -hls_flags independent_segments <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -var_stream_map <span style="color:#e6db74">&#34;v:0,a:0,name:src v:1,a:1,name:480p&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -master_pl_name master.m3u8 <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -hls_segment_filename <span style="color:#e6db74">&#34;</span>$OUT<span style="color:#e6db74">/%v/%05d.ts&#34;</span> <span style="color:#e6db74">&#34;</span>$OUT<span style="color:#e6db74">/%v/index.m3u8&#34;</span>
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -map 0:v:0 -map 0:a:0 -map 0:v:0 -map 0:a:0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -c:v:0 copy -c:a:0 copy -b:v:0 <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>STREAM_SRC_VIDEO_BITRATE<span style="color:#66d9ef">:-</span>10M<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -b:a:0 160k <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    $V1 -b:v:1 1M -maxrate:v:1 1200k -bufsize:v:1 2M -g:v:1 <span style="color:#ae81ff">60</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -c:a:1 copy -b:a:1 160k <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -f hls -hls_time <span style="color:#ae81ff">2</span> -hls_list_size <span style="color:#ae81ff">0</span> -hls_playlist_type event -hls_flags independent_segments <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -var_stream_map <span style="color:#e6db74">&#34;v:0,a:0,name:src v:1,a:1,name:480p&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -master_pl_name master.m3u8 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -hls_segment_filename <span style="color:#e6db74">&#34;</span>$OUT<span style="color:#e6db74">/%v/%05d.ts&#34;</span> <span style="color:#e6db74">&#34;</span>$OUT<span style="color:#e6db74">/%v/index.m3u8&#34;</span>
 </span></span></code></pre></div><ul>
 <li>원본 영상(<code>rtmp://127.0.0.1:1935/live/&lt;키&gt;</code>)을 <code>ffmpeg</code> 에 입력으로 제공하여, <code>원본 화질(v0, a0)</code>과 <code>480p(v1, a1)</code> 두가지 출력을 만들어 낸다.
 <ul>
-<li><code>원본(v0, a0)</code>은 <code>copy</code>로 <code>디코딩/재인코딩</code> 없이 그대로 복사한다.</li>
-<li><code>저화질 버전(v1, a1)</code>은 비디오의 경우 디코딩 후 <code>480p</code>로 재인코딩(비트레이트 1M ), 오디오의 경우 <code>AAC 96k</code>로 재인코딩한다.</li>
+<li><code>원본(v0, a0)</code>은 <code>copy</code>로 <code>디코딩/재인코딩</code> 없이 그대로 복사한다.(비트레이트 10M)
+<ul>
+<li><strong>수정)</strong> 원본 필터에 비트레이트를 지정하지 않을 경우, <code>ffmpeg</code>에서 <code>bandwidth</code>를 판단할 수 없어 이를 <code>master.m3u8</code>에 포함하지 않던 문제가 있었다. 이를 해결하기 위해 명시적으로 비트레이트를 지정하도록 수정했다.
+<blockquote>
+<p><code>10M</code>를 기본값으로 했는데, 이는 <code>1080p 30fps</code>를 기준으로 책정한 값이다.</p>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><code>저화질 버전(v1, a1)</code>은 비디오의 경우 디코딩 후 <code>480p 30fps</code>로 재인코딩(비트레이트 1M ), <del>오디오의 경우 <code>AAC 96k</code>로 재인코딩한다.</del> 오디오는 그대로 복사한다.(비트레이트 160K)</li>
 </ul>
 </li>
 <li>이후 <code>hls 포맷</code>으로 출력을 생성하되, <code>원본</code>은 <code>.../{sessionNo}/src/</code>에, <code>저화질 버전</code>은 <code>.../{sessionNo}/480p/</code>에 저장한다.</li>
@@ -556,7 +578,12 @@
 <ul>
 <li>화질 이동시 끊김을 방지하기 위해, <code>키프레임 간격</code>을 2초로 맞추도록 규칙을 세웠다. (즉, 2초마다 화질별 폴더에 <code>.ts</code> 파일이 추가된다.)
 <ul>
-<li><code>480p</code>의 경우 <a href="https://en.wikipedia.org/wiki/Group_of_pictures"><code>GOP(Group Of Pictures)</code></a>가 <code>60</code>(<code>30fps</code> 기준 <code>2초</code>)이고, 원본은 복사만 하고 있으므로 송출시에 호스트에게 키프레임 간격을 2초로 설정할 것을 안내한다.</li>
+<li><code>480p</code>의 경우 <a href="https://en.wikipedia.org/wiki/Group_of_pictures"><code>GOP(Group Of Pictures)</code></a>가 <code>60</code>(<code>30fps</code> 기준 <code>2초</code>)이고, 원본은 복사만 하고 있으므로 송출시에 호스트에게 키프레임 간격을 2초로 설정할 것을 안내한다.
+<ul>
+<li>또한, 디코딩 시 <code>30fps</code>로 고정해놓았기 때문에 <code>480p</code>의 키프레임 <code>2초</code> 간격은 보장된다.</li>
+</ul>
+</li>
+<li><code>오디오</code>의 경우, <code>480p</code>는 <em><code>AAC 96kbps</code>로 재인코딩하도록 했으나</em>, 이를 원본 그대로 복사할 경우 <code>CPU 사용률</code>이 절반으로 줄어드는(스트림 당 <code>22%</code> -&gt; <code>10%</code>) 이점이 있어 원본을 복사하도록 수정했다.</li>
 </ul>
 </li>
 </ul>
@@ -566,7 +593,7 @@
 <li>이를 통해 사용자는 <em>방송 중에도</em> <code>이전으로 되감을 수 있게되고</code>, 조각들이 그대로 남아있으므로 추후 <code>VOD를 만드는데에 재료</code>로 사용할 수 있다.</li>
 </ul>
 </li>
-<li>그리고, <code>exec</code>를 통해 <code>ffmpeg</code>을 실행함으로써, <code>MediaMTX</code>의 송출이 끝났을 때 <code>훅 프로세스</code>(<code>on-ready.sh</code>를 실행하고 있는 프로세스)에게 보내는 종료 신호가 <code>ffmpeg</code>에도 닿도록한다.
+<li>그리고, <code>exec</code>를 통해 <code>ffmpeg</code>을 실행함으로써, <code>MediaMTX</code>의 송출이 끝났을 때 <code>훅 프로세스</code>(<code>on-available.sh</code>를 실행하고 있는 프로세스)에게 보내는 종료 신호가 <code>ffmpeg</code>에도 닿도록한다.
 <ul>
 <li>이렇게 하지 않을 경우, <code>ffmpeg</code>의 종료는 <code>MediaMTX</code>-<code>ffmpeg</code>간 <code>RTMP</code> 연결이 닫히는 시점에 의존하게 된다. (따라서 직관적으로 <code>ffmpeg</code>에 종료 신호가 직접 닿게 <code>exec</code>를 이용해 프로세스를 띄운다.)</li>
 </ul>
@@ -603,7 +630,7 @@
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Set-Cookie: podor_media<span style="color:#f92672">=</span>&lt;payload&gt;.&lt;HMAC&gt;; Path<span style="color:#f92672">=</span>/media/; Max-Age<span style="color:#f92672">=</span>600; HttpOnly; Secure; SameSite<span style="color:#f92672">=</span>Strict
 </span></span></code></pre></div><p>또한, 위와 함께 응답 헤더에 <code>SET-COOKIE</code>로 관람 쿠키 <code>podor_media</code>을 함께 담아 보낸다.</p>
 <blockquote>
-<p>이 쿠키는 <code>/media/</code>에 한정되어 있으며, 수명이 10분이긴 하지만 매 폴링(<code>/api/events/{eventId}/stream</code>)마다 갱신된다.</p>
+<p>이 쿠키는 <code>/media/</code>에 한정되어 있으며, 수명이 10분이긴 하지만 매 폴링(<code>/api/events/{eventId}/stream</code>)마다 갱신되어, 시청하는 동안 끊기지 않도록 한다.</p>
 </blockquote>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>    <span style="color:#75715e"># HLS(/media/hls/{eventId}/{sessionNo}/…) · VOD(/media/vod/{eventId}.mp4)</span>
 </span></span><span style="display:flex;"><span>    location /media/ <span style="color:#f92672">{</span>
@@ -624,6 +651,7 @@
 <li>해당 API에서는 <code>쿠키 서명 및 수명</code> 검사,  <code>URI</code> 포맷(<code>/media/hls/{eventId}/…</code> 또는 <code>/media/vod/{eventId}.mp4</code>) 검사, <code>URI</code>의 <code>eventId</code>와 <code>쿠키</code>의 <code>eventId</code> 일치 여부 검사를 수행한다.
 <ul>
 <li>즉, 비교적 짧은 시간내에 빈번한 <code>조각/재생목록 요청</code>에서는 <em><code>DB</code>를 거치지않고</em> <strong>쿠키 서명만 검사</strong>하도록하고, 덜 빈번한 <code>관람 상태 요청</code>에서 <em><code>DB</code>까지 거친 검증</em>을 수행하도록 한다.</li>
+<li><strong>TODO:</strong> 현 상태에서 <code>관람 상태 요청</code>이 5초마다 발생하고 있기 때문에, 사실상 DB 요청도 빈번한 상황이다. 따라서 이를 Redis에 캐시하는 방향으로 추후 개선할 예정이다.</li>
 </ul>
 </li>
 </ul>
@@ -636,7 +664,11 @@
 <li>화질을 고르고 그 <code>index.m3u8</code>을 받는다. 목록에 <code>#EXT-X-ENDLIST</code>가 없으면 &ldquo;아직 끝나지 않은 라이브&quot;로 판단한다.</li>
 <li><code>라이브 끝(최신 조각)</code>에서 <em>조각 3개쯤 뒤부터</em> 재생을 시작한다.</li>
 <li><strong>조각 길이(2초)마다 <code>index.m3u8</code>을 다시 받는다.</strong> <code>ffmpeg</code>가 그사이 추가한 조각이 목록에 나타나면 받아서 버퍼 뒤에 잇는다.</li>
-<li>다운로드 속도를 재서 <code>원본</code>과 <code>480p</code> 사이를 자동으로 오간다(<code>ABR, Adaptive Bitrate Streaming</code> <a href="https://en.wikipedia.org/wiki/Adaptive_bitrate_streaming">참고</a>).</li>
+<li>다운로드 속도를 재서 <code>원본</code>과 <code>480p</code> 사이를 자동으로 오간다(<code>ABR, Adaptive Bitrate Streaming</code> <a href="https://en.wikipedia.org/wiki/Adaptive_bitrate_streaming">참고</a>).
+<blockquote>
+<p>측정한 속도에 0.7을 곱한 값이 그 화질의 <code>BANDWIDTH</code> 이상이어야 화질이 업그레이드 된다. 가령 원본이 10Mbps라면, <code>BANDWIDTH</code>가 (10M + 160k) * 1.1 ~= 11.2Mbps 이므로, 측정속도가 16Mbps 이상일 때 원본으로 바뀐다.</p>
+</blockquote>
+</li>
 </ol>
 <h3 id="5-종료-후-vod-생성" >5. 종료 후 VOD 생성
 <span>
@@ -661,7 +693,7 @@
 </span>
 </h4><p>스트리밍 송출 <em>연결이 끊겼을 때</em>, <code>MediaMTX</code>는 다음 작업들을 수행한다.</p>
 <ul>
-<li><code>runOnAvailable</code> 훅의 프로세스(즉, <code>on-ready.sh</code>를 수행하던 프로세스가 띄운 <code>ffmpeg</code> 프로세스)를 종료한다. <code>ffmpeg</code> 프로세스는 해당 세션의 <code>재생목록을 마무리한 뒤 종료</code>한다.</li>
+<li><code>runOnAvailable</code> 훅의 프로세스(즉, <code>on-available.sh</code>를 수행하던 프로세스가 띄운 <code>ffmpeg</code> 프로세스)를 종료한다. <code>ffmpeg</code> 프로세스는 해당 세션의 <code>재생목록을 마무리한 뒤 종료</code>한다.</li>
 <li><code>runOnUnavailable</code> 훅에 연결된 <code>on-not-ready.sh</code> 스크립트를 실행한다. 이 스크립트는 <code>P[^1]OST /api/internal/stream/stopped</code>에 요청을 보낸다.
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#75715e">// StreamInternalController.java
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">@PostMapping</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/stopped&#34;</span><span style="color:#f92672">)</span>
@@ -920,7 +952,7 @@
         <svg viewBox="0 0 28 23" height="100%" width="19" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2"/></svg>
     </a>
 </span>
-</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># 이전 `on-ready.sh`</span>
+</h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># 이전 `on-available.sh`</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># 480p 인코더. 원본(v:0)은 재인코딩 없이 그대로 복사한다.</span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>STREAM_ENCODER<span style="color:#66d9ef">:-</span>vaapi<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;vaapi&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
 </span></span><span style="display:flex;"><span>  HW<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-vaapi_device /dev/dri/renderD128&#34;</span>
@@ -929,7 +961,7 @@
 </span></span><span style="display:flex;"><span>  HW<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
 </span></span><span style="display:flex;"><span>  V1<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-filter:v:1 scale=-2:480 -c:v:1 libx264 -preset veryfast&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
-</span></span></code></pre></div><p>송출 스크립트(<code>on-ready.sh</code>)에서 <code>GPU 노드</code>가 올바르게 잡히지 않아 발생한 문제였다.<br>
+</span></span></code></pre></div><p>송출 스크립트(<code>on-available.sh</code>)에서 <code>GPU 노드</code>가 올바르게 잡히지 않아 발생한 문제였다.<br>
 서버로 사용한 PC에는 <code>내장 GPU</code>, <code>외장 GPU</code> 두 가지가 있었는데, <code>내장 GPU</code> 일 것이라고 생각한 <code>renderD128</code> 노드가 <a href="https://en.wikipedia.org/wiki/Nouveau_(software)">nouveau</a> 드라이버를 사용하는 <code>외장 GPU</code>였다.<br>
 이로 인해 <code>VAAPI</code> 초기화에 실패했고, <code>ffmpeg</code> 프로세스가 바로 죽어버렸다.</p>
 <h4 id="해결" >해결
