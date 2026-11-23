@@ -6,10 +6,167 @@
     <description>오늘도 개발을 한다. (develop)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>ko-kr</language>
-    <lastBuildDate>Fri, 13 Nov 2026 09:46:23 +0900</lastBuildDate>
+    <lastBuildDate>Mon, 23 Nov 2026 20:58:02 +0900</lastBuildDate>
     
     <atom:link href="https://cloudsoswift.github.io/categories/develop/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>[nginx] resolver 알아보기</title>
+      <link>https://cloudsoswift.github.io/post/develop/network/nginx/resolver/</link>
+      <pubDate>Mon, 23 Nov 2026 20:58:02 +0900</pubDate>
+      
+      <guid>https://cloudsoswift.github.io/post/develop/network/nginx/resolver/</guid>
+      <description>&lt;h2 id=&#34;발단&#34; &gt;발단
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%b0%9c%eb%8b%a8&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;nginx&lt;/code&gt;에서 &lt;code&gt;upstream&lt;/code&gt;을 &lt;code&gt;컨테이너 이름&lt;/code&gt;으로 지정해 사용하고 있었는데, &lt;code&gt;upstream&lt;/code&gt;로 지정됐던 &lt;em&gt;컨테이너들을 새로 만들때마다&lt;/em&gt; &lt;code&gt;502 에러&lt;/code&gt;가 발생했다.&lt;br&gt;
+이를 고치기 위해 매 번 &lt;code&gt;docker compose nginx restart&lt;/code&gt;를 통해 &lt;em&gt;&lt;code&gt;nginx&lt;/code&gt; 컨테이너를 재시작하여&lt;/em&gt; 새로 생성된 &lt;code&gt;upstream 컨테이너&lt;/code&gt;의 최신 주소를 읽도록 했었다.&lt;br&gt;
+이러한 오류가 발생했던 이유는, &lt;code&gt;nginx&lt;/code&gt;가 &lt;code&gt;upstream&lt;/code&gt;의 &lt;code&gt;호스트 이름&lt;/code&gt;을 &lt;strong&gt;&lt;code&gt;nginx 설정을 읽을 때&lt;/code&gt;&lt;/strong&gt; &lt;em&gt;딱 한 번만 IP로 바꾸어 기억하기 때문&lt;/em&gt;이었다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;1. nginx 기동 → spring 을 조회해 172.18.0.5 를 기억한다.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;2. spring 컨테이너를 다시 만든다 → Docker가 새 IP&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;예: 172.18.0.9&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt;를 준다.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;3. nginx 는 여전히 172.18.0.5 로 보낸다 → 아무도 없으니 연결 실패, 502.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;4. nginx -s reload → 설정을 다시 읽으며 이름을 다시 조회해서야 복구된다.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;- nginx, spring, nextjs 컨테이너는 모두 같은 docker compose의 브리지 네트워크에 존재한다.
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;이러한 갱신을 일종의 자동화를 시키기 위해, &lt;code&gt;resolver&lt;/code&gt; 및 &lt;code&gt;resolve&lt;/code&gt; 키워드를 사용하게 됐다.&lt;/p&gt;
+&lt;h2 id=&#34;resolver는-무엇인가&#34; &gt;&lt;code&gt;resolver&lt;/code&gt;는 무엇인가?
+&lt;span&gt;
+    &lt;a href=&#34;#resolver%eb%8a%94-%eb%ac%b4%ec%97%87%ec%9d%b8%ea%b0%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;a href=&#34;https://nginx.org/en/docs/http/ngx_http_core_module.html#resolver&#34;&gt;resolver&lt;/a&gt; 는 &lt;code&gt;nginx&lt;/code&gt;가 실행 중에 도메인 이름을 물어볼 &lt;code&gt;DNS 서버&lt;/code&gt;를 지정하는 지시어다. 이러한 &lt;code&gt;네임 서버&lt;/code&gt;는 &lt;code&gt;업스트림 서버의 이름&lt;/code&gt;을 &lt;code&gt;주소&lt;/code&gt;로 변환하는 데에 사용된다.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;resolver 127.0.0.11 valid&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;10s ipv6&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;off;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;upstream server_name &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    zone server_name 64k;   &lt;span style=&#34;color:#75715e&#34;&gt;# resolve 는 워커들이 공유하는 메모리 영역이 필요하다&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    server &lt;span style=&#34;color:#e6db74&#34;&gt;${&lt;/span&gt;ip&lt;span style=&#34;color:#e6db74&#34;&gt;}&lt;/span&gt; resolve;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;resolver 127.0.0.11&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;질의할 DNS 서버. &lt;code&gt;127.0.0.11&lt;/code&gt;는 &lt;code&gt;Docker&lt;/code&gt;가 사용자 정의 네트워크의 모든 컨테이너 안에 만들어두는 내장 DNS로, 컨테이너 이름을 현재 IP로 바꿔 준다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;valid=${time}&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;조회한 결과가 얼마나 유효할지&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;upstream server ... resolve&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;resolve&lt;/code&gt;는 이 서버의 이름을 주기적으로 다시 조회하라는 표시다. 없으면 &lt;em&gt;&lt;code&gt;resolver&lt;/code&gt;가 있어도&lt;/em&gt; nginx 컨테이너 기동시 한 번만 조회한다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;upstream zone&lt;/code&gt;
+&lt;ul&gt;
+&lt;li&gt;여러 워커 프로세스가 함께 보는 &lt;code&gt;공유 메모리&lt;/code&gt;. 새로 찾은 IP를 워커 전체에 알리는 공간이므로 &lt;code&gt;resolve&lt;/code&gt;를 쓰려면 반드시 필요하다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;resolver&lt;/code&gt;를 사용하면, &lt;code&gt;upstream&lt;/code&gt;의 &lt;em&gt;IP가 바뀔 수 있는 환경&lt;/em&gt;에서 &lt;code&gt;nginx&lt;/code&gt;가 &lt;strong&gt;알아서 따라가게 할 수&lt;/strong&gt;있다.&lt;br&gt;
+&lt;code&gt;Docker 컨테이너&lt;/code&gt;, &lt;code&gt;쿠버네티스 서비스&lt;/code&gt;, &lt;code&gt;클라우드 로드밸런서&lt;/code&gt;처럼 &lt;strong&gt;주소가 고정되지 않은 대상&lt;/strong&gt;이 전형적인 예다.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;이 기능은 원래 유료 버전인 &lt;code&gt;NGINX Plus&lt;/code&gt; 전용 기능이었으나, 오픈소스버전 nginx에는 1.27.3부터 들어왔다.&lt;br&gt;
+&lt;a href=&#34;https://nginx.org/en/CHANGES&#34;&gt;버전 별 변경사항 문서&lt;/a&gt;&lt;br&gt;
+&lt;a href=&#34;https://blog.nginx.org/blog/dynamic-dns-resolution-open-sourced-in-nginx&#34;&gt;Dynamic DNS Resolution Open Sourced in NGINX - NGINX Community Blog&lt;/a&gt;&lt;br&gt;
+이 기능이 들어오기 전까진 &lt;code&gt;proxy_pass http://$변수;&lt;/code&gt;와 같이 변수를 써서 요청마다 조회하게 만드는 우회법을 썼다. (다만, &lt;code&gt;upstream&lt;/code&gt;을 쓸 수 없는 방법이라 &lt;code&gt;keepalive 연결 재사용&lt;/code&gt;과 같은 이점을 포기해야 했다.)&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;사용법&#34; &gt;사용법
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%82%ac%ec%9a%a9%eb%b2%95&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# nginx.conf&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;# 컨테이너 이름(spring, next)을 Docker 내장 DNS 로 주기적으로 다시 조회한다.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;resolver 127.0.0.11 valid&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;10s ipv6&lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt;off;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;upstream spring_backend &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    zone spring_backend 64k;   &lt;span style=&#34;color:#75715e&#34;&gt;# resolve 는 워커들이 공유하는 메모리 영역이 필요하다&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    server spring:8080 resolve;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    keepalive 64;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    keepalive_requests 10000;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    keepalive_timeout 60s;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;upstream next_frontend &lt;span style=&#34;color:#f92672&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    zone next_frontend 64k;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    server next:3000 resolve;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    keepalive 32;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    keepalive_requests 10000;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    keepalive_timeout 60s;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;resolver 127.0.0.11&lt;/code&gt;: Docker 내장 DNS. &lt;code&gt;nginx.conf&lt;/code&gt; 파일 최상단(&lt;code&gt;http 컨텍스트&lt;/code&gt;)에 두어 두 upstream이 함께 쓴다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;valid=10s&lt;/code&gt;: 컨테이너의 새 IP를 nginx가 알기까지 최대 10초. &lt;code&gt;Spring&lt;/code&gt; 컨테이너는 뜨는 데 그보다 오래 걸리므로 실제로는 체감할 수 없다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ipv6=off&lt;/code&gt;: &lt;code&gt;브리지 네트워크&lt;/code&gt;가 &lt;em&gt;&lt;code&gt;IPv4&lt;/code&gt;만 쓰므로&lt;/em&gt; AAAA 조회를 하지 않는다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;zone &amp;lt;이름&amp;gt; 64k&lt;/code&gt;: &lt;code&gt;upstream&lt;/code&gt;마다 64KB &lt;code&gt;공유 메모리&lt;/code&gt;.(server 한 줄짜리 upstream에는 충분하다.)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;server spring:8080 resolve&lt;/code&gt;: 이 &lt;code&gt;upstream 이름&lt;/code&gt;을 &lt;code&gt;resolver&lt;/code&gt;로 계속 다시 조회하라는 표시.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;추가적으로, &lt;code&gt;docker-compose.yml&lt;/code&gt;에 &lt;code&gt;nginx 1.27.3&lt;/code&gt;이상 버전의 이미지를 쓰도록 기입해두었다.&lt;/p&gt;
+&lt;h2 id=&#34;실제-동작&#34; &gt;실제 동작
+&lt;span&gt;
+    &lt;a href=&#34;#%ec%8b%a4%ec%a0%9c-%eb%8f%99%ec%9e%91&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;resolver&lt;/code&gt;가 제대로 동작하는지 검증하기 위해 간단한 테스트를 진행했다.&lt;br&gt;
+&lt;code&gt;upstream&lt;/code&gt;을 사용하는 &lt;em&gt;컨테이너의 IP가 바뀌도록 하고&lt;/em&gt;, &lt;em&gt;&lt;code&gt;nginx reload&lt;/code&gt;없이&lt;/em&gt; 이후 요청이 새 컨테이너에 도달하는지 확인하는 것이다.&lt;/p&gt;
+&lt;h3 id=&#34;1-바꾸기-전-ip-기록&#34; &gt;1. 바꾸기 전 IP 기록
+&lt;span&gt;
+    &lt;a href=&#34;#1-%eb%b0%94%ea%be%b8%ea%b8%b0-%ec%a0%84-ip-%ea%b8%b0%eb%a1%9d&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker network ls | grep app-net &lt;span style=&#34;color:#75715e&#34;&gt;# 네트워크 이름 확인&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;150aeebbb648   podor_app-net   bridge    local
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker inspect -f &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}&amp;#39;&lt;/span&gt; home-spring &lt;span style=&#34;color:#75715e&#34;&gt;# spring 컨테이너의 ip 확인&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;172.18.0.5
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3 id=&#34;2-ip-가-바뀌도록-컨테이너-재생성&#34; &gt;2. IP 가 바뀌도록 컨테이너 재생성
+&lt;span&gt;
+    &lt;a href=&#34;#2-ip-%ea%b0%80-%eb%b0%94%eb%80%8c%eb%8f%84%eb%a1%9d-%ec%bb%a8%ed%85%8c%ec%9d%b4%eb%84%88-%ec%9e%ac%ec%83%9d%ec%84%b1&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker compose rm -sf spring &lt;span style=&#34;color:#75715e&#34;&gt;# 컨테이너 삭제. s: 컨테이너 중지, f: 강제 삭제&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker run -d --rm --name ipgrab --network podor_app-net alpine sleep &lt;span style=&#34;color:#ae81ff&#34;&gt;600&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# alpine 이미지 기반 컨테이너 만든 뒤 10분간 슬립&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker compose up -d spring &lt;span style=&#34;color:#75715e&#34;&gt;# spring 컨테이너 생성 및 실행&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker inspect -f &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}&amp;#39;&lt;/span&gt; home-spring &lt;span style=&#34;color:#75715e&#34;&gt;# spring 컨테이너 ip 확인 -&amp;gt; 이전과 다른 ip&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;172.18.0.9
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;docker compose restart&lt;/code&gt;를 사용할 경우, 같은 컨테이너를 단순히 다시 켜서 IP가 그대로일 때가 많다.&lt;br&gt;
+그래서 &lt;em&gt;컨테이너를 지우고&lt;/em&gt;, &lt;code&gt;임시 컨테이너(ipgrab)&lt;/code&gt;로 같은 네트워크의 IP 하나를 먼저 차지한 뒤 spring 컨테이너를 새로 만들었다.&lt;/p&gt;
+&lt;h3 id=&#34;3-reload-없이-요청&#34; &gt;3. reload 없이 요청
+&lt;span&gt;
+    &lt;a href=&#34;#3-reload-%ec%97%86%ec%9d%b4-%ec%9a%94%ec%b2%ad&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h3&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ curl -sk -o /dev/null -w &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#39;%{http_code}\n&amp;#39;&lt;/span&gt; https://localhost/api/events
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ae81ff&#34;&gt;401&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# `Spring Security`가 &amp;#34;로그인 필요&amp;#34; 라고 답한 것으로, 즉 `nginx`가 새 IP의 Spring 컨테이너까지 도달했음을 의미&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;$ docker compose logs --since 5m nginx | grep -iE &lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;upstream|connect\(\) failed&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#f92672&#34;&gt;(&lt;/span&gt;출력 없음&lt;span style=&#34;color:#f92672&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#75715e&#34;&gt;# connect() failed 나 upstream 오류가 한 줄도 없다. 즉, 죽은 IP 로 보낸 요청이 없었다는 뜻이다.&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;대안---ci에서-reload를-하는것은&#34; &gt;대안 - CI에서 &lt;code&gt;reload&lt;/code&gt;를 하는것은?
+&lt;span&gt;
+    &lt;a href=&#34;#%eb%8c%80%ec%95%88---ci%ec%97%90%ec%84%9c-reload%eb%a5%bc-%ed%95%98%eb%8a%94%ea%b2%83%ec%9d%80&#34;&gt;
+        &lt;svg viewBox=&#34;0 0 28 23&#34; height=&#34;100%&#34; width=&#34;19&#34; xmlns=&#34;http://www.w3.org/2000/svg&#34;&gt;&lt;path d=&#34;M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;path d=&#34;M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71&#34; fill=&#34;none&#34; stroke-linecap=&#34;round&#34; stroke-miterlimit=&#34;10&#34; stroke-width=&#34;2&#34;/&gt;&lt;/svg&gt;
+    &lt;/a&gt;
+&lt;/span&gt;
+&lt;/h2&gt;&lt;p&gt;&lt;code&gt;CI/CD 파이프라인&lt;/code&gt;에서 배포 끝에 &lt;code&gt;nginx -s reload&lt;/code&gt;를 넣는 방법도 있다. 하지만 그것은 &lt;em&gt;CI로 배포할 때만&lt;/em&gt; 막아 준다. 컨테이너가 새로 뜨는 경우는 배포 말고도 있다.&lt;br&gt;
+특히 &lt;code&gt;Spring 컨테이너&lt;/code&gt;가 &lt;code&gt;메모리 부족&lt;/code&gt;으로 죽고 &lt;em&gt;&lt;code&gt;restart: unless-stopped&lt;/code&gt;로 다시 뜰 때&lt;/em&gt;는 아무도 모르는 사이에 502 가 나게 된다.&lt;br&gt;
+그래서 &lt;code&gt;CI&lt;/code&gt;를 도입하더라도 &lt;strong&gt;&lt;code&gt;resolve&lt;/code&gt;는 유지&lt;/strong&gt;하고, &lt;code&gt;reload&lt;/code&gt;는 &lt;em&gt;nginx 설정이 바뀐 배포에만&lt;/em&gt; 넣는 구성이 낫다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;resolver&lt;/code&gt; 방식의 한계는 두 가지다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;valid 초&lt;/code&gt; 만큼의 &lt;strong&gt;지연&lt;/strong&gt; — 새 IP를 알기까지 &lt;code&gt;valid&lt;/code&gt;만큼 걸린다. 더 짧게 하면 조회가 잦아지지만, 로컬 DNS라 비용은 여전히 작다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Docker DNS&lt;/code&gt;에 &lt;strong&gt;의존&lt;/strong&gt; — &lt;em&gt;조회가 실패하면&lt;/em&gt; nginx는 &lt;code&gt;마지막으로 알던 주소&lt;/code&gt;를 계속 쓴다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;정리하면, &lt;code&gt;upstream&lt;/code&gt;이 컨테이너처럼 &lt;em&gt;주소가 바뀔 수 있는 대상&lt;/em&gt;이라면 &lt;code&gt;resolver&lt;/code&gt; + &lt;code&gt;zone&lt;/code&gt; + &lt;code&gt;resolve&lt;/code&gt; 세 가지를 함께 설정해 두는 것이 기본값이다.&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>[podoR] 4. 백엔드 스트리밍 구조 및 흐름 정리하기</title>
